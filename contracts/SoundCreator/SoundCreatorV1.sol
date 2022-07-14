@@ -29,7 +29,8 @@ pragma solidity ^0.8.15;
 */
 
 import "../SoundNft/ISoundNftV1.sol";
-import "openzeppelin-contracts/proxy/Clones.sol";
+import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import "openzeppelin/proxy/Clones.sol";
 
 contract SoundCreatorV1 {
     /***********************************
@@ -48,19 +49,17 @@ contract SoundCreatorV1 {
         soundRegistry = _soundRegistry;
     }
 
-    function createSoundNft(
-        address _owner,
-        string memory _name,
-        string memory _symbol,
-        string memory _baseURI
-    ) external returns (address soundNft) {
+    function createSoundNft(string memory _name, string memory _symbol)
+        external
+        returns (address soundNft)
+    {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement extension configurations
 
         // todo: research if we can get any gas savings by using a more minimal version of Clones lib
         soundNft = Clones.clone(nftImplementation);
 
-        // ISoundNftV1(soundNft).initialize(_owner, _name, _symbol, _baseURI);
+        ISoundNftV1(soundNft).initialize(_name, _symbol);
 
         // todo: emit event
     }

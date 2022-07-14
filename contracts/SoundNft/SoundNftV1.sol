@@ -33,11 +33,13 @@ import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 
 /// @title SoundNftV1
 /// @author Sound.xyz
-contract SoundNftV1 is ERC721AUpgradeable {
+contract SoundNftV1 is ERC721AUpgradeable, OwnableUpgradeable {
     function initialize(string memory _name, string memory _symbol)
-        external
-        override
+        public
+        initializerERC721A
+        initializer
     {
-        // super.initialize(_name, _symbol);
+        __ERC721A_init(_name, _symbol);
+        __Ownable_init();
     }
 }
