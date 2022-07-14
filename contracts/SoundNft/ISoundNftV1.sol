@@ -5,6 +5,18 @@
 pragma solidity ^0.8.15;
 
 /**
+ * @dev ERC721 token receiver interface.
+ */
+interface ERC721A__IERC721Receiver {
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4);
+}
+
+/**
  * @dev Forked interface of ERC721A
  */
 interface ISoundNftV1 {

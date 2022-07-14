@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.15;
 
-import "../SoundNft/ISoundNftV1.sol";
-
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
                ▒███████████████████████████████████████████████████████████               
@@ -30,25 +28,40 @@ import "../SoundNft/ISoundNftV1.sol";
                ▓██████████████████████████████████████████████████████████                
 */
 
+import "../SoundNft/ISoundNftV1.sol";
+import "openzeppelin-contracts/contracts/proxy/Clones.sol";
+
 contract SoundCreatorV1 {
     /***********************************
                 STORAGE
     ***********************************/
 
+    address nftImplementation;
     address soundRegistry;
 
     /***********************************
               PUBLIC FUNCTIONS
     ***********************************/
 
-    constructor(address _soundRegistry) {
+    constructor(address _nftImplementation, address _soundRegistry) {
+        nftImplementation = _nftImplementation;
         soundRegistry = _soundRegistry;
     }
 
-    function createSoundNft(bytes memory signature) external {
+    function createSoundNft(
+        address _owner,
+        string memory _name,
+        string memory _symbol,
+        string memory _baseURI
+    ) external returns (address soundNft) {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement extension configurations
+
+        // todo: research if we can get any gas savings by using a more minimal version of Clones lib
+        soundNft = Clones.clone(nftImplementation);
+
+        // ISoundNftV1(soundNft).initialize(_owner, _name, _symbol, _baseURI);
+
         // todo: emit event
-        // ISoundNftV1 = new Clone(soundRegistry);
     }
 }
