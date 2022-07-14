@@ -1,1 +1,2 @@
-openzeppelin-contracts/=./lib/openzeppelin-contracts/
+openzeppelin/=./lib/openzeppelin-contracts/contracts/
+chiru-labs/ERC721A-Upgradeable/=./lib/ERC721A-Upgradeable/contracts/

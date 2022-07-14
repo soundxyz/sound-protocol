@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.15;
 
-import "./ERC721A/ERC721A.sol";
+import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
@@ -32,7 +33,7 @@ import "./ERC721A/ERC721A.sol";
 
 /// @title SoundNftV1
 /// @author Sound.xyz
-contract SoundNftV1 is ERC721A {
+contract SoundNftV1 is ERC721AUpgradeable {
     function initialize(string memory _name, string memory _symbol)
         external
         override
