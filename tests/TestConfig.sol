@@ -13,15 +13,18 @@ contract TestConfig is Test {
 
     SoundCreatorV1 soundCreator;
 
-    // Set up before each test
+    // Set up called  before each test
     function setUp() public {
         // Deploy SoundNft implementation
-        SoundNftV1 soundNft = new SoundNftV1();
+        SoundNftV1 soundNftImplementation = new SoundNftV1();
 
         // todo: deploy registry here
         address soundRegistry = address(123);
 
-        soundCreator = new SoundCreatorV1(address(soundNft), soundRegistry);
+        soundCreator = new SoundCreatorV1(
+            address(soundNftImplementation),
+            soundRegistry
+        );
     }
 
     // Returns a random address funded with ETH
