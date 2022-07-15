@@ -37,8 +37,8 @@ contract SoundCreatorV1 {
                 STORAGE
     ***********************************/
 
-    address nftImplementation;
-    address soundRegistry;
+    address public nftImplementation;
+    address public soundRegistry;
 
     /***********************************
               PUBLIC FUNCTIONS
