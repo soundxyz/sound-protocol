@@ -9,16 +9,16 @@ contract SoundCreatorTests is TestConfig {
     function test_deploysSoundCreator() public {
         SoundNftV1 soundNftImplementation = new SoundNftV1();
         address soundRegistry = address(123);
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(
+        SoundCreatorV1 _soundCreator = new SoundCreatorV1(
             address(soundNftImplementation),
             soundRegistry
         );
 
-        assert(address(soundCreator) != address(0));
+        assert(address(_soundCreator) != address(0));
 
-        assertEq(address(soundCreator.soundRegistry()), soundRegistry);
+        assertEq(address(_soundCreator.soundRegistry()), soundRegistry);
         assertEq(
-            address(soundCreator.nftImplementation()),
+            address(_soundCreator.nftImplementation()),
             address(soundNftImplementation)
         );
     }
