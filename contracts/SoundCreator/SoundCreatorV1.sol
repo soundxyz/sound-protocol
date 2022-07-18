@@ -63,4 +63,28 @@ contract SoundCreatorV1 {
 
         // todo: emit event
     }
+
+    /// @notice Informs other contracts which interfaces this contract supports
+    /// @param _interfaceId The interface id to check
+    /// @dev https://eips.ethereum.org/EIPS/eip-165
+    function supportsInterface(bytes4 _interfaceId)
+        public
+        view
+        override(ERC721AUpgradeable, IERC165Upgradeable)
+        returns (bool)
+    {
+        return super.supportsInterface(_interfaceId);
+    }
+
+    /// @notice Get royalty information for token
+    /// @param _tokenId token id
+    /// @param _salePrice Sale price for the token
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+        external
+        view
+        override
+        returns (address fundingRecipient, uint256 royaltyAmount)
+    {
+        // todo
+    }
 }

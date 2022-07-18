@@ -22,7 +22,7 @@ pragma solidity ^0.8.15;
  ██████████████████████████████                            ▒█████████████████████████████▒
  ██████████████████████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒              ▒█████████████████████████████▒
  ████████████████████████████████████████████▒             ▒█████████████████████████████▒
- ████████████████████████████████████████████▒             ▒█████████████████████████████▒
+ ████████████████████████████████████████████▒             ▒█████████████████████████████▒ 
  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒███████████████████████████████▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒ 
                ▓█████████████████████████████████████████████████████████▒               
                ▓██████████████████████████████████████████████████████████                
@@ -32,9 +32,25 @@ import "openzeppelin-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import "../SoundNft/ISoundNftV1.sol";
 
 contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSAUpgradeable for bytes32;
+
+    struct SoundNftData {
+        bytes signature;
+        address soundNft;
+    }
+
+    /***********************************
+                EVENTS
+    ***********************************/
+
+    event RegisteredNfts(address[] indexed owner, address[] indexed nftAddress);
+    event UnregisteredNfts(
+        address[] indexed owner,
+        address[] indexed nftAddress
+    );
 
     /***********************************
                 CONSTANTS
@@ -70,27 +86,64 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @notice Registers a Sound NFT contract.
     function registerSoundNft(bytes memory _signature, address _soundNft)
         external
-        returns (bool success)
     {
-        return _register(_signature, _soundNft);
+        _registerSoundNft(_signature, _soundNft);
+
+        address[] memory owners = new address[](1);
+        owners[0] = OwnableUpgradeable(_soundNft).owner();
+
+        address[] memory nftAddresses = new address[](1);
+        nftAddresses[0] = _soundNft;
+
+        emit RegisteredNfts(owners, nftAddresses);
     }
 
     /// @notice Registers multiple Sound NFT contracts.
-    function registerSoundNfts(
-        bytes[] memory _signatures,
-        address[] memory _soundNfts
-    ) external returns (bool success) {
-        for (uint256 i; i < _signatures.length; i++) {
-            if (!_register(_signatures[i], _soundNfts[i])) {
-                return false;
+    function registerSoundNfts(SoundNftData[] memory nftData) external {
+        address[] memory owners = new address[](nftData.length);
+        address[] memory nftAddresses = new address[](nftData.length);
+
+        for (uint256 i; i < nftData.length; ) {
+            _registerSoundNft(nftData[i].signature, nftData[i].soundNft);
+
+            owners[i] = OwnableUpgradeable(nftData[i].soundNft).owner();
+            nftAddresses[i] = nftData[i].soundNft;
+
+            unchecked {
+                ++i;
             }
         }
-        return true;
+
+        emit RegisteredNfts(owners, nftAddresses);
     }
 
     /// @notice Unregisters a Sound NFT contract.
-    function unregister(address _soundNft) external returns (bool success) {
-        return _unregister(_soundNft);
+    function unregisterSoundNft(address _soundNft) external {
+        _unregisterSoundNft(_soundNft);
+
+        address[] memory owners = new address[](1);
+        address[] memory nftAddresses = new address[](1);
+
+        emit UnregisteredNfts(owners, nftAddresses);
+    }
+
+    /// @notice Unregisters multiple Sound NFT contracts.
+    function unregisterSoundNfts(address[] memory _soundNfts) external {
+        address[] memory owners = new address[](_soundNfts.length);
+        address[] memory nftAddresses = new address[](_soundNfts.length);
+
+        for (uint256 i; i < _soundNfts.length; ) {
+            _unregisterSoundNft(_soundNfts[i]);
+
+            owners[i] = OwnableUpgradeable(_soundNfts[i]).owner();
+            nftAddresses[i] = _soundNfts[i];
+
+            unchecked {
+                i++;
+            }
+        }
+
+        emit UnregisteredNfts(owners, nftAddresses);
     }
 
     /***********************************
@@ -98,22 +151,27 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     ***********************************/
 
     /// @notice Registers a Sound NFT contract.
-    function _register(bytes memory _signature, address _soundNft)
+    function _registerSoundNft(bytes memory _signature, address _soundNft)
         internal
-        returns (bool success)
     {
         require(_getSigner(_signature, _soundNft) == signingAuthority);
 
-        // todo: verify _soundNft matches SoundNft interface
+        require(
+            ISoundNftV1(_soundNft).supportsInterface(
+                type(ISoundNftV1).interfaceId
+            )
+        );
 
         registeredSoundNfts[_soundNft] = true;
-
-        return true;
     }
 
     /// @notice Unregisters a Sound NFT contract.
-    function _unregister(address _soundNft) internal returns (bool success) {
-        // todo: verify msg.sender == _soundNft owner or signingAuthority
+    function _unregisterSoundNft(address _soundNft) internal {
+        require(
+            msg.sender == OwnableUpgradeable(_soundNft).owner() ||
+                msg.sender == signingAuthority
+        );
+        registeredSoundNfts[_soundNft] = false;
     }
 
     function _getSigner(bytes memory _signature, address _soundNft)
