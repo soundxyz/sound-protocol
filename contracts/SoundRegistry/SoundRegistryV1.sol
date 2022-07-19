@@ -80,6 +80,16 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function initialize(address _signingAuthority) public initializer {
+        __Ownable_init();
+
+        signingAuthority = _signingAuthority;
+    }
+
+    /// @notice Changes the signing authority of the registry.
+    /// @param _signingAuthority The new signing authority.
+    function changeSigningAuthority(address _signingAuthority) external {
+        require(msg.sender == signingAuthority, "Unauthorized");
+
         signingAuthority = _signingAuthority;
     }
 
@@ -154,12 +164,16 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function _registerSoundNft(bytes memory _signature, address _soundNft)
         internal
     {
-        require(_getSigner(_signature, _soundNft) == signingAuthority);
+        require(
+            _getSigner(_signature, _soundNft) == signingAuthority,
+            "Unauthorized"
+        );
 
         require(
             ISoundNftV1(_soundNft).supportsInterface(
                 type(ISoundNftV1).interfaceId
-            )
+            ),
+            "Unauthorized"
         );
 
         registeredSoundNfts[_soundNft] = true;
@@ -169,7 +183,8 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function _unregisterSoundNft(address _soundNft) internal {
         require(
             msg.sender == OwnableUpgradeable(_soundNft).owner() ||
-                msg.sender == signingAuthority
+                msg.sender == signingAuthority,
+            "Unauthorized"
         );
         registeredSoundNfts[_soundNft] = false;
     }
