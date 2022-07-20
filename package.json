@@ -3,7 +3,8 @@
   "version": "2.0.0",
   "scripts": {
     "solhint": "solhint -f table contracts/**/*.sol",
-    "prettier-solidity": "./node_modules/.bin/prettier --write contracts/**/*.sol"
+    "prettier": "prettier contracts/**/*.sol",
+    "prettier:write": "prettier --write contracts/**/*.sol"
   },
   "repository": {
     "type": "git",
