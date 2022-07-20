@@ -30,9 +30,9 @@ import "chiru-labs/ERC721A-Upgradeable/interfaces/IERC721AUpgradeable.sol";
                ▓██████████████████████████████████████████████████████████                
 */
 
-/// @title ISoundNftV1
+/// @title ISoundEditionV1
 /// @author Sound.xyz
-interface ISoundNftV1 is IERC721AUpgradeable {
+interface ISoundEditionV1 is IERC721AUpgradeable {
     function initialize(
         address _owner,
         string memory _name,

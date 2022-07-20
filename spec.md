@@ -13,9 +13,9 @@ Sound Protocol 2.0 enables creators to permissinonlessly deploy gas-efficient NF
 
 - `SoundCreatorV1.sol`
   - Upgradeable via [UUPSUpgradeable](https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable)
-  - Deploys [minimal proxies (clones)](https://eips.ethereum.org/EIPS/eip-1167) of `SoundNftV1.sol` & initializes them with customizable configurations.
+  - Deploys [minimal proxies (clones)](https://eips.ethereum.org/EIPS/eip-1167) of `SoundEditionV1.sol` & initializes them with customizable configurations.
 
-- `SoundNftV1.sol`
+- `SoundEditionV1.sol`
   - Logic contract for the proxies deployed from SoundCreatorV1
   - Extended version of the [721a implementation](https://www.azuki.com/erc721a)
   - Implements EIP-2981 (`royaltyInfo`)

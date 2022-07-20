@@ -33,9 +33,9 @@ import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
                ▓██████████████████████████████████████████████████████████                
 */
 
-/// @title SoundNftV1
+/// @title SoundEditionV1
 /// @author Sound.xyz
-contract SoundNftV1 is
+contract SoundEditionV1 is
     ERC721AUpgradeable,
     IERC2981Upgradeable,
     OwnableUpgradeable
