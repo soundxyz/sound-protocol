@@ -1,16 +1,13 @@
-name: test
-
-on: workflow_dispatch
-
-env:
-  FOUNDRY_PROFILE: ci
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
-    name: Foundry project
+  test:
+    name: Forge tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
