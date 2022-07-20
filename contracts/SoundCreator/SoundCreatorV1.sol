@@ -28,9 +28,9 @@ pragma solidity ^0.8.15;
                ▓██████████████████████████████████████████████████████████                
 */
 
-import '../SoundNft/ISoundNftV1.sol';
-import 'chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol';
-import 'openzeppelin/proxy/Clones.sol';
+import "../SoundNft/ISoundNftV1.sol";
+import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import "openzeppelin/proxy/Clones.sol";
 
 contract SoundCreatorV1 {
   /***********************************
