@@ -11,6 +11,7 @@
   },
   "license": "GPL-3.0-or-later",
   "devDependencies": {
+    "husky": "8.0.1",
     "prettier": "2.7.1",
     "prettier-plugin-solidity": "1.0.0-dev.23",
     "solhint": "3.3.7",
