@@ -34,6 +34,8 @@ import "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "../SoundNft/ISoundNftV1.sol";
 
+import "forge-std/Test.sol";
+
 contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSAUpgradeable for bytes32;
 
@@ -56,14 +58,14 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
                 CONSTANTS
     ***********************************/
     bytes32 public constant SIGNATURE_TYPEHASH =
-        keccak256("RegistrationInfo(address contractAddress,uint256 chainId)");
+        keccak256("RegistrationInfo(address contractAddress)");
     bytes32 public immutable DOMAIN_SEPARATOR;
 
     /***********************************
                 STORAGE
     ***********************************/
 
-    address signingAuthority;
+    address public signingAuthority;
     mapping(address => bool) public registeredSoundNfts;
 
     /***********************************
@@ -88,16 +90,19 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @notice Changes the signing authority of the registry.
     /// @param _signingAuthority The new signing authority.
     function changeSigningAuthority(address _signingAuthority) external {
-        require(msg.sender == signingAuthority, "Unauthorized");
+        require(
+            msg.sender == signingAuthority || msg.sender == owner(),
+            "Unauthorized"
+        );
 
         signingAuthority = _signingAuthority;
     }
 
     /// @notice Registers a Sound NFT contract.
-    function registerSoundNft(bytes memory _signature, address _soundNft)
+    function registerSoundNft(address _soundNft, bytes memory _signature)
         external
     {
-        _registerSoundNft(_signature, _soundNft);
+        _registerSoundNft(_soundNft, _signature);
 
         address[] memory owners = new address[](1);
         owners[0] = OwnableUpgradeable(_soundNft).owner();
@@ -114,7 +119,7 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         address[] memory nftAddresses = new address[](nftData.length);
 
         for (uint256 i; i < nftData.length; ) {
-            _registerSoundNft(nftData[i].signature, nftData[i].soundNft);
+            _registerSoundNft(nftData[i].soundNft, nftData[i].signature);
 
             owners[i] = OwnableUpgradeable(nftData[i].soundNft).owner();
             nftAddresses[i] = nftData[i].soundNft;
@@ -161,20 +166,34 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     ***********************************/
 
     /// @notice Registers a Sound NFT contract.
-    function _registerSoundNft(bytes memory _signature, address _soundNft)
+    function _registerSoundNft(address _soundNft, bytes memory _signature)
         internal
     {
-        require(
-            _getSigner(_signature, _soundNft) == signingAuthority,
-            "Unauthorized"
-        );
+        address nftOwner = OwnableUpgradeable(_soundNft).owner();
 
-        require(
-            ISoundNftV1(_soundNft).supportsInterface(
-                type(ISoundNftV1).interfaceId
-            ),
-            "Unauthorized"
-        );
+        // If the caller is the NFT owner, the signature must be from the signing authority (ie: sound.xyz)
+        if (msg.sender == nftOwner) {
+            require(
+                _getSigner(_soundNft, _signature) == signingAuthority,
+                "Unauthorized"
+            );
+        } else if (msg.sender == signingAuthority) {
+            // If the caller is the signing authority, the signature must be from the NFT owner.
+            require(
+                _getSigner(_soundNft, _signature) == nftOwner,
+                "Unauthorized"
+            );
+        } else {
+            revert("Unauthorized");
+        }
+
+        // TODO: figure out why this isn't working
+        // require(
+        //     ISoundNftV1(_soundNft).supportsInterface(
+        //         type(ISoundNftV1).interfaceId
+        //     ),
+        //     "Wrong contract type"
+        // );
 
         registeredSoundNfts[_soundNft] = true;
     }
@@ -189,7 +208,7 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         registeredSoundNfts[_soundNft] = false;
     }
 
-    function _getSigner(bytes memory _signature, address _soundNft)
+    function _getSigner(address _soundNft, bytes memory _signature)
         internal
         view
         returns (address signer)
@@ -198,16 +217,10 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(
-                    abi.encode(SIGNATURE_TYPEHASH, _soundNft, block.chainid)
-                )
+                keccak256(abi.encode(SIGNATURE_TYPEHASH, _soundNft))
             )
         );
 
-        // Use the recover method to see what address was used to create
-        // the signature on this data.
-        // Note that if the digest doesn't exactly match what was signed we'll
-        // get a random recovered address.
         return digest.recover(_signature);
     }
 

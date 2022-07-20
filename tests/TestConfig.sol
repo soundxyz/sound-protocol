@@ -5,11 +5,13 @@ import "forge-std/Test.sol";
 
 import "../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../contracts/SoundEdition/SoundEditionV1.sol";
+import "../contracts/SoundRegistry/SoundRegistryV1.sol";
 
 contract TestConfig is Test {
     // Artist contract creation vars
     string constant SONG_NAME = "Never Gonna Give You Up";
     string constant SONG_SYMBOL = "NEVER";
+    bytes constant EMPTY_SIGNATURE = bytes("");
 
     SoundCreatorV1 soundCreator;
 
@@ -36,5 +38,27 @@ contract TestConfig is Test {
         vm.deal(addr, 1e19);
 
         return addr;
+    }
+
+    // Creates signature needed for registering a Sound NFT
+    function getRegistrationSignature(
+        SoundRegistryV1 soundRegistry,
+        uint256 signerPrivateKey,
+        address nftAddress
+    ) public returns (bytes memory signature) {
+        // Build auth signature
+        // (equivalent to ethers.js wallet._signTypedData())
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                soundRegistry.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(soundRegistry.SIGNATURE_TYPEHASH(), nftAddress)
+                )
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
+        return abi.encodePacked(r, s, v);
     }
 }
