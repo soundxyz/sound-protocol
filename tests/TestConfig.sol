@@ -11,7 +11,6 @@ contract TestConfig is Test {
     // Artist contract creation vars
     string constant SONG_NAME = "Never Gonna Give You Up";
     string constant SONG_SYMBOL = "NEVER";
-    bytes constant EMPTY_SIGNATURE = bytes("");
 
     SoundCreatorV1 soundCreator;
 

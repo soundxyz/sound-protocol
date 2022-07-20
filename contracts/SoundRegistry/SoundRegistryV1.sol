@@ -32,9 +32,15 @@ import "openzeppelin-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import "openzeppelin/utils/cryptography/draft-EIP712.sol";
 import "../SoundNft/ISoundNftV1.sol";
 
-contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract SoundRegistryV1 is
+    EIP712,
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     using ECDSAUpgradeable for bytes32;
 
     struct SoundNftData {
@@ -57,7 +63,6 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     ***********************************/
     bytes32 public constant SIGNATURE_TYPEHASH =
         keccak256("RegistrationInfo(address contractAddress)");
-    bytes32 public immutable DOMAIN_SEPARATOR;
 
     /***********************************
                 STORAGE
@@ -70,14 +75,7 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
               PUBLIC FUNCTIONS
     ***********************************/
 
-    constructor() {
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(uint256 chainId)"),
-                block.chainid
-            )
-        );
-    }
+    constructor() EIP712("SoundRegistry", "1") {}
 
     function initialize(address _signingAuthority) public initializer {
         __Ownable_init();
@@ -193,7 +191,7 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                DOMAIN_SEPARATOR,
+                _domainSeparatorV4(),
                 keccak256(abi.encode(SIGNATURE_TYPEHASH, _soundNft))
             )
         );
@@ -204,4 +202,13 @@ contract SoundRegistryV1 is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @notice Authorizes upgrades
     /// @dev DO NOT REMOVE!
     function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    /***********************************
+              VIEW FUNCTIONS
+    ***********************************/
+
+    /// @notice Returns the contract's {EIP712} domain separator.
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        return _domainSeparatorV4();
+    }
 }
