@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.15;
 
-import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
-import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import 'chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol';
+import 'openzeppelin-upgradeable/access/OwnableUpgradeable.sol';
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
@@ -34,12 +34,8 @@ import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 /// @title SoundNftV1
 /// @author Sound.xyz
 contract SoundNftV1 is ERC721AUpgradeable, OwnableUpgradeable {
-    function initialize(string memory _name, string memory _symbol)
-        public
-        initializerERC721A
-        initializer
-    {
-        __ERC721A_init(_name, _symbol);
-        __Ownable_init();
-    }
+  function initialize(string memory _name, string memory _symbol) public initializerERC721A initializer {
+    __ERC721A_init(_name, _symbol);
+    __Ownable_init();
+  }
 }
