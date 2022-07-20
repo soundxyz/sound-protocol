@@ -33,6 +33,14 @@ import "chiru-labs/ERC721A-Upgradeable/interfaces/IERC721AUpgradeable.sol";
 /// @title ISoundEditionV1
 /// @author Sound.xyz
 interface ISoundEditionV1 is IERC721AUpgradeable {
+    
+    struct RegistrationInfo {
+        // Signature used by registry to validate registration
+        bytes signature;
+        // Registry contract address
+        address registry;
+    }
+
     function initialize(
         address _owner,
         string memory _name,
