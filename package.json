@@ -1,0 +1,15 @@
+{
+  "name": "sound-protocol",
+  "version": "2.0.0",
+  "scripts": {
+    "solhint": "solhint -f table contracts/**/*.sol"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soundxyz/sound-protocol.git"
+  },
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "solhint": "3.3.7"
+  }
+}
