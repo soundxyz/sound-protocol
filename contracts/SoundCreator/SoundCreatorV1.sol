@@ -69,6 +69,7 @@ contract SoundCreatorV1 {
             baseURI_,
             _contractURI
         );
+        ISoundNftV1(soundNft).transferOwnership(msg.sender);
 
         // todo: emit event
     }

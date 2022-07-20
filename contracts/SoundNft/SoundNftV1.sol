@@ -4,7 +4,6 @@ pragma solidity ^0.8.15;
 
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
-import "./ISoundNftV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
 
 /*
@@ -35,11 +34,7 @@ import "../modules/Metadata/IMetadataModule.sol";
 
 /// @title SoundNftV1
 /// @author Sound.xyz
-contract SoundNftV1 is
-    ISoundNftV1,
-    ERC721AQueryableUpgradeable,
-    OwnableUpgradeable
-{
+contract SoundNftV1 is ERC721AQueryableUpgradeable, OwnableUpgradeable {
     // ================================
     // STORAGE
     // ================================
@@ -56,7 +51,11 @@ contract SoundNftV1 is
     event MetadataModuleSet(IMetadataModule _metadataModule);
     event BaseURISet(string baseURI_);
     event ContractURISet(string _contractURI);
-    event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_);
+    event MetadataFrozen(
+        IMetadataModule _metadataModule,
+        string baseURI_,
+        string _contractURI
+    );
 
     error MetadataIsFrozen();
 
@@ -108,7 +107,7 @@ contract SoundNftV1 is
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
         isMetadataFrozen = true;
-        emit MetadataFrozen(metadataModule, baseURI);
+        emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
     // ================================
@@ -130,7 +129,7 @@ contract SoundNftV1 is
         string memory baseURI_ = baseURI;
         return
             bytes(baseURI_).length != 0
-                ? string(abi.encodePacked(baseURI_, _toString(tokenId)))
+                ? string.concat(baseURI_, _toString(tokenId))
                 : "";
     }
 }

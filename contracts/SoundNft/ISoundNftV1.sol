@@ -42,4 +42,6 @@ interface ISoundNftV1 {
         string memory baseURI_,
         string memory _contractURI
     ) external;
+
+    function transferOwnership(address newOwner) external;
 }
