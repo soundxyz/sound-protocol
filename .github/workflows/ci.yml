@@ -29,3 +29,6 @@ jobs:
         run: |
           forge test -vvv
         id: test
+
+      - name: Run Linter
+        run: pnpm run solhint
