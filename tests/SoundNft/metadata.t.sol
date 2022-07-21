@@ -22,8 +22,8 @@ contract SoundNft_metadata is TestConfig {
     // Generates tokenURI using baseURI if no metadata module is selected
     function test_baseURIWhenNoMetadataModule() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 IMetadataModule(address(0)),
@@ -46,8 +46,8 @@ contract SoundNft_metadata is TestConfig {
     // Should successfully return contract URI for the collection
     function test_contractURI() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -64,8 +64,8 @@ contract SoundNft_metadata is TestConfig {
         MockMetadataModule metadataModule = new MockMetadataModule();
 
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 metadataModule,
@@ -84,8 +84,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_tokenURIRevertsWhenTokenIdDoesntExist() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -100,8 +100,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setBaseURIRevertsForNonOwner() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -120,8 +120,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setBaseURIRevertsWhenMetadataFrozen() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -140,8 +140,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setBaseURISuccess() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -165,8 +165,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setBaseURIEmitsEvent() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -184,8 +184,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setContractURIRevertsForNonOwner() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -204,8 +204,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setContractURIRevertsWhenMetadataFrozen() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -224,8 +224,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setContractURISuccess() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -242,8 +242,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setContractURIEmitsEvent() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -261,8 +261,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setMetadataModuleRevertsForNonOwner() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -281,8 +281,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setMetadataModuleRevertsWhenMetadataFrozen() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -301,8 +301,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setMetadataModuleSuccess() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 IMetadataModule(address(0)),
@@ -323,8 +323,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_setMetadataModuleEmitsEvent() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 IMetadataModule(address(0)),
@@ -342,8 +342,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_freezeMetadataRevertsForNonOwner() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -360,8 +360,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_freezeMetadataRevertsIfAlreadyFrozen() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -377,8 +377,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_freezeMetadataSuccess() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -394,8 +394,8 @@ contract SoundNft_metadata is TestConfig {
 
     function test_freezeMetadataEmitsEvent() public {
         // deploy new sound contract
-        MockSoundNftV1 soundNft = MockSoundNftV1(
-            soundCreator.createSoundNft(
+        MockSoundEditionV1 soundNft = MockSoundEditionV1(
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,

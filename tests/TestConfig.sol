@@ -4,9 +4,9 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 
 import "../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../contracts/SoundNft/SoundNftV1.sol";
+import "../contracts/SoundEdition/SoundEditionV1.sol";
 import "../contracts/modules/Metadata/IMetadataModule.sol";
-import "./mocks/MockSoundNftV1.sol";
+import "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {
     // Artist contract creation vars
@@ -20,8 +20,8 @@ contract TestConfig is Test {
 
     // Set up called before each test
     function setUp() public {
-        // Deploy SoundNft implementation
-        MockSoundNftV1 soundNftImplementation = new MockSoundNftV1();
+        // Deploy SoundEdition implementation
+        MockSoundEditionV1 soundNftImplementation = new MockSoundEditionV1();
 
         // todo: deploy registry here
         address soundRegistry = address(123);
