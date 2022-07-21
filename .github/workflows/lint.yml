@@ -21,9 +21,12 @@ jobs:
 
       - name: Install Node.js dependencies
         run: pnpm install
-
+      
       - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          eslint: true
-          prettier: true
+        run: pnpm run solhint
+
+      # - name: Run linters
+      #   uses: wearerequired/lint-action@v2
+      #   with:
+      #     eslint: true
+      #     prettier: true
