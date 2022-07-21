@@ -62,14 +62,7 @@ contract SoundCreatorV1 {
         // todo: research if we can get any gas savings by using a more minimal version of Clones lib
         soundNft = Clones.clone(nftImplementation);
 
-        ISoundEditionV1(soundNft).initialize(
-            msg.sender,
-            _name,
-            _symbol,
-            _metadataModule,
-            _baseURI,
-            _contractURI
-        );
+        ISoundEditionV1(soundNft).initialize(msg.sender, _name, _symbol, _metadataModule, _baseURI, _contractURI);
 
         // todo: emit event
     }

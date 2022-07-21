@@ -52,11 +52,7 @@ contract SoundEditionV1 is ERC721AQueryableUpgradeable, IERC2981Upgradeable, Own
     event MetadataModuleSet(IMetadataModule _metadataModule);
     event BaseURISet(string baseURI_);
     event ContractURISet(string _contractURI);
-    event MetadataFrozen(
-        IMetadataModule _metadataModule,
-        string baseURI_,
-        string _contractURI
-    );
+    event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
 
     error MetadataIsFrozen();
 
@@ -91,10 +87,7 @@ contract SoundEditionV1 is ERC721AQueryableUpgradeable, IERC2981Upgradeable, Own
         transferOwnership(_owner);
     }
 
-    function setMetadataModule(IMetadataModule _metadataModule)
-        external
-        onlyOwner
-    {
+    function setMetadataModule(IMetadataModule _metadataModule) external onlyOwner {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = _metadataModule;
 
@@ -139,10 +132,7 @@ contract SoundEditionV1 is ERC721AQueryableUpgradeable, IERC2981Upgradeable, Own
         }
 
         string memory baseURI_ = baseURI;
-        return
-            bytes(baseURI_).length != 0
-                ? string.concat(baseURI_, _toString(tokenId))
-                : "";
+        return bytes(baseURI_).length != 0 ? string.concat(baseURI_, _toString(tokenId)) : "";
     }
 
     /// @notice Informs other contracts which interfaces this contract supports
