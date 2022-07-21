@@ -11,6 +11,7 @@ See [spec](./spec.md) for current spec.
 - [git](https://git-scm.com/downloads)
 - [nodeJS](https://nodejs.org/en/download/)
 - [node version manager](https://github.com/nvm-sh/nvm)
+- [pnpm](https://pnpm.io/) - You need to have `pnpm` installed globally, you can run `npm i -g pnpm` to install it.
 - [brew](https://brew.sh/)
 - [foundry](https://getfoundry.sh) - You can run `sh ./setup.sh` to install Foundry and its dependencies.
 
@@ -32,19 +33,21 @@ nvm use
 
 - Install packages
 ```
-npm install
+pnpm install
 ```
 
 - Build contracts
 ```
-npm run build
+pnpm build
 ```
 
 - Run tests
 ```
-npm run test
+pnpm run test
 ```
 
 ## Code conventions
 
 To run prettier on all solidity files, uncomment the last line in `.prettierrc.js`, then run `npx prettier --write ./contracts/**/*.sol`
+pnpm test
+```
