@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.15;
 
 import "./TestConfig.sol";
@@ -26,7 +27,13 @@ contract SoundCreatorTests is TestConfig {
     // Tests that the factory creates a new sound NFT
     function test_createSound() public {
         SoundEditionV1 soundNft = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI
+            )
         );
 
         assert(address(soundNft) != address(0));

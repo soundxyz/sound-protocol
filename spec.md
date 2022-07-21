@@ -3,7 +3,7 @@ title: Sound Protocol 2.0
 description: A permissionless NFT factory which enables customizations for auction formats, payments, metadata, and on-chain registries.
 author: Sound Protocol Team
 status: Draft
---- 
+---
 
 ## Abstract
 
@@ -17,15 +17,19 @@ Sound Protocol 2.0 enables creators to permissinonlessly deploy gas-efficient NF
 
 - `SoundEditionV1.sol`
   - Logic contract for the proxies deployed from SoundCreatorV1
-  - Extended version of the [721a implementation](https://www.azuki.com/erc721a)
+  - Extended version of the [721a implementation](https://www.azuki.com/erc721a) with `ERC721AQueryable` extension
   - Implements EIP-2981 (`royaltyInfo`)
-  - Implements `contractURI` (https://docs.opensea.io/docs/contract-level-metadata)
   - Implements EIP-165 (`supportsInterface)
   - Implements extension contracts for:
     - metadata - `tokenURI`
     - payments - royalties & withdrawals
     - minting 
     - registry management
+  - Metadata
+    - For on-chain custom metadata `metadataModule` is utilized, which is a contract that inherits from `IMetadataModule.sol` and provides `tokenURI`
+    - `tokenURI` uses `baseURI` instead, if `metadataModule` is not present
+    - Implements `contractURI` (https://docs.opensea.io/docs/contract-level-metadata)
+    - Allows freezing of metadata, beyond which the variables can't be modified by `owner`
   
 - `SoundXyzRegistryV1.sol`
   - Upgradeable via [UUPSUpgradeable](https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable)
