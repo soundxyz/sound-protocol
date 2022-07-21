@@ -16,6 +16,6 @@
     "solhint": "3.3.7",
     "solhint-plugin-prettier": "0.0.5",
     "@changesets/cli": "^2.23.2",
-		"danger": "^11.1.1"
+    "danger": "^11.1.1"
   }
 }
