@@ -53,7 +53,7 @@ contract SoundCreatorV1 {
         string memory _name,
         string memory _symbol,
         IMetadataModule _metadataModule,
-        string memory baseURI_,
+        string memory _baseURI,
         string memory _contractURI
     ) external returns (address soundNft) {
         // todo: if signature provided, pass it to SoundRegistry.register();
@@ -66,7 +66,7 @@ contract SoundCreatorV1 {
             _name,
             _symbol,
             _metadataModule,
-            baseURI_,
+            _baseURI,
             _contractURI
         );
         ISoundNftV1(soundNft).transferOwnership(msg.sender);
