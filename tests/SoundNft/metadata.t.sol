@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.15;
 
+import "openzeppelin/utils/Strings.sol";
+
 import "../TestConfig.sol";
 import "../mocks/MockMetadataModule.sol";
 
@@ -36,7 +38,7 @@ contract SoundNft_metadata is TestConfig {
 
         string memory expectedTokenURI = string.concat(
             BASE_URI,
-            _toString(tokenId)
+            Strings.toString(tokenId)
         );
         assertEq(soundNft.tokenURI(tokenId), expectedTokenURI);
     }
@@ -156,7 +158,7 @@ contract SoundNft_metadata is TestConfig {
 
         string memory expectedTokenURI = string.concat(
             newBaseURI,
-            _toString(tokenId)
+            Strings.toString(tokenId)
         );
         assertEq(soundNft.tokenURI(tokenId), expectedTokenURI);
     }
