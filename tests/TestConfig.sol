@@ -1,22 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 
 import "../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../contracts/SoundEdition/SoundEditionV1.sol";
+import "../contracts/modules/Metadata/IMetadataModule.sol";
+import "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {
     // Artist contract creation vars
     string constant SONG_NAME = "Never Gonna Give You Up";
     string constant SONG_SYMBOL = "NEVER";
+    IMetadataModule constant METADATA_MODULE = IMetadataModule(address(0));
+    string constant BASE_URI = "https://example.com/metadata/";
+    string constant CONTRACT_URI = "https://example.com/storefront/";
 
     SoundCreatorV1 soundCreator;
 
-    // Set up called  before each test
+    // Set up called before each test
     function setUp() public {
         // Deploy SoundEdition implementation
-        SoundEditionV1 soundNftImplementation = new SoundEditionV1();
+        MockSoundEditionV1 soundNftImplementation = new MockSoundEditionV1();
 
         // todo: deploy registry here
         address soundRegistry = address(123);

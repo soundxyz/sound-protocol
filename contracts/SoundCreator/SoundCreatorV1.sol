@@ -49,14 +49,20 @@ contract SoundCreatorV1 {
         soundRegistry = _soundRegistry;
     }
 
-    function createSound(string memory _name, string memory _symbol) external returns (address soundNft) {
+    function createSound(
+        string memory _name,
+        string memory _symbol,
+        IMetadataModule _metadataModule,
+        string memory _baseURI,
+        string memory _contractURI
+    ) external returns (address soundNft) {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement extension configurations
 
         // todo: research if we can get any gas savings by using a more minimal version of Clones lib
         soundNft = Clones.clone(nftImplementation);
 
-        ISoundEditionV1(soundNft).initialize(msg.sender, _name, _symbol);
+        ISoundEditionV1(soundNft).initialize(msg.sender, _name, _symbol, _metadataModule, _baseURI, _contractURI);
 
         // todo: emit event
     }
