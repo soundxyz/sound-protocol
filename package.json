@@ -2,8 +2,7 @@
   "name": "sound-protocol",
   "version": "2.0.0",
   "scripts": {
-    "solhint": "solhint -f table contracts/**/*.sol",
-    "prettier:write": "prettier --write contracts/**/*.sol"
+    "solhint": "solhint -f table contracts/**/*.sol"
   },
   "repository": {
     "type": "git",

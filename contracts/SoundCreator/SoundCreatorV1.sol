@@ -49,10 +49,7 @@ contract SoundCreatorV1 {
         soundRegistry = _soundRegistry;
     }
 
-    function createSound(string memory _name, string memory _symbol)
-        external
-        returns (address soundNft)
-    {
+    function createSound(string memory _name, string memory _symbol) external returns (address soundNft) {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement extension configurations
 
