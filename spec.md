@@ -18,8 +18,8 @@ Sound Protocol 2.0 enables creators to permissinonlessly deploy gas-efficient NF
   - Logic contract for the proxies deployed from SoundCreatorV1
   - Extended version of the [721a implementation](https://www.azuki.com/erc721a) with `ERC721AQueryable` extension
   - Metadata
-    - Defines `baseURI` to use off-chain api
-    - For on-chain custom metadata set `metadataModule`, which is a contract that inherits from `IMetadataModule.sol` and provides `tokenURI`
+    - For on-chain custom metadata `metadataModule` is utilized, which is a contract that inherits from `IMetadataModule.sol` and provides `tokenURI`
+    - `tokenURI` uses `baseURI` instead, if `metadataModule` is not present
     - Implements `contractURI` (https://docs.opensea.io/docs/contract-level-metadata)
     - Allows freezing of metadata, beyond which the variables can't be modified by `owner`
 - `SoundXyzRegistryV1.sol`
