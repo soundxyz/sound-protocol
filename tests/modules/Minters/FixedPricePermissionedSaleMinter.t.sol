@@ -7,10 +7,6 @@ import "../../../contracts/modules/Minters/FixedPricePermissionedSaleMinter.sol"
 
 contract FixedPricePermissionedSaleMinterTests is TestConfig {
     uint256 constant PRICE = 1;
-    
-    uint32 constant START_TIME = 100;
-
-    uint32 constant END_TIME = 200;
 
     uint32 constant MAX_MINTED = 5;
 
@@ -66,42 +62,41 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         );
     }
 
-    // function test_createEditionMintRevertsIfMintEditionExists() public {
-    //     (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+    function test_createEditionMintRevertsIfMintEditionExists() public {
+        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-    //     vm.expectRevert(EditionMinter.MintAlreadyExists.selector);
+        vm.expectRevert(EditionMinter.MintAlreadyExists.selector);
 
-    //     minter.createEditionMint(
-    //         address(edition),
-    //         PRICE, 
-    //         START_TIME,
-    //         END_TIME,
-    //         MAX_MINTED
-    //     );
-    // }
+        minter.createEditionMint(
+            address(edition),
+            PRICE, 
+            edition.owner(),
+            MAX_MINTED
+        );
+    }
 
-    // function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
-    //     (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+    function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
+        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-    //     address caller = getRandomAccount(1);
-    //     vm.prank(caller);
-    //     vm.expectRevert(EditionMinter.MintControllerUnauthorized.selector);
-    //     minter.deleteEditionMint(address(edition));
+        address caller = getRandomAccount(1);
+        vm.prank(caller);
+        vm.expectRevert(EditionMinter.MintControllerUnauthorized.selector);
+        minter.deleteEditionMint(address(edition));
 
-    //     minter.setEditionMintController(address(edition), caller);
-    //     vm.prank(caller);
-    //     minter.deleteEditionMint(address(edition));
-    // }
+        minter.setEditionMintController(address(edition), caller);
+        vm.prank(caller);
+        minter.deleteEditionMint(address(edition));
+    }
 
-    // function test_deleteEditionMintRevertsIfMintEditionDoesNotExist() public {
-    //     (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+    function test_deleteEditionMintRevertsIfMintEditionDoesNotExist() public {
+        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-    //     minter.deleteEditionMint(address(edition));
+        minter.deleteEditionMint(address(edition));
 
-    //     vm.expectRevert(EditionMinter.MintNotFound.selector);
+        vm.expectRevert(EditionMinter.MintNotFound.selector);
 
-    //     minter.deleteEditionMint(address(edition));
-    // }
+        minter.deleteEditionMint(address(edition));
+    }
 
     // function test_mintBeforeStartTimeReverts() public {
     //     (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
