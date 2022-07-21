@@ -35,11 +35,7 @@ import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 /// @title SoundEditionV1
 /// @author Sound.xyz
-contract SoundEditionV1 is
-    ERC721AUpgradeable,
-    IERC2981Upgradeable,
-    OwnableUpgradeable
-{
+contract SoundEditionV1 is ERC721AUpgradeable, IERC2981Upgradeable, OwnableUpgradeable {
     /// @notice Initializes the contract
     /// @param _owner Owner of contract (artist)
     /// @param _name Name of the token

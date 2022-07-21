@@ -3,7 +3,6 @@
   "version": "2.0.0",
   "scripts": {
     "solhint": "solhint -f table contracts/**/*.sol",
-    "prettier:write": "prettier --write contracts/**/*.sol",
     "prepare": "husky install"
   },
   "repository": {
