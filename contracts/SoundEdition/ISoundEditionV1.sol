@@ -43,4 +43,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable {
         string memory baseURI_,
         string memory _contractURI
     ) external;
+
+    function mint(address _to, uint256 _quantity) external payable;
 }
