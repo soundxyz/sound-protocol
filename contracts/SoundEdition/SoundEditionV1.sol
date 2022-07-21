@@ -90,7 +90,7 @@ contract SoundEditionV1 is ERC721AQueryableUpgradeable, IERC2981Upgradeable, Own
         contractURI = _contractURI;
 
         __AccessControl_init();
-        
+
         // Set ownership to owner
         transferOwnership(_owner);
 

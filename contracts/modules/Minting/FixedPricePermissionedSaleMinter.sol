@@ -2,10 +2,26 @@
 
 pragma solidity ^0.8.15;
 
-import "./EditionMintControllers.sol";
+import "./EditionMinter.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
+import "solady/utils/ECDSA.sol";
 
-contract FixedPricePermissionedMinter is EditionMintControllers {
+contract FixedPricePermissionedMinter is EditionMinter {
+    using ECDSA for bytes32;
+
+    error MintWithWrongEtherValue();
+
+    error MintOutOfStock();
+
+    error MintWithInvalidSignature();
+
+    // prettier-ignore
+    event FixedPricePermissionedMintCreated(
+        address indexed edition,
+        uint256 price,
+        address signer,
+        uint32 maxMinted
+    );
 
     struct EditionMintData {
         // The price at which each token will be sold, in ETH.
@@ -19,31 +35,45 @@ contract FixedPricePermissionedMinter is EditionMintControllers {
     }
 
     mapping(address => EditionMintData) public editionMintData;
-    
+
     function createEditionMint(
         address edition,
         uint256 price,
         address signer,
         uint32 maxMinted
     ) public {
-        _initEditionMintController(edition);
+        _createEditionMint(edition);
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.signer = signer;
         data.maxMinted = maxMinted;
+        // prettier-ignore
+        emit FixedPricePermissionedMintCreated(
+            edition,
+            price,
+            signer,
+            maxMinted
+        );
     }
 
-    function deleteMintee(address edition) public onlyEditionMintController(edition) {
-        _deleteEditionMintController();
+    function deleteEditionMint(address edition) public {
+        _deleteEditionMint(edition);
         delete editionMintData[edition];
     }
 
-    function mint(address edition, uint256 quantity) public payable {
-        // EditionMintData storage data = editionMintData[edition];
-        // require(data.startTime <= block.timestamp, "Mint not started.");
-        // require(data.endTime > block.timestamp, "Mint has ended.");
-        // require(data.price * quantity == msg.value, "Wrong ether value.");
-        // require((data.totalMinted += quantity) <= data.maxMinted, "No more mints.");
-        ISoundEditionV1(edition).mint{value: msg.value}(edition, quantity);
+    function mint(
+        address edition,
+        uint32 quantity,
+        bytes calldata signature
+    ) public payable {
+        EditionMintData storage data = editionMintData[edition];
+        if ((data.totalMinted += quantity) > data.maxMinted) revert MintOutOfStock();
+        if (data.price * quantity != msg.value) revert MintWithWrongEtherValue();
+
+        bytes32 hash = keccak256(abi.encode(msg.sender, edition));
+        hash = hash.toEthSignedMessageHash();
+        if (hash.recover(signature) != data.signer) revert MintWithInvalidSignature();
+
+        ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
     }
 }
