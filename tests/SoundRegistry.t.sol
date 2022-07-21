@@ -1,15 +1,15 @@
 pragma solidity ^0.8.15;
 
 import "./TestConfig.sol";
-import "../contracts/SoundNft/SoundNftV1.sol";
+import "../contracts/SoundEdition/SoundEditionV1.sol";
 import "../contracts/SoundRegistry/SoundRegistryV1.sol";
 
 contract SoundRegistryTests is TestConfig {
-    event Registered(address indexed soundNft);
-    event Unregistered(address indexed soundNft);
+    event Registered(address indexed soundEdition);
+    event Unregistered(address indexed soundEdition);
 
-    event RegisteredBatch(address[] indexed soundNfts);
-    event UnregisteredBatch(address[] indexed soundNfts);
+    event RegisteredBatch(address[] indexed soundEditions);
+    event UnregisteredBatch(address[] indexed soundEditions);
 
     // Tests that the registry is initialized with the correct owner & signing authority.
     function test_initializedWithOwner() public {
@@ -66,7 +66,7 @@ contract SoundRegistryTests is TestConfig {
         address signerAuthority = vm.addr(signerAuthorityPk);
         address unauthorizedSigner = vm.addr(345);
 
-        address soundNft = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
 
         SoundRegistryV1 registry = new SoundRegistryV1();
         registry.initialize(signerAuthority);
@@ -74,13 +74,13 @@ contract SoundRegistryTests is TestConfig {
         bytes memory authoritySignature = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft
+            soundEdition
         );
 
         // Tests valid signature from unauthorized caller
         vm.expectRevert(bytes("Unauthorized"));
         vm.prank(unauthorizedSigner);
-        registry.registerSoundNft(soundNft, authoritySignature);
+        registry.registerSoundEdition(soundEdition, authoritySignature);
     }
 
     // Tests that the owner can't register an NFT using their own signature.
@@ -89,7 +89,7 @@ contract SoundRegistryTests is TestConfig {
         address nftOwner = vm.addr(nftOwnerPk);
 
         vm.prank(nftOwner);
-        address soundNft = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
 
         SoundRegistryV1 registry = new SoundRegistryV1();
         registry.initialize(address(123));
@@ -97,12 +97,12 @@ contract SoundRegistryTests is TestConfig {
         bytes memory ownerSignature = getRegistrationSignature(
             registry,
             nftOwnerPk,
-            soundNft
+            soundEdition
         );
 
         // Tests wrong signature from owner (should be signing authority's signature)
         vm.expectRevert(bytes("Unauthorized"));
-        registry.registerSoundNft(soundNft, ownerSignature);
+        registry.registerSoundEdition(soundEdition, ownerSignature);
     }
 
     // Tests that the signing authority can't register an NFT using their own signature.
@@ -110,7 +110,7 @@ contract SoundRegistryTests is TestConfig {
         uint256 signerAuthorityPk = 0x123;
         address signerAuthority = vm.addr(signerAuthorityPk);
 
-        address soundNft = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
 
         SoundRegistryV1 registry = new SoundRegistryV1();
         registry.initialize(address(123));
@@ -118,13 +118,13 @@ contract SoundRegistryTests is TestConfig {
         bytes memory signature = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft
+            soundEdition
         );
 
         // Tests wrong signature from owner (should be signing authority's signature)
         vm.expectRevert(bytes("Unauthorized"));
         vm.prank(signerAuthority);
-        registry.registerSoundNft(soundNft, signature);
+        registry.registerSoundEdition(soundEdition, signature);
     }
 
     // Tests signing authority can register an NFT.
@@ -135,7 +135,7 @@ contract SoundRegistryTests is TestConfig {
         address nftOwner = vm.addr(nftOwnerPk);
 
         vm.prank(nftOwner);
-        address soundNft = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
 
         SoundRegistryV1 registry = new SoundRegistryV1();
         registry.initialize(signerAuthority);
@@ -144,16 +144,16 @@ contract SoundRegistryTests is TestConfig {
         bytes memory signature = getRegistrationSignature(
             registry,
             nftOwnerPk,
-            soundNft
+            soundEdition
         );
 
         vm.expectEmit(true, true, true, true);
-        emit Registered(soundNft);
+        emit Registered(soundEdition);
 
         vm.prank(signerAuthority);
-        registry.registerSoundNft(soundNft, signature);
+        registry.registerSoundEdition(soundEdition, signature);
 
-        assertEq(registry.registeredSoundNfts(soundNft), true);
+        assertEq(registry.registeredSoundEditions(soundEdition), true);
     }
 
     // Tests NFT owner can register their NFT.
@@ -164,7 +164,7 @@ contract SoundRegistryTests is TestConfig {
         address signerAuthority = vm.addr(signerAuthorityPk);
 
         vm.prank(nftOwner);
-        address soundNft = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
 
         SoundRegistryV1 registry = new SoundRegistryV1();
         registry.initialize(signerAuthority);
@@ -173,29 +173,29 @@ contract SoundRegistryTests is TestConfig {
         bytes memory signature = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft
+            soundEdition
         );
 
         vm.expectEmit(true, true, true, true);
-        emit Registered(soundNft);
+        emit Registered(soundEdition);
 
         vm.prank(nftOwner);
-        registry.registerSoundNft(soundNft, signature);
+        registry.registerSoundEdition(soundEdition, signature);
 
-        assertEq(registry.registeredSoundNfts(soundNft), true);
+        assertEq(registry.registeredSoundEditions(soundEdition), true);
     }
 
     // Tests registering multiple NFTs.
-    function test_registerSoundNfts() public {
+    function test_registerSoundEditions() public {
         uint256 nftOwnerPk = 0x234;
         address nftOwner = vm.addr(nftOwnerPk);
         uint256 signerAuthorityPk = 0x123;
         address signerAuthority = vm.addr(signerAuthorityPk);
 
         vm.startPrank(nftOwner);
-        address soundNft1 = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
-        address soundNft2 = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
-        address soundNft3 = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition1 = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
+        address soundEdition2 = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
+        address soundEdition3 = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
         vm.stopPrank();
 
         SoundRegistryV1 registry = new SoundRegistryV1();
@@ -205,46 +205,46 @@ contract SoundRegistryTests is TestConfig {
         bytes memory signature1 = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft1
+            soundEdition1
         );
         bytes memory signature2 = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft2
+            soundEdition2
         );
         bytes memory signature3 = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft3
+            soundEdition3
         );
 
-        SoundRegistryV1.SoundNftData[]
-            memory data = new SoundRegistryV1.SoundNftData[](3);
-        data[0].soundNft = soundNft1;
+        SoundRegistryV1.SoundEditionData[]
+            memory data = new SoundRegistryV1.SoundEditionData[](3);
+        data[0].soundEdition = soundEdition1;
         data[0].signature = signature1;
-        data[1].soundNft = soundNft2;
+        data[1].soundEdition = soundEdition2;
         data[1].signature = signature2;
-        data[2].soundNft = soundNft3;
+        data[2].soundEdition = soundEdition3;
         data[2].signature = signature3;
 
         // Test event
         address[] memory nfts = new address[](3);
-        nfts[0] = soundNft1;
-        nfts[1] = soundNft2;
-        nfts[2] = soundNft3;
+        nfts[0] = soundEdition1;
+        nfts[1] = soundEdition2;
+        nfts[2] = soundEdition3;
         vm.expectEmit(true, true, true, true);
         emit RegisteredBatch(nfts);
 
         vm.prank(nftOwner);
-        registry.registerSoundNfts(data);
+        registry.registerSoundEditions(data);
 
-        assertEq(registry.registeredSoundNfts(soundNft1), true);
-        assertEq(registry.registeredSoundNfts(soundNft2), true);
-        assertEq(registry.registeredSoundNfts(soundNft3), true);
+        assertEq(registry.registeredSoundEditions(soundEdition1), true);
+        assertEq(registry.registeredSoundEditions(soundEdition2), true);
+        assertEq(registry.registeredSoundEditions(soundEdition3), true);
     }
 
     // Tests that unauthorized accounts can't unregister a Sound NFT.
-    function test_unauthorizedUnregisterSoundNft(address unauthorizedAccount)
+    function test_unauthorizedUnregisterSoundEdition(address unauthorizedAccount)
         public
     {
         uint256 nftOwnerPk = 0x234;
@@ -258,7 +258,7 @@ contract SoundRegistryTests is TestConfig {
         );
 
         vm.prank(nftOwner);
-        address soundNft = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
 
         SoundRegistryV1 registry = new SoundRegistryV1();
         registry.initialize(signerAuthority);
@@ -267,27 +267,27 @@ contract SoundRegistryTests is TestConfig {
         bytes memory signature = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft
+            soundEdition
         );
 
         vm.prank(nftOwner);
-        registry.registerSoundNft(soundNft, signature);
+        registry.registerSoundEdition(soundEdition, signature);
 
         // Tests unauthorized account can't unregister NFT
         vm.expectRevert(bytes("Unauthorized"));
         vm.prank(unauthorizedAccount);
-        registry.unregisterSoundNft(soundNft);
+        registry.unregisterSoundEdition(soundEdition);
     }
 
     // Tests unregistering a Sound NFT.
-    function test_unregisterSoundNft() public {
+    function test_unregisterSoundEdition() public {
         uint256 nftOwnerPk = 0x234;
         address nftOwner = vm.addr(nftOwnerPk);
         uint256 signerAuthorityPk = 0x123;
         address signerAuthority = vm.addr(signerAuthorityPk);
 
         vm.prank(nftOwner);
-        address soundNft = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
 
         SoundRegistryV1 registry = new SoundRegistryV1();
         registry.initialize(signerAuthority);
@@ -296,35 +296,35 @@ contract SoundRegistryTests is TestConfig {
         bytes memory signature = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft
+            soundEdition
         );
 
         vm.prank(nftOwner);
-        registry.registerSoundNft(soundNft, signature);
+        registry.registerSoundEdition(soundEdition, signature);
 
-        assertEq(registry.registeredSoundNfts(soundNft), true);
+        assertEq(registry.registeredSoundEditions(soundEdition), true);
 
         // Test event
         vm.expectEmit(true, true, true, true);
-        emit Unregistered(soundNft);
+        emit Unregistered(soundEdition);
 
         vm.prank(nftOwner);
-        registry.unregisterSoundNft(soundNft);
+        registry.unregisterSoundEdition(soundEdition);
 
-        assertEq(registry.registeredSoundNfts(soundNft), false);
+        assertEq(registry.registeredSoundEditions(soundEdition), false);
     }
 
     // Tests unregistering multiple Sound NFTs.
-    function test_unregisterSoundNfts() public {
+    function test_unregisterSoundEditions() public {
         uint256 nftOwnerPk = 0x234;
         address nftOwner = vm.addr(nftOwnerPk);
         uint256 signerAuthorityPk = 0x123;
         address signerAuthority = vm.addr(signerAuthorityPk);
 
         vm.startPrank(nftOwner);
-        address soundNft1 = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
-        address soundNft2 = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
-        address soundNft3 = soundCreator.createSoundNft(SONG_NAME, SONG_SYMBOL);
+        address soundEdition1 = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
+        address soundEdition2 = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
+        address soundEdition3 = soundCreator.createSound(SONG_NAME, SONG_SYMBOL);
         vm.stopPrank();
 
         SoundRegistryV1 registry = new SoundRegistryV1();
@@ -334,48 +334,48 @@ contract SoundRegistryTests is TestConfig {
         bytes memory signature1 = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft1
+            soundEdition1
         );
         bytes memory signature2 = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft2
+            soundEdition2
         );
         bytes memory signature3 = getRegistrationSignature(
             registry,
             signerAuthorityPk,
-            soundNft3
+            soundEdition3
         );
 
-        SoundRegistryV1.SoundNftData[]
-            memory data = new SoundRegistryV1.SoundNftData[](3);
-        data[0].soundNft = soundNft1;
+        SoundRegistryV1.SoundEditionData[]
+            memory data = new SoundRegistryV1.SoundEditionData[](3);
+        data[0].soundEdition = soundEdition1;
         data[0].signature = signature1;
-        data[1].soundNft = soundNft2;
+        data[1].soundEdition = soundEdition2;
         data[1].signature = signature2;
-        data[2].soundNft = soundNft3;
+        data[2].soundEdition = soundEdition3;
         data[2].signature = signature3;
 
         vm.prank(nftOwner);
-        registry.registerSoundNfts(data);
+        registry.registerSoundEditions(data);
 
-        assertEq(registry.registeredSoundNfts(soundNft1), true);
-        assertEq(registry.registeredSoundNfts(soundNft2), true);
-        assertEq(registry.registeredSoundNfts(soundNft3), true);
+        assertEq(registry.registeredSoundEditions(soundEdition1), true);
+        assertEq(registry.registeredSoundEditions(soundEdition2), true);
+        assertEq(registry.registeredSoundEditions(soundEdition3), true);
 
         // Test event
         address[] memory nfts = new address[](3);
-        nfts[0] = soundNft1;
-        nfts[1] = soundNft2;
-        nfts[2] = soundNft3;
+        nfts[0] = soundEdition1;
+        nfts[1] = soundEdition2;
+        nfts[2] = soundEdition3;
         vm.expectEmit(true, true, true, true);
         emit UnregisteredBatch(nfts);
 
         vm.prank(nftOwner);
-        registry.unregisterSoundNfts(nfts);
+        registry.unregisterSoundEditions(nfts);
 
-        assertEq(registry.registeredSoundNfts(soundNft1), false);
-        assertEq(registry.registeredSoundNfts(soundNft2), false);
-        assertEq(registry.registeredSoundNfts(soundNft3), false);
+        assertEq(registry.registeredSoundEditions(soundEdition1), false);
+        assertEq(registry.registeredSoundEditions(soundEdition2), false);
+        assertEq(registry.registeredSoundEditions(soundEdition3), false);
     }
 }

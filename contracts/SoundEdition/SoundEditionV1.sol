@@ -6,7 +6,7 @@ import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import "./ISoundNftV1.sol";
+import "./ISoundEditionV1.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
@@ -48,19 +48,10 @@ contract SoundEditionV1 is
     function initialize(
         address _owner,
         string memory _name,
-        string memory _symbol,
-        ISoundNftV1.RegistrationInfo memory _registrationInfo
+        string memory _symbol
     ) public initializerERC721A initializer {
         __ERC721A_init(_name, _symbol);
         __Ownable_init();
-
-        // If signature provided, register the contract
-        if (_registrationInfo.signature.length > 0) {
-            // ISoundRegistryV1(_registrationInfo.registry).register(
-            //     address(this),
-            //     _registrationInfo.signature
-            // );
-        }
 
         // Set ownership to owner
         transferOwnership(_owner);

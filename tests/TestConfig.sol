@@ -17,13 +17,13 @@ contract TestConfig is Test {
     // Set up called  before each test
     function setUp() public {
         // Deploy SoundEdition implementation
-        SoundEditionV1 soundNftImplementation = new SoundEditionV1();
+        SoundEditionV1 soundEditionImplementation = new SoundEditionV1();
 
         // todo: deploy registry here
         address soundRegistry = address(123);
 
         soundCreator = new SoundCreatorV1(
-            address(soundNftImplementation),
+            address(soundEditionImplementation),
             soundRegistry
         );
     }

@@ -7,10 +7,10 @@ import "../contracts/SoundCreator/SoundCreatorV1.sol";
 contract SoundCreatorTests is TestConfig {
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
-        SoundEditionV1 soundNftImplementation = new SoundEditionV1();
+        SoundEditionV1 soundEditionImplementation = new SoundEditionV1();
         address soundRegistry = address(123);
         SoundCreatorV1 _soundCreator = new SoundCreatorV1(
-            address(soundNftImplementation),
+            address(soundEditionImplementation),
             soundRegistry
         );
 
@@ -19,18 +19,18 @@ contract SoundCreatorTests is TestConfig {
         assertEq(address(_soundCreator.soundRegistry()), soundRegistry);
         assertEq(
             address(_soundCreator.nftImplementation()),
-            address(soundNftImplementation)
+            address(soundEditionImplementation)
         );
     }
 
     // Tests that the factory creates a new sound NFT
     function test_createSound() public {
-        SoundEditionV1 soundNft = SoundEditionV1(
+        SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL)
         );
 
-        assert(address(soundNft) != address(0));
-        assertEq(soundNft.name(), SONG_NAME);
-        assertEq(soundNft.symbol(), SONG_SYMBOL);
+        assert(address(soundEdition) != address(0));
+        assertEq(soundEdition.name(), SONG_NAME);
+        assertEq(soundEdition.symbol(), SONG_SYMBOL);
     }
 }

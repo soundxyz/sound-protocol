@@ -28,9 +28,10 @@ pragma solidity ^0.8.15;
                ▓██████████████████████████████████████████████████████████                
 */
 
-import "../SoundEdition/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
+import "../SoundEdition/ISoundEditionV1.sol";
+
 
 contract SoundCreatorV1 {
     /***********************************
@@ -49,47 +50,22 @@ contract SoundCreatorV1 {
         soundRegistry = _soundRegistry;
     }
 
-    function createSound(string memory _name, string memory _symbol, ISoundNftV1.RegistrationInfo calldata _registrationInfo)
+    function createSound(string memory _name, string memory _symbol)
         external
-        returns (address soundNft)
+        returns (address soundEdition)
     {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement extension configurations
 
         // todo: research if we can get any gas savings by using a more minimal version of Clones lib
-        soundNft = Clones.clone(nftImplementation);
+        soundEdition = Clones.clone(nftImplementation);
 
-        ISoundEditionV1(soundNft).initialize(
+        ISoundEditionV1(soundEdition).initialize(
             msg.sender,
             _name,
-            _symbol,
-            _registrationInfo
+            _symbol
         );
 
         // todo: emit event
-    }
-
-    /// @notice Informs other contracts which interfaces this contract supports
-    /// @param _interfaceId The interface id to check
-    /// @dev https://eips.ethereum.org/EIPS/eip-165
-    function supportsInterface(bytes4 _interfaceId)
-        public
-        view
-        override(ERC721AUpgradeable, IERC165Upgradeable)
-        returns (bool)
-    {
-        return super.supportsInterface(_interfaceId);
-    }
-
-    /// @notice Get royalty information for token
-    /// @param _tokenId token id
-    /// @param _salePrice Sale price for the token
-    function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
-        external
-        view
-        override
-        returns (address fundingRecipient, uint256 royaltyAmount)
-    {
-        // todo
     }
 }

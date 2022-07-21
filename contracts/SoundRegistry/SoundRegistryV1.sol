@@ -33,7 +33,7 @@ import "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "openzeppelin/utils/cryptography/draft-EIP712.sol";
-import "../SoundNft/ISoundNftV1.sol";
+import "../SoundEdition/ISoundEditionV1.sol";
 
 contract SoundRegistryV1 is
     EIP712,
@@ -43,20 +43,20 @@ contract SoundRegistryV1 is
 {
     using ECDSAUpgradeable for bytes32;
 
-    struct SoundNftData {
+    struct SoundEditionData {
         bytes signature;
-        address soundNft;
+        address soundEdition;
     }
 
     /***********************************
                 EVENTS
     ***********************************/
 
-    event Registered(address indexed soundNft);
-    event Unregistered(address indexed soundNft);
+    event Registered(address indexed soundEdition);
+    event Unregistered(address indexed soundEdition);
 
-    event RegisteredBatch(address[] indexed soundNfts);
-    event UnregisteredBatch(address[] indexed soundNfts);
+    event RegisteredBatch(address[] indexed soundEditions);
+    event UnregisteredBatch(address[] indexed soundEditions);
 
     /***********************************
                 CONSTANTS
@@ -69,7 +69,7 @@ contract SoundRegistryV1 is
     ***********************************/
 
     address public signingAuthority;
-    mapping(address => bool) public registeredSoundNfts;
+    mapping(address => bool) public registeredSoundEditions;
 
     /***********************************
               PUBLIC FUNCTIONS
@@ -95,22 +95,22 @@ contract SoundRegistryV1 is
     }
 
     /// @notice Registers a Sound NFT contract.
-    function registerSoundNft(address _soundNft, bytes memory _signature)
+    function registerSoundEdition(address _soundEdition, bytes memory _signature)
         external
     {
-        _registerSoundNft(_soundNft, _signature);
+        _registerSoundEdition(_soundEdition, _signature);
 
-        emit Registered(_soundNft);
+        emit Registered(_soundEdition);
     }
 
     /// @notice Registers multiple Sound NFT contracts.
-    function registerSoundNfts(SoundNftData[] memory nftData) external {
+    function registerSoundEditions(SoundEditionData[] memory nftData) external {
         address[] memory nftAddresses = new address[](nftData.length);
 
         for (uint256 i; i < nftData.length; ) {
-            _registerSoundNft(nftData[i].soundNft, nftData[i].signature);
+            _registerSoundEdition(nftData[i].soundEdition, nftData[i].signature);
 
-            nftAddresses[i] = nftData[i].soundNft;
+            nftAddresses[i] = nftData[i].soundEdition;
 
             unchecked {
                 ++i;
@@ -121,20 +121,20 @@ contract SoundRegistryV1 is
     }
 
     /// @notice Unregisters a Sound NFT contract.
-    function unregisterSoundNft(address _soundNft) external {
-        _unregisterSoundNft(_soundNft);
+    function unregisterSoundEdition(address _soundEdition) external {
+        _unregisterSoundEdition(_soundEdition);
 
-        emit Unregistered(_soundNft);
+        emit Unregistered(_soundEdition);
     }
 
     /// @notice Unregisters multiple Sound NFT contracts.
-    function unregisterSoundNfts(address[] memory _soundNfts) external {
-        address[] memory nftAddresses = new address[](_soundNfts.length);
+    function unregisterSoundEditions(address[] memory _soundEditions) external {
+        address[] memory nftAddresses = new address[](_soundEditions.length);
 
-        for (uint256 i; i < _soundNfts.length; ) {
-            _unregisterSoundNft(_soundNfts[i]);
+        for (uint256 i; i < _soundEditions.length; ) {
+            _unregisterSoundEdition(_soundEditions[i]);
 
-            nftAddresses[i] = _soundNfts[i];
+            nftAddresses[i] = _soundEditions[i];
 
             unchecked {
                 i++;
@@ -149,41 +149,41 @@ contract SoundRegistryV1 is
     ***********************************/
 
     /// @notice Registers a Sound NFT contract.
-    function _registerSoundNft(address _soundNft, bytes memory _signature)
+    function _registerSoundEdition(address _soundEdition, bytes memory _signature)
         internal
     {
-        address nftOwner = OwnableUpgradeable(_soundNft).owner();
+        address nftOwner = OwnableUpgradeable(_soundEdition).owner();
 
         // If the caller is the NFT owner, the signature must be from the signing authority (ie: sound.xyz)
         if (msg.sender == nftOwner) {
             require(
-                _getSigner(_soundNft, _signature) == signingAuthority,
+                _getSigner(_soundEdition, _signature) == signingAuthority,
                 "Unauthorized"
             );
         } else if (msg.sender == signingAuthority) {
             // If the caller is the signing authority, the signature must be from the NFT owner.
             require(
-                _getSigner(_soundNft, _signature) == nftOwner,
+                _getSigner(_soundEdition, _signature) == nftOwner,
                 "Unauthorized"
             );
         } else {
             revert("Unauthorized");
         }
 
-        registeredSoundNfts[_soundNft] = true;
+        registeredSoundEditions[_soundEdition] = true;
     }
 
     /// @notice Unregisters a Sound NFT contract.
-    function _unregisterSoundNft(address _soundNft) internal {
+    function _unregisterSoundEdition(address _soundEdition) internal {
         require(
-            msg.sender == OwnableUpgradeable(_soundNft).owner() ||
+            msg.sender == OwnableUpgradeable(_soundEdition).owner() ||
                 msg.sender == signingAuthority,
             "Unauthorized"
         );
-        registeredSoundNfts[_soundNft] = false;
+        registeredSoundEditions[_soundEdition] = false;
     }
 
-    function _getSigner(address _soundNft, bytes memory _signature)
+    function _getSigner(address _soundEdition, bytes memory _signature)
         internal
         view
         returns (address signer)
@@ -192,7 +192,7 @@ contract SoundRegistryV1 is
             abi.encodePacked(
                 "\x19\x01",
                 _domainSeparatorV4(),
-                keccak256(abi.encode(SIGNATURE_TYPEHASH, _soundNft))
+                keccak256(abi.encode(SIGNATURE_TYPEHASH, _soundEdition))
             )
         );
 
