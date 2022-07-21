@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minting/FixedPricePublicSaleMinter.sol";
+import "../../../contracts/modules/Minters/FixedPricePublicSaleMinter.sol";
 
 contract FixedPricePublicSaleMinterTests is TestConfig {
     uint256 constant PRICE = 1;
@@ -65,6 +65,28 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         vm.expectRevert(EditionMinter.MintAlreadyExists.selector);
 
         minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
+    }
+
+    function test_deleteEditionMintEmitsMintControllerUpdatedEvent() public {
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+
+        vm.expectEmit(false, false, false, true);
+
+        emit MintControllerUpdated(address(edition), address(0));
+
+        minter.deleteEditionMint(address(edition));
+    }
+
+    function test_setEditionMintControllerEmitsMintControllerUpdatedEvent() public {
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+
+        vm.expectEmit(false, false, false, true);
+
+        address newController = getRandomAccount(1);
+
+        emit MintControllerUpdated(address(edition), newController);
+
+        minter.setEditionMintController(address(edition), newController);
     }
 
     function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
