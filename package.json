@@ -2,6 +2,8 @@
   "name": "sound-protocol",
   "version": "2.0.0",
   "scripts": {
+    "build": "forge build",
+    "test": "forge test",
     "solhint": "solhint -f table contracts/**/*.sol",
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol"

@@ -35,6 +35,16 @@ nvm use
 npm install
 ```
 
+- Build contracts
+```
+npm run build
+```
+
+- Run tests
+```
+npm run test
+```
+
 ## Code conventions
 
 To run prettier on all solidity files, uncomment the last line in `.prettierrc.js`, then run `npx prettier --write ./contracts/**/*.sol`
