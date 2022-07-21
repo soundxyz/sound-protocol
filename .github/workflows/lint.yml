@@ -1,0 +1,33 @@
+name: Lint
+on:
+  push:
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2.0.1
+        with:
+          version: latest
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.16.0
+          cache: 'pnpm'
+
+      - name: Install Node.js dependencies
+        run: pnpm install
+      
+      - name: Run linters
+        run: pnpm run solhint
