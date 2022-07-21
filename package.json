@@ -4,6 +4,7 @@
   "scripts": {
     "build": "forge build",
     "test": "forge test",
+    "test:gas": "forge test --gas-report",
     "solhint": "solhint -f table contracts/**/*.sol",
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol"
