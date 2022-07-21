@@ -26,7 +26,9 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     event MintControllerUpdated(address indexed edition, address indexed controller);
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
-        edition = SoundEditionV1(soundCreator.createSound(SONG_NAME, SONG_SYMBOL));
+        edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+        );
 
         minter = new FixedPricePublicSaleMinter();
 
@@ -36,7 +38,9 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_createEditionMintEmitsEvent() public {
-        SoundEditionV1 edition = SoundEditionV1(soundCreator.createSound(SONG_NAME, SONG_SYMBOL));
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+        );
 
         FixedPricePublicSaleMinter minter = new FixedPricePublicSaleMinter();
 
@@ -48,7 +52,9 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_createEditionMintEmitsMintControllerUpdatedEvent() public {
-        SoundEditionV1 edition = SoundEditionV1(soundCreator.createSound(SONG_NAME, SONG_SYMBOL));
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+        );
 
         FixedPricePublicSaleMinter minter = new FixedPricePublicSaleMinter();
 

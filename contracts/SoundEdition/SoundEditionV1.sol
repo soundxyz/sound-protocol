@@ -36,7 +36,12 @@ import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 
 /// @title SoundEditionV1
 /// @author Sound.xyz
-contract SoundEditionV1 is ERC721AQueryableUpgradeable, IERC2981Upgradeable, OwnableUpgradeable, AccessControlUpgradeable {
+contract SoundEditionV1 is
+    ERC721AQueryableUpgradeable,
+    IERC2981Upgradeable,
+    OwnableUpgradeable,
+    AccessControlUpgradeable
+{
     // ================================
     // CONSTANTS
     // ================================
