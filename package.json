@@ -6,6 +6,7 @@
     "test": "forge test",
     "test:gas": "forge test --gas-report",
     "solhint": "solhint -f table contracts/**/*.sol",
+    "prepare": "husky install",
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol"
   },
