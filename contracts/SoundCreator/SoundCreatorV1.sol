@@ -55,14 +55,14 @@ contract SoundCreatorV1 {
         IMetadataModule _metadataModule,
         string memory _baseURI,
         string memory _contractURI
-    ) external returns (address soundNft) {
+    ) external returns (address soundEdition) {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement extension configurations
 
         // todo: research if we can get any gas savings by using a more minimal version of Clones lib
-        soundNft = Clones.clone(nftImplementation);
+        soundEdition = Clones.clone(nftImplementation);
 
-        ISoundEditionV1(soundNft).initialize(msg.sender, _name, _symbol, _metadataModule, _baseURI, _contractURI);
+        ISoundEditionV1(soundEdition).initialize(msg.sender, _name, _symbol, _metadataModule, _baseURI, _contractURI);
 
         // todo: emit event
     }
