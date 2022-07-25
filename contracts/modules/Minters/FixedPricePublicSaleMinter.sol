@@ -66,7 +66,7 @@ contract FixedPricePublicSaleMinter is EditionMinter {
         delete editionMintData[edition];
     }
 
-    function mint(address edition, uint32 quantity) public payable {
+    function mint(address edition, uint32 quantity) public payable virtual {
         EditionMintData storage data = editionMintData[edition];
         if ((data.totalMinted += quantity) > data.maxMinted) revert MintOutOfStock();
         if (data.price * quantity != msg.value) revert MintWithWrongEtherValue();

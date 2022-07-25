@@ -52,7 +52,7 @@ contract SoundEditionV1 is
     // ================================
 
     IMetadataModule public metadataModule;
-    string internal baseURI;
+    string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
 
@@ -175,6 +175,10 @@ contract SoundEditionV1 is
         returns (address fundingRecipient, uint256 royaltyAmount)
     {
         // todo
+    }
+
+    function _startTokenId() internal view override returns (uint256) {
+        return 1;
     }
 
     /// @notice Mints `_quantity` tokens to addrress `_to`
