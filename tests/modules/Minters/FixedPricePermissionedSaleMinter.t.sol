@@ -64,18 +64,8 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_createEditionMintRevertsIfMintEditionExists() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-        // Somehow `vm.expectRevert(EditionMinter.MintAlreadyExists.selector)` fails here.
-        // Even though running `minter.createEditionMint(...)` will revert with that selector.
-        (bool status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(
-                FixedPricePermissionedSaleMinter.createEditionMint.selector,
-                address(edition),
-                PRICE,
-                _signerAddress(),
-                MAX_MINTED
-            )
-        );
-        assertFalse(status);
+        vm.expectRevert(EditionMinter.MintControllerAlreadyExists.selector);
+        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTED);
     }
 
     function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
@@ -96,7 +86,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         minter.deleteEditionMint(address(edition));
 
-        vm.expectRevert(EditionMinter.MintNotFound.selector);
+        vm.expectRevert(EditionMinter.MintControllerNotFound.selector);
 
         minter.deleteEditionMint(address(edition));
     }

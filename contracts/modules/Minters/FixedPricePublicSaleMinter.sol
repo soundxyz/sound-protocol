@@ -5,6 +5,7 @@ pragma solidity ^0.8.15;
 import "./EditionMinter.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 
+/// @dev Minter class for sales at a fixed price within a time range.
 contract FixedPricePublicSaleMinter is EditionMinter {
     error MintWithWrongEtherValue();
 
@@ -45,7 +46,7 @@ contract FixedPricePublicSaleMinter is EditionMinter {
         uint32 endTime,
         uint32 maxMinted
     ) public {
-        _createEditionMint(edition);
+        _createEditionMintController(edition);
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.startTime = startTime;
@@ -62,7 +63,7 @@ contract FixedPricePublicSaleMinter is EditionMinter {
     }
 
     function deleteEditionMint(address edition) public {
-        _deleteEditionMint(edition);
+        _deleteEditionMintController(edition);
         delete editionMintData[edition];
     }
 

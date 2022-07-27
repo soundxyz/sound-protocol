@@ -2,53 +2,75 @@
 
 pragma solidity ^0.8.15;
 
+/// @dev The `EditionMinter` class provides common bookkeeping functions
+/// for managing edition mint data in deriving contracts.
+///
+/// A controller can create, edit, update, delete the mint data for an edition.
+/// It is up to the deriving contract to restrict editing, updating, deleting
+/// of mint data. A typical use case is to only allow the controller of the edition.
+///
+/// Deriving contracts may use the existence of a controller to prevent overriding
+/// of mint data.
+///
+/// An edition can only have one controller at any time for a single deriving contract.
+///
+/// An edition may have multiple controllers across different deriving contracts.
 abstract contract EditionMinter {
+    /// @dev The caller must be the the controller of this edition to perform this action.
     error MintControllerUnauthorized();
 
-    error MintControllerSetToZeroAddress();
+    /// @dev There is no controller assigned to this edition.
+    error MintControllerNotFound();
 
-    error MintNotFound();
+    /// @dev A mint controller is already assigned to this edition.
+    error MintControllerAlreadyExists();
 
-    error MintAlreadyExists();
-
+    /// @dev Emitted when the mint `controller` for `edition` is changed.
     event MintControllerUpdated(address indexed edition, address indexed controller);
 
+    /// @dev Maps an edition to a controller.
     mapping(address => address) private _controllers;
 
+    /// @dev Restricts the function to be only callable by the controller of `edition`.
     modifier onlyEditionMintController(address edition) virtual {
         address controller = _controllers[edition];
-        if (controller == address(0)) revert MintNotFound();
+        if (controller == address(0)) revert MintControllerNotFound();
         if (msg.sender != controller) revert MintControllerUnauthorized();
         _;
     }
 
-    function _createEditionMint(address edition) internal virtual {
-        if (_controllers[edition] != address(0)) revert MintAlreadyExists();
-
+    /// @dev Assigns the current caller as the controller to `edition`.
+    ///
+    /// Calling conditions:
+    ///
+    /// - The `edition` must not have a controller.
+    function _createEditionMintController(address edition) internal {
+        if (_controllers[edition] != address(0)) revert MintControllerAlreadyExists();
         _controllers[edition] = msg.sender;
-
         emit MintControllerUpdated(edition, msg.sender);
     }
 
-    function _deleteEditionMint(address edition) internal virtual {
-        address controller = _controllers[edition];
-        if (controller == address(0)) revert MintNotFound();
-        if (msg.sender != controller) revert MintControllerUnauthorized();
-        delete _controllers[edition];
-        emit MintControllerUpdated(edition, address(0));
+    /// @dev Convenience function for deleting a mint controller.
+    /// Equivalent to `setEditionMintController(edition, address(0))`.
+    function _deleteEditionMintController(address edition) internal {
+        setEditionMintController(edition, address(0));
     }
 
+    /// @dev Returns the mint controller for `edition`.
     function editionMintController(address edition) public view returns (address) {
         return _controllers[edition];
     }
 
+    /// @dev Sets the new `controller` for `edition`.
+    ///
+    /// Calling conditions:
+    ///
+    /// - The caller must be the current controller for `edition`.
     function setEditionMintController(address edition, address controller)
         public
         virtual
         onlyEditionMintController(edition)
     {
-        if (controller == address(0)) revert MintControllerSetToZeroAddress();
-
         _controllers[edition] = controller;
         emit MintControllerUpdated(edition, controller);
     }

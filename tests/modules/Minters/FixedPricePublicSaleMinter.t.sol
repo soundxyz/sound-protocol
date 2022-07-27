@@ -68,7 +68,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     function test_createEditionMintRevertsIfMintEditionExists() public {
         (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
 
-        vm.expectRevert(EditionMinter.MintAlreadyExists.selector);
+        vm.expectRevert(EditionMinter.MintControllerAlreadyExists.selector);
 
         minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
     }
@@ -113,7 +113,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         minter.deleteEditionMint(address(edition));
 
-        vm.expectRevert(EditionMinter.MintNotFound.selector);
+        vm.expectRevert(EditionMinter.MintControllerNotFound.selector);
 
         minter.deleteEditionMint(address(edition));
     }

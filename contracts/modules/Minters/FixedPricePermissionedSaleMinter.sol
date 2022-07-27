@@ -6,9 +6,9 @@ import "./EditionMinter.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/ECDSA.sol";
 
+/// @dev Minter class for sales approved with signatures.
 contract FixedPricePermissionedSaleMinter is EditionMinter {
     using ECDSA for bytes32;
-
     error MintWithWrongEtherValue();
 
     error MintOutOfStock();
@@ -42,7 +42,7 @@ contract FixedPricePermissionedSaleMinter is EditionMinter {
         address signer,
         uint32 maxMinted
     ) public {
-        _createEditionMint(edition);
+        _createEditionMintController(edition);
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.signer = signer;
@@ -57,7 +57,7 @@ contract FixedPricePermissionedSaleMinter is EditionMinter {
     }
 
     function deleteEditionMint(address edition) public {
-        _deleteEditionMint(edition);
+        _deleteEditionMintController(edition);
         delete editionMintData[edition];
     }
 
