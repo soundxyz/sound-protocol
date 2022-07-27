@@ -21,12 +21,12 @@ contract TestConfig is Test {
     // Set up called before each test
     function setUp() public {
         // Deploy SoundEdition implementation
-        MockSoundEditionV1 soundNftImplementation = new MockSoundEditionV1();
+        MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
 
         // todo: deploy registry here
         address soundRegistry = address(123);
 
-        soundCreator = new SoundCreatorV1(address(soundNftImplementation), soundRegistry);
+        soundCreator = new SoundCreatorV1(address(soundEditionImplementation), soundRegistry);
     }
 
     // Returns a random address funded with ETH
