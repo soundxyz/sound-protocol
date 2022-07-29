@@ -9,7 +9,7 @@ import "../../SoundEdition/ISoundEditionV1.sol";
 contract FixedPricePublicSaleMinter is EditionMinter {
     error MintWithWrongEtherValue();
 
-    error MintOutOfStock();
+    error OutOfStock();
 
     error MintNotStarted();
 
