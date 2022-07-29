@@ -23,7 +23,7 @@ abstract contract EditionMinter {
     error MintControllerNotFound();
 
     /// @dev A mint controller is already assigned to this edition.
-    error MintControllerAlreadyExists();
+    error MintControllerAlreadyExists(address controller);
 
     /// @dev Emitted when the mint `controller` for `edition` is changed.
     event MintControllerUpdated(address indexed edition, address indexed controller);
@@ -45,7 +45,7 @@ abstract contract EditionMinter {
     ///
     /// - The `edition` must not have a controller.
     function _createEditionMintController(address edition) internal {
-        if (_controllers[edition] != address(0)) revert MintControllerAlreadyExists();
+        if (_controllers[edition] != address(0)) revert MintControllerAlreadyExists(_controllers[edition]);
         _controllers[edition] = msg.sender;
         emit MintControllerUpdated(edition, msg.sender);
     }

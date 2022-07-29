@@ -11,7 +11,7 @@ contract FixedPricePermissionedSaleMinter is EditionMinter {
     using ECDSA for bytes32;
     error WrongEtherValue();
 
-    error MintOutOfStock();
+    error SoldOut();
 
     error InvalidSignature();
 
@@ -67,12 +67,12 @@ contract FixedPricePermissionedSaleMinter is EditionMinter {
         bytes calldata signature
     ) public payable {
         EditionMintData storage data = editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMinted) revert MintOutOfStock();
-        if (data.price * quantity != msg.value) revert MintWithWrongEtherValue();
+        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        if (data.price * quantity != msg.value) revert WrongEtherValue();
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition));
         hash = hash.toEthSignedMessageHash();
-        if (hash.recover(signature) != data.signer) revert MintWithInvalidSignature();
+        if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
         ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
     }

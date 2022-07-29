@@ -9,7 +9,7 @@ import "../../SoundEdition/ISoundEditionV1.sol";
 contract FixedPricePublicSaleMinter is EditionMinter {
     error WrongEtherValue();
 
-    error OutOfStock();
+    error SoldOut();
 
     error MintNotStarted();
 
@@ -69,8 +69,8 @@ contract FixedPricePublicSaleMinter is EditionMinter {
 
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMinted) revert MintOutOfStock();
-        if (data.price * quantity != msg.value) revert MintWithWrongEtherValue();
+        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        if (data.price * quantity != msg.value) revert WrongEtherValue();
         if (block.timestamp < data.startTime) revert MintNotStarted();
         if (data.endTime < block.timestamp) revert MintHasEnded();
         ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
