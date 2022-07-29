@@ -13,7 +13,7 @@ contract FixedPricePermissionedSaleMinter is EditionMinter {
 
     error MintOutOfStock();
 
-    error MintWithInvalidSignature();
+    error InvalidSignature();
 
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
