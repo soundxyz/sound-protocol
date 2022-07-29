@@ -9,7 +9,7 @@ import "solady/utils/ECDSA.sol";
 /// @dev Minter class for sales approved with signatures.
 contract FixedPricePermissionedSaleMinter is EditionMinter {
     using ECDSA for bytes32;
-    error MintWithWrongEtherValue();
+    error WrongEtherValue();
 
     error MintOutOfStock();
 
