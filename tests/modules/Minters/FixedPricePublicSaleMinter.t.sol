@@ -133,7 +133,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         minter.mint{ value: PRICE }(address(edition), 1);
     }
 
-    function test_mintAfterStartTimeReverts() public {
+    function test_mintAfterEndTimeReverts() public {
         (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
 
         vm.warp(END_TIME + 1);
