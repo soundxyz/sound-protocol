@@ -7,7 +7,7 @@ import "../../SoundEdition/ISoundEditionV1.sol";
 
 /// @dev Minter class for sales at a fixed price within a time range.
 contract FixedPricePublicSaleMinter is EditionMinter {
-    error MintWithWrongEtherValue();
+    error WrongEtherValue();
 
     error OutOfStock();
 
