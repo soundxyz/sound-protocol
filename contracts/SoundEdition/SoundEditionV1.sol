@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
-import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
 import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 
@@ -36,12 +36,7 @@ import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 
 /// @title SoundEditionV1
 /// @author Sound.xyz
-contract SoundEditionV1 is
-    ERC721AQueryableUpgradeable,
-    IERC2981Upgradeable,
-    OwnableUpgradeable,
-    AccessControlUpgradeable
-{
+contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, OwnableUpgradeable, AccessControlUpgradeable {
     // ================================
     // CONSTANTS
     // ================================
@@ -151,13 +146,11 @@ contract SoundEditionV1 is
         return bytes(baseURI_).length != 0 ? string.concat(baseURI_, _toString(tokenId)) : "";
     }
 
-    /// @notice Informs other contracts which interfaces this contract supports
-    /// @param _interfaceId The interface id to check
-    /// @dev https://eips.ethereum.org/EIPS/eip-165
+    /// @inheritdoc ISoundEditionV1
     function supportsInterface(bytes4 _interfaceId)
         public
         view
-        override(ERC721AUpgradeable, IERC721AUpgradeable, AccessControlUpgradeable, IERC165Upgradeable)
+        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return
@@ -171,19 +164,13 @@ contract SoundEditionV1 is
     function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
         external
         view
-        override
+        override(IERC2981Upgradeable)
         returns (address fundingRecipient, uint256 royaltyAmount)
     {
         // todo
     }
 
-    /// @notice Mints `_quantity` tokens to addrress `_to`
-    /// Each token will be assigned a token ID that is consecutively increasing.
-    /// The caller must have the `MINTER_ROLE`, which can be granted via
-    /// {grantRole}. Multiple minters, such as different minter contracts,
-    /// can be authorized simultaneously.
-    /// @param _to Address to mint to
-    /// @param _quantity Number of tokens to mint
+    /// @inheritdoc ISoundEditionV1
     function mint(address _to, uint256 _quantity) public payable onlyRole(MINTER_ROLE) {
         _mint(_to, _quantity);
     }

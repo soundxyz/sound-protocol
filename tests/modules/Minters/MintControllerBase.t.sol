@@ -3,9 +3,9 @@ pragma solidity ^0.8.15;
 import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minters/FixedPricePublicSaleMinter.sol";
+import "../../../contracts/modules/Minters/MintControllerBase.sol";
 
-contract EditionMinterTests is TestConfig, EditionMinter {
+contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function createEditionMintController(address edition) external {
         _createEditionMintController(edition);
     }
@@ -35,11 +35,11 @@ contract EditionMinterTests is TestConfig, EditionMinter {
         address controller1 = getRandomAccount(1);
         vm.prank(controller0);
         this.createEditionMintController(address(edition));
-        vm.expectRevert(abi.encodeWithSelector(EditionMinter.MintControllerAlreadyExists.selector, controller0));
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MintControllerAlreadyExists.selector, controller0));
         vm.prank(controller0);
         this.createEditionMintController(address(edition));
         vm.prank(controller1);
-        vm.expectRevert(abi.encodeWithSelector(EditionMinter.MintControllerAlreadyExists.selector, controller0));
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MintControllerAlreadyExists.selector, controller0));
         this.createEditionMintController(address(edition));
     }
 
@@ -81,7 +81,7 @@ contract EditionMinterTests is TestConfig, EditionMinter {
         this.createEditionMintController(address(edition));
 
         vm.prank(controller1);
-        vm.expectRevert(EditionMinter.MintControllerUnauthorized.selector);
+        vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
         this.deleteEditionMintController(address(edition));
     }
 
@@ -93,7 +93,7 @@ contract EditionMinterTests is TestConfig, EditionMinter {
         this.createEditionMintController(address(edition0));
 
         vm.prank(controller);
-        vm.expectRevert(EditionMinter.MintControllerNotFound.selector);
+        vm.expectRevert(MintControllerBase.MintControllerNotFound.selector);
         this.deleteEditionMintController(address(edition1));
     }
 }

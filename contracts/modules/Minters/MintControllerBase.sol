@@ -2,20 +2,8 @@
 
 pragma solidity ^0.8.15;
 
-/// @dev The `EditionMinter` class provides common bookkeeping functions
-/// for managing edition mint data in deriving contracts.
-///
-/// A controller can create, edit, update, delete the mint data for an edition.
-/// It is up to the deriving contract to restrict editing, updating, deleting
-/// of mint data. A typical use case is to only allow the controller of the edition.
-///
-/// Deriving contracts may use the existence of a controller to prevent overriding
-/// of mint data.
-///
-/// An edition can only have one controller at any time for a single deriving contract.
-///
-/// An edition may have multiple controllers across different deriving contracts.
-abstract contract EditionMinter {
+/// @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
+abstract contract MintControllerBase {
     /// @dev The caller must be the the controller of this edition to perform this action.
     error MintControllerUnauthorized();
 

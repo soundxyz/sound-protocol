@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.15;
 
-import "./EditionMinter.sol";
+import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/ECDSA.sol";
 
 /// @dev Minter class for sales approved with signatures.
-contract FixedPricePermissionedSaleMinter is EditionMinter {
+contract FixedPricePermissionedSaleMinter is MintControllerBase {
     using ECDSA for bytes32;
     error WrongEtherValue();
 

@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.15;
 
-import "./EditionMinter.sol";
+import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 
 /// @dev Minter class for sales at a fixed price within a time range.
-contract FixedPricePublicSaleMinter is EditionMinter {
+contract FixedPricePublicSaleMinter is MintControllerBase {
     error WrongEtherValue();
 
     error SoldOut();
