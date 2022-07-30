@@ -36,6 +36,13 @@ import "../modules/Metadata/IMetadataModule.sol";
 /// @title ISoundEditionV1
 /// @author Sound.xyz
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
+    /// @notice Initializes the contract
+    /// @param _owner Owner of contract (artist)
+    /// @param _name Name of the token
+    /// @param _symbol Symbol of the token
+    /// @param _metadataModule Address of metadata module, address(0x00) if not used
+    /// @param baseURI_ Base URI
+    /// @param _contractURI Contract URI for OpenSea storefront
     function initialize(
         address _owner,
         string memory _name,
@@ -54,6 +61,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /// @param _quantity Number of tokens to mint
     function mint(address _to, uint256 _quantity) external payable;
 
+    /// @notice Informs other contracts which interfaces this contract supports.
+    /// @param interfaceId The interface id to check.
+    /// @dev https://eips.ethereum.org/EIPS/eip-165
     function supportsInterface(bytes4 interfaceId)
         external
         view

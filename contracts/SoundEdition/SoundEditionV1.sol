@@ -66,13 +66,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
     // ================================
 
-    /// @notice Initializes the contract
-    /// @param _owner Owner of contract (artist)
-    /// @param _name Name of the token
-    /// @param _symbol Symbol of the token
-    /// @param _metadataModule Address of metadata module, address(0x00) if not used
-    /// @param baseURI_ Base URI
-    /// @param _contractURI Contract URI for OpenSea storefront
+    /// @inheritdoc ISoundEditionV1
     function initialize(
         address _owner,
         string memory _name,
@@ -130,6 +124,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // VIEW FUNCTIONS
     // ================================
 
+    /// @inheritdoc IERC721AUpgradeable
     function tokenURI(uint256 tokenId)
         public
         view
@@ -158,9 +153,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
             AccessControlUpgradeable.supportsInterface(_interfaceId);
     }
 
-    /// @notice Get royalty information for token
-    /// @param _tokenId token id
-    /// @param _salePrice Sale price for the token
+    /// @inheritdoc IERC2981Upgradeable
     function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
         external
         view
