@@ -53,7 +53,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory symbol,
         IMetadataModule metadataModule,
         string memory baseURI,
-        string memory contractURI
+        string memory contractURI,
+        address guardian
     ) external;
 
     /**
