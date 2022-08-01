@@ -13,3 +13,6 @@
 	path = lib/ERC721A-Upgradeable
 	url = https://github.com/chiru-labs/ERC721A-Upgradeable
 	branch = main
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/vectorized/solady
