@@ -32,6 +32,8 @@ contract RangedEditionMinter is MintControllerBase {
 
     error NotPermissionedMint();
 
+    error MintPaused();
+
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
@@ -134,6 +136,8 @@ contract RangedEditionMinter is MintControllerBase {
     ) public payable {
         EditionMintData storage data = editionMintData[edition];
 
+        if (data.paused) revert MintPaused();
+        
         if (data.startTime > block.timestamp) {
 
             if (data.totalMinted >= data.maxPermissioned) revert OutOfPermissionedSlots();
