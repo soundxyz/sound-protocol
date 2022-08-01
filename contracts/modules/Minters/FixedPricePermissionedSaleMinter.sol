@@ -20,7 +20,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         address indexed edition,
         uint256 price,
         address signer,
-        uint32 maxMinted
+        uint32 maxMintable
     );
 
     struct EditionMintData {
@@ -29,7 +29,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         // Whitelist signer address.
         address signer;
         // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMinted;
+        uint32 maxMintable;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
     }
@@ -40,19 +40,19 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         address edition,
         uint256 price,
         address signer,
-        uint32 maxMinted
+        uint32 maxMintable
     ) public {
         _createEditionMintController(edition);
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.signer = signer;
-        data.maxMinted = maxMinted;
+        data.maxMintable = maxMintable;
         // prettier-ignore
         emit FixedPricePermissionedMintCreated(
             edition,
             price,
             signer,
-            maxMinted
+            maxMintable
         );
     }
 
@@ -67,7 +67,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         bytes calldata signature
     ) public payable {
         EditionMintData storage data = editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
         if (data.price * quantity != msg.value) revert WrongEtherValue();
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition));

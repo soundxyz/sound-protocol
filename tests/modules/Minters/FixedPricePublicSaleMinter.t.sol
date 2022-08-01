@@ -12,7 +12,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     uint32 constant END_TIME = 200;
 
-    uint32 constant MAX_MINTED = 5;
+    uint32 constant MAX_MINTABLE = 5;
 
     // prettier-ignore
     event FixedPricePublicSaleMintCreated(
@@ -20,7 +20,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         uint256 price,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMinted
+        uint32 maxMintable
     );
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
@@ -32,7 +32,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE);
     }
 
     function test_createEditionMintEmitsEvent() public {
@@ -44,9 +44,9 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPricePublicSaleMintCreated(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
+        emit FixedPricePublicSaleMintCreated(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE);
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE);
     }
 
     function test_mintBeforeStartTimeReverts() public {
@@ -87,10 +87,10 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         address caller = getRandomAccount(1);
         vm.prank(caller);
         vm.expectRevert(FixedPricePublicSaleMinter.SoldOut.selector);
-        minter.mint{ value: PRICE * (MAX_MINTED + 1) }(address(edition), MAX_MINTED + 1);
+        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MAX_MINTABLE + 1);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * MAX_MINTED }(address(edition), MAX_MINTED);
+        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MAX_MINTABLE);
 
         vm.prank(caller);
         vm.expectRevert(FixedPricePublicSaleMinter.SoldOut.selector);
