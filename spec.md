@@ -30,8 +30,16 @@ Sound Protocol 2.0 enables creators to permissinonlessly deploy gas-efficient NF
     - `tokenURI` uses `baseURI` instead, if `metadataModule` is not present
     - Implements `contractURI` (https://docs.opensea.io/docs/contract-level-metadata)
     - Allows freezing of metadata, beyond which the variables can't be modified by `owner`
+  - Minters
+    - Allows authorized minting contracts (Minters) to call the `mint(address to, uint256 quantity)` function.
+    - To authorize a minter, the owner must call the `grantRole(MINTER_ROLE, minter)` function.
   
 - `SoundXyzRegistryV1.sol`
   - Upgradeable via [UUPSUpgradeable](https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable)
   - Stores registry of NFTs by sound.xyz artists
   - Requires signature from sound.xyz to register NFTs
+
+- `modules/Minters/**.sol`
+  - Currently only allows creation and deletion of edition mints.
+  - We may want to add a feature to restrict the total number of mints per wallet in the future.
+  - We may want to allow edition mint controllers to directly edit the fields in the future.
