@@ -111,8 +111,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         emit MetadataModuleSet(metadataModule_);
     }
 
-    /// @inheritdoc ISoundEditionV1
-    function setBaseURI(string memory baseURI_) external onlyOwner {
+    function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
 
@@ -127,8 +126,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         emit ContractURISet(contractURI_);
     }
 
-    /// @inheritdoc ISoundEditionV1
-    function freezeMetadata() external onlyOwner {
+    function freezeMetadata() external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
         isMetadataFrozen = true;
@@ -156,7 +154,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     /// @notice Enables the guardian to transfer ownership of the contract to a new address.
     /// @param newOwner The new owner of this contract.
     function setNewOwner(address newOwner) external onlyGuardian {
-        transferOwnership(newOwner);
+        _transferOwnership(newOwner);
     }
 
     // ================================
@@ -169,7 +167,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     modifier onlyOwnerOrAdmin() {
-        if (_msgSender() != owner() && !hasRole(_msgSender(), ADMIN_ROLE)) revert Unauthorized();
+        if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
         _;
     }
 

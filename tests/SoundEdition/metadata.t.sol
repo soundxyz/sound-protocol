@@ -5,6 +5,7 @@ import "openzeppelin/utils/Strings.sol";
 
 import "../TestConfig.sol";
 import "../mocks/MockMetadataModule.sol";
+import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
 contract SoundEdition_metadata is TestConfig {
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
@@ -84,7 +85,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.setBaseURI(newBaseURI);
     }
 
@@ -141,7 +142,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.setContractURI(newContractURI);
     }
 
@@ -194,7 +195,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.setMetadataModule(newMetadataModule);
     }
 
@@ -264,7 +265,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.freezeMetadata();
     }
 

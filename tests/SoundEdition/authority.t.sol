@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "../TestConfig.sol";
+import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
 contract SoundEdition_authority is TestConfig {
     event GuardianSet(address indexed guardian);
@@ -37,19 +38,17 @@ contract SoundEdition_authority is TestConfig {
 
     // Non-owners can't set guardian.
     function test_nonOwnerCantSetGuardian(address nonOwner) external {
-        address guardian = address(123);
-
         SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, address(0))
         );
 
-        vm.expectRevert(SoundCreatorV1.Unauthorized.selector);
+        vm.expectRevert("Ownable: caller is not the owner");
 
-        vm.prank(nonOwner)
+        vm.prank(nonOwner);
         soundEdition.setGuardian(nonOwner);
     }
 
-    // Guardian can relinquish role.
+    // Guardian can relinquish guardianship.
     function test_guardianCanRelinquishRole() external {
         address guardian = address(12345);
 
@@ -60,8 +59,8 @@ contract SoundEdition_authority is TestConfig {
         vm.expectEmit(false, false, false, true);
         emit GuardianSet(address(0));
 
-        vm.prank(soundEdition.guardian())
-        soundEdition.relinquishRole();
+        vm.prank(soundEdition.guardian());
+        soundEdition.relinquishGuardianship();
 
         assertEq(soundEdition.guardian(), address(0));
     }
@@ -72,10 +71,10 @@ contract SoundEdition_authority is TestConfig {
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
         );
 
-        vm.expectRevert(SoundCreatorV1.Unauthorized.selector);
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
 
-        vm.prank(nonGuardian)
-        soundEdition.relinquishRole();
+        vm.prank(nonGuardian);
+        soundEdition.relinquishGuardianship();
     }
 
     // Guardian can set a new owner.
@@ -87,10 +86,7 @@ contract SoundEdition_authority is TestConfig {
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, guardian)
         );
 
-        vm.expectEmit(false, false, false, true);
-        emit GuardianSet(newOwner);
-
-        vm.prank(soundEdition.guardian())
+        vm.prank(soundEdition.guardian());
         soundEdition.setNewOwner(newOwner);
 
         assertEq(soundEdition.owner(), newOwner);
@@ -104,9 +100,9 @@ contract SoundEdition_authority is TestConfig {
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, guardian)
         );
 
-        vm.expectRevert(SoundCreatorV1.Unauthorized.selector);
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
 
-        vm.prank(nonGuardian)
+        vm.prank(nonGuardian);
         soundEdition.setNewOwner(nonGuardian);
     }
 }
