@@ -6,13 +6,13 @@ import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/ECDSA.sol";
 
+/// @title Fixed Price Permissioned Sale Minter
 /// @dev Minter class for sales approved with signatures.
 contract FixedPricePermissionedSaleMinter is MintControllerBase {
     using ECDSA for bytes32;
+
     error WrongEtherValue();
-
     error SoldOut();
-
     error InvalidSignature();
 
     // prettier-ignore

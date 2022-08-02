@@ -53,4 +53,10 @@ pnpm test:gas
 
 ## Code conventions
 
+We generally follow OpenZeppelin's conventions:
+
+- Underscore `_before` private variables.
+- Underscore `after_` function arguments which shadow globals.
+- [Natspec](https://docs.soliditylang.org/en/develop/natspec-format.html) format for comments, using `@dev` for function descriptions.
+
 To run prettier on all solidity files, uncomment the last line in `.prettierrc.js`, then run `npx prettier --write ./contracts/**/*.sol`
