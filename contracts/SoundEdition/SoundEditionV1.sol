@@ -45,6 +45,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // CONSTANTS
     // ================================
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     // ================================
     // STORAGE
@@ -134,25 +135,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
-    /*  
-        Authenticity:
-        - If edition creation is permissionless, a fraudster pretending to be a sound.xyz artist can deploy an edition
-            and post the editions for sale on secondary markets. Opensea has been grappling with this for awhile and 
-            has a lot of systems in place to mitigate it. 
-        - We can only guarantee the legitimacy of artist and edition addresses on sound.xyz. 
-        - Signature verification is not required. We can serve these lists from our API for any third parties. 
-       
-        Edition ownership recovery in the event of lost or compromised artist wallet:
-        - If an artist builds a big collector base & their wallet is lost or stolen, it could severely damage their income.
-        - Currently, the Sound multisig fulfills the guardian role for ownership recovery.
-        - For edition creation to become permissionless while still protecting artists from wallet loss or theft, artists need to be
-          able to choose their own guardian. 
-        - A single guardian address is still weak security because the guardian wallet could be compromised.
-        - Recommended solution:
-          - In the near term, inform artists of the risks and encourage them to set up a multisig as the guardian address. In the long term,
-            build the UI to make it possible to do all from sound.xyz rather than sending artists to gnosis. 
-    */
-
     /// @notice Enables owner to set a guardian for ownership recovery.
     /// @param newGuardian Address of guardian.
     function setGuardian(address newGuardian) public onlyOwner {
@@ -173,7 +155,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     /// @notice Enables the guardian to transfer ownership of the contract to a new address.
     /// @param newOwner The new owner of this contract.
-    function recoverOwnership(address newOwner) external onlyGuardian {
+    function setNewOwner(address newOwner) external onlyGuardian {
         transferOwnership(newOwner);
     }
 
@@ -182,7 +164,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // ================================
 
     modifier onlyGuardian() {
-        if (msg.sender != guardian) revert Unauthorized();
+        if (_msgSender() != guardian) revert Unauthorized();
+        _;
+    }
+
+    modifier onlyOwnerOrAdmin() {
+        if (_msgSender() != owner() && !hasRole(_msgSender(), ADMIN_ROLE)) revert Unauthorized();
         _;
     }
 

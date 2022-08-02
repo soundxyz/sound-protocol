@@ -17,7 +17,3 @@
 	url = https://github.com/chiru-labs/ERC721A-Upgradeable
 	branch = main
 	ignore = dirty
-[submodule "lib/solady"]
-	path = lib/solady
-	url = https://github.com/vectorized/solady
-	ignore = dirty
