@@ -188,7 +188,8 @@ contract RangedEditionMinter is MintControllerBase {
                 )
             )
         );
-        if (digest.recover(signature) != signer) revert InvalidSignature();
+        bool isValidSignature = digest.recover(signature) == signer && signer != address(0);
+        if (!isValidSignature) revert InvalidSignature();
     }
 
     function setStartTime(address edition, uint32 startTime) public onlyEditionMintController(edition) {

@@ -22,6 +22,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
 
     function test_createEditionMintControllerEmitsEvent() external {
         SoundEditionV1 edition = _createEdition();
+
         vm.expectEmit(false, false, false, true);
         emit MintControllerUpdated(address(edition), edition.owner());
         this.createEditionMintController(address(edition));
@@ -30,6 +31,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function test_createEditionMintControllerRevertsIfCallerNotEditionOwner() external {
         SoundEditionV1 edition = _createEdition();
         address attacker = getRandomAccount(1);
+        
         vm.expectRevert(MintControllerBase.CallerNotEditionOwner.selector);
         vm.prank(attacker);
         this.createEditionMintController(address(edition));
@@ -42,7 +44,9 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
 
     function test_createEditionMintControllerChangesController() external {
         SoundEditionV1 edition = _createEdition();
+        
         assertEq(this.editionMintController(address(edition)), address(0));
+        
         this.createEditionMintController(address(edition));
         assertEq(this.editionMintController(address(edition)), edition.owner());
     }
@@ -82,7 +86,9 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function test_setEditionMintControllerEmitsEvent() external {
         SoundEditionV1 edition = _createEdition();
         address newController = getRandomAccount(1);
+        
         this.createEditionMintController(address(edition));
+        
         vm.expectEmit(false, false, false, true);
         emit MintControllerUpdated(address(edition), newController);
         this.setEditionMintController(address(edition), newController);
@@ -91,14 +97,18 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function test_setEditionMintControllerChangesController() external {
         SoundEditionV1 edition = _createEdition();
         address newController = getRandomAccount(1);
+        
         this.createEditionMintController(address(edition));
+        
         this.setEditionMintController(address(edition), newController);
         assertEq(this.editionMintController(address(edition)), newController);
     }
 
     function test_deleteEditionMintControllerEmitsEvent() external {
         SoundEditionV1 edition = _createEdition();
+        
         this.createEditionMintController(address(edition));
+        
         vm.expectEmit(false, false, false, true);
         emit MintControllerUpdated(address(edition), address(0));
         this.deleteEditionMintController(address(edition));
@@ -107,7 +117,9 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
         SoundEditionV1 edition = _createEdition();
         address attacker = getRandomAccount(1);
+        
         this.createEditionMintController(address(edition));
+        
         vm.prank(attacker);
         vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
         this.deleteEditionMintController(address(edition));
@@ -128,8 +140,10 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
 
     function test_deleteEditionMintControllerChangesControllerToZeroAddress() external {
         SoundEditionV1 edition = _createEdition();
+        
         this.createEditionMintController(address(edition));
         assertEq(this.editionMintController(address(edition)), edition.owner());
+        
         this.deleteEditionMintController(address(edition));
         assertEq(this.editionMintController(address(edition)), address(0));
     }
