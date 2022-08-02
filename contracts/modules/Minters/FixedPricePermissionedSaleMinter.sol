@@ -15,6 +15,8 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
 
     error InvalidSignature();
 
+    error SignerIsZeroAddress();
+
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
         address indexed edition,
@@ -43,6 +45,8 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 maxMintable
     ) public {
         _createEditionMintController(edition);
+        if (signer == address(0)) revert SignerIsZeroAddress();
+        
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.signer = signer;
@@ -74,6 +78,6 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
+        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
     }
 }

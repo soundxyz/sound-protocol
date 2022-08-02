@@ -149,7 +149,7 @@ contract RangedEditionMinter is MintControllerBase {
         }
         if (data.price * quantity != msg.value) revert WrongEtherValue();
 
-        ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
+        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
     }
 
     /// @notice Gets signer address to validate permissioned purchase.

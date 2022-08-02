@@ -61,6 +61,18 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
     }
 
+    function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+        );
+
+        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+
+        vm.expectRevert(FixedPricePermissionedSaleMinter.SignerIsZeroAddress.selector);
+
+        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE);   
+    }
+
     function test_mintWithoutCorrectSignatureReverts() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
