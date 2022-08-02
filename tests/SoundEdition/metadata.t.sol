@@ -104,19 +104,32 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setBaseURISuccess() public {
-        // deploy new sound contract
+        string memory newBaseURI = "https://abc.com/";
+        uint256 tokenId = 1;
+        string memory expectedTokenURI = string.concat(newBaseURI, Strings.toString(tokenId));
+
+        // Test owner can set base URI
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
         );
-        // mint NFTs
-        soundEdition.mint(2);
-        uint256 tokenId = 1;
 
-        string memory newBaseURI = "https://abc.com/";
+        soundEdition.mint(2);
         soundEdition.setBaseURI(newBaseURI);
 
-        string memory expectedTokenURI = string.concat(newBaseURI, Strings.toString(tokenId));
         assertEq(soundEdition.tokenURI(tokenId), expectedTokenURI);
+
+        // Test admin can set base URI
+        MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
+        );
+
+        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+        soundEdition2.mint(2);
+
+        vm.prank(ARTIST_ADMIN);
+        soundEdition2.setBaseURI(newBaseURI);
+
+        assertEq(soundEdition2.tokenURI(tokenId), expectedTokenURI);
     }
 
     function test_setBaseURIEmitsEvent() public {
@@ -161,15 +174,30 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setContractURISuccess() public {
-        // deploy new sound contract
+        string memory newContractURI = "https://abc.com/";
+
+        // Test owner can set contract URI
+
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
         );
 
-        string memory newContractURI = "https://abc.com/";
         soundEdition.setContractURI(newContractURI);
 
         assertEq(soundEdition.contractURI(), newContractURI);
+
+        // Test admin can set contract URI
+
+        MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
+        );
+
+        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+
+        vm.prank(ARTIST_ADMIN);
+        soundEdition2.setContractURI(newContractURI);
+
+        assertEq(soundEdition2.contractURI(), newContractURI);
     }
 
     function test_setContractURIEmitsEvent() public {
@@ -214,7 +242,11 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setMetadataModuleSuccess() public {
-        // deploy new sound contract
+        string memory expectedTokenURI = "MOCK";
+        uint256 tokenId = 1;
+
+        // Test owner can set metadata module
+
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -225,9 +257,8 @@ contract SoundEdition_metadata is TestConfig {
                 GUARDIAN
             )
         );
-        // mint NFTs
+
         soundEdition.mint(2);
-        uint256 tokenId = 1;
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
         soundEdition.setMetadataModule(newMetadataModule);
@@ -235,6 +266,28 @@ contract SoundEdition_metadata is TestConfig {
         string memory expectedTokenURI = "MOCK";
 
         assertEq(soundEdition.tokenURI(tokenId), expectedTokenURI);
+
+        // Test admin can set metadata module
+
+        MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                IMetadataModule(address(0)),
+                BASE_URI,
+                CONTRACT_URI,
+                GUARDIAN
+            )
+        );
+
+        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+
+        soundEdition2.mint(2);
+
+        vm.prank(ARTIST_ADMIN);
+        soundEdition2.setMetadataModule(newMetadataModule);
+
+        assertEq(soundEdition2.tokenURI(tokenId), expectedTokenURI);
     }
 
     function test_setMetadataModuleEmitsEvent() public {
@@ -281,14 +334,26 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_freezeMetadataSuccess() public {
-        // deploy new sound contract
-        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+        // Test owner can freeze metadata
+        MockSoundEditionV1 soundEdition1 = MockSoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
         );
 
-        soundEdition.freezeMetadata();
+        soundEdition1.freezeMetadata();
 
-        assertEq(soundEdition.isMetadataFrozen(), true);
+        assertEq(soundEdition1.isMetadataFrozen(), true);
+
+        // Test admin can freeze metadata
+        MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
+        );
+
+        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+
+        vm.prank(ARTIST_ADMIN);
+        soundEdition2.freezeMetadata();
+
+        assertEq(soundEdition2.isMetadataFrozen(), true);
     }
 
     function test_freezeMetadataEmitsEvent() public {
