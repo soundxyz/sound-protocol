@@ -114,6 +114,7 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         if (data.price * quantity != msg.value) revert WrongEtherValue();
         if (block.timestamp < data.startTime) revert MintNotStarted();
         if (data.endTime < block.timestamp) revert MintHasEnded();
+
         ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
     }
 }

@@ -38,6 +38,12 @@ import "../modules/Metadata/IMetadataModule.sol";
  * @author Sound.xyz
  */
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
+    /// Getter for minter role hash
+    function MINTER_ROLE() external returns (bytes32);
+
+    /// Getter for admin role hash
+    function ADMIN_ROLE() external returns (bytes32);
+
     /**
      * @dev Initializes the contract
      * @param owner Owner of contract (artist)
