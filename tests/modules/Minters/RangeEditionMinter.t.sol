@@ -5,7 +5,7 @@ import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
 
-contract FixedPricePublicSaleMinterTests is TestConfig {
+contract RangeEditionMinterTests is TestConfig {
     uint256 constant PRICE = 1;
 
     uint32 constant START_TIME = 100;
@@ -62,6 +62,16 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SIGNER_PRIVATE_KEY, digest);
         return abi.encodePacked(r, s, v);
+    }
+
+    function _getTicketNumbers(uint256 startTicketNumber, uint256 quantity) internal pure returns (uint256[] memory) {
+        unchecked {
+            uint256[] memory ticketNumbers = new uint256[](quantity);
+            for (uint256 i; i < quantity; ++i) {
+                ticketNumbers[i] = startTicketNumber + i;
+            }
+            return ticketNumbers;
+        }
     }
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, RangeEditionMinter minter) {
@@ -235,25 +245,39 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         assertEq(paused, false);
     }
 
-    function test_permissionedMintIncrementsValuesCorrectly() public {
+    function test_permissionedMintSetsValuesCorrectly() public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
-
-        uint256[] memory ticketNumbers = new uint256[](2);
-        ticketNumbers[0] = 0;
-        ticketNumbers[1] = 1;
 
         uint32 quantity = 2;
 
         address caller = getRandomAccount(1);
-        bytes memory sig = _getSignature(minter, caller, address(edition), ticketNumbers);
+        bytes memory sig = _getSignature(minter, caller, address(edition), _getTicketNumbers(0, quantity));
 
         vm.warp(START_TIME - 1);
         vm.prank(caller);
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity, ticketNumbers, sig);
+        minter.mint{ value: quantity * PRICE }(address(edition), quantity, _getTicketNumbers(0, quantity), sig);
 
         (, , , , uint32 totalMinted, , uint32 totalPermissionedMinted, , ) = minter.editionMintData(address(edition));
-        assertEq(totalMinted, uint32(2));
-        assertEq(totalPermissionedMinted, uint32(2));
+        assertEq(totalMinted, quantity);
+        assertEq(totalPermissionedMinted, quantity);
+
+        assertEq(edition.ownerOf(0), caller);
+        assertEq(edition.ownerOf(1), caller);
+        assertEq(edition.totalSupply(), quantity);
+    }
+
+    function test_permissionedMintRevertsForIncorrectSignature() public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
+
+        uint32 quantity = 2;
+
+        address caller = getRandomAccount(1);
+        bytes memory sig = _getSignature(minter, getRandomAccount(2), address(edition), _getTicketNumbers(0, quantity));
+
+        vm.warp(START_TIME - 1);
+        vm.prank(caller);
+        vm.expectRevert(RangeEditionMinter.InvalidSignature.selector);
+        minter.mint{ value: quantity * PRICE }(address(edition), quantity, _getTicketNumbers(0, quantity), sig);
     }
 
     // function test_mintBeforeStartTimeReverts() public {
