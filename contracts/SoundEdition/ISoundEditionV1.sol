@@ -52,7 +52,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory contractURI
     ) external;
 
-    // @dev Mints `quantity` tokens to addrress `to`
+    /// @dev Mints `quantity` tokens to addrress `to`
     /// Each token will be assigned a token ID that is consecutively increasing.
     /// The caller must have the `MINTERROLE`, which can be granted via
     /// {grantRole}. Multiple minters, such as different minter contracts,

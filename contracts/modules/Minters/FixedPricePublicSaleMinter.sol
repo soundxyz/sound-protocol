@@ -8,12 +8,10 @@ import "../../SoundEdition/ISoundEditionV1.sol";
 /// @title Fixed Price Public Sale Minter
 /// @dev Minter class for sales at a fixed price within a time range.
 contract FixedPricePublicSaleMinter is MintControllerBase {
+    // ERRORS
     error WrongEtherValue();
-
     error SoldOut();
-
     error MintNotStarted();
-
     error MintHasEnded();
 
     // prettier-ignore
@@ -40,6 +38,7 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
 
     mapping(address => EditionMintData) public editionMintData;
 
+    /// @dev Initializes the configuration for an edition mint.
     function createEditionMint(
         address edition,
         uint256 price,
