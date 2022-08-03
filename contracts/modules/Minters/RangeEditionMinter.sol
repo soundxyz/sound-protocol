@@ -161,6 +161,11 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
 
             // If the public sale has not started, we perform permissioned sale.
             if (data.startTime > block.timestamp) {
+                // Increase `totalPermissionedMinted` by `quantity`.
+                // Require that the increased value does not exceed `maxPermissionedMintable`.
+                if ((data.totalPermissionedMinted += quantity) > data.maxPermissionedMintable)
+                    revert NoPermissionedSlots();
+
                 // Recover signer. Returns `address(0)` if signature is invalid.
                 address recovered = keccak256(
                     abi.encodePacked(
@@ -186,11 +191,6 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
                 }
                 // Require that the number of `ticketNumbers` equals `quantity`.
                 if (ticketNumbers.length != quantity) revert InvalidTicketNumbers();
-
-                // Increase `totalPermissionedMinted` by `quantity`.
-                // Require that the increased value does not exceed `maxPermissionedMintable`.
-                if ((data.totalPermissionedMinted += quantity) > data.maxPermissionedMintable)
-                    revert NoPermissionedSlots();
             }
             // Increase `totalMinted` by `quantity`.
             // Require that the increased value does not exceed `maxMintable`.
