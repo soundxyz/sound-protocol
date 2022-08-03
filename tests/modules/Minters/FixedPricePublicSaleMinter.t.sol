@@ -14,13 +14,16 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE = 5;
 
+    uint32 constant MAX_ALLOWED_PER_WALLET = 0;
+
     // prettier-ignore
     event FixedPricePublicSaleMintCreated(
         address indexed edition,
         uint256 price,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMintable
+        uint32 maxMintable,
+        uint32 maxAllowedPerWallet
     );
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
@@ -32,7 +35,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_ALLOWED_PER_WALLET);
     }
 
     function test_createEditionMintEmitsEvent() public {
@@ -44,9 +47,9 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPricePublicSaleMintCreated(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE);
+        emit FixedPricePublicSaleMintCreated(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_ALLOWED_PER_WALLET);
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_ALLOWED_PER_WALLET);
     }
 
     function test_mintBeforeStartTimeReverts() public {
