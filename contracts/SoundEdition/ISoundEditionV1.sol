@@ -36,37 +36,49 @@ import "../modules/Metadata/IMetadataModule.sol";
 /// @title ISoundEditionV1
 /// @author Sound.xyz
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
-    /// @notice Initializes the contract
-    /// @param _owner Owner of contract (artist)
-    /// @param _name Name of the token
-    /// @param _symbol Symbol of the token
-    /// @param _metadataModule Address of metadata module, address(0x00) if not used
-    /// @param baseURI_ Base URI
-    /// @param _contractURI Contract URI for OpenSea storefront
+    /// @dev Initializes the contract
+    /// @param owner Owner of contract (artist)
+    /// @param name Name of the token
+    /// @param symbol Symbol of the token
+    /// @param metadataModule Address of metadata module, address(0x00) if not used
+    /// @param baseURI Base URI
+    /// @param contractURI Contract URI for OpenSea storefront
     function initialize(
-        address _owner,
-        string memory _name,
-        string memory _symbol,
-        IMetadataModule _metadataModule,
-        string memory baseURI_,
-        string memory _contractURI
+        address owner,
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule,
+        string memory baseURI,
+        string memory contractURI
     ) external;
 
-    /// @notice Mints `_quantity` tokens to addrress `_to`
+    /// @dev Mints `quantity` tokens to addrress `to`
     /// Each token will be assigned a token ID that is consecutively increasing.
-    /// The caller must have the `MINTER_ROLE`, which can be granted via
+    /// The caller must have the `MINTERROLE`, which can be granted via
     /// {grantRole}. Multiple minters, such as different minter contracts,
     /// can be authorized simultaneously.
-    /// @param _to Address to mint to
-    /// @param _quantity Number of tokens to mint
-    function mint(address _to, uint256 _quantity) external payable;
+    /// @param to Address to mint to
+    /// @param quantity Number of tokens to mint
+    function mint(address to, uint256 quantity) external payable;
 
-    /// @notice Informs other contracts which interfaces this contract supports.
+    /// @dev Informs other contracts which interfaces this contract supports.
+    /// https://eips.ethereum.org/EIPS/eip-165
     /// @param interfaceId The interface id to check.
-    /// @dev https://eips.ethereum.org/EIPS/eip-165
     function supportsInterface(bytes4 interfaceId)
         external
         view
         override(IERC721AUpgradeable, IERC165Upgradeable)
         returns (bool);
+
+    /// @dev Sets metadata module
+    function setMetadataModule(IMetadataModule metadataModule) external;
+
+    /// @dev Sets global base URI
+    function setBaseURI(string memory baseURI) external;
+
+    /// @dev Sets contract URI
+    function setContractURI(string memory _contractURI) external;
+
+    /// @dev Freezes metadata by preventing any more changes to base URI
+    function freezeMetadata() external;
 }

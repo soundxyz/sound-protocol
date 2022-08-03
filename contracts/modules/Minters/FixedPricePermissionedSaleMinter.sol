@@ -6,13 +6,14 @@ import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/ECDSA.sol";
 
+/// @title Fixed Price Permissioned Sale Minter
 /// @dev Minter class for sales approved with signatures.
 contract FixedPricePermissionedSaleMinter is MintControllerBase {
     using ECDSA for bytes32;
+
+    // ERRORS
     error WrongEtherValue();
-
     error SoldOut();
-
     error InvalidSignature();
 
     // prettier-ignore
@@ -36,6 +37,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
 
     mapping(address => EditionMintData) public editionMintData;
 
+    /// @dev Initializes the configuration for an edition mint.
     function createEditionMint(
         address edition,
         uint256 price,
@@ -56,11 +58,13 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         );
     }
 
+    /// @dev Deletes the configuration for an edition mint.
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
         delete editionMintData[edition];
     }
 
+    /// @dev Mints tokens for a given edition.
     function mint(
         address edition,
         uint32 quantity,

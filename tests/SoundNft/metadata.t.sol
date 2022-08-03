@@ -218,6 +218,7 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition.setMetadataModule(newMetadataModule);
 
         string memory expectedTokenURI = "MOCK";
+
         assertEq(soundEdition.tokenURI(tokenId), expectedTokenURI);
     }
 
