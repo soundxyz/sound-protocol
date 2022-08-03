@@ -14,8 +14,6 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE = 5;
 
-    uint32 constant MAX_ALLOWED_PER_WALLET = 0;
-
     // prettier-ignore
     event FixedPricePublicSaleMintCreated(
         address indexed edition,
@@ -26,7 +24,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         uint32 maxAllowedPerWallet
     );
 
-    function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
+    function _createEditionAndMinter(uint32 _maxAllowedPerWallet) internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
         edition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
         );
@@ -35,7 +33,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_ALLOWED_PER_WALLET);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, _maxAllowedPerWallet);
     }
 
     function test_createEditionMintEmitsEvent() public {
@@ -47,13 +45,13 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPricePublicSaleMintCreated(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_ALLOWED_PER_WALLET);
+        emit FixedPricePublicSaleMintCreated(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, 0);
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_ALLOWED_PER_WALLET);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, 0);
     }
 
     function test_mintBeforeStartTimeReverts() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(0);
 
         vm.warp(START_TIME - 1);
 
@@ -68,7 +66,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_mintAfterEndTimeReverts() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(0);
 
         vm.warp(END_TIME + 1);
 
@@ -83,7 +81,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_mintWhenSoldOutReverts() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(0);
 
         vm.warp(START_TIME);
 
@@ -101,7 +99,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_mintWithWrongEtherValueReverts() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(0);
 
         vm.warp(START_TIME);
 
@@ -112,7 +110,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(0);
 
         vm.warp(START_TIME);
 
@@ -137,7 +135,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_mintUpdatesValuesAndEditionCorrectly() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(0);
 
         vm.warp(START_TIME);
 
@@ -157,5 +155,15 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         data = minter.editionMintData(address(edition));
 
         assertEq(data.totalMinted, quantity);
+    }
+
+    function test_mintWhenOverMaxAllowedPerWalletReverts() public {
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(1);
+        vm.warp(START_TIME);
+
+        address caller = getRandomAccount(1);
+        vm.prank(caller);
+        vm.expectRevert(FixedPricePublicSaleMinter.ExceedsMaxPerWallet.selector);
+        minter.mint{ value: PRICE * 2 }(address(edition), 2);
     }
 }
