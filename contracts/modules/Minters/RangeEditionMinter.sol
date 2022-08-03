@@ -27,9 +27,7 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
 
     error NoPermissionedSlots();
 
-    error TicketNumberExceedsMax();
-
-    error TicketNumberUsed();
+    error InvalidTicketNumbers();
 
     error SignerNotSet();
 
@@ -37,7 +35,7 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
 
     error MaxPermissionedMintableExceedsMaxMintable();
 
-    error AuctionHasEnded();
+    error MintHasEnded();
 
     // prettier-ignore
     event RangeEditionMintCreated(
@@ -115,7 +113,7 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
 
         if (maxPermissionedMintable > maxMintable) revert MaxPermissionedMintableExceedsMaxMintable();
 
-        // Invariant: if `maxPermissionedMintable > 0`, `signer != address(0)`.
+        // Invariant: if `maxPermissionedMintable != 0`, `signer != address(0)`.
         if (maxPermissionedMintable != 0) {
             if (signer == address(0)) revert SignerIsZeroAddress();
         }
@@ -148,66 +146,58 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
     function mint(
         address edition,
         uint32 quantity,
-        uint32[] calldata ticketNumbers,
+        uint256[] calldata ticketNumbers,
         bytes calldata signature
     ) public payable {
         unchecked {
             EditionMintData storage data = editionMintData[edition];
 
+            // Require not paused.
             if (data.paused) revert MintPaused();
-
+            // Require exact payment.
             if (data.price * quantity != msg.value) revert WrongEtherValue();
+            // Require not ended.
+            if (data.endTime > block.timestamp) revert MintHasEnded();
 
-            if (data.endTime > block.timestamp) revert AuctionHasEnded();
-
-            uint256 nextTotalMinted = data.totalMinted + quantity;
-
-            // If the public auction has not started.
+            // If the public sale has not started, we perform permissioned sale.
             if (data.startTime > block.timestamp) {
-                uint256 nextTotalPermissionedMinted = data.totalPermissionedMinted + quantity;
-                if (nextTotalPermissionedMinted > data.maxPermissionedMintable) revert NoPermissionedSlots();
-                _claimTicketNumbers(edition, ticketNumbers, signature, data.signer);
-                data.totalPermissionedMinted = uint32(nextTotalPermissionedMinted);
+                // Recover signer. Returns `address(0)` if signature is invalid.
+                address recovered = keccak256(
+                    abi.encodePacked(
+                        "\x19\x01",
+                        DOMAIN_SEPARATOR,
+                        keccak256(
+                            abi.encode(PERMISSIONED_SALE_TYPEHASH, address(this), msg.sender, edition, ticketNumbers)
+                        )
+                    )
+                ).recover(signature);
+                // Invariant: if `maxPermissionedMintable != 0`, `signer != address(0)`.
+                // If `maxPermissionedMintable == 0`, the previous check will have reverted.
+                // Therefore, `signer` will not be the zero address here.
+                if (recovered != data.signer) revert InvalidSignature();
+
+                // Claim tickets.
+                LibBitmap.Bitmap storage ticketClaimedBitmap = _ticketClaimedBitmaps[edition];
+                for (uint256 i; i < ticketNumbers.length; ++i) {
+                    uint256 ticketNumber = ticketNumbers[i];
+                    if (ticketNumber > type(uint32).max) revert InvalidTicketNumbers();
+                    if (ticketClaimedBitmap.get(ticketNumber)) revert InvalidTicketNumbers();
+                    ticketClaimedBitmap.set(ticketNumber);
+                }
+                // Require that the number of `ticketNumbers` equals `quantity`.
+                if (ticketNumbers.length != quantity) revert InvalidTicketNumbers();
+
+                // Increase `totalPermissionedMinted` by `quantity`.
+                // Require that the increased value does not exceed `maxPermissionedMintable`.
+                if ((data.totalPermissionedMinted += quantity) > data.maxPermissionedMintable)
+                    revert NoPermissionedSlots();
             }
-
-            if (nextTotalMinted > data.maxMintable) revert SoldOut();
-
-            data.totalMinted = uint32(nextTotalMinted);
+            // Increase `totalMinted` by `quantity`.
+            // Require that the increased value does not exceed `maxMintable`.
+            if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
 
             ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
         }
-    }
-
-    /// @notice Gets signer address to validate permissioned purchase.
-    /// @param edition Edition contract address.
-    /// @param ticketNumbers Ticket numbers to check.
-    /// @param signature Signed message.
-    /// @param signer Signer.
-    /// @dev https://eips.ethereum.org/EIPS/eip-712
-    function _claimTicketNumbers(
-        address edition,
-        uint32[] calldata ticketNumbers,
-        bytes calldata signature,
-        address signer
-    ) private {
-        unchecked {
-            for (uint256 i; i < ticketNumbers.length; ++i) {
-                uint256 ticketNumber = ticketNumbers[i];
-                if (ticketNumber > type(uint32).max) revert TicketNumberExceedsMax();
-                if (_ticketClaimedBitmaps[edition].get(ticketNumber)) revert TicketNumberUsed();
-                _ticketClaimedBitmaps[edition].set(ticketNumber);
-            }
-        }
-
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR,
-                keccak256(abi.encode(PERMISSIONED_SALE_TYPEHASH, address(this), msg.sender, edition, ticketNumbers))
-            )
-        );
-
-        if (digest.recover(signature) != signer) revert InvalidSignature();
     }
 
     function setStartTime(address edition, uint32 startTime) public onlyEditionMintController(edition) {
@@ -226,8 +216,9 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
         public
         onlyEditionMintController(edition)
     {
-        // Invariant: if `maxPermissionedMintable > 0`, `signer != address(0)`.
-        // If there is no `signer`, we cannot allow `maxPermissioned` to be set to a non-zero value.
+        // Invariant: if `maxPermissionedMintable != 0`, `signer != address(0)`.
+        // Reject all updates to `maxPermissionedMintable` (which may be non-zero),
+        // when the stored `signer` is the zero address.
         if (editionMintData[edition].signer == address(0)) revert SignerNotSet();
         if (maxPermissionedMintable > editionMintData[edition].maxMintable)
             revert MaxPermissionedMintableExceedsMaxMintable();
@@ -243,9 +234,9 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
     }
 
     function setSigner(address edition, address signer) public onlyEditionMintController(edition) {
-        // Invariant: if `maxPermissionedMintable > 0`, `signer != address(0)`.
-        // The `maxPermissionedMintable` may be non-zero, and we cannot allow
-        // `signer` to be set to the zero address.
+        // Invariant: if `maxPermissionedMintable != 0`, `signer != address(0)`.
+        // Reject all attempts to set `signer` to the zero address,
+        // as the stored `maxPermissionedMintable` may not be zero.
         if (signer == address(0)) revert SignerIsZeroAddress();
         editionMintData[edition].signer = signer;
         emit SignerSet(edition, signer);
