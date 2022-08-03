@@ -6,9 +6,10 @@ import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/ECDSA.sol";
 import "solady/utils/LibBitmap.sol";
+import "solady/utils/Multicallable.sol";
 
 /// @dev Minter class for range edition sales.
-contract RangedEditionMinter is MintControllerBase {
+contract RangedEditionMinter is MintControllerBase, Multicallable {
     using ECDSA for bytes32;
     using LibBitmap for LibBitmap.Bitmap;
 
@@ -49,7 +50,9 @@ contract RangedEditionMinter is MintControllerBase {
         uint32 maxPermissionedMintable
     );
 
-    event TimeRangeSet(address indexed edition, uint32 indexed startTime, uint32 indexed endTime);
+    event StartTimeSet(address indexed edition, uint32 indexed startTime);
+
+    event EndTimeSet(address indexed edition, uint32 indexed endTime);
 
     event SignerSet(address indexed edition, address indexed signer);
 
@@ -207,44 +210,49 @@ contract RangedEditionMinter is MintControllerBase {
         if (digest.recover(signature) != signer) revert InvalidSignature();
     }
 
-    function setTimeRange(
-        address edition,
-        uint32 startTime,
-        uint32 endTime
-    ) public onlyEditionMintController(edition) {
-        if (endTime <= startTime) revert InvalidTimeRange();
+    function setStartTime(address edition, uint32 startTime) public onlyEditionMintController(edition) {
+        if (editionMintData[edition].endTime <= startTime) revert InvalidTimeRange();
         editionMintData[edition].startTime = startTime;
-        editionMintData[edition].endTime = endTime;
-        emit TimeRangeSet(edition, startTime, endTime);
+        emit StartTimeSet(edition, startTime);
     }
 
-    function setMaxPermissionedMintable(address edition, uint32 value) public onlyEditionMintController(edition) {
+    function setEndTime(address edition, uint32 endTime) public onlyEditionMintController(edition) {
+        if (endTime <= editionMintData[edition].startTime) revert InvalidTimeRange();
+        editionMintData[edition].endTime = endTime;
+        emit EndTimeSet(edition, endTime);
+    }
+
+    function setMaxPermissionedMintable(address edition, uint32 maxPermissionedMintable)
+        public
+        onlyEditionMintController(edition)
+    {
         // Invariant: if `maxPermissionedMintable > 0`, `signer != address(0)`.
         // If there is no `signer`, we cannot allow `maxPermissioned` to be set to a non-zero value.
         if (editionMintData[edition].signer == address(0)) revert SignerNotSet();
-        if (value > editionMintData[edition].maxMintable) revert MaxPermissionedMintableExceedsMaxMintable();
-        editionMintData[edition].maxPermissionedMintable = value;
-        emit MaxPermissionedMintableSet(edition, value);
-    }
-
-    function setMaxMintable(address edition, uint32 value) public onlyEditionMintController(edition) {
-        if (editionMintData[edition].maxPermissionedMintable > value)
+        if (maxPermissionedMintable > editionMintData[edition].maxMintable)
             revert MaxPermissionedMintableExceedsMaxMintable();
-        editionMintData[edition].maxMintable = value;
-        emit MaxMintableSet(edition, value);
+        editionMintData[edition].maxPermissionedMintable = maxPermissionedMintable;
+        emit MaxPermissionedMintableSet(edition, maxPermissionedMintable);
     }
 
-    function setSigner(address edition, address value) public onlyEditionMintController(edition) {
+    function setMaxMintable(address edition, uint32 maxMintable) public onlyEditionMintController(edition) {
+        if (editionMintData[edition].maxPermissionedMintable > maxMintable)
+            revert MaxPermissionedMintableExceedsMaxMintable();
+        editionMintData[edition].maxMintable = maxMintable;
+        emit MaxMintableSet(edition, maxMintable);
+    }
+
+    function setSigner(address edition, address signer) public onlyEditionMintController(edition) {
         // Invariant: if `maxPermissionedMintable > 0`, `signer != address(0)`.
         // The `maxPermissionedMintable` may be non-zero, and we cannot allow
         // `signer` to be set to the zero address.
-        if (value == address(0)) revert SignerIsZeroAddress();
-        editionMintData[edition].signer = value;
-        emit SignerSet(edition, value);
+        if (signer == address(0)) revert SignerIsZeroAddress();
+        editionMintData[edition].signer = signer;
+        emit SignerSet(edition, signer);
     }
 
-    function setPaused(address edition, bool value) public onlyEditionMintController(edition) {
-        editionMintData[edition].paused = value;
-        emit PausedSet(edition, value);
+    function setPaused(address edition, bool paused) public onlyEditionMintController(edition) {
+        editionMintData[edition].paused = paused;
+        emit PausedSet(edition, paused);
     }
 }
