@@ -70,7 +70,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.expectRevert(FixedPricePermissionedSaleMinter.SignerIsZeroAddress.selector);
 
-        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE);   
+        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE);
     }
 
     function test_mintWithoutCorrectSignatureReverts() public {

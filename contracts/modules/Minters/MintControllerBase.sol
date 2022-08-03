@@ -54,18 +54,18 @@ abstract contract MintControllerBase {
             result := and(
                 and(
                     // Whether the returned address equals `msg.sender`.
-                    eq(mload(0x00), caller()), 
+                    eq(mload(0x00), caller()),
                     // Whether at least a word has been returned.
                     gt(returndatasize(), 31)
                 ),
                 call(
-                    gas(),   // Remaining gas.
+                    gas(), // Remaining gas.
                     edition, // The `edition` address.
-                    0,       // Send 0 Ether.
-                    0x1c,    // Offset of the selector in the memory.
-                    0x04,    // Size of the selector (4 bytes).
-                    0x00,    // Offset of the return data.
-                    0x20     // Size of the return data (1 32-byte word).
+                    0, // Send 0 Ether.
+                    0x1c, // Offset of the selector in the memory.
+                    0x04, // Size of the selector (4 bytes).
+                    0x00, // Offset of the return data.
+                    0x20 // Size of the return data (1 32-byte word).
                 )
             )
         }

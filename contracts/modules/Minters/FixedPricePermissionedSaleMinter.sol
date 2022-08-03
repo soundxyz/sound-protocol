@@ -46,7 +46,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
     ) public {
         _createEditionMintController(edition);
         if (signer == address(0)) revert SignerIsZeroAddress();
-        
+
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.signer = signer;
