@@ -9,7 +9,7 @@ import "solady/utils/LibBitmap.sol";
 import "solady/utils/Multicallable.sol";
 
 /// @dev Minter class for range edition sales.
-contract RangedEditionMinter is MintControllerBase, Multicallable {
+contract RangeEditionMinter is MintControllerBase, Multicallable {
     using ECDSA for bytes32;
     using LibBitmap for LibBitmap.Bitmap;
 
@@ -62,7 +62,7 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
 
     // The permissioned typehash (used for checking signature validity)
     bytes32 public constant PERMISSIONED_SALE_TYPEHASH =
-        keccak256("EditionInfo(address contractAddress,address buyerAddress,uint256 editionId,uint256 ticketNumber)");
+        keccak256("EditionInfo(address contract,address buyer,address edition,uint256[] memory ticketNumbers)");
 
     // Domain separator - used to prevent replay attacks using signatures from different networks
     bytes32 public immutable DOMAIN_SEPARATOR;
@@ -157,7 +157,7 @@ contract RangedEditionMinter is MintControllerBase, Multicallable {
             // Require exact payment.
             if (data.price * quantity != msg.value) revert WrongEtherValue();
             // Require not ended.
-            if (data.endTime > block.timestamp) revert MintHasEnded();
+            if (data.endTime < block.timestamp) revert MintHasEnded();
 
             // If the public sale has not started, we perform permissioned sale.
             if (data.startTime > block.timestamp) {
