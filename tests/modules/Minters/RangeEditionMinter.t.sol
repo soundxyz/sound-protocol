@@ -126,7 +126,30 @@ contract RangeEditionMinterTests is TestConfig {
         }
     }
 
-    function test_permissionedMintRevertsForMintPaused() public {
+    function test_mintUpdatesValuesAndMintsCorrectly() public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
+
+        vm.warp(START_TIME);
+
+        address caller = getRandomAccount(1);
+
+        uint32 quantity = 2;
+
+        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+
+        assertEq(data.totalMinted, 0);
+
+        vm.prank(caller);
+        minter.mint{ value: PRICE * quantity }(address(edition), quantity);
+
+        assertEq(edition.balanceOf(caller), uint256(quantity));
+
+        data = minter.editionMintData(address(edition));
+
+        assertEq(data.totalMinted, quantity);
+    }
+
+    function test_mintRevertsForMintPaused() public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
         uint32 quantity = 1;
