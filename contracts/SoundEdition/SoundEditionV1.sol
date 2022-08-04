@@ -93,6 +93,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
+    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
+        _mint(to, quantity);
+    }
+
+    /// @inheritdoc ISoundEditionV1
     function setMetadataModule(IMetadataModule metadataModule_) external onlyOwner {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
@@ -165,10 +170,5 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         returns (address fundingRecipient, uint256 royaltyAmount)
     {
         // todo
-    }
-
-    /// @inheritdoc ISoundEditionV1
-    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
-        _mint(to, quantity);
     }
 }
