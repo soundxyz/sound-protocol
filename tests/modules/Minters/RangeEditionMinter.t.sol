@@ -71,12 +71,13 @@ contract RangeEditionMinterTests is TestConfig {
 
         RangeEditionMinter minter = new RangeEditionMinter();
 
-        bool hasRevert = true;
+        bool hasRevert;
 
         if (!(startTime <= closingTime && closingTime <= endTime)) {
             vm.expectRevert(
                 abi.encodeWithSelector(RangeEditionMinter.InvalidTimeRange.selector, startTime, closingTime, endTime)
             );
+            hasRevert = true;
         } else if (!(maxMintableLower <= maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
@@ -85,8 +86,7 @@ contract RangeEditionMinterTests is TestConfig {
                     maxMintableUpper
                 )
             );
-        } else {
-            hasRevert = false;
+            hasRevert = true;
         }
 
         if (!hasRevert) {
@@ -241,7 +241,8 @@ contract RangeEditionMinterTests is TestConfig {
     function test_setTime(
         uint32 startTime,
         uint32 closingTime,
-        uint32 endTime
+        uint32 endTime,
+        bool testLocked
     ) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
@@ -251,6 +252,10 @@ contract RangeEditionMinterTests is TestConfig {
             vm.expectRevert(
                 abi.encodeWithSelector(RangeEditionMinter.InvalidTimeRange.selector, startTime, closingTime, endTime)
             );
+            hasRevert = true;
+        } else if (testLocked) {
+            minter.lock(address(edition));
+            vm.expectRevert(RangeEditionMinter.MintDataLocked.selector);
             hasRevert = true;
         }
 
@@ -269,7 +274,11 @@ contract RangeEditionMinterTests is TestConfig {
         }
     }
 
-    function test_setMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper) public {
+    function test_setMaxMintableRange(
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper,
+        bool testLocked
+    ) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
         bool hasRevert;
@@ -282,6 +291,10 @@ contract RangeEditionMinterTests is TestConfig {
                     maxMintableUpper
                 )
             );
+            hasRevert = true;
+        } else if (testLocked) {
+            minter.lock(address(edition));
+            vm.expectRevert(RangeEditionMinter.MintDataLocked.selector);
             hasRevert = true;
         }
 
@@ -299,16 +312,25 @@ contract RangeEditionMinterTests is TestConfig {
         }
     }
 
-    function test_setPaused() public {
+    function test_setPaused(bool paused, bool testLocked) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
-        vm.expectEmit(false, false, false, true);
+        bool hasRevert;
 
-        for (uint256 i; i < 5; ++i) {
-            bool paused = i & 1 == 0;
+        if (testLocked) {
+            minter.lock(address(edition));
+            vm.expectRevert(RangeEditionMinter.MintDataLocked.selector);
+            hasRevert = true;
+        }
+
+        if (!hasRevert) {
+            vm.expectEmit(false, false, false, true);
             emit PausedSet(address(edition), paused);
-            minter.setPaused(address(edition), paused);
+        }
 
+        minter.setPaused(address(edition), paused);
+
+        if (!hasRevert) {
             RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
             assertEq(data.paused, paused);
         }
