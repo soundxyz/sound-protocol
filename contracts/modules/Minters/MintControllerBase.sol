@@ -115,12 +115,12 @@ abstract contract MintControllerBase {
         emit MintControllerUpdated(edition, controller);
     }
 
-    /// @dev Enables owner or admins to mint to a given address for free.
+    /// @dev Enables owner or admins to mint to a given address for no cost.
     function adminMint(
         SoundEditionV1 edition,
         address recipient,
         uint256 quantity
-    ) public payable {
+    ) public {
         if (edition.owner() != msg.sender && !edition.hasRole(edition.ADMIN_ROLE(), msg.sender)) revert Unauthorized();
 
         ISoundEditionV1(edition).mint(recipient, quantity);

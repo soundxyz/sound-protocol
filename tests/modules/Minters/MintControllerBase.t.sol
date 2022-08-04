@@ -1,9 +1,9 @@
 pragma solidity ^0.8.15;
 
 import "../../TestConfig.sol";
+import "../../../contracts/modules/Minters/MintControllerBase.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minters/MintControllerBase.sol";
 
 contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function _createEdition() internal returns (SoundEditionV1 edition) {
@@ -146,5 +146,74 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
 
         this.deleteEditionMintController(address(edition));
         assertEq(this.editionMintController(address(edition)), address(0));
+    }
+
+    function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
+        vm.assume(nonAdminOrOwner != address(this));
+        vm.assume(nonAdminOrOwner != address(0));
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
+        );
+
+        this.createEditionMintController(address(edition));
+
+        edition.grantRole(edition.MINTER_ROLE(), address(this));
+
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+
+        vm.prank(nonAdminOrOwner);
+        this.adminMint(edition, nonAdminOrOwner, 1);
+    }
+
+    function test_adminMintSuccess() public {
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
+        );
+
+        // Register the edition
+        this.createEditionMintController(address(edition));
+
+        // Test owner can mint to own address
+        address owner = address(12345);
+        edition.transferOwnership(owner);
+
+        // Give this minter the minter role
+        edition.grantRole(edition.MINTER_ROLE(), address(this));
+
+        // Since we're testing the MintControllerBase, we're not setting a max quantity, so this number can be anything up to uint32.max;
+        uint32 quantity = 307023923;
+
+        vm.prank(owner);
+        this.adminMint(edition, owner, quantity);
+
+        assert(edition.balanceOf(owner) == quantity);
+
+        // Test owner can mint to a recipient address
+        address recipient1 = address(39730);
+        edition.transferOwnership(owner);
+
+        vm.prank(owner);
+        this.adminMint(edition, recipient1, quantity);
+
+        assert(edition.balanceOf(recipient1) == quantity);
+
+        // Test an admin can mint to own address
+        address admin = address(54321);
+
+        edition.grantRole(edition.MINTER_ROLE(), address(this));
+        edition.grantRole(edition.ADMIN_ROLE(), admin);
+
+        vm.prank(admin);
+        this.adminMint(edition, admin, 420);
+
+        assert(edition.balanceOf(admin) == 420);
+
+        // Test an admin can mint to a recipient address
+        address recipient2 = address(837802);
+        vm.prank(admin);
+        this.adminMint(edition, recipient2, quantity);
+
+        assert(edition.balanceOf(recipient2) == quantity);
     }
 }

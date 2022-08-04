@@ -67,6 +67,8 @@ contract SoundEdition_authority is TestConfig {
 
     // Non-guardians can't relinquish role.
     function test_nonGuardiansCantRelinquishRole(address nonGuardian) external {
+        vm.assume(nonGuardian != GUARDIAN);
+
         SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, GUARDIAN)
         );
