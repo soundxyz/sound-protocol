@@ -111,7 +111,13 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
 
-        _validateEditionMintData(data);
+        if (data.startTime > data.closingTime || data.closingTime > data.endTime)
+            revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
+
+        if (data.maxMintableLower > data.maxMintableUpper)
+            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
+
+        if (data.locked) revert MintDataLocked();
 
         // prettier-ignore
         emit RangeEditionMintCreated(
@@ -134,23 +140,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     /// @dev Returns the `EditionMintData` for `edition.
     function editionMintData(address edition) public view returns (EditionMintData memory) {
         return _editionMintData[edition];
-    }
-
-    // ================================
-    // INTERNAL HELPER FUNCTIONS
-    // ================================
-
-    /// @dev Helper function to validate all the fields for `data` upon update.
-    function _validateEditionMintData(EditionMintData storage data) internal view {
-        if (data.startTime > data.closingTime || data.closingTime > data.endTime) {
-            revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
-        }
-        if (data.maxMintableLower > data.maxMintableUpper) {
-            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
-        }
-        if (data.locked) {
-            revert MintDataLocked();
-        }
     }
 
     // ================================
@@ -206,7 +195,12 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         data.startTime = startTime;
         data.closingTime = closingTime;
         data.endTime = endTime;
-        _validateEditionMintData(data);
+
+        if (data.startTime > data.closingTime || data.closingTime > data.endTime)
+            revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
+
+        if (data.locked) revert MintDataLocked();
+
         emit TimeRangeSet(edition, startTime, closingTime, endTime);
     }
 
@@ -219,14 +213,22 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         EditionMintData storage data = _editionMintData[edition];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-        _validateEditionMintData(_editionMintData[edition]);
+
+        if (data.maxMintableLower > data.maxMintableUpper)
+            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
+
+        if (data.locked) revert MintDataLocked();
+
         emit MaxMintableRangeSet(edition, maxMintableLower, maxMintableUpper);
     }
 
     /// @dev Sets the paused status.
     function setPaused(address edition, bool paused) public onlyEditionMintController(edition) {
-        _editionMintData[edition].paused = paused;
-        _validateEditionMintData(_editionMintData[edition]);
+        EditionMintData storage data = _editionMintData[edition];
+        data.paused = paused;
+
+        if (data.locked) revert MintDataLocked();
+
         emit PausedSet(edition, paused);
     }
 
