@@ -335,4 +335,11 @@ contract RangeEditionMinterTests is TestConfig {
             assertEq(data.paused, paused);
         }
     }
+
+    function test_lockEmitsEvent() public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
+        vm.expectEmit(false, false, false, true);
+        emit Locked(address(edition));
+        minter.lock(address(edition));
+    }
 }
