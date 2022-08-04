@@ -140,6 +140,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // INTERNAL HELPER FUNCTIONS
     // ================================
 
+    /// @dev Helper function to validate all the fields for `data` upon update.
     function _validateEditionMintData(EditionMintData storage data) internal view {
         if (data.startTime > data.closingTime || data.closingTime > data.endTime) {
             revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
@@ -253,6 +254,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         setMaxMintableRange(edition, maxMintableLower, _editionMintData[edition].maxMintableUpper);
     }
 
+    /// @dev Sets the `maxMintableUpper` for `edition`.
     function setMaxMintableUpper(address edition, uint32 maxMintableUpper) public {
         setMaxMintableRange(edition, _editionMintData[edition].maxMintableLower, maxMintableUpper);
     }
