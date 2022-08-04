@@ -91,6 +91,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // CREATE AND DELETE
     // ================================
 
+    /// @dev Initializes the configuration for an edition mint.
     function createEditionMint(
         address edition,
         uint256 price,
@@ -124,11 +125,13 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         );
     }
 
+    /// @dev Deletes the configuration for an edition mint.
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
         delete _editionMintData[edition];
     }
 
+    /// @dev Returns the `EditionMintData` for `edition.
     function editionMintData(address edition) public view returns (EditionMintData memory) {
         return _editionMintData[edition];
     }
@@ -153,6 +156,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // MINT
     // ================================
 
+    /// @dev Mints tokens for a given edition.
     function mint(address edition, uint32 quantity) public payable {
         unchecked {
             EditionMintData storage data = _editionMintData[edition];
@@ -184,11 +188,13 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // SETTER FUNCTIONS
     // ================================
 
+    /// @dev Locks the mint configuration.
     function lock(address edition) public onlyEditionMintController(edition) {
         _editionMintData[edition].locked = true;
         emit Locked(edition);
     }
 
+    /// @dev Sets the time range.
     function setTimeRange(
         address edition,
         uint32 startTime,
@@ -203,6 +209,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         emit TimeRangeSet(edition, startTime, closingTime, endTime);
     }
 
+    /// @dev Sets the max mintable range.
     function setMaxMintableRange(
         address edition,
         uint32 maxMintableLower,
@@ -215,6 +222,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         emit MaxMintableRangeSet(edition, maxMintableLower, maxMintableUpper);
     }
 
+    /// @dev Sets the paused status.
     function setPaused(address edition, bool paused) public onlyEditionMintController(edition) {
         _editionMintData[edition].paused = paused;
         _validateEditionMintData(_editionMintData[edition]);
@@ -225,18 +233,22 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // CONVENIENCE SETTER FUNCTIONS
     // ================================
 
+    /// @dev Sets the `startTime` for `edition`.
     function setStartTime(address edition, uint32 startTime) public {
         setTimeRange(edition, startTime, _editionMintData[edition].closingTime, _editionMintData[edition].endTime);
     }
 
+    /// @dev Sets the `closingTime` for `edition`.
     function setClosingTime(address edition, uint32 closingTime) public {
         setTimeRange(edition, _editionMintData[edition].startTime, closingTime, _editionMintData[edition].endTime);
     }
 
+    /// @dev Sets the `endTime` for `edition`.
     function setEndTime(address edition, uint32 endTime) public {
         setTimeRange(edition, _editionMintData[edition].startTime, _editionMintData[edition].closingTime, endTime);
     }
 
+    /// @dev Sets the `maxMintableLower` for `edition`.
     function setMaxMintableLower(address edition, uint32 maxMintableLower) public {
         setMaxMintableRange(edition, maxMintableLower, _editionMintData[edition].maxMintableUpper);
     }
@@ -245,10 +257,12 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         setMaxMintableRange(edition, _editionMintData[edition].maxMintableLower, maxMintableUpper);
     }
 
+    /// @dev Pause the mint for `edition`.
     function pause(address edition) public {
         setPaused(edition, true);
     }
 
+    /// @dev Unpause the mint for `edition`.
     function unpause(address edition) public {
         setPaused(edition, false);
     }
