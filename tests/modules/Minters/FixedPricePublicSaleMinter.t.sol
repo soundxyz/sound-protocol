@@ -166,4 +166,20 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         vm.expectRevert(FixedPricePublicSaleMinter.ExceedsMaxPerWallet.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), 2);
     }
+
+    function test_mintWhenAllowedPerWalletIsSetAndSatisfied() public {
+        // Set max allowed per wallet to 2
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter(2);
+
+        // Ensure we can mint the max allowed of 2 tokens
+        address caller = getRandomAccount(1);
+        vm.warp(START_TIME);
+        vm.prank(caller);
+        minter.mint{ value: PRICE * 2 }(address(edition), 2);
+
+        assertEq(edition.balanceOf(caller), 2);
+
+        FixedPricePublicSaleMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        assertEq(data.totalMinted, 2);
+    }
 }
