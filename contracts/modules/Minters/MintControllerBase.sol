@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.15;
 
+/// @title Mint Controller Base
 /// @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
 abstract contract MintControllerBase {
     /// @dev The caller must be the the controller of this edition to perform this action.
@@ -31,9 +32,7 @@ abstract contract MintControllerBase {
     }
 
     /// @dev Assigns the current caller as the controller to `edition`.
-    ///
     /// Calling conditions:
-    ///
     /// - The `edition` must not have a controller.
     function _createEditionMintController(address edition) internal {
         if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
@@ -83,9 +82,7 @@ abstract contract MintControllerBase {
     }
 
     /// @dev Sets the new `controller` for `edition`.
-    ///
     /// Calling conditions:
-    ///
     /// - The caller must be the current controller for `edition`.
     function setEditionMintController(address edition, address controller)
         public
