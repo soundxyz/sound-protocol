@@ -8,9 +8,6 @@ import "solady/utils/Multicallable.sol";
 
 /// @dev Minter class for range edition sales.
 contract RangeEditionMinter is MintControllerBase, Multicallable {
-    using ECDSA for bytes32;
-    using LibBitmap for LibBitmap.Bitmap;
-
     // ================================
     // CUSTOM ERRORS
     // ================================
