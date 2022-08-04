@@ -14,6 +14,9 @@ abstract contract MintControllerBase {
     /// @dev A mint controller is already assigned to this edition.
     error MintControllerAlreadyExists(address controller);
 
+    /// @dev The caller must be the owner of the edition contract.
+    error CallerNotEditionOwner();
+
     /// @dev Emitted when the mint `controller` for `edition` is changed.
     event MintControllerUpdated(address indexed edition, address indexed controller);
 
@@ -32,9 +35,39 @@ abstract contract MintControllerBase {
     /// Calling conditions:
     /// - The `edition` must not have a controller.
     function _createEditionMintController(address edition) internal {
+        if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
         if (_controllers[edition] != address(0)) revert MintControllerAlreadyExists(_controllers[edition]);
         _controllers[edition] = msg.sender;
         emit MintControllerUpdated(edition, msg.sender);
+    }
+
+    /// @dev Returns whether the caller is the owner of `edition`.
+    function _callerIsEditionOwner(address edition) private returns (bool result) {
+        // To avoid defining an interface just to call `owner()`.
+        // And Solidity does not have try catch for plain old `call`.
+        assembly {
+            // Store the 4-byte function selector of `owner()` into scratch space.
+            mstore(0x00, 0x8da5cb5b)
+            // The `call` must be placed as the last argument of `and`,
+            // as the arguments are evaluated right to left.
+            result := and(
+                and(
+                    // Whether the returned address equals `msg.sender`.
+                    eq(mload(0x00), caller()),
+                    // Whether at least a word has been returned.
+                    gt(returndatasize(), 31)
+                ),
+                call(
+                    gas(), // Remaining gas.
+                    edition, // The `edition` address.
+                    0, // Send 0 Ether.
+                    0x1c, // Offset of the selector in the memory.
+                    0x04, // Size of the selector (4 bytes).
+                    0x00, // Offset of the return data.
+                    0x20 // Size of the return data (1 32-byte word).
+                )
+            )
+        }
     }
 
     /// @dev Convenience function for deleting a mint controller.
