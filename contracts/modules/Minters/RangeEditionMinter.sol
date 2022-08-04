@@ -4,8 +4,6 @@ pragma solidity ^0.8.15;
 
 import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
-import "solady/utils/ECDSA.sol";
-import "solady/utils/LibBitmap.sol";
 import "solady/utils/Multicallable.sol";
 
 /// @dev Minter class for range edition sales.
