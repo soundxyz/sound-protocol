@@ -61,46 +61,6 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTED);
     }
 
-    function test_createEditionMintRevertsIfMintEditionExists() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
-
-        // Somehow `vm.expectRevert(EditionMinter.MintAlreadyExists.selector)` fails here.
-        // Even though running `minter.createEditionMint(...)` will revert with that selector.
-        (bool status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(
-                FixedPricePermissionedSaleMinter.createEditionMint.selector,
-                address(edition),
-                PRICE,
-                _signerAddress(),
-                MAX_MINTED
-            )
-        );
-        assertFalse(status);
-    }
-
-    function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
-
-        address caller = getRandomAccount(1);
-        vm.prank(caller);
-        vm.expectRevert(EditionMinter.MintControllerUnauthorized.selector);
-        minter.deleteEditionMint(address(edition));
-
-        minter.setEditionMintController(address(edition), caller);
-        vm.prank(caller);
-        minter.deleteEditionMint(address(edition));
-    }
-
-    function test_deleteEditionMintRevertsIfMintEditionDoesNotExist() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
-
-        minter.deleteEditionMint(address(edition));
-
-        vm.expectRevert(EditionMinter.MintNotFound.selector);
-
-        minter.deleteEditionMint(address(edition));
-    }
-
     function test_mintWithoutCorrectSignatureReverts() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
@@ -110,7 +70,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         vm.prank(caller);
         minter.mint{ value: PRICE }(address(edition), 1, sig);
 
-        vm.expectRevert(FixedPricePermissionedSaleMinter.MintWithInvalidSignature.selector);
+        vm.expectRevert(FixedPricePermissionedSaleMinter.InvalidSignature.selector);
         minter.mint{ value: PRICE }(address(edition), 1, sig);
     }
 
@@ -121,25 +81,25 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(FixedPricePermissionedSaleMinter.MintWithWrongEtherValue.selector);
+        vm.expectRevert(FixedPricePermissionedSaleMinter.WrongEtherValue.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), 1, sig);
     }
 
-    function test_mintDuringOutOfStockReverts() public {
+    function test_mintWhenSoldOutReverts() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
         address caller = getRandomAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(FixedPricePermissionedSaleMinter.MintOutOfStock.selector);
+        vm.expectRevert(FixedPricePermissionedSaleMinter.SoldOut.selector);
         minter.mint{ value: PRICE * (MAX_MINTED + 1) }(address(edition), MAX_MINTED + 1, sig);
 
         vm.prank(caller);
         minter.mint{ value: PRICE * MAX_MINTED }(address(edition), MAX_MINTED, sig);
 
         vm.prank(caller);
-        vm.expectRevert(FixedPricePermissionedSaleMinter.MintOutOfStock.selector);
+        vm.expectRevert(FixedPricePermissionedSaleMinter.SoldOut.selector);
         minter.mint{ value: PRICE }(address(edition), 1, sig);
     }
 

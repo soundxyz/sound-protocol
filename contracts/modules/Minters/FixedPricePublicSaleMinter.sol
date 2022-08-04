@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.15;
 
-import "./EditionMinter.sol";
+import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 
-contract FixedPricePublicSaleMinter is EditionMinter {
-    error MintWithWrongEtherValue();
-
-    error MintOutOfStock();
-
+/// @title Fixed Price Public Sale Minter
+/// @dev Minter class for sales at a fixed price within a time range.
+contract FixedPricePublicSaleMinter is MintControllerBase {
+    // ERRORS
+    error WrongEtherValue();
+    error SoldOut();
     error MintNotStarted();
-
     error MintHasEnded();
 
     // prettier-ignore
@@ -38,6 +38,7 @@ contract FixedPricePublicSaleMinter is EditionMinter {
 
     mapping(address => EditionMintData) public editionMintData;
 
+    /// @dev Initializes the configuration for an edition mint.
     function createEditionMint(
         address edition,
         uint256 price,
@@ -45,7 +46,7 @@ contract FixedPricePublicSaleMinter is EditionMinter {
         uint32 endTime,
         uint32 maxMinted
     ) public {
-        _createEditionMint(edition);
+        _createEditionMintController(edition);
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.startTime = startTime;
@@ -62,14 +63,14 @@ contract FixedPricePublicSaleMinter is EditionMinter {
     }
 
     function deleteEditionMint(address edition) public {
-        _deleteEditionMint(edition);
+        _deleteEditionMintController(edition);
         delete editionMintData[edition];
     }
 
-    function mint(address edition, uint32 quantity) public payable virtual {
+    function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMinted) revert MintOutOfStock();
-        if (data.price * quantity != msg.value) revert MintWithWrongEtherValue();
+        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        if (data.price * quantity != msg.value) revert WrongEtherValue();
         if (block.timestamp < data.startTime) revert MintNotStarted();
         if (data.endTime < block.timestamp) revert MintHasEnded();
         ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);

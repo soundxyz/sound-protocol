@@ -23,8 +23,6 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         uint32 maxMinted
     );
 
-    event MintControllerUpdated(address indexed edition, address indexed controller);
-
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
         edition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
@@ -51,73 +49,6 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
     }
 
-    function test_createEditionMintEmitsMintControllerUpdatedEvent() public {
-        SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
-        );
-
-        FixedPricePublicSaleMinter minter = new FixedPricePublicSaleMinter();
-
-        vm.expectEmit(false, false, false, true);
-
-        emit MintControllerUpdated(address(edition), edition.owner());
-
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
-    }
-
-    function test_createEditionMintRevertsIfMintEditionExists() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
-
-        vm.expectRevert(EditionMinter.MintAlreadyExists.selector);
-
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTED);
-    }
-
-    function test_deleteEditionMintEmitsMintControllerUpdatedEvent() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
-
-        vm.expectEmit(false, false, false, true);
-
-        emit MintControllerUpdated(address(edition), address(0));
-
-        minter.deleteEditionMint(address(edition));
-    }
-
-    function test_setEditionMintControllerEmitsMintControllerUpdatedEvent() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
-
-        vm.expectEmit(false, false, false, true);
-
-        address newController = getRandomAccount(1);
-
-        emit MintControllerUpdated(address(edition), newController);
-
-        minter.setEditionMintController(address(edition), newController);
-    }
-
-    function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
-
-        address caller = getRandomAccount(1);
-        vm.prank(caller);
-        vm.expectRevert(EditionMinter.MintControllerUnauthorized.selector);
-        minter.deleteEditionMint(address(edition));
-
-        minter.setEditionMintController(address(edition), caller);
-        vm.prank(caller);
-        minter.deleteEditionMint(address(edition));
-    }
-
-    function test_deleteEditionMintRevertsIfMintEditionDoesNotExist() public {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
-
-        minter.deleteEditionMint(address(edition));
-
-        vm.expectRevert(EditionMinter.MintNotFound.selector);
-
-        minter.deleteEditionMint(address(edition));
-    }
-
     function test_mintBeforeStartTimeReverts() public {
         (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
 
@@ -133,7 +64,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         minter.mint{ value: PRICE }(address(edition), 1);
     }
 
-    function test_mintAfterStartTimeReverts() public {
+    function test_mintAfterEndTimeReverts() public {
         (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
 
         vm.warp(END_TIME + 1);
@@ -148,21 +79,21 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         minter.mint{ value: PRICE }(address(edition), 1);
     }
 
-    function test_mintDuringOutOfStockReverts() public {
+    function test_mintWhenSoldOutReverts() public {
         (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
 
         vm.warp(START_TIME);
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.MintOutOfStock.selector);
+        vm.expectRevert(FixedPricePublicSaleMinter.SoldOut.selector);
         minter.mint{ value: PRICE * (MAX_MINTED + 1) }(address(edition), MAX_MINTED + 1);
 
         vm.prank(caller);
         minter.mint{ value: PRICE * MAX_MINTED }(address(edition), MAX_MINTED);
 
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.MintOutOfStock.selector);
+        vm.expectRevert(FixedPricePublicSaleMinter.SoldOut.selector);
         minter.mint{ value: PRICE }(address(edition), 1);
     }
 
@@ -173,7 +104,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.MintWithWrongEtherValue.selector);
+        vm.expectRevert(FixedPricePublicSaleMinter.WrongEtherValue.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), 1);
     }
 

@@ -2,18 +2,19 @@
 
 pragma solidity ^0.8.15;
 
-import "./EditionMinter.sol";
+import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/ECDSA.sol";
 
-contract FixedPricePermissionedSaleMinter is EditionMinter {
+/// @title Fixed Price Permissioned Sale Minter
+/// @dev Minter class for sales approved with signatures.
+contract FixedPricePermissionedSaleMinter is MintControllerBase {
     using ECDSA for bytes32;
 
-    error MintWithWrongEtherValue();
-
-    error MintOutOfStock();
-
-    error MintWithInvalidSignature();
+    // ERRORS
+    error WrongEtherValue();
+    error SoldOut();
+    error InvalidSignature();
 
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
@@ -36,13 +37,14 @@ contract FixedPricePermissionedSaleMinter is EditionMinter {
 
     mapping(address => EditionMintData) public editionMintData;
 
+    /// @dev Initializes the configuration for an edition mint.
     function createEditionMint(
         address edition,
         uint256 price,
         address signer,
         uint32 maxMinted
     ) public {
-        _createEditionMint(edition);
+        _createEditionMintController(edition);
         EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.signer = signer;
@@ -56,23 +58,25 @@ contract FixedPricePermissionedSaleMinter is EditionMinter {
         );
     }
 
+    /// @dev Deletes the configuration for an edition mint.
     function deleteEditionMint(address edition) public {
-        _deleteEditionMint(edition);
+        _deleteEditionMintController(edition);
         delete editionMintData[edition];
     }
 
+    /// @dev Mints tokens for a given edition.
     function mint(
         address edition,
         uint32 quantity,
         bytes calldata signature
     ) public payable {
         EditionMintData storage data = editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMinted) revert MintOutOfStock();
-        if (data.price * quantity != msg.value) revert MintWithWrongEtherValue();
+        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        if (data.price * quantity != msg.value) revert WrongEtherValue();
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition));
         hash = hash.toEthSignedMessageHash();
-        if (hash.recover(signature) != data.signer) revert MintWithInvalidSignature();
+        if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
         ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
     }

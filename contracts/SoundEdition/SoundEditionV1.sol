@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
-import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
 import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 
@@ -36,12 +36,7 @@ import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 
 /// @title SoundEditionV1
 /// @author Sound.xyz
-contract SoundEditionV1 is
-    ERC721AQueryableUpgradeable,
-    IERC2981Upgradeable,
-    OwnableUpgradeable,
-    AccessControlUpgradeable
-{
+contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, OwnableUpgradeable, AccessControlUpgradeable {
     // ================================
     // CONSTANTS
     // ================================
@@ -60,10 +55,10 @@ contract SoundEditionV1 is
     // EVENTS & ERRORS
     // ================================
 
-    event MetadataModuleSet(IMetadataModule _metadataModule);
+    event MetadataModuleSet(IMetadataModule metadataModule);
     event BaseURISet(string baseURI_);
-    event ContractURISet(string _contractURI);
-    event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
+    event ContractURISet(string contractURI);
+    event MetadataFrozen(IMetadataModule metadataModule, string baseURI_, string contractURI);
 
     error MetadataIsFrozen();
 
@@ -71,45 +66,41 @@ contract SoundEditionV1 is
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
     // ================================
 
-    /// @notice Initializes the contract
-    /// @param _owner Owner of contract (artist)
-    /// @param _name Name of the token
-    /// @param _symbol Symbol of the token
-    /// @param _metadataModule Address of metadata module, address(0x00) if not used
-    /// @param baseURI_ Base URI
-    /// @param _contractURI Contract URI for OpenSea storefront
+    /// @inheritdoc ISoundEditionV1
     function initialize(
-        address _owner,
-        string memory _name,
-        string memory _symbol,
-        IMetadataModule _metadataModule,
+        address owner,
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule_,
         string memory baseURI_,
-        string memory _contractURI
+        string memory contractURI_
     ) public initializerERC721A initializer {
-        __ERC721A_init(_name, _symbol);
+        __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
         __Ownable_init();
 
-        metadataModule = _metadataModule;
+        metadataModule = metadataModule_;
         baseURI = baseURI_;
-        contractURI = _contractURI;
+        contractURI = contractURI_;
 
         __AccessControl_init();
 
         // Set ownership to owner
-        transferOwnership(_owner);
+        transferOwnership(owner);
 
         // Give owner the DEFAULT_ADMIN_ROLE
-        _grantRole(DEFAULT_ADMIN_ROLE, _owner);
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
     }
 
-    function setMetadataModule(IMetadataModule _metadataModule) external onlyOwner {
+    /// @inheritdoc ISoundEditionV1
+    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwner {
         if (isMetadataFrozen) revert MetadataIsFrozen();
-        metadataModule = _metadataModule;
+        metadataModule = metadataModule_;
 
-        emit MetadataModuleSet(_metadataModule);
+        emit MetadataModuleSet(metadataModule_);
     }
 
+    /// @inheritdoc ISoundEditionV1
     function setBaseURI(string memory baseURI_) external onlyOwner {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
@@ -117,13 +108,15 @@ contract SoundEditionV1 is
         emit BaseURISet(baseURI_);
     }
 
-    function setContractURI(string memory _contractURI) external onlyOwner {
+    /// @inheritdoc ISoundEditionV1
+    function setContractURI(string memory contractURI_) external onlyOwner {
         if (isMetadataFrozen) revert MetadataIsFrozen();
-        contractURI = _contractURI;
+        contractURI = contractURI_;
 
-        emit ContractURISet(_contractURI);
+        emit ContractURISet(contractURI_);
     }
 
+    /// @inheritdoc ISoundEditionV1
     function freezeMetadata() external onlyOwner {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
@@ -135,6 +128,7 @@ contract SoundEditionV1 is
     // VIEW FUNCTIONS
     // ================================
 
+    /// @inheritdoc IERC721AUpgradeable
     function tokenURI(uint256 tokenId)
         public
         view
@@ -151,41 +145,35 @@ contract SoundEditionV1 is
         return bytes(baseURI_).length != 0 ? string.concat(baseURI_, _toString(tokenId)) : "";
     }
 
-    /// @notice Informs other contracts which interfaces this contract supports
-    /// @param _interfaceId The interface id to check
-    /// @dev https://eips.ethereum.org/EIPS/eip-165
-    function supportsInterface(bytes4 _interfaceId)
+    /// @inheritdoc ISoundEditionV1
+    function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721AUpgradeable, IERC721AUpgradeable, AccessControlUpgradeable, IERC165Upgradeable)
+        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return
-            ERC721AUpgradeable.supportsInterface(_interfaceId) ||
-            AccessControlUpgradeable.supportsInterface(_interfaceId);
+            ERC721AUpgradeable.supportsInterface(interfaceId) ||
+            AccessControlUpgradeable.supportsInterface(interfaceId);
     }
 
-    /// @notice Get royalty information for token
-    /// @param _tokenId token id
-    /// @param _salePrice Sale price for the token
-    function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+    /// @inheritdoc IERC2981Upgradeable
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
-        override
+        override(IERC2981Upgradeable)
         returns (address fundingRecipient, uint256 royaltyAmount)
     {
         // todo
     }
 
-    function _startTokenId() internal view override returns (uint256) {
+    /// @inheritdoc ERC721AUpgradeable
+    function _startTokenId() internal pure override returns (uint256) {
         return 1;
     }
 
-    /// @notice Mints `_quantity` tokens to addrress `_to`
-    /// Each token will be assigned a token ID that is consecutively increasing
-    /// @param _to Address to mint to
-    /// @param _quantity Number of tokens to mint
-    function mint(address _to, uint256 _quantity) public payable onlyRole(MINTER_ROLE) {
-        _mint(_to, _quantity);
+    /// @inheritdoc ISoundEditionV1
+    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
+        _mint(to, quantity);
     }
 }
