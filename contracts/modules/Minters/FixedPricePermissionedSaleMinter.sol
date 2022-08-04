@@ -16,14 +16,12 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
     error SoldOut();
     error InvalidSignature();
 
-    error SignerIsZeroAddress();
-
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
         address indexed edition,
         uint256 price,
         address signer,
-        uint32 maxMintable
+        uint32 maxMinted
     );
 
     struct EditionMintData {
@@ -32,44 +30,38 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         // Whitelist signer address.
         address signer;
         // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
+        uint32 maxMinted;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
     }
 
-    mapping(address => EditionMintData) internal _editionMintData;
+    mapping(address => EditionMintData) public editionMintData;
 
     /// @dev Initializes the configuration for an edition mint.
     function createEditionMint(
         address edition,
         uint256 price,
         address signer,
-        uint32 maxMintable
+        uint32 maxMinted
     ) public {
         _createEditionMintController(edition);
-        if (signer == address(0)) revert SignerIsZeroAddress();
-
-        EditionMintData storage data = _editionMintData[edition];
+        EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.signer = signer;
-        data.maxMintable = maxMintable;
+        data.maxMinted = maxMinted;
         // prettier-ignore
         emit FixedPricePermissionedMintCreated(
             edition,
             price,
             signer,
-            maxMintable
+            maxMinted
         );
-    }
-
-    function editionMintData(address edition) public view returns (EditionMintData memory) {
-        return _editionMintData[edition];
     }
 
     /// @dev Deletes the configuration for an edition mint.
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
-        delete _editionMintData[edition];
+        delete editionMintData[edition];
     }
 
     /// @dev Mints tokens for a given edition.
@@ -78,14 +70,14 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 quantity,
         bytes calldata signature
     ) public payable {
-        EditionMintData storage data = _editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
+        EditionMintData storage data = editionMintData[edition];
+        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
         if (data.price * quantity != msg.value) revert WrongEtherValue();
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition));
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+        ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
     }
 }

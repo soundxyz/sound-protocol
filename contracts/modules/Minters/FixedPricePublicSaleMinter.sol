@@ -20,7 +20,7 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         uint256 price,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMintable
+        uint32 maxMinted
     );
 
     struct EditionMintData {
@@ -31,12 +31,12 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         // End timestamp of sale (in seconds since unix epoch).
         uint32 endTime;
         // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
+        uint32 maxMinted;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
     }
 
-    mapping(address => EditionMintData) internal _editionMintData;
+    mapping(address => EditionMintData) public editionMintData;
 
     /// @dev Initializes the configuration for an edition mint.
     function createEditionMint(
@@ -44,39 +44,35 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         uint256 price,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMintable
+        uint32 maxMinted
     ) public {
         _createEditionMintController(edition);
-        EditionMintData storage data = _editionMintData[edition];
+        EditionMintData storage data = editionMintData[edition];
         data.price = price;
         data.startTime = startTime;
         data.endTime = endTime;
-        data.maxMintable = maxMintable;
+        data.maxMinted = maxMinted;
         // prettier-ignore
         emit FixedPricePublicSaleMintCreated(
             edition,
             price,
             startTime,
             endTime,
-            maxMintable
+            maxMinted
         );
     }
 
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
-        delete _editionMintData[edition];
-    }
-
-    function editionMintData(address edition) public view returns (EditionMintData memory) {
-        return _editionMintData[edition];
+        delete editionMintData[edition];
     }
 
     function mint(address edition, uint32 quantity) public payable {
-        EditionMintData storage data = _editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
+        EditionMintData storage data = editionMintData[edition];
+        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
         if (data.price * quantity != msg.value) revert WrongEtherValue();
         if (block.timestamp < data.startTime) revert MintNotStarted();
         if (data.endTime < block.timestamp) revert MintHasEnded();
-        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+        ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
     }
 }
