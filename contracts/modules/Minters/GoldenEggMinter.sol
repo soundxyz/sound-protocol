@@ -16,9 +16,11 @@ contract GoldenEggMinter is FixedPricePublicSaleMinter {
 
     /// @notice Returns token id for the golden egg, after auction has ended. Else returns 0
     function getGoldenEggTokenId(address edition) external view returns (uint256 _tokenId) {
-        uint256 totalMinted = editionMintData[edition].totalMinted;
+        uint256 totalMinted = _editionMintData[edition].totalMinted;
 
-        if (block.timestamp > editionMintData[edition].endTime || totalMinted == editionMintData[edition].maxMinted) {
+        if (
+            block.timestamp > _editionMintData[edition].endTime || totalMinted == _editionMintData[edition].maxMintable
+        ) {
             // calculate number between 1 and totalMinted, corresponding to the blockhash
             _tokenId = (uint256(_goldenEggBlockhashForEdition[edition]) % totalMinted) + 1;
         }

@@ -71,7 +71,7 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         return _editionMintData[edition];
     }
 
-    function mint(address edition, uint32 quantity) public payable {
+    function mint(address edition, uint32 quantity) public payable virtual {
         EditionMintData storage data = _editionMintData[edition];
         if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
         if (data.price * quantity != msg.value) revert WrongEtherValue();
