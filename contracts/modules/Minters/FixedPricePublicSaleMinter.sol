@@ -44,6 +44,12 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
     mapping(address => EditionMintData) internal _editionMintData;
 
     /// @dev Initializes the configuration for an edition mint.
+    /// @param edition Address of the song edition contract we are minting for.
+    /// @param price Sale price in ETH for minting a single token in `edition`.
+    /// @param startTime Start timestamp of sale (in seconds since unix epoch).
+    /// @param endTime End timestamp of sale (in seconds since unix epoch).
+    /// @param maxMinted The maximum number of tokens that can can be minted for this sale.
+    /// @param maxAllowedPerWallet The maximum number of tokens that a wallet can mint.
     function createEditionMint(
         address edition,
         uint256 price,
@@ -79,6 +85,9 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         return _editionMintData[edition];
     }
 
+    /// @dev Mints the required `quantity` in song `edition.
+    /// @param edition Address of the song edition contract we are minting for.
+    /// @param quantity Token quantity to mint in song `edition`.
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = _editionMintData[edition];
         if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
