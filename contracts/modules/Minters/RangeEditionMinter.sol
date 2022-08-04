@@ -63,9 +63,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         uint256 price;
         // Start timestamp of sale (in seconds since unix epoch).
         uint32 startTime;
-        // The timestamp (in seconds since unix epoch)
-        // after which the `totalMinted` is frozen if it is
-        // more than the `minToFreeze`.
+        // The timestamp (in seconds since unix epoch) after which the
+        // max amount of tokens mintable will drop from
+        // `maxMintableUpper` to `maxMintableLower`.
         uint32 closingTime;
         // End timestamp of sale (in seconds since unix epoch).
         uint32 endTime;
