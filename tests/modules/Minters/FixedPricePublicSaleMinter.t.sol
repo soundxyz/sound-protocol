@@ -132,4 +132,27 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         );
         assertFalse(status);
     }
+
+    function test_mintUpdatesValuesAndEditionCorrectly() public {
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEditionAndMinter();
+
+        vm.warp(START_TIME);
+
+        address caller = getRandomAccount(1);
+
+        uint32 quantity = 2;
+
+        FixedPricePublicSaleMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+
+        assertEq(data.totalMinted, 0);
+
+        vm.prank(caller);
+        minter.mint{ value: PRICE * quantity }(address(edition), quantity);
+
+        assertEq(edition.balanceOf(caller), uint256(quantity));
+
+        data = minter.editionMintData(address(edition));
+
+        assertEq(data.totalMinted, quantity);
+    }
 }
