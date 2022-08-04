@@ -36,7 +36,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 totalMinted;
     }
 
-    mapping(address => EditionMintData) public editionMintData;
+    mapping(address => EditionMintData) internal _editionMintData;
 
     function createEditionMint(
         address edition,
@@ -47,7 +47,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         _createEditionMintController(edition);
         if (signer == address(0)) revert SignerIsZeroAddress();
 
-        EditionMintData storage data = editionMintData[edition];
+        EditionMintData storage data = _editionMintData[edition];
         data.price = price;
         data.signer = signer;
         data.maxMintable = maxMintable;
@@ -60,9 +60,13 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         );
     }
 
+    function editionMintData(address edition) public view returns (EditionMintData memory) {
+        return _editionMintData[edition];
+    }
+
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
-        delete editionMintData[edition];
+        delete _editionMintData[edition];
     }
 
     function mint(
@@ -70,7 +74,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 quantity,
         bytes calldata signature
     ) public payable {
-        EditionMintData storage data = editionMintData[edition];
+        EditionMintData storage data = _editionMintData[edition];
         if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
         if (data.price * quantity != msg.value) revert WrongEtherValue();
 
