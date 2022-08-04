@@ -10,7 +10,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     uint256 constant PRICE = 1;
 
-    uint32 constant MAX_MINTED = 5;
+    uint32 constant MAX_MINTABLE = 5;
 
     uint256 SIGNER_PRIVATE_KEY = 1;
 
@@ -19,7 +19,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         address indexed edition,
         uint256 price,
         address signer,
-        uint32 maxMinted
+        uint32 maxMintable
     );
 
     function _signerAddress() internal returns (address) {
@@ -44,7 +44,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTED);
+        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
     }
 
     function test_createEditionMintEmitsEvent() public {
@@ -56,9 +56,21 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPricePermissionedMintCreated(address(edition), PRICE, _signerAddress(), MAX_MINTED);
+        emit FixedPricePermissionedMintCreated(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTED);
+        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
+    }
+
+    function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+        );
+
+        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+
+        vm.expectRevert(FixedPricePermissionedSaleMinter.SignerIsZeroAddress.selector);
+
+        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE);
     }
 
     function test_mintWithoutCorrectSignatureReverts() public {
@@ -93,10 +105,10 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         vm.expectRevert(FixedPricePermissionedSaleMinter.SoldOut.selector);
-        minter.mint{ value: PRICE * (MAX_MINTED + 1) }(address(edition), MAX_MINTED + 1, sig);
+        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MAX_MINTABLE + 1, sig);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * MAX_MINTED }(address(edition), MAX_MINTED, sig);
+        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MAX_MINTABLE, sig);
 
         vm.prank(caller);
         vm.expectRevert(FixedPricePermissionedSaleMinter.SoldOut.selector);
