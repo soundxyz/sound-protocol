@@ -85,7 +85,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         string memory symbol,
         IMetadataModule metadataModule_,
         string memory baseURI_,
-        string memory contractURI_
+        string memory contractURI_,
+        address guardian_
     ) public initializerERC721A initializer {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -94,6 +95,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
+
+        if (guardian_ != address(0)) {
+            guardian = guardian_;
+            emit GuardianSet(guardian);
+        }
 
         __AccessControl_init();
 
@@ -105,7 +111,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwner {
+    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
 
@@ -120,7 +126,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setContractURI(string memory contractURI_) external onlyOwner {
+    function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
 

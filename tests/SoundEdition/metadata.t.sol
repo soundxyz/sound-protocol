@@ -263,8 +263,6 @@ contract SoundEdition_metadata is TestConfig {
         MockMetadataModule newMetadataModule = new MockMetadataModule();
         soundEdition.setMetadataModule(newMetadataModule);
 
-        string memory expectedTokenURI = "MOCK";
-
         assertEq(soundEdition.tokenURI(tokenId), expectedTokenURI);
 
         // Test admin can set metadata module

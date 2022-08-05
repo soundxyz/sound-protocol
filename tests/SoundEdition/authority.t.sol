@@ -8,7 +8,7 @@ contract SoundEdition_authority is TestConfig {
     event GuardianSet(address indexed guardian);
 
     function test_setsGuardianOnInitialization() external {
-        address guardian = address(123);
+        address guardian = address(123456789);
 
         vm.expectEmit(false, false, false, true);
         emit GuardianSet(guardian);
@@ -96,7 +96,7 @@ contract SoundEdition_authority is TestConfig {
 
     // Non-guardians can't set a new owner.
     function test_nonGuardiansCantSetNewOwner(address nonGuardian) external {
-        address guardian = address(12345);
+        address guardian = address(30896230963);
 
         SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, guardian)
