@@ -137,7 +137,7 @@ abstract contract MintControllerBase {
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
     }
 
-    function _requireMintNotPaused(address edition) internal {
+    function _requireMintNotPaused(address edition) internal view {
         if (_baseData[edition].mintPaused) revert MintPaused();
     }
 }

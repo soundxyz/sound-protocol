@@ -12,7 +12,6 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
     using ECDSA for bytes32;
 
     // ERRORS
-    error WrongEtherValue();
     error SoldOut();
     error InvalidSignature();
 
@@ -72,7 +71,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
     ) public payable {
         EditionMintData storage data = editionMintData[edition];
         if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
-        if (data.price * quantity != msg.value) revert WrongEtherValue();
+        _requireExactPayment(data.price * quantity);
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition));
         hash = hash.toEthSignedMessageHash();

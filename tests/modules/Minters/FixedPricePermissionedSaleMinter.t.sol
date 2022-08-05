@@ -81,7 +81,13 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(FixedPricePermissionedSaleMinter.WrongEtherValue.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MintControllerBase.WrongEtherValue.selector,
+                PRICE * 2,
+                PRICE
+            )
+        );
         minter.mint{ value: PRICE * 2 }(address(edition), 1, sig);
     }
 

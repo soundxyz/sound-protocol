@@ -104,7 +104,13 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.WrongEtherValue.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MintControllerBase.WrongEtherValue.selector,
+                PRICE * 2,
+                PRICE
+            )
+        );
         minter.mint{ value: PRICE * 2 }(address(edition), 1);
     }
 
