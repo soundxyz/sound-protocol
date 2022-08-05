@@ -123,7 +123,6 @@ contract RangeEditionMinterTests is TestConfig {
             assertEq(data.maxMintableLower, maxMintableLower);
             assertEq(data.maxMintableUpper, maxMintableUpper);
             assertEq(data.paused, false);
-            assertEq(data.locked, false);
         }
     }
 
@@ -242,8 +241,7 @@ contract RangeEditionMinterTests is TestConfig {
     function test_setTime(
         uint32 startTime,
         uint32 closingTime,
-        uint32 endTime,
-        bool testLocked
+        uint32 endTime
     ) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
@@ -253,10 +251,6 @@ contract RangeEditionMinterTests is TestConfig {
             vm.expectRevert(
                 abi.encodeWithSelector(RangeEditionMinter.InvalidTimeRange.selector, startTime, closingTime, endTime)
             );
-            hasRevert = true;
-        } else if (testLocked) {
-            minter.lock(address(edition));
-            vm.expectRevert(RangeEditionMinter.MintDataLocked.selector);
             hasRevert = true;
         }
 
@@ -277,8 +271,7 @@ contract RangeEditionMinterTests is TestConfig {
 
     function test_setMaxMintableRange(
         uint32 maxMintableLower,
-        uint32 maxMintableUpper,
-        bool testLocked
+        uint32 maxMintableUpper
     ) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
@@ -292,10 +285,6 @@ contract RangeEditionMinterTests is TestConfig {
                     maxMintableUpper
                 )
             );
-            hasRevert = true;
-        } else if (testLocked) {
-            minter.lock(address(edition));
-            vm.expectRevert(RangeEditionMinter.MintDataLocked.selector);
             hasRevert = true;
         }
 
@@ -313,35 +302,16 @@ contract RangeEditionMinterTests is TestConfig {
         }
     }
 
-    function test_setPaused(bool paused, bool testLocked) public {
+    function test_setPaused(bool paused) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
-        bool hasRevert;
-
-        if (testLocked) {
-            minter.lock(address(edition));
-            vm.expectRevert(RangeEditionMinter.MintDataLocked.selector);
-            hasRevert = true;
-        }
-
-        if (!hasRevert) {
-            vm.expectEmit(false, false, false, true);
-            emit PausedSet(address(edition), paused);
-        }
+        vm.expectEmit(false, false, false, true);
+        emit PausedSet(address(edition), paused);
 
         minter.setPaused(address(edition), paused);
 
-        if (!hasRevert) {
-            RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
-            assertEq(data.paused, paused);
-        }
-    }
-
-    function test_lockEmitsEvent() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
-        vm.expectEmit(false, false, false, true);
-        emit Locked(address(edition));
-        minter.lock(address(edition));
+        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        assertEq(data.paused, paused);
     }
 }
 
@@ -396,23 +366,11 @@ contract RangeEditionMinterUpdater {
         minter = _minter;
     }
 
-    function setStartTime(uint32 startTime) public {
-        minter.setStartTime(address(edition), startTime);
+    function setTimeRange(uint32 startTime, uint32 closingTime, uint32 endTime) public {
+        minter.setTimeRange(address(edition), startTime, closingTime, endTime);
     }
 
-    function setClosingTime(uint32 closingTime) public {
-        minter.setClosingTime(address(edition), closingTime);
-    }
-
-    function setEndTime(uint32 endTime) public {
-        minter.setEndTime(address(edition), endTime);
-    }
-
-    function setMaxMintableLower(uint32 maxMintableLower) public {
-        minter.setMaxMintableLower(address(edition), maxMintableLower);
-    }
-
-    function setMaxMintableUpper(uint32 maxMintableUpper) public {
-        minter.setMaxMintableUpper(address(edition), maxMintableUpper);
+    function setMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper) public {
+        minter.setMaxMintableRange(address(edition), maxMintableLower, maxMintableUpper);
     }
 }

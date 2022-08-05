@@ -47,8 +47,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     event PausedSet(address indexed edition, bool paused);
 
-    event Locked(address indexed edition);
-
     // ================================
     // STRUCTS
     // ================================
@@ -72,8 +70,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         uint32 maxMintableLower;
         // Whether the sale is paused.
         bool paused;
-        // Whether the data is locked.
-        bool locked;
     }
 
     // ================================
@@ -169,12 +165,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // SETTER FUNCTIONS
     // ================================
 
-    /// @dev Locks the mint configuration.
-    function lock(address edition) public onlyEditionMintController(edition) {
-        _editionMintData[edition].locked = true;
-        emit Locked(edition);
-    }
-
     /// @dev Sets the time range.
     function setTimeRange(
         address edition,
@@ -189,8 +179,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
         if (data.startTime > data.closingTime || data.closingTime > data.endTime)
             revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
-
-        if (data.locked) revert MintDataLocked();
 
         emit TimeRangeSet(edition, startTime, closingTime, endTime);
     }
@@ -208,8 +196,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         if (data.maxMintableLower > data.maxMintableUpper)
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
-        if (data.locked) revert MintDataLocked();
-
         emit MaxMintableRangeSet(edition, maxMintableLower, maxMintableUpper);
     }
 
@@ -217,8 +203,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     function setPaused(address edition, bool paused) public onlyEditionMintController(edition) {
         EditionMintData storage data = _editionMintData[edition];
         data.paused = paused;
-
-        if (data.locked) revert MintDataLocked();
 
         emit PausedSet(edition, paused);
     }
