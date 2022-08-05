@@ -143,30 +143,28 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     /// @dev Mints tokens for a given edition.
     function mint(address edition, uint32 quantity) public payable {
-        unchecked {
-            EditionMintData storage data = _editionMintData[edition];
-            // Require not paused.
-            if (data.paused) revert MintPaused();
-            // Require exact payment.
-            uint256 requiredPayment = data.price * quantity;
-            if (requiredPayment != msg.value) revert WrongEtherValue(msg.value, requiredPayment);
-            // Require started.
-            if (block.timestamp < data.startTime) revert MintNotOpen(data.startTime, data.endTime);
-            // Require not ended.
-            if (block.timestamp > data.endTime) revert MintNotOpen(data.startTime, data.endTime);
+        EditionMintData storage data = _editionMintData[edition];
+        // Require not paused.
+        if (data.paused) revert MintPaused();
+        // Require exact payment.
+        uint256 requiredPayment = data.price * quantity;
+        if (requiredPayment != msg.value) revert WrongEtherValue(msg.value, requiredPayment);
+        // Require started.
+        if (block.timestamp < data.startTime) revert MintNotOpen(data.startTime, data.endTime);
+        // Require not ended.
+        if (block.timestamp > data.endTime) revert MintNotOpen(data.startTime, data.endTime);
 
-            uint32 maxMintable;
-            if (block.timestamp < data.closingTime) {
-                maxMintable = data.maxMintableUpper;
-            } else {
-                maxMintable = data.maxMintableLower;
-            }
-            // Increase `totalMinted` by `quantity`.
-            // Require that the increased value does not exceed `maxMintable`.
-            if ((data.totalMinted += quantity) > maxMintable) revert SoldOut(maxMintable);
-
-            ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+        uint32 maxMintable;
+        if (block.timestamp < data.closingTime) {
+            maxMintable = data.maxMintableUpper;
+        } else {
+            maxMintable = data.maxMintableLower;
         }
+        // Increase `totalMinted` by `quantity`.
+        // Require that the increased value does not exceed `maxMintable`.
+        if ((data.totalMinted += quantity) > maxMintable) revert SoldOut(maxMintable);
+
+        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
     }
 
     // ================================
