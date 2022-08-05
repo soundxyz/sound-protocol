@@ -13,13 +13,16 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
     error MintNotStarted();
     error MintHasEnded();
 
+    error ExceedsMaxPerWallet();
+
     // prettier-ignore
     event FixedPricePublicSaleMintCreated(
         address indexed edition,
         uint256 price,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMinted
+        uint32 maxMintable,
+        uint32 maxAllowedPerWallet
     );
 
     struct EditionMintData {
@@ -30,48 +33,74 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         // End timestamp of sale (in seconds since unix epoch).
         uint32 endTime;
         // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMinted;
+        uint32 maxMintable;
+        // The maximum number of tokens that a wallet can mint.
+        uint32 maxAllowedPerWallet;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
     }
 
-    mapping(address => EditionMintData) public editionMintData;
+    mapping(address => EditionMintData) internal _editionMintData;
 
     /// @dev Initializes the configuration for an edition mint.
+    /// @param edition Address of the song edition contract we are minting for.
+    /// @param price Sale price in ETH for minting a single token in `edition`.
+    /// @param startTime Start timestamp of sale (in seconds since unix epoch).
+    /// @param endTime End timestamp of sale (in seconds since unix epoch).
+    /// @param maxMintable The maximum number of tokens that can can be minted for this sale.
+    /// @param maxAllowedPerWallet The maximum number of tokens that a wallet can mint.
     function createEditionMint(
         address edition,
         uint256 price,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMinted
+        uint32 maxMintable,
+        uint32 maxAllowedPerWallet
     ) public {
         _createEditionMintController(edition);
-        EditionMintData storage data = editionMintData[edition];
+        EditionMintData storage data = _editionMintData[edition];
         data.price = price;
         data.startTime = startTime;
         data.endTime = endTime;
-        data.maxMinted = maxMinted;
+        data.maxMintable = maxMintable;
+        data.maxAllowedPerWallet = maxAllowedPerWallet;
         // prettier-ignore
         emit FixedPricePublicSaleMintCreated(
             edition,
             price,
             startTime,
             endTime,
-            maxMinted
+            maxMintable,
+            maxAllowedPerWallet
         );
     }
 
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
-        delete editionMintData[edition];
+        delete _editionMintData[edition];
     }
 
+    function editionMintData(address edition) public view returns (EditionMintData memory) {
+        return _editionMintData[edition];
+    }
+
+    /// @dev Mints the required `quantity` in song `edition.
+    /// @param edition Address of the song edition contract we are minting for.
+    /// @param quantity Token quantity to mint in song `edition`.
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = editionMintData[edition];
         if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        
+        uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
+        // If the maximum allowed per wallet is set (i.e. is different to 0)
+        // check the required additional quantity does not exceed the set maximum
+        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet)) revert ExceedsMaxPerWallet();
+
+        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
         _requireExactPayment(data.price * quantity);
+
         if (block.timestamp < data.startTime) revert MintNotStarted();
         if (data.endTime < block.timestamp) revert MintHasEnded();
-        ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
+        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
     }
 }

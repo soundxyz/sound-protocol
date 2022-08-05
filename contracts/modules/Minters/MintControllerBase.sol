@@ -23,7 +23,10 @@ abstract contract MintControllerBase {
 
     /// @notice The mint is paused.
     error MintPaused();
-
+    
+    /// @dev The caller must be the owner of the edition contract.
+    error CallerNotEditionOwner();
+    
     // ================================
     // EVENTS
     // ================================
@@ -54,6 +57,10 @@ abstract contract MintControllerBase {
     /// @dev Maps an edition to a controller.
     mapping(address => BaseData) private _baseData;
 
+    // ================================
+    // FUNCTIONS
+    // ================================
+
     /// @dev Restricts the function to be only callable by the controller of `edition`.
     modifier onlyEditionMintController(address edition) virtual {
         BaseData storage data = _baseData[edition];
@@ -76,6 +83,35 @@ abstract contract MintControllerBase {
         data.controllerAccess = true;
         
         emit MintControllerSet(edition, msg.sender);
+    }
+
+    /// @dev Returns whether the caller is the owner of `edition`.
+    function _callerIsEditionOwner(address edition) private returns (bool result) {
+        // To avoid defining an interface just to call `owner()`.
+        // And Solidity does not have try catch for plain old `call`.
+        assembly {
+            // Store the 4-byte function selector of `owner()` into scratch space.
+            mstore(0x00, 0x8da5cb5b)
+            // The `call` must be placed as the last argument of `and`,
+            // as the arguments are evaluated right to left.
+            result := and(
+                and(
+                    // Whether the returned address equals `msg.sender`.
+                    eq(mload(0x00), caller()),
+                    // Whether at least a word has been returned.
+                    gt(returndatasize(), 31)
+                ),
+                call(
+                    gas(), // Remaining gas.
+                    edition, // The `edition` address.
+                    0, // Send 0 Ether.
+                    0x1c, // Offset of the selector in the memory.
+                    0x04, // Size of the selector (4 bytes).
+                    0x00, // Offset of the return data.
+                    0x20 // Size of the return data (1 32-byte word).
+                )
+            )
+        }
     }
 
     /// @dev Convenience function for deleting a mint controller.
