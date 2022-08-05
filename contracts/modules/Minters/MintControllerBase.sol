@@ -5,38 +5,63 @@ pragma solidity ^0.8.15;
 /// @title Mint Controller Base
 /// @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
 abstract contract MintControllerBase {
-    struct ControllerData {
-        address addr;
-        bool access;
-    }
+    // ================================
+    // CUSTOM ERRORS
+    // ================================
 
-    /// @dev The caller must be the the controller of this edition to perform this action.
+    /// @notice The caller must be the the controller of this edition to perform this action.
     error MintControllerUnauthorized();
 
-    /// @dev There is no controller assigned to this edition.
+    /// @notice There is no controller assigned to this edition.
     error MintControllerNotFound();
 
-    /// @dev A mint controller is already assigned to this edition.
+    /// @notice A mint controller is already assigned to this edition.
     error MintControllerAlreadyExists(address controller);
 
-    /// @dev Emitted when the mint `controller` for `edition` renounces their own access.
+    /// @notice The `paid` Ether value must be equal to the `required` Ether value.
+    error WrongEtherValue(uint256 paid, uint256 required);
+
+    /// @notice The mint is paused.
+    error MintPaused();
+
+    // ================================
+    // EVENTS
+    // ================================
+
+    /// @notice Emitted when the mint `controller` for `edition` renounces their own access.
     event MintControllerAccessRenounced(address indexed edition, address indexed controller);
 
-    /// @dev Emitted when the mint `controller` for `edition` is changed.
-    event MintControllerUpdated(address indexed edition, address indexed controller);
+    /// @notice Emitted when the mint `controller` for `edition` is updated.
+    event MintControllerSet(address indexed edition, address indexed controller);
+
+    /// @notice Emitted when the `paused` status of `edition` is updated.
+    event MintPausedSet(address indexed edition, bool paused);
+
+    // ================================
+    // STRUCTS
+    // ================================
+
+    struct BaseData {
+        address controller;
+        bool controllerAccess;
+        bool mintPaused;
+    }
+
+    // ================================
+    // STORAGE
+    // ================================
 
     /// @dev Maps an edition to a controller.
-    mapping(address => ControllerData) private _controllerData;
+    mapping(address => BaseData) private _baseData;
 
     /// @dev Restricts the function to be only callable by the controller of `edition`.
     modifier onlyEditionMintController(address edition) virtual {
-        ControllerData memory controllerData = _controllerData[edition];
-        address controller = controllerData.addr;
+        BaseData storage data = _baseData[edition];
         
-        if (controllerData.addr == address(0)) revert MintControllerNotFound();
-        if (msg.sender != controllerData.addr) revert MintControllerUnauthorized();
-        if (!controllerData.access) revert MintControllerUnauthorized();
-        
+        if (data.controller == address(0)) revert MintControllerNotFound();
+        if (msg.sender != data.controller) revert MintControllerUnauthorized();
+        if (!data.controllerAccess) revert MintControllerUnauthorized();
+
         _;
     }
 
@@ -44,14 +69,13 @@ abstract contract MintControllerBase {
     /// Calling conditions:
     /// - The `edition` must not have a controller.
     function _createEditionMintController(address edition) internal {
-        ControllerData memory controllerData = _controllerData[edition];
-        address controller = controllerData.addr;
+        BaseData storage data = _baseData[edition];
         
-        if (controller != address(0)) revert MintControllerAlreadyExists(controller);
-        _controllerData[edition].addr = msg.sender;
-        _controllerData[edition].access = true;
+        if (data.controller != address(0)) revert MintControllerAlreadyExists(data.controller);
+        data.controller = msg.sender;
+        data.controllerAccess = true;
         
-        emit MintControllerUpdated(edition, msg.sender);
+        emit MintControllerSet(edition, msg.sender);
     }
 
     /// @dev Convenience function for deleting a mint controller.
@@ -62,12 +86,12 @@ abstract contract MintControllerBase {
 
     /// @dev Returns if the mint controller for `edition` has access.
     function editionMintControllerHasAccess(address edition) public view returns (bool) {
-        return _controllerData[edition].access;
+        return _baseData[edition].controllerAccess;
     }
 
     /// @dev Returns the mint controller for `edition`.
     function editionMintController(address edition) public view returns (address) {
-        return _controllerData[edition].addr;
+        return _baseData[edition].controller;
     }
 
     /// @dev Sets the new `controller` for `edition`.
@@ -78,8 +102,8 @@ abstract contract MintControllerBase {
         virtual
         onlyEditionMintController(edition)
     {
-        _controllerData[edition].addr = controller;
-        emit MintControllerUpdated(edition, controller);
+        _baseData[edition].controller = controller;
+        emit MintControllerSet(edition, controller);
     }
 
     /// @dev Sets the new `controller` for `edition`.
@@ -90,7 +114,30 @@ abstract contract MintControllerBase {
         virtual
         onlyEditionMintController(edition)
     {
-        _controllerData[edition].access = false;
-        emit MintControllerAccessRenounced(edition, _controllerData[edition].addr);
+        BaseData storage data = _baseData[edition];
+
+        data.controllerAccess = false;
+        emit MintControllerAccessRenounced(edition, data.controller);
+    }
+
+    function setEditionMintPaused(address edition, bool paused)
+        public
+        virtual
+        onlyEditionMintController(edition)
+    {
+        _baseData[edition].mintPaused = paused;
+        emit MintPausedSet(edition, paused);
+    }
+
+    // ================================
+    // HELPER REQUIRE FUNCTIONS
+    // ================================
+
+    function _requireExactPayment(uint256 requiredEtherValue) internal view {
+        if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
+    }
+
+    function _requireMintNotPaused(address edition) internal {
+        if (_baseData[edition].mintPaused) revert MintPaused();
     }
 }

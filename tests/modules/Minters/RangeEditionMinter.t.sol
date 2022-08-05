@@ -74,12 +74,12 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
 
-        if (!(startTime <= closingTime && closingTime <= endTime)) {
+        if (!(startTime < closingTime && closingTime < endTime)) {
             vm.expectRevert(
                 abi.encodeWithSelector(RangeEditionMinter.InvalidTimeRange.selector, startTime, closingTime, endTime)
             );
             hasRevert = true;
-        } else if (!(maxMintableLower <= maxMintableUpper)) {
+        } else if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     RangeEditionMinter.InvalidMaxMintableRange.selector,
@@ -149,23 +149,6 @@ contract RangeEditionMinterTests is TestConfig {
         assertEq(data.totalMinted, quantity);
     }
 
-    function test_mintRevertsForMintPaused() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
-
-        uint32 quantity = 1;
-
-        minter.setPaused(address(edition), true);
-
-        vm.warp(START_TIME);
-
-        vm.expectRevert(RangeEditionMinter.MintPaused.selector);
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity);
-
-        minter.setPaused(address(edition), false);
-
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity);
-    }
-
     function test_mintRevertForWrongEtherValue() public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
@@ -176,7 +159,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint256 requiredPayment = quantity * PRICE;
 
         bytes memory expectedRevert = abi.encodeWithSelector(
-            RangeEditionMinter.WrongEtherValue.selector,
+            MintControllerBase.WrongEtherValue.selector,
             requiredPayment - 1,
             requiredPayment
         );
@@ -247,7 +230,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
 
-        if (!(startTime <= closingTime && closingTime <= endTime)) {
+        if (!(startTime < closingTime && closingTime < endTime)) {
             vm.expectRevert(
                 abi.encodeWithSelector(RangeEditionMinter.InvalidTimeRange.selector, startTime, closingTime, endTime)
             );
@@ -277,7 +260,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
 
-        if (!(maxMintableLower <= maxMintableUpper)) {
+        if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     RangeEditionMinter.InvalidMaxMintableRange.selector,
@@ -300,18 +283,6 @@ contract RangeEditionMinterTests is TestConfig {
             assertEq(data.maxMintableLower, maxMintableLower);
             assertEq(data.maxMintableUpper, maxMintableUpper);
         }
-    }
-
-    function test_setPaused(bool paused) public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
-
-        vm.expectEmit(false, false, false, true);
-        emit PausedSet(address(edition), paused);
-
-        minter.setPaused(address(edition), paused);
-
-        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
-        assertEq(data.paused, paused);
     }
 }
 
@@ -348,12 +319,12 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
 
     function invariant_maxMintableRange() public {
         RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
-        assertTrue(data.maxMintableLower <= data.maxMintableUpper);
+        assertTrue(data.maxMintableLower < data.maxMintableUpper);
     }
 
     function invariant_timeRange() public {
         RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
-        assertTrue(data.startTime <= data.closingTime && data.closingTime <= data.endTime);
+        assertTrue(data.startTime < data.closingTime && data.closingTime < data.endTime);
     }
 }
 

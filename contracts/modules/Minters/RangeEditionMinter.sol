@@ -16,15 +16,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
-    error WrongEtherValue(uint256 paid, uint256 required);
-
     error SoldOut(uint32 maxMintable);
 
-    error MintPaused();
-
     error MintNotOpen(uint32 startTime, uint32 endTime);
-
-    error MintDataLocked();
 
     // ================================
     // EVENTS
@@ -44,8 +38,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     event TimeRangeSet(address indexed edition, uint32 startTime, uint32 closingTime, uint32 endTime);
 
     event MaxMintableRangeSet(address indexed edition, uint32 maxMintableLower, uint32 maxMintableUpper);
-
-    event PausedSet(address indexed edition, bool paused);
 
     // ================================
     // STRUCTS
@@ -102,10 +94,10 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
 
-        if (data.startTime > data.closingTime || data.closingTime > data.endTime)
+        if (!(data.startTime < data.closingTime && data.closingTime < data.endTime))
             revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
 
-        if (data.maxMintableLower > data.maxMintableUpper)
+        if (!(data.maxMintableLower < data.maxMintableUpper))
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         // prettier-ignore
@@ -139,10 +131,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = _editionMintData[edition];
         // Require not paused.
-        if (data.paused) revert MintPaused();
+        _requireMintNotPaused(edition);
         // Require exact payment.
-        uint256 requiredPayment = data.price * quantity;
-        if (requiredPayment != msg.value) revert WrongEtherValue(msg.value, requiredPayment);
+        _requireExactPayment(data.price * quantity);
         // Require started.
         if (block.timestamp < data.startTime) revert MintNotOpen(data.startTime, data.endTime);
         // Require not ended.
@@ -177,7 +168,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         data.closingTime = closingTime;
         data.endTime = endTime;
 
-        if (data.startTime > data.closingTime || data.closingTime > data.endTime)
+        if (!(data.startTime < data.closingTime && data.closingTime < data.endTime))
             revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
 
         emit TimeRangeSet(edition, startTime, closingTime, endTime);
@@ -193,56 +184,10 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
 
-        if (data.maxMintableLower > data.maxMintableUpper)
+        if (!(data.maxMintableLower < data.maxMintableUpper))
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         emit MaxMintableRangeSet(edition, maxMintableLower, maxMintableUpper);
     }
 
-    /// @dev Sets the paused status.
-    function setPaused(address edition, bool paused) public onlyEditionMintController(edition) {
-        EditionMintData storage data = _editionMintData[edition];
-        data.paused = paused;
-
-        emit PausedSet(edition, paused);
-    }
-
-    // ================================
-    // CONVENIENCE SETTER FUNCTIONS
-    // ================================
-
-    /// @dev Sets the `startTime` for `edition`.
-    function setStartTime(address edition, uint32 startTime) public {
-        setTimeRange(edition, startTime, _editionMintData[edition].closingTime, _editionMintData[edition].endTime);
-    }
-
-    /// @dev Sets the `closingTime` for `edition`.
-    function setClosingTime(address edition, uint32 closingTime) public {
-        setTimeRange(edition, _editionMintData[edition].startTime, closingTime, _editionMintData[edition].endTime);
-    }
-
-    /// @dev Sets the `endTime` for `edition`.
-    function setEndTime(address edition, uint32 endTime) public {
-        setTimeRange(edition, _editionMintData[edition].startTime, _editionMintData[edition].closingTime, endTime);
-    }
-
-    /// @dev Sets the `maxMintableLower` for `edition`.
-    function setMaxMintableLower(address edition, uint32 maxMintableLower) public {
-        setMaxMintableRange(edition, maxMintableLower, _editionMintData[edition].maxMintableUpper);
-    }
-
-    /// @dev Sets the `maxMintableUpper` for `edition`.
-    function setMaxMintableUpper(address edition, uint32 maxMintableUpper) public {
-        setMaxMintableRange(edition, _editionMintData[edition].maxMintableLower, maxMintableUpper);
-    }
-
-    /// @dev Pause the mint for `edition`.
-    function pause(address edition) public {
-        setPaused(edition, true);
-    }
-
-    /// @dev Unpause the mint for `edition`.
-    function unpause(address edition) public {
-        setPaused(edition, false);
-    }
 }
