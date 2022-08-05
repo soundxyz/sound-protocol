@@ -1,6 +1,7 @@
 pragma solidity ^0.8.15;
 
 import "../../TestConfig.sol";
+import "../../utils/InvariantTest.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
@@ -341,5 +342,77 @@ contract RangeEditionMinterTests is TestConfig {
         vm.expectEmit(false, false, false, true);
         emit Locked(address(edition));
         minter.lock(address(edition));
+    }
+}
+
+contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest {
+    RangeEditionMinterUpdater minterUpdater;
+    RangeEditionMinter minter;
+    SoundEditionV1 edition;
+
+    function setUp() public override {
+        super.setUp();
+
+        edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+        );
+
+        minter = new RangeEditionMinter();
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            START_TIME,
+            CLOSING_TIME,
+            END_TIME,
+            MAX_MINTABLE_LOWER,
+            MAX_MINTABLE_UPPER
+        );
+
+        minterUpdater = new RangeEditionMinterUpdater(edition, minter);
+
+        addTargetContract(address(minter));
+    }
+
+    function invariant_maxMintableRange() public {
+        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        assertTrue(data.maxMintableLower <= data.maxMintableUpper);
+    }
+
+    function invariant_timeRange() public {
+        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        assertTrue(data.startTime <= data.closingTime && data.closingTime <= data.endTime);
+    }
+}
+
+contract RangeEditionMinterUpdater {
+    SoundEditionV1 edition;
+    RangeEditionMinter minter;
+
+    constructor(SoundEditionV1 _edition, RangeEditionMinter _minter) {
+        edition = _edition;
+        minter = _minter;
+    }
+
+    function setStartTime(uint32 startTime) public {
+        minter.setStartTime(address(edition), startTime);
+    }
+
+    function setClosingTime(uint32 closingTime) public {
+        minter.setClosingTime(address(edition), closingTime);
+    }
+
+    function setEndTime(uint32 endTime) public {
+        minter.setEndTime(address(edition), endTime);
+    }
+
+    function setMaxMintableLower(uint32 maxMintableLower) public {
+        minter.setMaxMintableLower(address(edition), maxMintableLower);
+    }
+
+    function setMaxMintableUpper(uint32 maxMintableUpper) public {
+        minter.setMaxMintableUpper(address(edition), maxMintableUpper);
     }
 }
