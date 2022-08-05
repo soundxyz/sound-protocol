@@ -3,7 +3,6 @@
 pragma solidity ^0.8.15;
 
 import "./MintControllerBase.sol";
-import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/Multicallable.sol";
 
 /// @dev Minter class for range edition sales.
@@ -15,10 +14,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     error InvalidTimeRange(uint32 startTime, uint32 closingTime, uint32 endTime);
 
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
-
-    error SoldOut(uint32 maxMintable);
-
-    error MintNotOpen(uint32 startTime, uint32 endTime);
 
     // ================================
     // EVENTS
@@ -130,14 +125,8 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     /// @dev Mints tokens for a given edition.
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = _editionMintData[edition];
-        // Require not paused.
-        _requireMintNotPaused(edition);
-        // Require exact payment.
-        _requireExactPayment(data.price * quantity);
-        // Require started.
-        if (block.timestamp < data.startTime) revert MintNotOpen(data.startTime, data.endTime);
-        // Require not ended.
-        if (block.timestamp > data.endTime) revert MintNotOpen(data.startTime, data.endTime);
+
+        _requireMintOpen(data.startTime, data.endTime);
 
         uint32 maxMintable;
         if (block.timestamp < data.closingTime) {
@@ -147,9 +136,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         }
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        if ((data.totalMinted += quantity) > maxMintable) revert SoldOut(maxMintable);
+        _requireNotSoldOut(data.totalMinted += quantity, maxMintable);
 
-        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+        _mint(edition, msg.sender, quantity, quantity * data.price);
     }
 
     // ================================
@@ -189,5 +178,4 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
         emit MaxMintableRangeSet(edition, maxMintableLower, maxMintableUpper);
     }
-
 }

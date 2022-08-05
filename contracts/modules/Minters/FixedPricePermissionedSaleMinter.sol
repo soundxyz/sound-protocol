@@ -12,7 +12,6 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
     using ECDSA for bytes32;
 
     // ERRORS
-    error SoldOut();
     error InvalidSignature();
 
     error SignerIsZeroAddress();
@@ -78,13 +77,12 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         bytes calldata signature
     ) public payable {
         EditionMintData storage data = _editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
-        _requireExactPayment(data.price * quantity);
+        _requireNotSoldOut(data.totalMinted += quantity, data.maxMintable);
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition));
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+        _mint(edition, msg.sender, quantity, data.price * quantity);
     }
 }

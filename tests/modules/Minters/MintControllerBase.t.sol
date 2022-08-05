@@ -24,10 +24,12 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
 
     function onlyEditionMintControllerAction(address edition) external onlyEditionMintController(edition) {}
 
-    function mint(address edition, uint32 quantity, uint256 price) external payable {
-        _requireExactPayment(quantity * price);
-        _requireMintNotPaused(edition);
-        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+    function mint(
+        address edition,
+        uint32 quantity,
+        uint256 price
+    ) external payable {
+        _mint(edition, msg.sender, quantity, quantity * price);
     }
 
     function test_createEditionMintControllerEmitsEvent() external {
@@ -165,25 +167,19 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
         assertEq(this.editionMintController(address(edition)), address(0));
     }
 
-    function test_revertsForWrongEtherValue() public {
+    function test_mintRevertsForWrongEtherValue() public {
         SoundEditionV1 edition = _createEdition();
 
         this.createEditionMintController(address(edition));
 
         uint256 price = 1;
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                WrongEtherValue.selector,
-                price * 2 - 1,
-                price * 2
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(WrongEtherValue.selector, price * 2 - 1, price * 2));
         this.mint{ value: price * 2 - 1 }(address(edition), 2, price);
 
         this.mint{ value: price * 2 }(address(edition), 2, price);
     }
 
-    function test_revertsWhenPaused() public {
+    function test_mintRevertsWhenPaused() public {
         SoundEditionV1 edition = _createEdition();
 
         this.createEditionMintController(address(edition));

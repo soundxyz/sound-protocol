@@ -174,21 +174,18 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 quantity = 1;
 
         vm.warp(START_TIME - 1);
-
-        bytes memory expectedRevert = abi.encodeWithSelector(
-            RangeEditionMinter.MintNotOpen.selector,
-            START_TIME,
-            END_TIME
+        vm.expectRevert(
+            abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
         );
-
-        vm.expectRevert(expectedRevert);
         minter.mint{ value: quantity * PRICE }(address(edition), quantity);
 
         vm.warp(START_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), quantity);
 
         vm.warp(END_TIME + 1);
-        vm.expectRevert(expectedRevert);
+        vm.expectRevert(
+            abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
+        );
         minter.mint{ value: quantity * PRICE }(address(edition), quantity);
 
         vm.warp(END_TIME);
@@ -207,7 +204,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 totalMinted;
 
         if (quantityToBuyBeforeClosing > MAX_MINTABLE_UPPER) {
-            vm.expectRevert(abi.encodeWithSelector(RangeEditionMinter.SoldOut.selector, MAX_MINTABLE_UPPER));
+            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE_UPPER));
         } else {
             totalMinted = quantityToBuyBeforeClosing;
         }
@@ -215,7 +212,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(address(edition), quantityToBuyBeforeClosing);
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
-            vm.expectRevert(abi.encodeWithSelector(RangeEditionMinter.SoldOut.selector, MAX_MINTABLE_LOWER));
+            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE_LOWER));
         }
         vm.warp(CLOSING_TIME);
         minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), quantityToBuyAfterClosing);
@@ -252,10 +249,7 @@ contract RangeEditionMinterTests is TestConfig {
         }
     }
 
-    function test_setMaxMintableRange(
-        uint32 maxMintableLower,
-        uint32 maxMintableUpper
-    ) public {
+    function test_setMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
 
         bool hasRevert;
@@ -337,7 +331,11 @@ contract RangeEditionMinterUpdater {
         minter = _minter;
     }
 
-    function setTimeRange(uint32 startTime, uint32 closingTime, uint32 endTime) public {
+    function setTimeRange(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) public {
         minter.setTimeRange(address(edition), startTime, closingTime, endTime);
     }
 

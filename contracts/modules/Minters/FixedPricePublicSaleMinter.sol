@@ -9,10 +9,6 @@ import "../../SoundEdition/ISoundEditionV1.sol";
 /// @dev Minter class for sales at a fixed price within a time range.
 contract FixedPricePublicSaleMinter is MintControllerBase {
     // ERRORS
-    error SoldOut();
-    error MintNotStarted();
-    error MintHasEnded();
-
     error ExceedsMaxPerWallet();
 
     // prettier-ignore
@@ -89,17 +85,16 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
     /// @param quantity Token quantity to mint in song `edition`.
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = _editionMintData[edition];
-        
+
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet)) revert ExceedsMaxPerWallet();
+        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
+            revert ExceedsMaxPerWallet();
 
-        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
-        _requireExactPayment(data.price * quantity);
+        _requireNotSoldOut(data.totalMinted += quantity, data.maxMintable);
+        _requireMintOpen(data.startTime, data.endTime);
 
-        if (block.timestamp < data.startTime) revert MintNotStarted();
-        if (data.endTime < block.timestamp) revert MintHasEnded();
-        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+        _mint(edition, msg.sender, quantity, data.price * quantity);
     }
 }
