@@ -112,8 +112,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         if (data.maxMintableLower > data.maxMintableUpper)
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
-        if (data.locked) revert MintDataLocked();
-
         // prettier-ignore
         emit RangeEditionMintCreated(
             edition,
