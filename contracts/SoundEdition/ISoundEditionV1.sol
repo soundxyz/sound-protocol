@@ -6,6 +6,7 @@ import "chiru-labs/ERC721A-Upgradeable/interfaces/IERC721AUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "../modules/Metadata/IMetadataModule.sol";
+import "../SoundFeeRegistry/SoundFeeRegistry.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
@@ -43,13 +44,19 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /// @param metadataModule Address of metadata module, address(0x00) if not used
     /// @param baseURI Base URI
     /// @param contractURI Contract URI for OpenSea storefront
+    /// @param fundingRecipient Address that receive royalties
+    /// @param royaltyBPS Royalty amount in bps
+    /// @param soundFeeRegistry Registry for providing platform fee details
     function initialize(
         address owner,
         string memory name,
         string memory symbol,
         IMetadataModule metadataModule,
         string memory baseURI,
-        string memory contractURI
+        string memory contractURI,
+        address fundingRecipient,
+        uint32 royaltyBPS,
+        SoundFeeRegistry soundFeeRegistry
     ) external;
 
     /// @dev Mints `quantity` tokens to addrress `to`
@@ -77,8 +84,14 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function setBaseURI(string memory baseURI) external;
 
     /// @dev Sets contract URI
-    function setContractURI(string memory _contractURI) external;
+    function setContractURI(string memory contractURI) external;
 
     /// @dev Freezes metadata by preventing any more changes to base URI
     function freezeMetadata() external;
+
+    /// @dev Sets funding recipient address
+    function setFundingRecipient(address fundingRecipient) external;
+
+    /// @dev Sets royalty amount in bps
+    function setRoyalty(uint32 royaltyBPS) external;
 }
