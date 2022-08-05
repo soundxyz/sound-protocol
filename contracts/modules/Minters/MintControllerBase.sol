@@ -26,7 +26,7 @@ abstract contract MintControllerBase {
     error SoldOut(uint32 maxMintable);
 
     /// @notice The current block timestamp must be between `startTime` and `endTime`, inclusive.
-    error MintNotOpen(uint32 blockTimestamp, uint32 startTime, uint32 endTime);
+    error MintNotOpen(uint256 blockTimestamp, uint32 startTime, uint32 endTime);
 
     /// @notice The mint is paused.
     error MintPaused();
