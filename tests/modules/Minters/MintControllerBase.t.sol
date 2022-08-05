@@ -21,6 +21,8 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_createEditionMintControllerEmitsEvent() external {
+        address controller = getRandomAccount(0);
+        vm.prank(controller);
         SoundEditionV1 edition = _createEdition();
 
         vm.expectEmit(false, false, false, true);
@@ -91,9 +93,8 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
         this.createEditionMintController(address(edition));
 
         vm.expectEmit(false, false, false, true);
-        emit MintControllerSet(address(edition), controller1);
-        vm.prank(controller0);
-        this.setEditionMintController(address(edition), controller1);
+        emit MintControllerSet(address(edition), newController);
+        this.setEditionMintController(address(edition), newController);
     }
 
     function test_setEditionMintControllerChangesController() external {
@@ -113,7 +114,6 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
 
         vm.expectEmit(false, false, false, true);
         emit MintControllerSet(address(edition), address(0));
-        vm.prank(controller);
 
         this.deleteEditionMintController(address(edition));
     }

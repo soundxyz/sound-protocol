@@ -76,8 +76,9 @@ abstract contract MintControllerBase {
     /// Calling conditions:
     /// - The `edition` must not have a controller.
     function _createEditionMintController(address edition) internal {
+        if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
+
         BaseData storage data = _baseData[edition];
-        
         if (data.controller != address(0)) revert MintControllerAlreadyExists(data.controller);
         data.controller = msg.sender;
         data.controllerAccess = true;

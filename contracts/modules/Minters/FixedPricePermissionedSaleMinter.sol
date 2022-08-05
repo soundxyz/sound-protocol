@@ -77,8 +77,8 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 quantity,
         bytes calldata signature
     ) public payable {
-        EditionMintData storage data = editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        EditionMintData storage data = _editionMintData[edition];
+        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
         _requireExactPayment(data.price * quantity);
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition));

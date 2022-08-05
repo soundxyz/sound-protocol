@@ -88,8 +88,7 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
     /// @param edition Address of the song edition contract we are minting for.
     /// @param quantity Token quantity to mint in song `edition`.
     function mint(address edition, uint32 quantity) public payable {
-        EditionMintData storage data = editionMintData[edition];
-        if ((data.totalMinted += quantity) > data.maxMinted) revert SoldOut();
+        EditionMintData storage data = _editionMintData[edition];
         
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
         // If the maximum allowed per wallet is set (i.e. is different to 0)
