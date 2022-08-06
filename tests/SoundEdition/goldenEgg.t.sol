@@ -33,7 +33,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_MINTABLE);
     }
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
