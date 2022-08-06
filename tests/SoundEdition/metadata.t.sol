@@ -76,6 +76,10 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition.tokenURI(2);
     }
 
+    // ================================
+    // setBaseURI()
+    // ================================
+
     function test_setBaseURIRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
 
@@ -123,6 +127,10 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition.setBaseURI(newBaseURI);
     }
 
+    // ================================
+    // setContractURI()
+    // ================================
+
     function test_setContractURIRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
 
@@ -164,6 +172,10 @@ contract SoundEdition_metadata is TestConfig {
         emit ContractURISet(newContractURI);
         soundEdition.setContractURI(newContractURI);
     }
+
+    // ================================
+    // setMetadataModule()
+    // ================================
 
     function test_setMetadataModuleRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
@@ -212,6 +224,10 @@ contract SoundEdition_metadata is TestConfig {
         emit MetadataModuleSet(newMetadataModule);
         soundEdition.setMetadataModule(newMetadataModule);
     }
+
+    // ================================
+    // freezeMetadata()
+    // ================================
 
     function test_freezeMetadataRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
