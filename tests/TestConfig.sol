@@ -15,6 +15,7 @@ contract TestConfig is Test {
     IMetadataModule constant METADATA_MODULE = IMetadataModule(address(0));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
+    uint32 constant MAX_MINTABLE = 5;
 
     SoundCreatorV1 soundCreator;
 

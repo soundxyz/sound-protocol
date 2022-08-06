@@ -43,13 +43,15 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /// @param metadataModule Address of metadata module, address(0x00) if not used
     /// @param baseURI Base URI
     /// @param contractURI Contract URI for OpenSea storefront
+    /// @param mintRandomnessLockedAfter Token supply after which randomness gets locked
     function initialize(
         address owner,
         string memory name,
         string memory symbol,
         IMetadataModule metadataModule,
         string memory baseURI,
-        string memory contractURI
+        string memory contractURI,
+        uint32 mintRandomnessLockedAfter
     ) external;
 
     /// @dev Mints `quantity` tokens to addrress `to`
@@ -82,6 +84,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /// @dev Freezes metadata by preventing any more changes to base URI
     function freezeMetadata() external;
 
+    /// @dev sets mintRandomnessLockedAfter in case of insufficient sales, to finalize goldenEgg
+    function setMintRandomnessLock(uint32 mintRandomnessLockedAfter) external;
+
     /// @dev Returns the base token URI for the collection
     function baseURI() external view returns (string memory);
+
+    /// @dev Returns token id for the golden egg, after randomness is locked. Else returns 0
+    function getGoldenEggTokenId() external view returns (uint256 tokenId);
 }

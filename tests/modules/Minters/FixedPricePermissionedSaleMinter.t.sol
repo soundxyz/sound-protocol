@@ -10,8 +10,6 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     uint256 constant PRICE = 1;
 
-    uint32 constant MAX_MINTABLE = 5;
-
     uint256 SIGNER_PRIVATE_KEY = 1;
 
     // prettier-ignore
@@ -37,7 +35,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         returns (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter)
     {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
         );
 
         minter = new FixedPricePermissionedSaleMinter();
@@ -49,7 +47,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
         );
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
@@ -63,7 +61,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
         );
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();

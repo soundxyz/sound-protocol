@@ -12,8 +12,6 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     uint32 constant END_TIME = 200;
 
-    uint32 constant MAX_MINTABLE = 5;
-
     // prettier-ignore
     event FixedPricePublicSaleMintCreated(
         address indexed edition,
@@ -25,7 +23,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
         );
 
         minter = new FixedPricePublicSaleMinter();
@@ -37,7 +35,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
         );
 
         FixedPricePublicSaleMinter minter = new FixedPricePublicSaleMinter();

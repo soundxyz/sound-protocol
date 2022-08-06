@@ -50,6 +50,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
+    uint32 public mintRandomnessLockedAfter;
+    bytes32 mintRandomness;
 
     // ================================
     // EVENTS & ERRORS
@@ -61,6 +63,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI_, string contractURI);
 
     error MetadataIsFrozen();
+    error InvalidRandomnessLock();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -73,7 +76,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         string memory symbol,
         IMetadataModule metadataModule_,
         string memory baseURI_,
-        string memory contractURI_
+        string memory contractURI_,
+        uint32 mintRandomnessLockedAfter_
     ) public initializerERC721A initializer {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -82,6 +86,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
+        mintRandomnessLockedAfter = mintRandomnessLockedAfter_;
 
         __AccessControl_init();
 
@@ -90,6 +95,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
         // Give owner the DEFAULT_ADMIN_ROLE
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
+        _mint(to, quantity);
+
+        if (_totalMinted() <= mintRandomnessLockedAfter) {
+            mintRandomness = blockhash(block.number - 1);
+        }
     }
 
     /// @inheritdoc ISoundEditionV1
@@ -122,6 +136,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
         isMetadataFrozen = true;
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function setMintRandomnessLock(uint32 mintRandomnessLockedAfter_) external onlyOwner {
+        if (mintRandomnessLockedAfter_ < _totalMinted()) revert InvalidRandomnessLock();
+
+        mintRandomnessLockedAfter = mintRandomnessLockedAfter_;
     }
 
     // ================================
@@ -173,7 +194,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
-        _mint(to, quantity);
+    function getGoldenEggTokenId() external view returns (uint256 tokenId) {
+        if (_totalMinted() >= mintRandomnessLockedAfter) {
+            // calculate number between 1 and mintRandomnessLockedAfter, corresponding to the blockhash
+            tokenId = (uint256(mintRandomness) % mintRandomnessLockedAfter) + 1;
+        }
     }
 }
