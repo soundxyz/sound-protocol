@@ -4,8 +4,10 @@ pragma solidity ^0.8.15;
 
 import "openzeppelin/access/Ownable.sol";
 
-/// @title SoundFeeRegistry
-/// @author Sound.xyz
+/**
+ * @title SoundFeeRegistry
+ * @author Sound.xyz
+ */
 contract SoundFeeRegistry is Ownable {
     // ================================
     // CONSTANTS
@@ -19,7 +21,9 @@ contract SoundFeeRegistry is Ownable {
 
     address public soundFeeAddress;
 
-    /// @dev platform fee in bps (0 to 10,000)
+    /**
+     * @dev platform fee in bps (0 to 10,000)
+     */
     uint32 public platformBPSFee;
 
     // ================================

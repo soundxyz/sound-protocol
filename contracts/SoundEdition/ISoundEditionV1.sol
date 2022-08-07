@@ -89,12 +89,18 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /// @dev Freezes metadata by preventing any more changes to base URI
     function freezeMetadata() external;
 
-    /// @dev Sets funding recipient address
+    /**
+     * @dev Sets funding recipient address
+     */
     function setFundingRecipient(address fundingRecipient) external;
 
-    /// @dev Sets royalty amount in bps
+    /**
+     * @dev Sets royalty amount in bps
+     */
     function setRoyalty(uint32 royaltyBPS) external;
 
-    /// @dev Withdraws collected royalties to the platform and fundingRecipient
+    /**
+     * @dev Withdraws collected royalties to the platform and fundingRecipient
+     */
     function withdrawAll() external;
 }

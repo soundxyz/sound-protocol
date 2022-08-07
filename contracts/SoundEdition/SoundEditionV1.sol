@@ -219,6 +219,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
 
-    /// @dev receive secondary royalties
+    // ================================
+    // FALLBACK FUNCTIONS
+    // ================================
+
+    /**
+     * @dev receive secondary royalties
+     */
     receive() external payable {}
 }
