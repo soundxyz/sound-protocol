@@ -37,7 +37,17 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         returns (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter)
     {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            payable(
+                soundCreator.createSound(
+                    SONG_NAME,
+                    SONG_SYMBOL,
+                    METADATA_MODULE,
+                    BASE_URI,
+                    CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS
+                )
+            )
         );
 
         minter = new FixedPricePermissionedSaleMinter();
@@ -49,7 +59,17 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            payable(
+                soundCreator.createSound(
+                    SONG_NAME,
+                    SONG_SYMBOL,
+                    METADATA_MODULE,
+                    BASE_URI,
+                    CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS
+                )
+            )
         );
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
@@ -63,7 +83,17 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            payable(
+                soundCreator.createSound(
+                    SONG_NAME,
+                    SONG_SYMBOL,
+                    METADATA_MODULE,
+                    BASE_URI,
+                    CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS
+                )
+            )
         );
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();

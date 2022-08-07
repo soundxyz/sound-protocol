@@ -94,4 +94,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /// @dev Sets royalty amount in bps
     function setRoyalty(uint32 royaltyBPS) external;
+
+    /// @dev Withdraws collected royalties to the platform and fundingRecipient
+    function withdrawAll() external;
 }

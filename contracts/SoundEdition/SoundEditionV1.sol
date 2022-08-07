@@ -115,6 +115,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         _mint(to, quantity);
     }
 
+    /// @inheritdoc ISoundEditionV1
     function withdrawAll() external {
         uint256 balance = address(this).balance;
         uint256 platformFee = (balance * soundFeeRegistry.platformBPSFee()) / MAX_BPS;
@@ -217,4 +218,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         fundingRecipient_ = address(this);
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
+
+    /// @dev receive secondary royalties
+    receive() external payable {}
 }
