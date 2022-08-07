@@ -5,10 +5,11 @@ pragma solidity ^0.8.15;
 import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 
-/// @title Fixed Price Public Sale Minter
-/// @dev Minter class for sales at a fixed price within a time range.
+/**
+ * @title Fixed Price Public Sale Minter
+ * @dev Minter class for sales at a fixed price within a time range.
+ */
 contract FixedPricePublicSaleMinter is MintControllerBase {
-    // ERRORS
     error WrongEtherValue();
     error SoldOut();
     error MintNotStarted();
@@ -43,13 +44,15 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
 
     mapping(address => EditionMintData) internal _editionMintData;
 
-    /// @dev Initializes the configuration for an edition mint.
-    /// @param edition Address of the song edition contract we are minting for.
-    /// @param price Sale price in ETH for minting a single token in `edition`.
-    /// @param startTime Start timestamp of sale (in seconds since unix epoch).
-    /// @param endTime End timestamp of sale (in seconds since unix epoch).
-    /// @param maxMintable The maximum number of tokens that can can be minted for this sale.
-    /// @param maxAllowedPerWallet The maximum number of tokens that a wallet can mint.
+    /**
+     * @dev Initializes the configuration for an edition mint.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param price Sale price in ETH for minting a single token in `edition`.
+     * @param startTime Start timestamp of sale (in seconds since unix epoch).
+     * @param endTime End timestamp of sale (in seconds since unix epoch).
+     * @param maxMintable The maximum number of tokens that can can be minted for this sale.
+     * @param maxAllowedPerWallet The maximum number of tokens that a wallet can mint.
+     */
     function createEditionMint(
         address edition,
         uint256 price,
@@ -76,25 +79,36 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         );
     }
 
+    /**
+     * @dev Deletes a given edition's mint configuration.
+     * @param edition The edition to delete the mint configuration for.
+     */
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
         delete _editionMintData[edition];
     }
 
+    /**
+     * @dev Returns the given edition's mint configuration.
+     * @param edition The edition to get the mint configuration for.
+     */
     function editionMintData(address edition) public view returns (EditionMintData memory) {
         return _editionMintData[edition];
     }
 
-    /// @dev Mints the required `quantity` in song `edition.
-    /// @param edition Address of the song edition contract we are minting for.
-    /// @param quantity Token quantity to mint in song `edition`.
+    /**
+     * @dev Mints the required `quantity` in song `edition.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param quantity Token quantity to mint in song `edition`.
+     */
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = _editionMintData[edition];
 
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet)) revert ExceedsMaxPerWallet();
+        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
+            revert ExceedsMaxPerWallet();
 
         if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
         if (data.price * quantity != msg.value) revert WrongEtherValue();

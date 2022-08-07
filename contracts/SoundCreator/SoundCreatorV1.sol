@@ -32,8 +32,10 @@ import "../SoundEdition/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
 
-/// @title Sound Creator V1
-/// @dev Factory for deploying Sound edition contracts.
+/**
+ * @title Sound Creator V1
+ * @dev Factory for deploying Sound edition contracts.
+ */
 contract SoundCreatorV1 {
     /***********************************
                 STORAGE
@@ -51,7 +53,9 @@ contract SoundCreatorV1 {
         soundRegistry = _soundRegistry;
     }
 
-    /// @dev Deploys a Sound edition contract.
+    /**
+     * @dev Deploys a Sound edition contract.
+     */
     function createSound(
         string memory _name,
         string memory _symbol,
