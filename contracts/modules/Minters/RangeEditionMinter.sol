@@ -30,6 +30,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
+        uint256 indexed mintId, 
         uint256 price,
         uint32 startTime,
         uint32 closingTime,
@@ -38,9 +39,20 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         uint32 maxMintableUpper
     );
 
-    event TimeRangeSet(address indexed edition, uint32 startTime, uint32 closingTime, uint32 endTime);
+    event TimeRangeSet(
+        address indexed edition,
+        uint256 indexed mintId,
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    );
 
-    event MaxMintableRangeSet(address indexed edition, uint32 maxMintableLower, uint32 maxMintableUpper);
+    event MaxMintableRangeSet(
+        address indexed edition,
+        uint256 indexed mintId,
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper
+    );
 
     // ================================
     // STRUCTS
@@ -69,7 +81,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // STORAGE
     // ================================
 
-    mapping(address => EditionMintData) internal _editionMintData;
+    mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     // ================================
     // CREATE AND DELETE
@@ -95,10 +107,10 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
-    ) public {
-        _createEditionMintController(edition);
+    ) public returns (uint256 mintId) {
+        mintId = _createEditionMintController(edition);
 
-        EditionMintData storage data = _editionMintData[edition];
+        EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
         data.startTime = startTime;
         data.closingTime = closingTime;
@@ -115,6 +127,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         // prettier-ignore
         emit RangeEditionMintCreated(
             edition,
+            mintId, 
             price,
             startTime,
             closingTime,
@@ -128,17 +141,17 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
      * @dev Deletes the configuration for an edition mint.
      * @param edition Address of the song edition contract we are minting for.
      */
-    function deleteEditionMint(address edition) public {
-        _deleteEditionMintController(edition);
-        delete _editionMintData[edition];
+    function deleteEditionMint(address edition, uint256 mintId) public {
+        _deleteEditionMintController(edition, mintId);
+        delete _editionMintData[edition][mintId];
     }
 
     /**
      * @dev Returns the `EditionMintData` for `edition.
      * @param edition Address of the song edition contract we are minting for.
      */
-    function editionMintData(address edition) public view returns (EditionMintData memory) {
-        return _editionMintData[edition];
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 
     // ================================
@@ -150,8 +163,12 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
      * @param edition Address of the song edition contract we are minting for.
      * @param quantity Token quantity to mint in song `edition`.
      */
-    function mint(address edition, uint32 quantity) public payable {
-        EditionMintData storage data = _editionMintData[edition];
+    function mint(
+        address edition,
+        uint256 mintId,
+        uint32 quantity
+    ) public payable {
+        EditionMintData storage data = _editionMintData[edition][mintId];
 
         _requireMintOpen(data.startTime, data.endTime);
 
@@ -167,7 +184,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         _requireNotSoldOut(nextTotalMinted, maxMintable);
         data.totalMinted = nextTotalMinted;
 
-        _mint(edition, msg.sender, quantity, quantity * data.price);
+        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
 
     // ================================
@@ -185,11 +202,12 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
      */
     function setTimeRange(
         address edition,
+        uint256 mintId,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition) {
-        EditionMintData storage data = _editionMintData[edition];
+    ) public onlyEditionMintController(edition, mintId) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
         data.startTime = startTime;
         data.closingTime = closingTime;
         data.endTime = endTime;
@@ -197,7 +215,7 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         if (!(data.startTime < data.closingTime && data.closingTime < data.endTime))
             revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
 
-        emit TimeRangeSet(edition, startTime, closingTime, endTime);
+        emit TimeRangeSet(edition, mintId, startTime, closingTime, endTime);
     }
 
     /*
@@ -208,16 +226,17 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
      */
     function setMaxMintableRange(
         address edition,
+        uint256 mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
-    ) public onlyEditionMintController(edition) {
-        EditionMintData storage data = _editionMintData[edition];
+    ) public onlyEditionMintController(edition, mintId) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
 
         if (!(data.maxMintableLower < data.maxMintableUpper))
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
-        emit MaxMintableRangeSet(edition, maxMintableLower, maxMintableUpper);
+        emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
     }
 }

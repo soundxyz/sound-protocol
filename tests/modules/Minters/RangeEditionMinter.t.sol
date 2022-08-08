@@ -19,9 +19,12 @@ contract RangeEditionMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE_UPPER = 10;
 
+    uint256 constant MINT_ID = 0;
+
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
+        uint256 indexed mintId, 
         uint256 price,
         uint32 startTime,
         uint32 closingTime,
@@ -30,9 +33,20 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintableUpper
     );
 
-    event TimeRangeSet(address indexed edition, uint32 startTime, uint32 closingTime, uint32 endTime);
+    event TimeRangeSet(
+        address indexed edition,
+        uint256 indexed mintId,
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    );
 
-    event MaxMintableRangeSet(address indexed edition, uint32 maxMintableLower, uint32 maxMintableUpper);
+    event MaxMintableRangeSet(
+        address indexed edition,
+        uint256 indexed mintId,
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper
+    );
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, RangeEditionMinter minter) {
         edition = SoundEditionV1(
@@ -90,6 +104,7 @@ contract RangeEditionMinterTests is TestConfig {
             vm.expectEmit(false, false, false, true);
             emit RangeEditionMintCreated(
                 address(edition),
+                MINT_ID,
                 price,
                 startTime,
                 closingTime,
@@ -110,7 +125,7 @@ contract RangeEditionMinterTests is TestConfig {
         );
 
         if (!hasRevert) {
-            RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+            RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
             assertEq(data.price, price);
             assertEq(data.startTime, startTime);
             assertEq(data.closingTime, closingTime);
@@ -130,16 +145,16 @@ contract RangeEditionMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * quantity }(address(edition), quantity);
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
-        data = minter.editionMintData(address(edition));
+        data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
     }
@@ -160,7 +175,7 @@ contract RangeEditionMinterTests is TestConfig {
         );
 
         vm.expectRevert(expectedRevert);
-        minter.mint{ value: requiredPayment - 1 }(address(edition), quantity);
+        minter.mint{ value: requiredPayment - 1 }(address(edition), MINT_ID, quantity);
     }
 
     function test_mintRevertsForMintNotOpen() public {
@@ -172,22 +187,22 @@ contract RangeEditionMinterTests is TestConfig {
         vm.expectRevert(
             abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
         );
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity);
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(START_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity);
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(END_TIME + 1);
         vm.expectRevert(
             abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
         );
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity);
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(END_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity);
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(CLOSING_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), quantity);
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
     }
 
     function test_mintRevertsForSoldOut(uint32 quantityToBuyBeforeClosing, uint32 quantityToBuyAfterClosing) public {
@@ -204,13 +219,13 @@ contract RangeEditionMinterTests is TestConfig {
             totalMinted = quantityToBuyBeforeClosing;
         }
         vm.warp(START_TIME);
-        minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(address(edition), quantityToBuyBeforeClosing);
+        minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(address(edition), MINT_ID, quantityToBuyBeforeClosing);
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
             vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE_LOWER));
         }
         vm.warp(CLOSING_TIME);
-        minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), quantityToBuyAfterClosing);
+        minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), MINT_ID, quantityToBuyAfterClosing);
     }
 
     function test_setTime(
@@ -231,13 +246,13 @@ contract RangeEditionMinterTests is TestConfig {
 
         if (!hasRevert) {
             vm.expectEmit(false, false, false, true);
-            emit TimeRangeSet(address(edition), startTime, closingTime, endTime);
+            emit TimeRangeSet(address(edition), MINT_ID, startTime, closingTime, endTime);
         }
 
-        minter.setTimeRange(address(edition), startTime, closingTime, endTime);
+        minter.setTimeRange(address(edition), MINT_ID, startTime, closingTime, endTime);
 
         if (!hasRevert) {
-            RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+            RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
             assertEq(data.startTime, startTime);
             assertEq(data.closingTime, closingTime);
             assertEq(data.endTime, endTime);
@@ -262,13 +277,13 @@ contract RangeEditionMinterTests is TestConfig {
 
         if (!hasRevert) {
             vm.expectEmit(false, false, false, true);
-            emit MaxMintableRangeSet(address(edition), maxMintableLower, maxMintableUpper);
+            emit MaxMintableRangeSet(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
         }
 
-        minter.setMaxMintableRange(address(edition), maxMintableLower, maxMintableUpper);
+        minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
 
         if (!hasRevert) {
-            RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+            RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
             assertEq(data.maxMintableLower, maxMintableLower);
             assertEq(data.maxMintableUpper, maxMintableUpper);
         }
@@ -307,17 +322,19 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
     }
 
     function invariant_maxMintableRange() public {
-        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
         assertTrue(data.maxMintableLower < data.maxMintableUpper);
     }
 
     function invariant_timeRange() public {
-        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
         assertTrue(data.startTime < data.closingTime && data.closingTime < data.endTime);
     }
 }
 
 contract RangeEditionMinterUpdater {
+    uint256 constant MINT_ID = 0;
+
     SoundEditionV1 edition;
     RangeEditionMinter minter;
 
@@ -331,10 +348,10 @@ contract RangeEditionMinterUpdater {
         uint32 closingTime,
         uint32 endTime
     ) public {
-        minter.setTimeRange(address(edition), startTime, closingTime, endTime);
+        minter.setTimeRange(address(edition), MINT_ID, startTime, closingTime, endTime);
     }
 
     function setMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper) public {
-        minter.setMaxMintableRange(address(edition), maxMintableLower, maxMintableUpper);
+        minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
     }
 }

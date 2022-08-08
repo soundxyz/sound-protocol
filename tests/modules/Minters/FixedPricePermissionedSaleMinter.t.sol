@@ -12,11 +12,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE = 5;
 
-    uint256 SIGNER_PRIVATE_KEY = 1;
+    uint256 constant SIGNER_PRIVATE_KEY = 1;
+
+    uint256 constant MINT_ID = 0;
 
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
         address indexed edition,
+        uint256 indexed mintId,
         uint256 price,
         address signer,
         uint32 maxMintable
@@ -27,7 +30,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     }
 
     function _getSignature(address caller, address edition) internal returns (bytes memory) {
-        bytes32 digest = keccak256(abi.encode(caller, address(edition))).toEthSignedMessageHash();
+        bytes32 digest = keccak256(abi.encode(caller, address(edition), MINT_ID)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SIGNER_PRIVATE_KEY, digest);
         return abi.encodePacked(r, s, v);
     }
@@ -56,7 +59,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPricePermissionedMintCreated(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
+        emit FixedPricePermissionedMintCreated(address(edition), MINT_ID, PRICE, _signerAddress(), MAX_MINTABLE);
 
         minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
     }
@@ -80,10 +83,10 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        minter.mint{ value: PRICE }(address(edition), 1, sig);
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
 
         vm.expectRevert(FixedPricePermissionedSaleMinter.InvalidSignature.selector);
-        minter.mint{ value: PRICE }(address(edition), 1, sig);
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintWithWrongEtherValueReverts() public {
@@ -94,7 +97,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, PRICE * 2, PRICE));
-        minter.mint{ value: PRICE * 2 }(address(edition), 1, sig);
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintWhenSoldOutReverts() public {
@@ -105,14 +108,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE));
-        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MAX_MINTABLE + 1, sig);
+        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MAX_MINTABLE, sig);
+        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig);
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE));
-        minter.mint{ value: PRICE }(address(edition), 1, sig);
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
@@ -125,7 +128,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         (status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(FixedPricePermissionedSaleMinter.mint.selector, address(edition), 1, sig)
+            abi.encodeWithSelector(FixedPricePermissionedSaleMinter.mint.selector, address(edition), MINT_ID, 1, sig)
         );
         assertTrue(status);
 
@@ -134,7 +137,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         (status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(FixedPricePermissionedSaleMinter.mint.selector, address(edition), 1, sig)
+            abi.encodeWithSelector(FixedPricePermissionedSaleMinter.mint.selector, address(edition), MINT_ID, 1, sig)
         );
         assertFalse(status);
     }
@@ -147,16 +150,19 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        FixedPricePermissionedSaleMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        FixedPricePermissionedSaleMinter.EditionMintData memory data = minter.editionMintData(
+            address(edition),
+            MINT_ID
+        );
 
         assertEq(data.totalMinted, 0);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * quantity }(address(edition), quantity, sig);
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, sig);
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
-        data = minter.editionMintData(address(edition));
+        data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
     }

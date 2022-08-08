@@ -3,7 +3,6 @@
 pragma solidity ^0.8.15;
 
 import "./MintControllerBase.sol";
-import "../../SoundEdition/ISoundEditionV1.sol";
 import "solady/utils/ECDSA.sol";
 
 /**
@@ -19,6 +18,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
         address indexed edition,
+        uint256 indexed mintId,
         uint256 price,
         address signer,
         uint32 maxMintable
@@ -35,7 +35,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 totalMinted;
     }
 
-    mapping(address => EditionMintData) internal _editionMintData;
+    mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev Initializes the configuration for an edition mint.
@@ -45,17 +45,18 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint256 price,
         address signer,
         uint32 maxMintable
-    ) public {
-        _createEditionMintController(edition);
+    ) public returns (uint256 mintId) {
+        mintId = _createEditionMintController(edition);
         if (signer == address(0)) revert SignerIsZeroAddress();
 
-        EditionMintData storage data = _editionMintData[edition];
+        EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
         data.signer = signer;
         data.maxMintable = maxMintable;
         // prettier-ignore
         emit FixedPricePermissionedMintCreated(
             edition,
+            mintId,
             price,
             signer,
             maxMintable
@@ -66,16 +67,16 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
      * @dev Returns the given edition's mint configuration.
      * @param edition The edition to get the mint configuration for.
      */
-    function editionMintData(address edition) public view returns (EditionMintData memory) {
-        return _editionMintData[edition];
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 
     /**
      * @dev Deletes the configuration for an edition mint.
      */
-    function deleteEditionMint(address edition) public {
-        _deleteEditionMintController(edition);
-        delete _editionMintData[edition];
+    function deleteEditionMint(address edition, uint256 mintId) public {
+        _deleteEditionMintController(edition, mintId);
+        delete _editionMintData[edition][mintId];
     }
 
     /**
@@ -83,16 +84,19 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
      */
     function mint(
         address edition,
+        uint256 mintId,
         uint32 quantity,
         bytes calldata signature
     ) public payable {
-        EditionMintData storage data = _editionMintData[edition];
-        _requireNotSoldOut(data.totalMinted += quantity, data.maxMintable);
+        EditionMintData storage data = _editionMintData[edition][mintId];
+        uint32 nextTotalMinted = data.totalMinted + quantity;
+        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
+        data.totalMinted = nextTotalMinted;
 
-        bytes32 hash = keccak256(abi.encode(msg.sender, edition));
+        bytes32 hash = keccak256(abi.encode(msg.sender, edition, mintId));
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        _mint(edition, msg.sender, quantity, data.price * quantity);
+        _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
     }
 }
