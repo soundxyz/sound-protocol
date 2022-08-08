@@ -64,6 +64,7 @@ contract MerkleDropMinter is MintControllerBase {
     ) public {
         _createEditionMintController(edition);
         EditionMintData storage data = editionMintData[edition];
+        data.merkleRootHash = merkleRootHash;
         data.price = price;
         data.startTime = startTime;
         data.endTime = endTime;
@@ -86,15 +87,8 @@ contract MerkleDropMinter is MintControllerBase {
 
     function mint(address edition, uint32 quantity, bytes32[] calldata merkleProof) public payable {
         EditionMintData storage data = editionMintData[edition];
-        //bytes32 leaf = keccak256(abi.encodePacked(msg.sender, quantity));
-
-        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, keccak256(abi.encodePacked(msg.sender)));
-
-        // (bool valid, uint256 index) = MerkleProof.verify(
-        //     merkleProof,
-        //     data.merkleRootHash,
-        //     leaf
-        // );
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, quantity));
+        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         require(valid, "Invalid proof");
 
         if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
