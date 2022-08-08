@@ -171,19 +171,6 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
         this.mint{ value: price * 2 }(address(edition), mintId, 2, price);
     }
 
-    function test_revertsWhenAccessRenounced() public {
-        SoundEditionV1 edition = _createEdition();
-
-        uint256 mintId = this.createEditionMintController(address(edition));
-
-        this.onlyEditionMintControllerAction(address(edition), mintId);
-
-        this.renounceEditionMintControllerAccess(address(edition), mintId);
-
-        vm.expectRevert(MintControllerUnauthorized.selector);
-        this.onlyEditionMintControllerAction(address(edition), mintId);
-    }
-
     function test_mintRevertsWithZeroQuantity() public {
         SoundEditionV1 edition = _createEdition();
 

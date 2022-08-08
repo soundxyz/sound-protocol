@@ -77,7 +77,6 @@ abstract contract MintControllerBase {
 
     struct BaseData {
         address controller;
-        bool controllerAccess;
         bool mintPaused;
     }
 
@@ -107,7 +106,6 @@ abstract contract MintControllerBase {
 
         if (data.controller == address(0)) revert MintControllerNotFound();
         if (msg.sender != data.controller) revert MintControllerUnauthorized();
-        if (!data.controllerAccess) revert MintControllerUnauthorized();
 
         _;
     }
@@ -125,7 +123,6 @@ abstract contract MintControllerBase {
         BaseData storage data = _baseData[edition][mintId];
         if (data.controller != address(0)) revert MintControllerAlreadyExists(data.controller);
         data.controller = msg.sender;
-        data.controllerAccess = true;
 
         _nextMintIds[edition] += 1;
 
@@ -172,13 +169,6 @@ abstract contract MintControllerBase {
     }
 
     /**
-     * @dev Returns if the mint controller for `edition` has access.
-     */
-    function editionMintControllerHasAccess(address edition, uint256 mintId) public view returns (bool) {
-        return _baseData[edition][mintId].controllerAccess;
-    }
-
-    /**
      * @dev Returns the mint controller for `edition`.
      */
     function editionMintController(address edition, uint256 mintId) public view returns (address) {
@@ -197,22 +187,6 @@ abstract contract MintControllerBase {
     ) public virtual onlyEditionMintController(edition, mintId) {
         _baseData[edition][mintId].controller = controller;
         emit MintControllerSet(edition, mintId, controller);
-    }
-
-    /**
-     * @dev Sets the new `controller` for `edition`.
-     * Calling conditions:
-     * - The caller must be the current controller for `edition`.
-     */
-    function renounceEditionMintControllerAccess(address edition, uint256 mintId)
-        public
-        virtual
-        onlyEditionMintController(edition, mintId)
-    {
-        BaseData storage data = _baseData[edition][mintId];
-
-        data.controllerAccess = false;
-        emit MintControllerAccessRenounced(edition, mintId, data.controller);
     }
 
     /**
