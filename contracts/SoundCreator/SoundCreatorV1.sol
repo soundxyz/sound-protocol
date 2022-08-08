@@ -57,11 +57,11 @@ contract SoundCreatorV1 {
      * @dev Deploys a Sound edition contract.
      */
     function createSound(
-        string memory _name,
-        string memory _symbol,
-        IMetadataModule _metadataModule,
-        string memory _baseURI,
-        string memory _contractURI,
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule,
+        string memory baseURI,
+        string memory contractURI,
         uint32 masterMaxMintable
     ) external returns (address soundEdition) {
         // todo: if signature provided, pass it to SoundRegistry.register();
@@ -72,11 +72,11 @@ contract SoundCreatorV1 {
 
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
-            _name,
-            _symbol,
-            _metadataModule,
-            _baseURI,
-            _contractURI,
+            name,
+            symbol,
+            metadataModule,
+            baseURI,
+            contractURI,
             masterMaxMintable
         );
 
