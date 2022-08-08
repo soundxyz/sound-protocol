@@ -133,8 +133,8 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         delete _editionMintData[edition];
     }
 
-    /** 
-     * @dev Returns the `EditionMintData` for `edition. 
+    /**
+     * @dev Returns the `EditionMintData` for `edition.
      * @param edition Address of the song edition contract we are minting for.
      */
     function editionMintData(address edition) public view returns (EditionMintData memory) {

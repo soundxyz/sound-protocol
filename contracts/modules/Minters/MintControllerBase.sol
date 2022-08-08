@@ -162,7 +162,7 @@ abstract contract MintControllerBase {
         setEditionMintController(edition, address(0));
     }
 
-    /** 
+    /**
      * @dev Returns if the mint controller for `edition` has access.
      */
     function editionMintControllerHasAccess(address edition) public view returns (bool) {

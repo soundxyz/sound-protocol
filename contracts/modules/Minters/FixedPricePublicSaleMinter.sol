@@ -108,7 +108,9 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
             revert ExceedsMaxPerWallet();
 
-        _requireNotSoldOut(data.totalMinted += quantity, data.maxMintable);
+        uint32 nextTotalMinted = data.totalMinted + quantity;
+        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
+        data.totalMinted = nextTotalMinted;
         _requireMintOpen(data.startTime, data.endTime);
 
         _mint(edition, msg.sender, quantity, data.price * quantity);

@@ -34,10 +34,6 @@ contract RangeEditionMinterTests is TestConfig {
 
     event MaxMintableRangeSet(address indexed edition, uint32 maxMintableLower, uint32 maxMintableUpper);
 
-    event PausedSet(address indexed edition, bool paused);
-
-    event Locked(address indexed edition);
-
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, RangeEditionMinter minter) {
         edition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
@@ -122,7 +118,6 @@ contract RangeEditionMinterTests is TestConfig {
             assertEq(data.totalMinted, uint32(0));
             assertEq(data.maxMintableLower, maxMintableLower);
             assertEq(data.maxMintableUpper, maxMintableUpper);
-            assertEq(data.paused, false);
         }
     }
 
