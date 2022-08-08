@@ -10,6 +10,9 @@ import "../../SoundEdition/ISoundEditionV1.sol";
  * @dev Minter class for sales at a fixed price within a time range.
  */
 contract FixedPricePublicSaleMinter is MintControllerBase {
+    /**
+     * The number of tokens minted has exceeded the number allowed for each wallet.
+     */
     error ExceedsMaxPerWallet();
 
     // prettier-ignore

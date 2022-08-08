@@ -13,8 +13,14 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // CUSTOM ERRORS
     // ================================
 
+    /**
+     * The following condition must hold: `startTime` < `closingTime` < `endTime`.
+     */
     error InvalidTimeRange(uint32 startTime, uint32 closingTime, uint32 endTime);
 
+    /**
+     * The following condition must hold: `maxMintableLower` < `maxMintableUpper`.
+     */
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
     // ================================
@@ -53,10 +59,10 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         uint32 endTime;
         // The total number of tokens minted. Includes permissioned mints.
         uint32 totalMinted;
-        // The upper limit of the maximum number of tokens that can be minted.
-        uint32 maxMintableUpper;
         // The lower limit of the maximum number of tokens that can be minted.
         uint32 maxMintableLower;
+        // The upper limit of the maximum number of tokens that can be minted.
+        uint32 maxMintableUpper;
     }
 
     // ================================
@@ -71,6 +77,15 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     /*
      * @dev Initializes the configuration for an edition mint.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param price Sale price in ETH for minting a single token in `edition`.
+     * @param startTime Start timestamp of sale (in seconds since unix epoch).
+     * @param closingTime The timestamp (in seconds since unix epoch) after which the
+     * max amount of tokens mintable will drop from
+     * `maxMintableUpper` to `maxMintableLower`.
+     * @param endTime End timestamp of sale (in seconds since unix epoch).
+     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
+     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
      */
     function createEditionMint(
         address edition,
@@ -111,13 +126,17 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     /*
      * @dev Deletes the configuration for an edition mint.
+     * @param edition Address of the song edition contract we are minting for.
      */
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
         delete _editionMintData[edition];
     }
 
-    /// @dev Returns the `EditionMintData` for `edition.
+    /** 
+     * @dev Returns the `EditionMintData` for `edition. 
+     * @param edition Address of the song edition contract we are minting for.
+     */
     function editionMintData(address edition) public view returns (EditionMintData memory) {
         return _editionMintData[edition];
     }
@@ -128,6 +147,8 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     /*
      * @dev Mints tokens for a given edition.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param quantity Token quantity to mint in song `edition`.
      */
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = _editionMintData[edition];
@@ -142,7 +163,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         }
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        _requireNotSoldOut(data.totalMinted += quantity, maxMintable);
+        uint32 nextTotalMinted = data.totalMinted + quantity;
+        _requireNotSoldOut(nextTotalMinted, maxMintable);
+        data.totalMinted = nextTotalMinted;
 
         _mint(edition, msg.sender, quantity, quantity * data.price);
     }
@@ -153,6 +176,12 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     /*
      * @dev Sets the time range.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param startTime Start timestamp of sale (in seconds since unix epoch).
+     * @param closingTime The timestamp (in seconds since unix epoch) after which the
+     * max amount of tokens mintable will drop from
+     * `maxMintableUpper` to `maxMintableLower`.
+     * @param endTime End timestamp of sale (in seconds since unix epoch).
      */
     function setTimeRange(
         address edition,
@@ -173,6 +202,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
 
     /*
      * @dev Sets the max mintable range.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
+     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
      */
     function setMaxMintableRange(
         address edition,
