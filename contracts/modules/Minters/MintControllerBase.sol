@@ -2,17 +2,13 @@
 
 pragma solidity ^0.8.15;
 
-<<<<<<< HEAD
+// TODO: figure out how to adapt ISoundEdition and import that instead
+import "../../SoundEdition/SoundEditionV1.sol";
+
 /**
  * @title Mint Controller Base
  * @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
  */
-=======
-// TODO: figure out how to adapt ISoundEdition and import that instead
-import "../../SoundEdition/SoundEditionV1.sol";
-
-/// @title Mint Controller Base
-/// @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
 abstract contract MintControllerBase {
     /// @dev The caller must be the the controller of this edition to perform this action.
     error MintControllerUnauthorized();

@@ -20,7 +20,6 @@ contract SoundEdition_authority is TestConfig {
         assertEq(soundEdition.guardian(), guardian);
     }
 
-    // Owner can set guardian.
     function test_ownerCanSetGuardian() external {
         address guardian = address(123);
 
@@ -36,8 +35,9 @@ contract SoundEdition_authority is TestConfig {
         assertEq(soundEdition.guardian(), guardian);
     }
 
-    // Non-owners can't set guardian.
     function test_nonOwnerCantSetGuardian(address nonOwner) external {
+        vm.assume(nonOwner != address(this));
+
         SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, address(0))
         );
@@ -48,7 +48,6 @@ contract SoundEdition_authority is TestConfig {
         soundEdition.setGuardian(nonOwner);
     }
 
-    // Guardian can relinquish guardianship.
     function test_guardianCanRelinquishRole() external {
         address guardian = address(12345);
 
@@ -65,7 +64,6 @@ contract SoundEdition_authority is TestConfig {
         assertEq(soundEdition.guardian(), address(0));
     }
 
-    // Non-guardians can't relinquish role.
     function test_nonGuardiansCantRelinquishRole(address nonGuardian) external {
         vm.assume(nonGuardian != GUARDIAN);
 
@@ -79,7 +77,6 @@ contract SoundEdition_authority is TestConfig {
         soundEdition.relinquishGuardianship();
     }
 
-    // Guardian can set a new owner.
     function test_guardianCanSetNewOwner() external {
         address guardian = address(12345);
         address newOwner = address(6789);
@@ -94,9 +91,10 @@ contract SoundEdition_authority is TestConfig {
         assertEq(soundEdition.owner(), newOwner);
     }
 
-    // Non-guardians can't set a new owner.
     function test_nonGuardiansCantSetNewOwner(address nonGuardian) external {
         address guardian = address(30896230963);
+
+        vm.assume(nonGuardian != guardian);
 
         SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, guardian)
