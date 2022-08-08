@@ -5,7 +5,9 @@ pragma solidity ^0.8.15;
 import "./MintControllerBase.sol";
 import "solady/utils/Multicallable.sol";
 
-/// @dev Minter class for range edition sales.
+/*
+ * @dev Minter class for range edition sales.
+ */
 contract RangeEditionMinter is MintControllerBase, Multicallable {
     // ================================
     // CUSTOM ERRORS
@@ -55,8 +57,6 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         uint32 maxMintableUpper;
         // The lower limit of the maximum number of tokens that can be minted.
         uint32 maxMintableLower;
-        // Whether the sale is paused.
-        bool paused;
     }
 
     // ================================
@@ -69,7 +69,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // CREATE AND DELETE
     // ================================
 
-    /// @dev Initializes the configuration for an edition mint.
+    /*
+     * @dev Initializes the configuration for an edition mint.
+     */
     function createEditionMint(
         address edition,
         uint256 price,
@@ -107,7 +109,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         );
     }
 
-    /// @dev Deletes the configuration for an edition mint.
+    /*
+     * @dev Deletes the configuration for an edition mint.
+     */
     function deleteEditionMint(address edition) public {
         _deleteEditionMintController(edition);
         delete _editionMintData[edition];
@@ -122,7 +126,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // MINT
     // ================================
 
-    /// @dev Mints tokens for a given edition.
+    /*
+     * @dev Mints tokens for a given edition.
+     */
     function mint(address edition, uint32 quantity) public payable {
         EditionMintData storage data = _editionMintData[edition];
 
@@ -145,7 +151,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
     // SETTER FUNCTIONS
     // ================================
 
-    /// @dev Sets the time range.
+    /*
+     * @dev Sets the time range.
+     */
     function setTimeRange(
         address edition,
         uint32 startTime,
@@ -163,7 +171,9 @@ contract RangeEditionMinter is MintControllerBase, Multicallable {
         emit TimeRangeSet(edition, startTime, closingTime, endTime);
     }
 
-    /// @dev Sets the max mintable range.
+    /*
+     * @dev Sets the max mintable range.
+     */
     function setMaxMintableRange(
         address edition,
         uint32 maxMintableLower,
