@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.15;
 
-import "../../SoundEdition/ISoundEditionV1.sol";
-
-/// @title Mint Controller Base
-/// @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
+/**
+ * @title Mint Controller Base
+ * @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
+ */
 abstract contract MintControllerBase {
     // ================================
     // CUSTOM ERRORS
@@ -79,9 +79,11 @@ abstract contract MintControllerBase {
         _;
     }
 
-    /// @dev Assigns the current caller as the controller to `edition`.
-    /// Calling conditions:
-    /// - The `edition` must not have a controller.
+    /**
+     * @dev Assigns the current caller as the controller to `edition`.
+     * Calling conditions:
+     * - The `edition` must not have a controller.
+     */
     function _createEditionMintController(address edition) internal {
         if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
 
@@ -93,7 +95,9 @@ abstract contract MintControllerBase {
         emit MintControllerSet(edition, msg.sender);
     }
 
-    /// @dev Returns whether the caller is the owner of `edition`.
+    /**
+     * @dev Returns whether the caller is the owner of `edition`.
+     */
     function _callerIsEditionOwner(address edition) private returns (bool result) {
         // To avoid defining an interface just to call `owner()`.
         // And Solidity does not have try catch for plain old `call`.
@@ -122,8 +126,10 @@ abstract contract MintControllerBase {
         }
     }
 
-    /// @dev Convenience function for deleting a mint controller.
-    /// Equivalent to `setEditionMintController(edition, address(0))`.
+    /**
+     * @dev Convenience function for deleting a mint controller.
+     * Equivalent to `setEditionMintController(edition, address(0))`.
+     */
     function _deleteEditionMintController(address edition) internal {
         setEditionMintController(edition, address(0));
     }
@@ -133,14 +139,18 @@ abstract contract MintControllerBase {
         return _baseData[edition].controllerAccess;
     }
 
-    /// @dev Returns the mint controller for `edition`.
+    /**
+     * @dev Returns the mint controller for `edition`.
+     */
     function editionMintController(address edition) public view returns (address) {
         return _baseData[edition].controller;
     }
 
-    /// @dev Sets the new `controller` for `edition`.
-    /// Calling conditions:
-    /// - The caller must be the current controller for `edition`.
+    /**
+     * @dev Sets the new `controller` for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
+     */
     function setEditionMintController(address edition, address controller)
         public
         virtual
