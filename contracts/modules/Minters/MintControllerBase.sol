@@ -85,7 +85,7 @@ abstract contract MintControllerBase {
     // ================================
 
     /**
-     * @dev Maps an edition to the it's next mint ID.
+     * @dev Maps an edition to the its next mint ID.
      */
     mapping(address => uint256) private _nextMintIds;
 
