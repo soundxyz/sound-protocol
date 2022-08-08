@@ -208,4 +208,14 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
         vm.expectRevert(MintControllerUnauthorized.selector);
         this.onlyEditionMintControllerAction(address(edition));
     }
+
+    function test_mintRevertsWithZeroQuantity() public {
+        SoundEditionV1 edition = _createEdition();
+
+        this.createEditionMintController(address(edition));
+
+        vm.expectRevert(IERC721AUpgradeable.MintZeroQuantity.selector);
+
+        this.mint{ value: 0 }(address(edition), 0, 0);
+    }
 }

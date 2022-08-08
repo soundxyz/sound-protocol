@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.15;
 
+import "../../SoundEdition/ISoundEditionV1.sol";
+
 /**
  * @title Mint Controller Base
  * @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
@@ -10,41 +12,63 @@ abstract contract MintControllerBase {
     // CUSTOM ERRORS
     // ================================
 
-    /// @notice The caller must be the the controller of this edition to perform this action.
+    /**
+     * The caller must be the the controller of this edition to perform this action.
+     */
     error MintControllerUnauthorized();
 
-    /// @notice There is no controller assigned to this edition.
+    /**
+     * There is no controller assigned to this edition.
+     */
     error MintControllerNotFound();
 
-    /// @notice A mint controller is already assigned to this edition.
+    /**
+     * A mint controller is already assigned to this edition.
+     */
     error MintControllerAlreadyExists(address controller);
 
-    /// @notice The `paid` Ether value must be equal to the `required` Ether value.
+    /**
+     * The `paid` Ether value must be equal to the `required` Ether value.
+     */
     error WrongEtherValue(uint256 paid, uint256 required);
 
-    /// @notice The total minted cannot exceed `maxMintable`.
+    /**
+     * The total minted cannot exceed `maxMintable`.
+     */
     error SoldOut(uint32 maxMintable);
 
-    /// @notice The current block timestamp must be between `startTime` and `endTime`, inclusive.
+    /**
+     * The current block timestamp must be between `startTime` and `endTime`, inclusive.
+     */
     error MintNotOpen(uint256 blockTimestamp, uint32 startTime, uint32 endTime);
 
-    /// @notice The mint is paused.
+    /**
+     * The mint is paused.
+     */
     error MintPaused();
 
-    /// @notice The caller must be the owner of the edition contract.
+    /**
+     * The caller must be the owner of the edition contract.
+     */
     error CallerNotEditionOwner();
 
     // ================================
     // EVENTS
     // ================================
 
-    /// @notice Emitted when the mint `controller` for `edition` renounces their own access.
+    /**
+     * @notice Emitted when the mint `controller` for `edition` renounces their own access.
+     */
     event MintControllerAccessRenounced(address indexed edition, address indexed controller);
 
-    /// @notice Emitted when the mint `controller` for `edition` is updated.
+    /**
+     * @notice Emitted when the mint `controller` for `edition` is updated.
+     */
     event MintControllerSet(address indexed edition, address indexed controller);
 
-    /// @notice Emitted when the `paused` status of `edition` is updated.
+    /**
+     * @notice Emitted when the `paused` status of `edition` is updated.
+     */
     event MintPausedSet(address indexed edition, bool paused);
 
     // ================================
@@ -61,14 +85,18 @@ abstract contract MintControllerBase {
     // STORAGE
     // ================================
 
-    /// @dev Maps an edition to a controller.
+    /**
+     * @dev Maps an edition to a controller.
+     */
     mapping(address => BaseData) private _baseData;
 
     // ================================
     // MINT CONTROLLER FUNCTIONS
     // ================================
 
-    /// @dev Restricts the function to be only callable by the controller of `edition`.
+    /**
+     * @dev Restricts the function to be only callable by the controller of `edition`.
+     */
     modifier onlyEditionMintController(address edition) virtual {
         BaseData storage data = _baseData[edition];
 
@@ -160,9 +188,11 @@ abstract contract MintControllerBase {
         emit MintControllerSet(edition, controller);
     }
 
-    /// @dev Sets the new `controller` for `edition`.
-    /// Calling conditions:
-    /// - The caller must be the current controller for `edition`.
+    /**
+     * @dev Sets the new `controller` for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
+     */
     function renounceEditionMintControllerAccess(address edition) public virtual onlyEditionMintController(edition) {
         BaseData storage data = _baseData[edition];
 
@@ -170,9 +200,11 @@ abstract contract MintControllerBase {
         emit MintControllerAccessRenounced(edition, data.controller);
     }
 
-    /// @dev Sets the `paused` status for `edition`.
-    /// Calling conditions:
-    /// - The caller must be the current controller for `edition`.
+    /**
+     * @dev Sets the `paused` status for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
+     */
     function setEditionMintPaused(address edition, bool paused) public virtual onlyEditionMintController(edition) {
         _baseData[edition].mintPaused = paused;
         emit MintPausedSet(edition, paused);
@@ -182,7 +214,9 @@ abstract contract MintControllerBase {
     // INTERNAL HELPER FUNCTIONS
     // ================================
 
-    /// @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+    /**
+     * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     */
     function _mint(
         address edition,
         address to,
@@ -194,13 +228,17 @@ abstract contract MintControllerBase {
         ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
     }
 
-    /// @dev Requires that `startTime <= block.timestamp <= endTime`.
+    /**
+     * @dev Requires that `startTime <= block.timestamp <= endTime`.
+     */
     function _requireMintOpen(uint32 startTime, uint32 endTime) internal view {
         if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
         if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
     }
 
-    /// @dev Requires that `totalMinted <= maxMintable`.
+    /**
+     * @dev Requires that `totalMinted <= maxMintable`.
+     */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert SoldOut(maxMintable);
     }
