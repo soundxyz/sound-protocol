@@ -228,6 +228,22 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), MINT_ID, quantityToBuyAfterClosing);
     }
 
+    function test_mintBeforeAndAfterClosingTimeBaseCase() public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter();
+        uint32 maxMintableLower = 0;
+        uint32 maxMintableUpper = 1;
+        minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
+
+        uint32 quantity = 1;
+
+        vm.warp(START_TIME);
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
+
+        vm.warp(CLOSING_TIME);
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, maxMintableLower));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
+    }
+
     function test_setTime(
         uint32 startTime,
         uint32 closingTime,
