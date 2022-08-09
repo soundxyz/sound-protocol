@@ -452,6 +452,7 @@ contract SoundEdition_metadata is TestConfig {
 
     function test_freezeMetadataSuccess() public {
         // Test owner can freeze metadata
+
         MockSoundEditionV1 soundEdition1 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
