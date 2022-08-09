@@ -19,7 +19,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_baseURIWhenNoMetadataModule() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, IMetadataModule(address(0)), BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                IMetadataModule(address(0)),
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         // mint NFTs
@@ -34,7 +41,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_contractURI() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         assertEq(soundEdition.contractURI(), CONTRACT_URI);
@@ -46,7 +60,14 @@ contract SoundEdition_metadata is TestConfig {
 
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, metadataModule, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                metadataModule,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         // mint NFTs
@@ -60,7 +81,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_tokenURIRevertsWhenTokenIdDoesntExist() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         vm.expectRevert(URIQueryForNonexistentToken.selector);
@@ -70,7 +98,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setBaseURIRevertsForNonOwner() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         string memory newBaseURI = "https://abc.com/";
@@ -84,7 +119,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setBaseURIRevertsWhenMetadataFrozen() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
         // Freeze Metadata
         soundEdition.freezeMetadata();
@@ -98,7 +140,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setBaseURISuccess() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
         // mint NFTs
         soundEdition.mint(2);
@@ -114,7 +163,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setBaseURIEmitsEvent() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         string memory newBaseURI = "https://abc.com/";
@@ -127,7 +183,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setContractURIRevertsForNonOwner() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         string memory newContractURI = "https://abc.com/";
@@ -141,7 +204,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setContractURIRevertsWhenMetadataFrozen() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
         // Freeze Metadata
         soundEdition.freezeMetadata();
@@ -155,7 +225,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setContractURISuccess() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         string memory newContractURI = "https://abc.com/";
@@ -167,7 +244,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setContractURIEmitsEvent() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         string memory newContractURI = "https://abc.com/";
@@ -180,7 +264,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setMetadataModuleRevertsForNonOwner() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
@@ -194,7 +285,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setMetadataModuleRevertsWhenMetadataFrozen() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
         // Freeze Metadata
         soundEdition.freezeMetadata();
@@ -208,7 +306,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setMetadataModuleSuccess() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, IMetadataModule(address(0)), BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                IMetadataModule(address(0)),
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
         // mint NFTs
         soundEdition.mint(2);
@@ -225,7 +330,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_setMetadataModuleEmitsEvent() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, IMetadataModule(address(0)), BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                IMetadataModule(address(0)),
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
@@ -238,7 +350,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_freezeMetadataRevertsForNonOwner() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         address caller = getRandomAccount(1);
@@ -250,7 +369,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_freezeMetadataRevertsIfAlreadyFrozen() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
         soundEdition.freezeMetadata();
 
@@ -261,7 +387,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_freezeMetadataSuccess() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         soundEdition.freezeMetadata();
@@ -272,7 +405,14 @@ contract SoundEdition_metadata is TestConfig {
     function test_freezeMetadataEmitsEvent() public {
         // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         vm.expectEmit(false, false, false, true);
