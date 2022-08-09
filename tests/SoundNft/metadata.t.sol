@@ -7,6 +7,8 @@ import "../TestConfig.sol";
 import "../mocks/MockMetadataModule.sol";
 
 contract SoundEdition_metadata is TestConfig {
+    uint32 constant MASTER_MAX_MINTABLE = MASTER_MAX_MINTABLE_MAX;
+
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
     event BaseURISet(string baseURI_);
     event ContractURISet(string _contractURI);

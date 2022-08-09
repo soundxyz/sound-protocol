@@ -24,7 +24,10 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         uint32 maxAllowedPerWallet
     );
 
-    function _createEditionAndMinter(uint32 _maxAllowedPerWallet) internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
+    function _createEditionAndMinter(uint32 _maxAllowedPerWallet)
+        internal
+        returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter)
+    {
         edition = SoundEditionV1(
             soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
         );

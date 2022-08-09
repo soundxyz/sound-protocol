@@ -51,8 +51,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     IMetadataModule public metadataModule;
     string internal baseURI;
     string public contractURI;
-    bool public isMetadataFrozen;
     uint32 public masterMaxMintable;
+    bool public masterMaxMintableLocked;
+    bool public isMetadataFrozen;
 
     // ================================
     // EVENTS & ERRORS
@@ -62,8 +63,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     event BaseURISet(string baseURI_);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI_, string contractURI);
+    event MasterMaxMintableLocked(uint32 masterMaxMintable);
+    event MasterMaxMintableSet(uint32 masterMaxMintable);
 
     error MetadataIsFrozen();
+    error MasterMaxMintableIsLocked();
+    error InvalidMasterMaxMintable();
+    error OutOfStock(uint32 masterMaxMintable);
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -129,6 +135,18 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
+    function setMasterMaxMintable(uint32 masterMaxMintable_) external onlyOwner {
+        if (masterMaxMintableLocked) revert MasterMaxMintableIsLocked();
+        if (masterMaxMintable_ >= masterMaxMintable) revert InvalidMasterMaxMintable();
+        masterMaxMintable = masterMaxMintable_;
+        emit MasterMaxMintableSet(masterMaxMintable_);
+    }
+
+    function lockMasterMaxMintable() external onlyOwner {
+        masterMaxMintableLocked = true;
+        emit MasterMaxMintableLocked(masterMaxMintable);
+    }
+
     // ================================
     // VIEW FUNCTIONS
     // ================================
@@ -174,6 +192,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     /// @inheritdoc ISoundEditionV1
     function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
+        if (_totalMinted() + quantity > masterMaxMintable) revert OutOfStock(masterMaxMintable);
         _mint(to, quantity);
     }
 }

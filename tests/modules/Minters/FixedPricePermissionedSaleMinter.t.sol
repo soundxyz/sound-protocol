@@ -12,7 +12,9 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE = 5;
 
-    uint256 SIGNER_PRIVATE_KEY = 1;
+    uint32 constant MASTER_MAX_MINTABLE = MASTER_MAX_MINTABLE_MAX;
+
+    uint256 constant SIGNER_PRIVATE_KEY = 1;
 
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
