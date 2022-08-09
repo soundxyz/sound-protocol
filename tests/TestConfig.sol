@@ -15,7 +15,6 @@ contract TestConfig is Test {
     IMetadataModule public constant METADATA_MODULE = IMetadataModule(address(0));
     string public constant BASE_URI = "https://example.com/metadata/";
     string public constant CONTRACT_URI = "https://example.com/storefront/";
-    address public constant GUARDIAN = address(4242424242424242424242424242424);
     address public constant ARTIST_ADMIN = address(8888888888);
 
     SoundCreatorV1 public soundCreator;

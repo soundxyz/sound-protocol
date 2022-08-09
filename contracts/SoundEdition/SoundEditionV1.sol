@@ -57,21 +57,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     string public contractURI;
     bool public isMetadataFrozen;
 
-    // Recovery address
-    address public guardian;
-
     // ================================
-    // EVENTS & ERRORS
+    // EVENTS
     // ================================
 
     event MetadataModuleSet(IMetadataModule metadataModule);
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event GuardianSet(address indexed guardian);
+
+    // ================================
+    // ERRORS
+    // ================================
 
     error MetadataIsFrozen();
-    error GuardianAlreadySet();
     error Unauthorized();
 
     // ================================
@@ -85,8 +84,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         string memory symbol,
         IMetadataModule metadataModule_,
         string memory baseURI_,
-        string memory contractURI_,
-        address guardian_
+        string memory contractURI_
     ) public initializerERC721A initializer {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -95,11 +93,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
-
-        if (guardian_ != address(0)) {
-            guardian = guardian_;
-            emit GuardianSet(guardian);
-        }
 
         __AccessControl_init();
 
@@ -140,38 +133,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
-    /// @notice Enables owner to set a guardian for ownership recovery.
-    /// @param newGuardian Address of guardian.
-    function setGuardian(address newGuardian) public onlyOwner {
-        //  Owner can only set a guardian if one isn't already set.
-        if (guardian != address(0)) revert GuardianAlreadySet();
-
-        guardian = newGuardian;
-
-        emit GuardianSet(newGuardian);
-    }
-
-    /// @notice Enables current guardian to relinquish the guardianship role.
-    function relinquishGuardianship() external onlyGuardian {
-        guardian = address(0);
-
-        emit GuardianSet(address(0));
-    }
-
-    /// @notice Enables the guardian to transfer ownership of the contract to a new address.
-    /// @param newOwner The new owner of this contract.
-    function setNewOwner(address newOwner) external onlyGuardian {
-        _transferOwnership(newOwner);
-    }
-
     // ================================
     // MODIFIERS
     // ================================
-
-    modifier onlyGuardian() {
-        if (_msgSender() != guardian) revert Unauthorized();
-        _;
-    }
 
     modifier onlyOwnerOrAdmin() {
         if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
