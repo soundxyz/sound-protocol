@@ -52,6 +52,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param metadataModule Address of metadata module, address(0x00) if not used
      * @param baseURI Base URI
      * @param contractURI Contract URI for OpenSea storefront
+     * @param masterMaxMintable The maximum amount of tokens that can be minted for this edition.
      */
     function initialize(
         address owner,
@@ -59,7 +60,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory symbol,
         IMetadataModule metadataModule,
         string memory baseURI,
-        string memory contractURI
+        string memory contractURI,
+        uint32 masterMaxMintable
     ) external;
 
     /**

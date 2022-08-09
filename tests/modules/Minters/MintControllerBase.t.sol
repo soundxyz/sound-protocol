@@ -8,7 +8,14 @@ import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function _createEdition() internal returns (SoundEditionV1 edition) {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
     }
 
@@ -153,7 +160,14 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
         vm.assume(nonAdminOrOwner != address(0));
 
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         this.createEditionMintController(address(edition));
@@ -168,7 +182,14 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
 
     function test_adminMintSuccess() public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
         );
 
         // Register the edition

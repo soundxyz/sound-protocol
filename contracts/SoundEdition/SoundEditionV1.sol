@@ -56,6 +56,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     string internal baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
+    uint32 public masterMaxMintable;
 
     // ================================
     // EVENTS
@@ -84,7 +85,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         string memory symbol,
         IMetadataModule metadataModule_,
         string memory baseURI_,
-        string memory contractURI_
+        string memory contractURI_,
+        uint32 masterMaxMintable_
     ) public initializerERC721A initializer {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -93,6 +95,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
+        masterMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
 
         __AccessControl_init();
 

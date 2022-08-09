@@ -16,6 +16,7 @@ contract TestConfig is Test {
     string public constant BASE_URI = "https://example.com/metadata/";
     string public constant CONTRACT_URI = "https://example.com/storefront/";
     address public constant ARTIST_ADMIN = address(8888888888);
+    uint32 public constant MASTER_MAX_MINTABLE = type(uint32).max;
 
     SoundCreatorV1 public soundCreator;
 
