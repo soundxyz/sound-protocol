@@ -55,15 +55,21 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     uint32 public masterMaxMintable;
 
     // ================================
-    // EVENTS & ERRORS
+    // EVENTS
     // ================================
 
     event MetadataModuleSet(IMetadataModule metadataModule);
-    event BaseURISet(string baseURI_);
+    event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
-    event MetadataFrozen(IMetadataModule metadataModule, string baseURI_, string contractURI);
+    event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
+
+    // ================================
+    // ERRORS
+    // ================================
 
     error MetadataIsFrozen();
+    error Unauthorized();
+    error MaxSupplyReached();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -174,6 +180,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     /// @inheritdoc ISoundEditionV1
     function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
+        if (_totalMinted() + quantity > masterMaxMintable) revert MaxSupplyReached();
         _mint(to, quantity);
     }
 }
