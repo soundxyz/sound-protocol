@@ -2,7 +2,6 @@
 pragma solidity ^0.8.15;
 
 import "../../SoundEdition/ISoundEditionV1.sol";
-import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 
 /**
  * @title Mint Controller Base

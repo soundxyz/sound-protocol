@@ -183,7 +183,7 @@ contract MintControllerBaseTests is TestConfig {
         }
     }
 
-    function test_cantMintPasteditionMaxMintable() external {
+    function test_cantMintPastEditionMaxMintable() external {
         uint32 maxSupply = 5000;
 
         SoundEditionV1 edition1 = _createEdition(maxSupply);
