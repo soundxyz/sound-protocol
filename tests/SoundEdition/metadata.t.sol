@@ -24,7 +24,8 @@ contract SoundEdition_metadata is TestConfig {
                 IMetadataModule(address(0)),
                 BASE_URI,
                 CONTRACT_URI,
-                MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
@@ -41,7 +42,8 @@ contract SoundEdition_metadata is TestConfig {
                 metadataModule,
                 BASE_URI,
                 CONTRACT_URI,
-                MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
@@ -79,7 +81,19 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_tokenURIRevertsWhenTokenIdDoesntExist() public {
-        MockSoundEditionV1 soundEdition = _createEdition();
+        // deploy new sound contract
+        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
 
         vm.expectRevert(URIQueryForNonexistentToken.selector);
         soundEdition.tokenURI(2);

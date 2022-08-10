@@ -52,6 +52,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
+    uint32 public masterMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
     bytes32 mintRandomness;
@@ -80,6 +81,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
+        uint32 masterMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
     ) public initializerERC721A initializer {
@@ -90,6 +92,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
+        masterMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
 

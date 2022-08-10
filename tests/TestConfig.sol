@@ -15,13 +15,13 @@ contract TestConfig is Test {
     IMetadataModule constant METADATA_MODULE = IMetadataModule(address(0));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
-    uint32 constant MAX_MINTABLE = 5;
+    uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 soundCreator;
 
     // Set up called before each test
-    function setUp() public {
+    function setUp() public virtual {
         // Deploy SoundEdition implementation
         MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
 

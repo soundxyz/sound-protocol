@@ -27,7 +27,8 @@ contract SoundCreatorTests is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
