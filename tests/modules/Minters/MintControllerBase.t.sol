@@ -178,28 +178,17 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_cantMintPastMasterMaxMintable() external {
-        // Test with max of 1
-        SoundEditionV1 edition1 = _createEdition(1);
+        uint32 maxSupply = 5000;
+
+        SoundEditionV1 edition1 = _createEdition(maxSupply);
 
         uint256 mintId1 = minter.createEditionMintController(address(edition1));
 
-        minter.mint(address(edition1), mintId1, 1, 0);
+        // Mint the max supply
+        minter.mint(address(edition1), mintId1, maxSupply, 0);
 
+        // try minting 1 more
         vm.expectRevert(SoundEditionV1.MaxSupplyReached.selector);
-
         minter.mint(address(edition1), mintId1, 1, 0);
-
-        // TODO: debug this test. Forge infinitely hangs when running it:
-
-        // Test with max of uint32.max
-        // SoundEditionV1 edition2 = _createEdition(MASTER_MAX_MINTABLE);
-
-        // uint256 mintId2 = minter.createEditionMintController(address(edition2));
-
-        // minter.mint(address(edition2), mintId2, MASTER_MAX_MINTABLE, 0);
-
-        // vm.expectRevert(SoundEditionV1.MaxSupplyReached.selector);
-
-        // minter.mint(address(edition2), mintId2, 1, 0);
     }
 }
