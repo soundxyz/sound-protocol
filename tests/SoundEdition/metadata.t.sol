@@ -18,7 +18,6 @@ contract SoundEdition_metadata is TestConfig {
 
     // Generates tokenURI using baseURI if no metadata module is selected
     function test_baseURIWhenNoMetadataModule() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -40,7 +39,6 @@ contract SoundEdition_metadata is TestConfig {
 
     // Should successfully return contract URI for the collection
     function test_contractURI() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -59,7 +57,6 @@ contract SoundEdition_metadata is TestConfig {
     function test_metadataModule() public {
         MockMetadataModule metadataModule = new MockMetadataModule();
 
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -80,7 +77,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_tokenURIRevertsWhenTokenIdDoesntExist() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -97,7 +93,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setBaseURIRevertsForNonOwner() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -118,7 +113,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setBaseURIRevertsWhenMetadataFrozen() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -129,7 +123,7 @@ contract SoundEdition_metadata is TestConfig {
                 MASTER_MAX_MINTABLE
             )
         );
-        // Freeze Metadata
+
         soundEdition.freezeMetadata();
 
         string memory newBaseURI = "https://abc.com/";
@@ -143,8 +137,10 @@ contract SoundEdition_metadata is TestConfig {
         uint256 tokenId = 1;
         string memory expectedTokenURI = string.concat(newBaseURI, Strings.toString(tokenId));
 
-        // Test owner can set base URI
-        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+        /**
+         * Test owner can set base URI
+         */
+        MockSoundEditionV1 soundEdition1 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -155,12 +151,14 @@ contract SoundEdition_metadata is TestConfig {
             )
         );
 
-        soundEdition.mint(2);
-        soundEdition.setBaseURI(newBaseURI);
+        soundEdition1.mint(2);
+        soundEdition1.setBaseURI(newBaseURI);
 
-        assertEq(soundEdition.tokenURI(tokenId), expectedTokenURI);
+        assertEq(soundEdition1.tokenURI(tokenId), expectedTokenURI);
 
-        // Test admin can set base URI
+        /**
+         * Test admin can set base URI
+         */
         MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -182,7 +180,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setBaseURIEmitsEvent() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -202,7 +199,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setContractURIRevertsForNonOwner() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -223,7 +219,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setContractURIRevertsWhenMetadataFrozen() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -234,7 +229,7 @@ contract SoundEdition_metadata is TestConfig {
                 MASTER_MAX_MINTABLE
             )
         );
-        // Freeze Metadata
+
         soundEdition.freezeMetadata();
 
         string memory newContractURI = "https://abc.com/";
@@ -246,9 +241,10 @@ contract SoundEdition_metadata is TestConfig {
     function test_setContractURISuccess() public {
         string memory newContractURI = "https://abc.com/";
 
-        // Test owner can set contract URI
-
-        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+        /**
+         * Test owner can set contract URI
+         */
+        MockSoundEditionV1 soundEdition1 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -259,12 +255,13 @@ contract SoundEdition_metadata is TestConfig {
             )
         );
 
-        soundEdition.setContractURI(newContractURI);
+        soundEdition1.setContractURI(newContractURI);
 
-        assertEq(soundEdition.contractURI(), newContractURI);
+        assertEq(soundEdition1.contractURI(), newContractURI);
 
-        // Test admin can set contract URI
-
+        /**
+         * Test admin can set contract URI
+         */
         MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -285,7 +282,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setContractURIEmitsEvent() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -305,7 +301,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setMetadataModuleRevertsForNonOwner() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -326,7 +321,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setMetadataModuleRevertsWhenMetadataFrozen() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -337,7 +331,7 @@ contract SoundEdition_metadata is TestConfig {
                 MASTER_MAX_MINTABLE
             )
         );
-        // Freeze Metadata
+
         soundEdition.freezeMetadata();
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
@@ -350,9 +344,10 @@ contract SoundEdition_metadata is TestConfig {
         string memory expectedTokenURI = "MOCK";
         uint256 tokenId = 1;
 
-        // Test owner can set metadata module
-
-        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+        /**
+         * Test owner can set metadata module
+         */
+        MockSoundEditionV1 soundEdition1 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -363,15 +358,16 @@ contract SoundEdition_metadata is TestConfig {
             )
         );
 
-        soundEdition.mint(2);
+        soundEdition1.mint(2);
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
-        soundEdition.setMetadataModule(newMetadataModule);
+        soundEdition1.setMetadataModule(newMetadataModule);
 
-        assertEq(soundEdition.tokenURI(tokenId), expectedTokenURI);
+        assertEq(soundEdition1.tokenURI(tokenId), expectedTokenURI);
 
-        // Test admin can set metadata module
-
+        /**
+         * Test admin can set metadata module
+         */
         MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -394,7 +390,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setMetadataModuleEmitsEvent() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -414,7 +409,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_freezeMetadataRevertsForNonOwner() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -433,7 +427,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_freezeMetadataRevertsIfAlreadyFrozen() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -451,8 +444,9 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_freezeMetadataSuccess() public {
-        // Test owner can freeze metadata
-
+        /**
+         * Test owner can freeze metadata
+         */
         MockSoundEditionV1 soundEdition1 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -468,7 +462,9 @@ contract SoundEdition_metadata is TestConfig {
 
         assertEq(soundEdition1.isMetadataFrozen(), true);
 
-        // Test admin can freeze metadata
+        /**
+         * Test admin can freeze metadata
+         */
         MockSoundEditionV1 soundEdition2 = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -489,7 +485,6 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_freezeMetadataEmitsEvent() public {
-        // deploy new sound contract
         MockSoundEditionV1 soundEdition = MockSoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
