@@ -5,6 +5,8 @@ import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
 contract SoundEdition_admin is TestConfig {
+    event EditionMaxMintableSet(uint32 editionMaxMintable);
+
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
@@ -87,5 +89,79 @@ contract SoundEdition_admin is TestConfig {
         edition.mint(recipient2, quantity);
 
         assert(edition.balanceOf(recipient2) == quantity);
+    }
+
+    // Tests that edition max supply can't be increased.
+    function test_setMaxRevertsIfAmountInvalid() external {
+        uint32 max = 10000;
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, max)
+        );
+
+        vm.expectRevert(SoundEditionV1.InvalidAmount.selector);
+        edition.setMaxMintable(max + 1);
+    }
+
+    function test_setMaxRevertsIfCallerUnauthorized(address attacker) external {
+        vm.assume(attacker != address(this));
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
+        );
+
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+
+        vm.prank(attacker);
+        edition.setMaxMintable(1);
+    }
+
+    function test_setMaxMintableSuccess() external {
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE
+            )
+        );
+
+        /**
+         * Owner can set max
+         */
+        uint32 newMax = 69;
+
+        vm.expectEmit(false, false, false, true);
+
+        emit EditionMaxMintableSet(newMax);
+
+        edition.setMaxMintable(newMax);
+        assert(edition.editionMaxMintable() == newMax);
+
+        /**
+         * Admin can set max
+         */
+
+        address admin = address(54321);
+        edition.grantRole(edition.ADMIN_ROLE(), admin);
+
+        newMax = 42;
+
+        vm.expectEmit(false, false, false, true);
+
+        emit EditionMaxMintableSet(newMax);
+
+        vm.prank(admin);
+        edition.setMaxMintable(newMax);
+        assert(edition.editionMaxMintable() == newMax);
     }
 }

@@ -14,9 +14,16 @@ contract MintControllerBaseTests is TestConfig {
         minter = new MockMinter();
     }
 
-    function _createEdition(uint32 masterMaxMintable) internal returns (SoundEditionV1 edition) {
+    function _createEdition(uint32 editionMaxMintable) internal returns (SoundEditionV1 edition) {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, masterMaxMintable)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                editionMaxMintable
+            )
         );
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
@@ -176,7 +183,7 @@ contract MintControllerBaseTests is TestConfig {
         }
     }
 
-    function test_cantMintPastMasterMaxMintable() external {
+    function test_cantMintPasteditionMaxMintable() external {
         uint32 maxSupply = 5000;
 
         SoundEditionV1 edition1 = _createEdition(maxSupply);

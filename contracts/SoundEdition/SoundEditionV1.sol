@@ -56,7 +56,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     string internal baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
-    uint32 public masterMaxMintable;
+    uint32 public editionMaxMintable;
 
     // ================================
     // EVENTS
@@ -66,6 +66,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
+    event EditionMaxMintableSet(uint32 editionMaxMintable);
 
     // ================================
     // ERRORS
@@ -74,6 +75,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     error MetadataIsFrozen();
     error Unauthorized();
     error MaxSupplyReached();
+    error InvalidAmount();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -87,7 +89,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
-        uint32 masterMaxMintable_
+        uint32 editionMaxMintable_
     ) public initializerERC721A initializer {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -96,7 +98,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
-        masterMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
+        editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
 
         __AccessControl_init();
 
@@ -135,6 +137,26 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
         isMetadataFrozen = true;
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function mint(address to, uint256 quantity) public payable {
+        address caller = _msgSender();
+        // Only allow calls if caller has minter role, admin role, or is the owner.
+        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
+        // Check if max supply has been reached.
+        if (_totalMinted() + quantity > editionMaxMintable) revert MaxSupplyReached();
+
+        _mint(to, quantity);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function setMaxMintable(uint32 newMaxMintable) public onlyOwnerOrAdmin {
+        if (newMaxMintable > editionMaxMintable) revert InvalidAmount();
+
+        editionMaxMintable = newMaxMintable;
+
+        emit EditionMaxMintableSet(newMaxMintable);
     }
 
     // ================================
@@ -187,16 +209,5 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         returns (address fundingRecipient, uint256 royaltyAmount)
     {
         // todo
-    }
-
-    /// @inheritdoc ISoundEditionV1
-    function mint(address to, uint256 quantity) public payable {
-        address caller = _msgSender();
-        // Only allow calls if caller has minter role, admin role, or is the owner.
-        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
-        // Check if max supply has been reached.
-        if (_totalMinted() + quantity > masterMaxMintable) revert MaxSupplyReached();
-
-        _mint(to, quantity);
     }
 }
