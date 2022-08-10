@@ -6,37 +6,39 @@ import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 
 contract MintControllerBaseTests is TestConfig {
-    event MintControllerUpdated(address indexed edition, address indexed controller);
+    event MintControllerSet(address indexed edition, uint256 indexed mintId, address indexed controller);
 
-    MockMinter minter;
+    MockMinter public minter;
 
     constructor() {
         minter = new MockMinter();
     }
 
-    function _createEdition() internal returns (SoundEditionV1 edition) {
+    function _createEdition(uint32 masterMaxMintable) internal returns (SoundEditionV1 edition) {
         edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MASTER_MAX_MINTABLE
-            )
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, masterMaxMintable)
         );
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
     }
 
     function test_createEditionMintControllerEmitsEvent() external {
-        SoundEditionV1 edition = _createEdition();
+        address controller = getRandomAccount(0);
+        vm.startPrank(controller);
+
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
+
+        uint256 mintId = 0;
 
         vm.expectEmit(false, false, false, true);
-        emit MintControllerUpdated(address(edition), edition.owner());
+        emit MintControllerSet(address(edition), mintId, controller);
         minter.createEditionMintController(address(edition));
+
+        vm.stopPrank();
     }
 
     function test_createEditionMintControllerRevertsIfCallerNotEditionOwner() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address attacker = getRandomAccount(1);
 
         vm.expectRevert(MintControllerBase.CallerNotEditionOwner.selector);
@@ -50,109 +52,143 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_createEditionMintControllerChangesController() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
-        assertEq(minter.editionMintController(address(edition)), address(0));
+        uint256 mintId = 0;
+
+        assertEq(minter.editionMintController(address(edition), mintId), address(0));
 
         minter.createEditionMintController(address(edition));
-        assertEq(minter.editionMintController(address(edition)), edition.owner());
-    }
-
-    function test_createEditionMintControllerRevertsWhenAlreadyExists() external {
-        address controller0 = getRandomAccount(0);
-        vm.prank(controller0);
-        SoundEditionV1 edition = _createEdition();
-        assertEq(edition.owner(), controller0);
-
-        address controller1 = getRandomAccount(1);
-
-        vm.prank(controller0);
-        minter.createEditionMintController(address(edition));
-
-        // Try calling with `controller0`, should revert with {MintControllerAlreadyExists},
-        // since the controller has already been registered.
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MintControllerAlreadyExists.selector, controller0));
-        vm.prank(controller0);
-        minter.createEditionMintController(address(edition));
-
-        // Try calling with `controller1`, should revert with {CallerNotEditionOwner}.
-        vm.prank(controller1);
-        vm.expectRevert(MintControllerBase.CallerNotEditionOwner.selector);
-        minter.createEditionMintController(address(edition));
-
-        // Transfer ownership of the `edition` to `controller1`.
-        vm.prank(controller0);
-        edition.transferOwnership(controller1);
-
-        // Try calling with `controller1`, should revert with {MintControllerAlreadyExists}.
-        vm.prank(controller1);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MintControllerAlreadyExists.selector, controller0));
-        minter.createEditionMintController(address(edition));
+        assertEq(minter.editionMintController(address(edition), mintId), edition.owner());
     }
 
     function test_setEditionMintControllerEmitsEvent() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address newController = getRandomAccount(1);
 
-        minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition));
 
         vm.expectEmit(false, false, false, true);
-        emit MintControllerUpdated(address(edition), newController);
-        minter.setEditionMintController(address(edition), newController);
+        emit MintControllerSet(address(edition), mintId, newController);
+        minter.setEditionMintController(address(edition), mintId, newController);
     }
 
     function test_setEditionMintControllerChangesController() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address newController = getRandomAccount(1);
 
-        minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition));
 
-        minter.setEditionMintController(address(edition), newController);
-        assertEq(minter.editionMintController(address(edition)), newController);
+        minter.setEditionMintController(address(edition), mintId, newController);
+        assertEq(minter.editionMintController(address(edition), mintId), newController);
     }
 
     function test_deleteEditionMintControllerEmitsEvent() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
-        minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition));
 
         vm.expectEmit(false, false, false, true);
-        emit MintControllerUpdated(address(edition), address(0));
-        minter.deleteEditionMintController(address(edition));
+        emit MintControllerSet(address(edition), mintId, address(0));
+
+        minter.deleteEditionMintController(address(edition), mintId);
     }
 
     function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address attacker = getRandomAccount(1);
 
-        minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition));
 
         vm.prank(attacker);
         vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
-        minter.deleteEditionMintController(address(edition));
+        minter.deleteEditionMintController(address(edition), mintId);
     }
 
     function test_deleteEditionMintRevertsIfMintEditionDoesNotExist() public {
-        SoundEditionV1 edition0 = _createEdition();
-        SoundEditionV1 edition1 = _createEdition();
+        SoundEditionV1 edition0 = _createEdition(MASTER_MAX_MINTABLE);
+        SoundEditionV1 edition1 = _createEdition(MASTER_MAX_MINTABLE);
 
         address controller = getRandomAccount(0);
 
-        minter.createEditionMintController(address(edition0));
+        uint256 mintId = minter.createEditionMintController(address(edition0));
 
         vm.prank(controller);
         vm.expectRevert(MintControllerBase.MintControllerNotFound.selector);
-        minter.deleteEditionMintController(address(edition1));
+        minter.deleteEditionMintController(address(edition1), mintId);
     }
 
-    function test_deleteEditionMintControllerChangesControllerToZeroAddress() external {
-        SoundEditionV1 edition = _createEdition();
+    function test_deleteEditionMintControllerChangesControllerToZeroAddress() public {
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
-        minter.createEditionMintController(address(edition));
-        assertEq(minter.editionMintController(address(edition)), edition.owner());
+        uint256 mintId = minter.createEditionMintController(address(edition));
+        assertEq(minter.editionMintController(address(edition), mintId), edition.owner());
 
-        minter.deleteEditionMintController(address(edition));
-        assertEq(minter.editionMintController(address(edition)), address(0));
+        minter.deleteEditionMintController(address(edition), mintId);
+        assertEq(minter.editionMintController(address(edition), mintId), address(0));
+    }
+
+    function test_mintRevertsForWrongEtherValue() public {
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
+
+        uint256 mintId = minter.createEditionMintController(address(edition));
+
+        uint256 price = 1;
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, price * 2 - 1, price * 2));
+        minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, price);
+
+        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
+    }
+
+    function test_mintRevertsWhenPaused() public {
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
+
+        uint256 mintId = minter.createEditionMintController(address(edition));
+
+        minter.setEditionMintPaused(address(edition), mintId, true);
+
+        uint256 price = 1;
+        vm.expectRevert(MintControllerBase.MintPaused.selector);
+
+        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
+
+        minter.setEditionMintPaused(address(edition), mintId, false);
+
+        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
+    }
+
+    function test_mintRevertsWithZeroQuantity() public {
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
+
+        uint256 mintId = minter.createEditionMintController(address(edition));
+
+        vm.expectRevert(IERC721AUpgradeable.MintZeroQuantity.selector);
+
+        minter.mint{ value: 0 }(address(edition), mintId, 0, 0);
+    }
+
+    function test_createEditionMintControllerMultipleTimes() external {
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
+
+        for (uint256 i; i < 3; ++i) {
+            uint256 mintId = minter.createEditionMintController(address(edition));
+            assertEq(mintId, i);
+        }
+    }
+
+    function test_cantMintPastMasterMaxMintable() external {
+        uint32 maxSupply = 5000;
+
+        SoundEditionV1 edition1 = _createEdition(maxSupply);
+
+        uint256 mintId1 = minter.createEditionMintController(address(edition1));
+
+        // Mint the max supply
+        minter.mint(address(edition1), mintId1, maxSupply, 0);
+
+        // try minting 1 more
+        vm.expectRevert(SoundEditionV1.MaxSupplyReached.selector);
+        minter.mint(address(edition1), mintId1, 1, 0);
     }
 
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {

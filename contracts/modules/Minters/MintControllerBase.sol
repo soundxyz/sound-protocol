@@ -1,41 +1,116 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
 pragma solidity ^0.8.15;
 
-// TODO: figure out how to adapt ISoundEdition and import that instead
-import "../../SoundEdition/SoundEditionV1.sol";
+import "../../SoundEdition/ISoundEditionV1.sol";
+import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 
 /**
  * @title Mint Controller Base
  * @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
  */
 abstract contract MintControllerBase {
-    /// @dev The caller must be the the controller of this edition to perform this action.
+    // ================================
+    // CUSTOM ERRORS
+    // ================================
+
+    /**
+     * The caller must be the the controller of this edition to perform this action.
+     */
     error MintControllerUnauthorized();
 
-    /// @dev There is no controller assigned to this edition.
+    /**
+     * There is no controller assigned to this edition.
+     */
     error MintControllerNotFound();
 
-    /// @dev A mint controller is already assigned to this edition.
+    /**
+     * A mint controller is already assigned to this edition.
+     */
     error MintControllerAlreadyExists(address controller);
 
-    /// @dev The caller must be the owner of the edition contract.
+    /**
+     * The `paid` Ether value must be equal to the `required` Ether value.
+     */
+    error WrongEtherValue(uint256 paid, uint256 required);
+
+    /**
+     * The total minted cannot exceed `maxMintable`.
+     */
+    error SoldOut(uint32 maxMintable);
+
+    /**
+     * The current block timestamp must be between `startTime` and `endTime`, inclusive.
+     */
+    error MintNotOpen(uint256 blockTimestamp, uint32 startTime, uint32 endTime);
+
+    /**
+     * The mint is paused.
+     */
+    error MintPaused();
+
+    /**
+     * The caller must be the owner of the edition contract.
+     */
     error CallerNotEditionOwner();
 
     /// @dev Unauthorized caller
     error Unauthorized();
 
-    /// @dev Emitted when the mint `controller` for `edition` is changed.
-    event MintControllerUpdated(address indexed edition, address indexed controller);
+    // ================================
+    // EVENTS
+    // ================================
 
-    /// @dev Maps an edition to a controller.
-    mapping(address => address) private _controllers;
+    /**
+     * @notice Emitted when the mint `controller` for `edition` renounces their own access.
+     */
+    event MintControllerAccessRenounced(address indexed edition, uint256 indexed mintId, address indexed controller);
 
-    /// @dev Restricts the function to be only callable by the controller of `edition`.
-    modifier onlyEditionMintController(address edition) virtual {
-        address controller = _controllers[edition];
-        if (controller == address(0)) revert MintControllerNotFound();
-        if (msg.sender != controller) revert MintControllerUnauthorized();
+    /**
+     * @notice Emitted when the mint `controller` for `edition` is updated.
+     */
+    event MintControllerSet(address indexed edition, uint256 indexed mintId, address indexed controller);
+
+    /**
+     * @notice Emitted when the `paused` status of `edition` is updated.
+     */
+    event MintPausedSet(address indexed edition, uint256 indexed mintId, bool indexed paused);
+
+    // ================================
+    // STRUCTS
+    // ================================
+
+    struct BaseData {
+        address controller;
+        bool mintPaused;
+    }
+
+    // ================================
+    // STORAGE
+    // ================================
+
+    /**
+     * @dev Maps an edition to the its next mint ID.
+     */
+    mapping(address => uint256) private _nextMintIds;
+
+    /**
+     * @dev Maps an edition and the mint ID to a controller.
+     */
+    mapping(address => mapping(uint256 => BaseData)) private _baseData;
+
+    // ================================
+    // MINT CONTROLLER FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Restricts the function to be only callable by the controller of `edition`.
+     */
+    modifier onlyEditionMintController(address edition, uint256 mintId) virtual {
+        BaseData storage data = _baseData[edition][mintId];
+
+        if (data.controller == address(0)) revert MintControllerNotFound();
+        if (msg.sender != data.controller) revert MintControllerUnauthorized();
+
         _;
     }
 
@@ -44,11 +119,18 @@ abstract contract MintControllerBase {
      * Calling conditions:
      * - The `edition` must not have a controller.
      */
-    function _createEditionMintController(address edition) internal {
+    function _createEditionMintController(address edition) internal returns (uint256 mintId) {
         if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
-        if (_controllers[edition] != address(0)) revert MintControllerAlreadyExists(_controllers[edition]);
-        _controllers[edition] = msg.sender;
-        emit MintControllerUpdated(edition, msg.sender);
+
+        mintId = _nextMintIds[edition];
+
+        BaseData storage data = _baseData[edition][mintId];
+        if (data.controller != address(0)) revert MintControllerAlreadyExists(data.controller);
+        data.controller = msg.sender;
+
+        _nextMintIds[edition] += 1;
+
+        emit MintControllerSet(edition, mintId, msg.sender);
     }
 
     /**
@@ -86,15 +168,15 @@ abstract contract MintControllerBase {
      * @dev Convenience function for deleting a mint controller.
      * Equivalent to `setEditionMintController(edition, address(0))`.
      */
-    function _deleteEditionMintController(address edition) internal {
-        setEditionMintController(edition, address(0));
+    function _deleteEditionMintController(address edition, uint256 mintId) internal {
+        setEditionMintController(edition, mintId, address(0));
     }
 
     /**
      * @dev Returns the mint controller for `edition`.
      */
-    function editionMintController(address edition) public view returns (address) {
-        return _controllers[edition];
+    function editionMintController(address edition, uint256 mintId) public view returns (address) {
+        return _baseData[edition][mintId].controller;
     }
 
     /**
@@ -102,23 +184,81 @@ abstract contract MintControllerBase {
      * Calling conditions:
      * - The caller must be the current controller for `edition`.
      */
-    function setEditionMintController(address edition, address controller)
-        public
-        virtual
-        onlyEditionMintController(edition)
-    {
-        _controllers[edition] = controller;
-        emit MintControllerUpdated(edition, controller);
+    function setEditionMintController(
+        address edition,
+        uint256 mintId,
+        address controller
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _baseData[edition][mintId].controller = controller;
+        emit MintControllerSet(edition, mintId, controller);
+    }
+
+    /**
+     * @dev Sets the `paused` status for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
+     */
+    function setEditionMintPaused(
+        address edition,
+        uint256 mintId,
+        bool paused
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _baseData[edition][mintId].mintPaused = paused;
+        emit MintPausedSet(edition, mintId, paused);
+    }
+
+    /**
+     * @dev Returns the next mint ID for `edition`.
+     */
+    function nextMintId(address edition) public view returns (uint256) {
+        return _nextMintIds[edition];
+    }
+
+    // ================================
+    // INTERNAL HELPER FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     */
+    function _mint(
+        address edition,
+        uint256 mintId,
+        address to,
+        uint32 quantity,
+        uint256 requiredEtherValue
+    ) internal {
+        if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
+        if (_baseData[edition][mintId].mintPaused) revert MintPaused();
+        ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
+    }
+
+    /**
+     * @dev Requires that `startTime <= block.timestamp <= endTime`.
+     */
+    function _requireMintOpen(uint32 startTime, uint32 endTime) internal view {
+        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+    }
+
+    /**
+     * @dev Requires that `totalMinted <= maxMintable`.
+     */
+    function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
+        if (totalMinted > maxMintable) revert SoldOut(maxMintable);
     }
 
     /// @dev Enables owner or admins to mint to a given address for no cost.
     function adminMint(
-        SoundEditionV1 edition,
+        ISoundEditionV1 edition,
         address recipient,
         uint256 quantity
     ) public {
-        if (edition.owner() != msg.sender && !edition.hasRole(edition.ADMIN_ROLE(), msg.sender)) revert Unauthorized();
+        if (
+            !_callerIsEditionOwner(address(edition)) &&
+            !IAccessControlUpgradeable(address(edition)).hasRole(edition.ADMIN_ROLE(), msg.sender)
+        ) revert Unauthorized();
 
-        ISoundEditionV1(edition).mint(recipient, quantity);
+        edition.mint(recipient, quantity);
     }
 }

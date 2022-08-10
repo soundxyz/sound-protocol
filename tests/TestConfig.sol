@@ -21,7 +21,7 @@ contract TestConfig is Test {
     SoundCreatorV1 public soundCreator;
 
     // Set up called before each test
-    function setUp() public {
+    function setUp() public virtual {
         // Deploy SoundEdition implementation
         MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
 
