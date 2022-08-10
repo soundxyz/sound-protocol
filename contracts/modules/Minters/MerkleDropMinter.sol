@@ -31,6 +31,8 @@ contract MerkleDropMinter is MintControllerBase {
 
     error ExceedsEligibleQuantity();
 
+    error InvalidMerkleProof();
+
     struct EditionMintData {
         // Hash of the root node for the merkle tree drop
         bytes32 merkleRootHash;
@@ -114,7 +116,7 @@ contract MerkleDropMinter is MintControllerBase {
 
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender, totalQuantity));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
-        require(valid, "Invalid proof");
+        if (!valid) revert InvalidMerkleProof();
 
         _mint(edition, mintId, msg.sender, wantedQuantity, data.price * wantedQuantity);
 

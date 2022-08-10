@@ -105,4 +105,14 @@ contract MerkleDropMinterTests is TestConfig {
 
         minter.mint(address(edition), mintId, 3, 3, proof);
     }
+
+    function test_cannotClaimWithInvalidProof() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 1);
+        bytes32[] memory proof = m.getProof(leaves, 1);
+
+        vm.warp(START_TIME);
+        vm.prank(accounts[0]);
+        vm.expectRevert(MerkleDropMinter.InvalidMerkleProof.selector);
+        minter.mint(address(edition), mintId, 1, 1, proof);
+    }
 }
