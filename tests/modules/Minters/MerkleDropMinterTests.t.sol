@@ -60,6 +60,49 @@ contract MerkleDropMinterTests is TestConfig {
 
       vm.warp(START_TIME);
       vm.prank(accounts[0]);
-      minter.mint(address(edition), mintId, 1, proof);
+      minter.mint(address(edition), mintId, 1, 1, proof);
+    }
+
+    function test_canMintMultipleTimesLessThanEligibleAmount() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 1);
+        bytes32[] memory proof = m.getProof(leaves, 1);
+
+        uint256 user1Balance = edition.balanceOf(accounts[1]);
+        assertEq(user1Balance, 0);
+
+        vm.warp(START_TIME);
+
+        // Claim 1 of 2 eligible tokens
+        vm.prank(accounts[1]);
+        minter.mint(address(edition), mintId, 2, 1, proof);
+        user1Balance = edition.balanceOf(accounts[1]);
+        assertEq(user1Balance, 1);
+
+        // Claim the second of the 2 eligible tokens
+        vm.prank(accounts[1]);
+        minter.mint(address(edition), mintId, 2, 1, proof);
+        user1Balance = edition.balanceOf(accounts[1]);
+        assertEq(user1Balance, 2);
+    }
+
+    function test_cannotClaimMoreThanEligible() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 1);
+        bytes32[] memory proof = m.getProof(leaves, 0);
+
+        vm.warp(START_TIME);
+        vm.prank(accounts[0]);
+        vm.expectRevert(MerkleDropMinter.ExceedsEligibleQuantity.selector);
+        minter.mint(address(edition), mintId, 1, 2, proof);
+    }
+
+    function test_cannotClaimMoreThanMaxMintable() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 2, 1);
+        bytes32[] memory proof = m.getProof(leaves, 2);
+
+        vm.warp(START_TIME);
+        vm.prank(accounts[2]);
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, 2));
+
+        minter.mint(address(edition), mintId, 3, 3, proof);
     }
 }

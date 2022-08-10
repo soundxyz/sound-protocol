@@ -3,15 +3,15 @@
 pragma solidity ^0.8.15;
 
 import "openzeppelin/token/ERC20/IERC20.sol";
-import "openzeppelin/utils/structs/BitMaps.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
+import "openzeppelin/utils/structs/EnumerableMap.sol";
 import "./MintControllerBase.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 
 /// @dev Airdrop using merkle tree logic.
 contract MerkleDropMinter is MintControllerBase {
-    using BitMaps for BitMaps.BitMap;
-    BitMaps.BitMap private claimed;
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
+    EnumerableMap.AddressToUintMap private claimed;
 
     // prettier-ignore
     event MerkleDropMintCreated(
@@ -28,6 +28,8 @@ contract MerkleDropMinter is MintControllerBase {
       address recipient,
       uint32 quantity
     );
+
+    error ExceedsEligibleQuantity();
 
     struct EditionMintData {
         // Hash of the root node for the merkle tree drop
@@ -92,39 +94,38 @@ contract MerkleDropMinter is MintControllerBase {
         return _editionMintData[edition][mintId];
     }
 
-    function mint(address edition, uint256 mintId, uint32 quantity, bytes32[] calldata merkleProof) public payable {
+    function mint(address edition, uint256 mintId, uint32 totalQuantity, uint32 wantedQuantity, bytes32[] calldata merkleProof) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 nextTotalMinted = data.totalMinted + quantity;
+        uint32 nextTotalMinted = data.totalMinted + wantedQuantity;
         _requireNotSoldOut(nextTotalMinted, data.maxMintable);
         data.totalMinted = nextTotalMinted;
 
         _requireMintOpen(data.startTime, data.endTime);
 
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, quantity));
+        (bool success, uint256 claimedQuantity) = claimed.tryGet(msg.sender);
+        claimedQuantity = success ? claimedQuantity : 0;
+        uint256 updatedClaimedQuantity = claimedQuantity + wantedQuantity;
+
+        if (updatedClaimedQuantity > totalQuantity) revert ExceedsEligibleQuantity();
+
+        // Update the claimed amount data
+        claimed.set(msg.sender, updatedClaimedQuantity);
+
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, totalQuantity));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         require(valid, "Invalid proof");
 
-        _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
+        _mint(edition, mintId, msg.sender, wantedQuantity, data.price * wantedQuantity);
 
-        // require(!isClaimed(index), "Tokens already claimed");
-        // claimed.set(index);
-
-        emit DropClaimed(msg.sender, quantity);
-
-        // require(
-        //     IERC20(token).transfer(recipient, quantity),
-        //     "Airdrop: Claim failed"
-        // );
-
-        ISoundEditionV1(edition).mint{ value: msg.value }(edition, quantity);
+        emit DropClaimed(msg.sender, wantedQuantity);
     }
 
     /**
-     * @dev Returns true if the claim at the given index in the merkle tree has already been made.
-     * @param index The index into the merkle tree.
+     * @dev Returns the amount of claimed tokens for `wallet`.
+     * @param wallet Address of the wallet.
      */
-    function isClaimed(uint256 index) public view returns (bool) {
-        return claimed.get(index);
+    function getClaimed(address wallet) public view returns (bool, uint256) {
+        return claimed.tryGet(wallet);
     }
 }
