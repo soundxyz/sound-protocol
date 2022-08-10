@@ -6,16 +6,9 @@ import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/MintControllerBase.sol";
 
 contract MintControllerBaseTests is TestConfig, MintControllerBase {
-    function _createEdition() internal returns (SoundEditionV1 edition) {
+    function _createEdition(uint32 masterMaxMintable) internal returns (SoundEditionV1 edition) {
         edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MASTER_MAX_MINTABLE
-            )
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, masterMaxMintable)
         );
 
         edition.grantRole(edition.MINTER_ROLE(), address(this));
@@ -47,7 +40,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
         address controller = getRandomAccount(0);
         vm.startPrank(controller);
 
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         uint256 mintId = 0;
 
@@ -59,7 +52,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_createEditionMintControllerRevertsIfCallerNotEditionOwner() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address attacker = getRandomAccount(1);
 
         vm.expectRevert(MintControllerBase.CallerNotEditionOwner.selector);
@@ -73,7 +66,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_createEditionMintControllerChangesController() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         uint256 mintId = 0;
 
@@ -84,7 +77,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_setEditionMintControllerEmitsEvent() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address newController = getRandomAccount(1);
 
         uint256 mintId = this.createEditionMintController(address(edition));
@@ -95,7 +88,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_setEditionMintControllerChangesController() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address newController = getRandomAccount(1);
 
         uint256 mintId = this.createEditionMintController(address(edition));
@@ -105,7 +98,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_deleteEditionMintControllerEmitsEvent() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         uint256 mintId = this.createEditionMintController(address(edition));
 
@@ -116,7 +109,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_deleteEditionMintRevertsIfCallerUnauthorized() public {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
         address attacker = getRandomAccount(1);
 
         uint256 mintId = this.createEditionMintController(address(edition));
@@ -127,8 +120,8 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_deleteEditionMintRevertsIfMintEditionDoesNotExist() public {
-        SoundEditionV1 edition0 = _createEdition();
-        SoundEditionV1 edition1 = _createEdition();
+        SoundEditionV1 edition0 = _createEdition(MASTER_MAX_MINTABLE);
+        SoundEditionV1 edition1 = _createEdition(MASTER_MAX_MINTABLE);
 
         address controller = getRandomAccount(0);
 
@@ -140,7 +133,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_deleteEditionMintControllerChangesControllerToZeroAddress() public {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         uint256 mintId = this.createEditionMintController(address(edition));
         assertEq(this.editionMintController(address(edition), mintId), edition.owner());
@@ -150,7 +143,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_mintRevertsForWrongEtherValue() public {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         uint256 mintId = this.createEditionMintController(address(edition));
 
@@ -162,7 +155,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_mintRevertsWhenPaused() public {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         uint256 mintId = this.createEditionMintController(address(edition));
 
@@ -179,7 +172,7 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_mintRevertsWithZeroQuantity() public {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         uint256 mintId = this.createEditionMintController(address(edition));
 
@@ -189,11 +182,37 @@ contract MintControllerBaseTests is TestConfig, MintControllerBase {
     }
 
     function test_createEditionMintControllerMultipleTimes() external {
-        SoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = _createEdition(MASTER_MAX_MINTABLE);
 
         for (uint256 i; i < 3; ++i) {
             uint256 mintId = this.createEditionMintController(address(edition));
             assertEq(mintId, i);
         }
+    }
+
+    function test_cantMintPastMasterMaxMintable() external {
+        // Test with max of 1
+        SoundEditionV1 edition1 = _createEdition(1);
+
+        uint256 mintId1 = this.createEditionMintController(address(edition1));
+
+        this.mint(address(edition1), mintId1, 1, 0);
+
+        vm.expectRevert(SoundEditionV1.MaxSupplyReached.selector);
+
+        this.mint(address(edition1), mintId1, 1, 0);
+
+        // TODO: debug this test. Forge infinitely hangs when running it:
+
+        // Test with max of uint32.max
+        // SoundEditionV1 edition2 = _createEdition(MASTER_MAX_MINTABLE);
+
+        // uint256 mintId2 = this.createEditionMintController(address(edition2));
+
+        // this.mint(address(edition2), mintId2, MASTER_MAX_MINTABLE, 0);
+
+        // vm.expectRevert(SoundEditionV1.MaxSupplyReached.selector);
+
+        // this.mint(address(edition2), mintId2, 1, 0);
     }
 }
