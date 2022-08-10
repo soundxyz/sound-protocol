@@ -11,6 +11,8 @@ import "forge-std/console2.sol";
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
     uint32 public constant END_TIME = 200;
+    uint32 constant MAX_MINTABLE = 5;
+
     address[] accounts = [
         getRandomAccount(1),
         getRandomAccount(2),
@@ -33,19 +35,19 @@ contract MerkleDropMinterTests is TestConfig {
         root = m.getRoot(leaves);
     }
 
-    function _createEditionAndMinter(uint32 _price, uint32 _maxMintable, uint32 _maxAllowedPerWallet) internal returns (SoundEditionV1 edition, MerkleDropMinter minter) {
+    function _createEditionAndMinter(uint32 _price, uint32 _maxMintable, uint32 _maxAllowedPerWallet) internal returns (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) {
         setUpMerkleTree();
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
         );
 
         minter = new MerkleDropMinter();
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
-        minter.createEditionMint(address(edition), root, _price, START_TIME, END_TIME, _maxMintable);
+        mintId = minter.createEditionMint(address(edition), root, _price, START_TIME, END_TIME, _maxMintable);
     }
 
     function test_canSuccessfullyMintWhenEligible() public {
-      (SoundEditionV1 edition, MerkleDropMinter minter) = _createEditionAndMinter(0, 6, 1);
+      (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 1);
       bytes32[] memory proof = m.getProof(leaves, 0);
 
       // Test we can verify proof using OZ MerkleProof lib, used by the minter
@@ -58,6 +60,6 @@ contract MerkleDropMinterTests is TestConfig {
 
       vm.warp(START_TIME);
       vm.prank(accounts[0]);
-      minter.mint(address(edition), 1, proof);
+      minter.mint(address(edition), mintId, 1, proof);
     }
 }

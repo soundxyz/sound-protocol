@@ -13,18 +13,10 @@ contract MerkleDropMinter is MintControllerBase {
     using BitMaps for BitMaps.BitMap;
     BitMaps.BitMap private claimed;
 
-
-    error WrongEtherValue();
-
-    error SoldOut();
-
-    error MintNotStarted();
-
-    error MintHasEnded();
-
     // prettier-ignore
     event MerkleDropMintCreated(
         address indexed edition,
+        uint256 indexed mintId,
         bytes32 merkleRootHash,
         uint256 price,
         uint32 startTime,
@@ -52,7 +44,7 @@ contract MerkleDropMinter is MintControllerBase {
         uint32 totalMinted;
     }
 
-    mapping(address => EditionMintData) public editionMintData;
+    mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     function createEditionMint(
         address edition,
@@ -61,9 +53,10 @@ contract MerkleDropMinter is MintControllerBase {
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable
-    ) public {
-        _createEditionMintController(edition);
-        EditionMintData storage data = editionMintData[edition];
+    ) public returns (uint256 mintId) {
+        mintId = _createEditionMintController(edition);
+
+        EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
         data.price = price;
         data.startTime = startTime;
@@ -72,6 +65,7 @@ contract MerkleDropMinter is MintControllerBase {
         // prettier-ignore
         emit MerkleDropMintCreated(
             edition,
+            mintId,
             merkleRootHash,
             price,
             startTime,
@@ -80,21 +74,38 @@ contract MerkleDropMinter is MintControllerBase {
         );
     }
 
-    function deleteEditionMint(address edition) public {
-        _deleteEditionMintController(edition);
-        delete editionMintData[edition];
+    /**
+     * @dev Deletes a given edition's mint configuration.
+     * @param edition Address of the edition.
+     * @param mintId The mint instance identifier, created when the mint controller was set.
+     */
+    function deleteEditionMint(address edition, uint256 mintId) public {
+        _deleteEditionMintController(edition, mintId);
+        delete _editionMintData[edition][mintId];
     }
 
-    function mint(address edition, uint32 quantity, bytes32[] calldata merkleProof) public payable {
-        EditionMintData storage data = editionMintData[edition];
+    /**
+     * @dev Returns the given edition's mint configuration.
+     * @param edition Address of the edition.
+     */
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
+    }
+
+    function mint(address edition, uint256 mintId, uint32 quantity, bytes32[] calldata merkleProof) public payable {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+
+        uint32 nextTotalMinted = data.totalMinted + quantity;
+        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
+        data.totalMinted = nextTotalMinted;
+
+        _requireMintOpen(data.startTime, data.endTime);
+
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender, quantity));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         require(valid, "Invalid proof");
 
-        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
-        if (data.price * quantity != msg.value) revert WrongEtherValue();
-        if (block.timestamp < data.startTime) revert MintNotStarted();
-        if (data.endTime < block.timestamp) revert MintHasEnded();
+        _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
 
         // require(!isClaimed(index), "Tokens already claimed");
         // claimed.set(index);
