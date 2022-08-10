@@ -24,7 +24,8 @@ contract SoundEdition_metadata is TestConfig {
                 IMetadataModule(address(0)),
                 BASE_URI,
                 CONTRACT_URI,
-                MAX_MINTABLE
+                MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
     }
@@ -34,7 +35,15 @@ contract SoundEdition_metadata is TestConfig {
 
         // deploy new sound contract
         soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, metadataModule, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                metadataModule,
+                BASE_URI,
+                CONTRACT_URI,
+                MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
         );
     }
 

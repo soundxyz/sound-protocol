@@ -8,7 +8,15 @@ import "../../../contracts/modules/Minters/MintControllerBase.sol";
 contract MintControllerBaseTests is TestConfig, MintControllerBase {
     function _createEdition() internal returns (SoundEditionV1 edition) {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
         );
     }
 
