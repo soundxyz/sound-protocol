@@ -56,7 +56,7 @@ contract RangeEditionMinterTests is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
+                MAX_MINTABLE_UPPER,
                 MASTER_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
@@ -92,7 +92,7 @@ contract RangeEditionMinterTests is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
+                MAX_MINTABLE_UPPER,
                 MASTER_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
@@ -339,7 +339,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
+                MAX_MINTABLE_UPPER,
                 MASTER_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
