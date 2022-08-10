@@ -96,6 +96,15 @@ contract MerkleDropMinter is MintControllerBase {
         return _editionMintData[edition][mintId];
     }
 
+    /*
+     * @dev Mints tokens.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId Id of the mint instance.
+     * @param totalQuantity The total number of tokens allocated to the user.
+     * This is the maximum the user can claim.
+     * @param wantedQuantity Number of tokens to actually mint. This can be anything up to the totalQuantity`
+     * @param merkleProof Merkle proof for the claim.
+     */
     function mint(address edition, uint256 mintId, uint32 totalQuantity, uint32 wantedQuantity, bytes32[] calldata merkleProof) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
