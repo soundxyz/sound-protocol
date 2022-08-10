@@ -50,7 +50,7 @@ contract RangeEditionMinterTests is TestConfig {
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, RangeEditionMinter minter) {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE_UPPER)
         );
 
         minter = new RangeEditionMinter();
@@ -77,7 +77,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintableUpper
     ) public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE_UPPER)
         );
 
         RangeEditionMinter minter = new RangeEditionMinter();
@@ -315,7 +315,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
         super.setUp();
 
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI)
+            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE_UPPER)
         );
 
         minter = new RangeEditionMinter();
