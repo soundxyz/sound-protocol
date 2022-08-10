@@ -247,18 +247,4 @@ abstract contract MintControllerBase {
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert SoldOut(maxMintable);
     }
-
-    /// @dev Enables owner or admins to mint to a given address for no cost.
-    function adminMint(
-        ISoundEditionV1 edition,
-        address recipient,
-        uint256 quantity
-    ) public {
-        if (
-            !_callerIsEditionOwner(address(edition)) &&
-            !IAccessControlUpgradeable(address(edition)).hasRole(edition.ADMIN_ROLE(), msg.sender)
-        ) revert Unauthorized();
-
-        edition.mint(recipient, quantity);
-    }
 }

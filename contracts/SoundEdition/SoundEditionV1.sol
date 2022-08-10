@@ -190,8 +190,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 quantity) public payable {
+        address caller = _msgSender();
+        // Only allow calls if caller has minter role, admin role, or is the owner.
+        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
+        // Check if max supply has been reached.
         if (_totalMinted() + quantity > masterMaxMintable) revert MaxSupplyReached();
+
         _mint(to, quantity);
     }
 }
