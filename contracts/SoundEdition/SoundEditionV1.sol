@@ -52,7 +52,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
-    uint32 public mintRandomnessLockedAfter;
+    uint32 public randomnessLockedAfterMinted;
     bytes32 mintRandomness;
 
     // ================================
@@ -79,7 +79,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
-        uint32 mintRandomnessLockedAfter_
+        uint32 randomnessLockedAfterMinted_
     ) public initializerERC721A initializer {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -88,7 +88,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
-        mintRandomnessLockedAfter = mintRandomnessLockedAfter_;
+        randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
 
         __AccessControl_init();
 
@@ -103,7 +103,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
         _mint(to, quantity);
 
-        if (_totalMinted() <= mintRandomnessLockedAfter) {
+        if (_totalMinted() <= randomnessLockedAfterMinted) {
             mintRandomness = blockhash(block.number - 1);
         }
     }
@@ -141,10 +141,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMintRandomnessLock(uint32 mintRandomnessLockedAfter_) external onlyOwner {
-        if (mintRandomnessLockedAfter_ < _totalMinted()) revert InvalidRandomnessLock();
+    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwner {
+        if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
 
-        mintRandomnessLockedAfter = mintRandomnessLockedAfter_;
+        randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
     }
 
     // ================================
@@ -197,9 +197,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     /// @inheritdoc ISoundEditionV1
     function getGoldenEggTokenId() external view returns (uint256 tokenId) {
-        if (_totalMinted() >= mintRandomnessLockedAfter) {
-            // calculate number between 1 and mintRandomnessLockedAfter, corresponding to the blockhash
-            tokenId = (uint256(mintRandomness) % mintRandomnessLockedAfter) + 1;
+        if (_totalMinted() >= randomnessLockedAfterMinted) {
+            // calculate number between 1 and randomnessLockedAfterMinted, corresponding to the blockhash
+            tokenId = (uint256(mintRandomness) % randomnessLockedAfterMinted) + 1;
         }
     }
 }

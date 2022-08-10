@@ -62,7 +62,7 @@ contract SoundCreatorV1 {
         IMetadataModule _metadataModule,
         string memory _baseURI,
         string memory _contractURI,
-        uint32 _mintRandomnessLockedAfter
+        uint32 _randomnessLockedAfterMinted
     ) external returns (address soundEdition) {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement module configurations
@@ -77,7 +77,7 @@ contract SoundCreatorV1 {
             _metadataModule,
             _baseURI,
             _contractURI,
-            _mintRandomnessLockedAfter
+            _randomnessLockedAfterMinted
         );
 
         // todo: emit event
