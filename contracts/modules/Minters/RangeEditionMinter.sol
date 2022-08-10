@@ -3,12 +3,11 @@
 pragma solidity ^0.8.15;
 
 import "./MintControllerBase.sol";
-import "solady/utils/Multicallable.sol";
 
 /*
  * @dev Minter class for range edition sales.
  */
-contract RangeEditionMinter is MintControllerBase, Multicallable {
+contract RangeEditionMinter is MintControllerBase {
     // ================================
     // CUSTOM ERRORS
     // ================================
