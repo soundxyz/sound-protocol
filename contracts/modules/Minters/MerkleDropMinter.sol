@@ -114,7 +114,7 @@ contract MerkleDropMinter is MintControllerBase {
         // Update the claimed amount data
         claimed.set(msg.sender, updatedClaimedQuantity);
 
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, totalQuantity));
+        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender, totalQuantity));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
