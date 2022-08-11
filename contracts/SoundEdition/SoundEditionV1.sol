@@ -49,7 +49,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // STORAGE
     // ================================
 
-    uint32 public maxSupply;
     IMetadataModule public metadataModule;
     string public baseURI;
     string public contractURI;
