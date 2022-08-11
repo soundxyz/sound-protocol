@@ -144,7 +144,7 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 requestedQuantity = 1;
         minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
 
-        uint256 claimedAmount = minter.getClaimed(accounts[0]);
+        uint256 claimedAmount = minter.getClaimed(address(edition), mintId, accounts[0]);
         assertEq(claimedAmount, 1);
     }
 }

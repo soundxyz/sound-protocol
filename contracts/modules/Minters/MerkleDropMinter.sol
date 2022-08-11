@@ -11,7 +11,6 @@ import "../../SoundEdition/ISoundEditionV1.sol";
 /// @dev Airdrop using merkle tree logic.
 contract MerkleDropMinter is MintControllerBase {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-    EnumerableMap.AddressToUintMap private claimed;
 
     // prettier-ignore
     event MerkleDropMintCreated(
@@ -46,6 +45,8 @@ contract MerkleDropMinter is MintControllerBase {
         uint32 maxMintable;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
+        // Tracking claimed amounts per wallet
+        EnumerableMap.AddressToUintMap claimed;
     }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
@@ -90,10 +91,28 @@ contract MerkleDropMinter is MintControllerBase {
 
     /**
      * @dev Returns the given edition's mint configuration.
+     * This returns all the `EditionMintData` struct properties except for `claimed`
+     * EnumerableMap.AddressToUintMap.
+     * To get the claimed map, use `getClaimed` function.
      * @param edition Address of the edition.
+     * @param mintId Mint identifier.
      */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
+    function editionMintData(address edition, uint256 mintId) public view returns (
+        bytes32 merkleRootHash,
+        uint256 price,
+        uint32 startTime,
+        uint32 endTime,
+        uint32 maxMintable,
+        uint32 totalMinted) {
+            EditionMintData storage data = _editionMintData[edition][mintId];
+            return (
+                data.merkleRootHash,
+                data.price,
+                data.startTime,
+                data.endTime,
+                data.maxMintable,
+                data.totalMinted
+            );
     }
 
     /*
@@ -114,12 +133,12 @@ contract MerkleDropMinter is MintControllerBase {
 
         _requireMintOpen(data.startTime, data.endTime);
 
-        uint256 updatedClaimedQuantity = getClaimed(msg.sender) + requestedQuantity;
+        uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
         if (updatedClaimedQuantity > eligibleQuantity) revert ExceedsEligibleQuantity();
 
         // Update the claimed amount data
-        claimed.set(msg.sender, updatedClaimedQuantity);
+        data.claimed.set(msg.sender, updatedClaimedQuantity);
 
         bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender, eligibleQuantity));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
@@ -131,13 +150,16 @@ contract MerkleDropMinter is MintControllerBase {
     }
 
     /**
-     * @dev Returns the amount of claimed tokens for `wallet`.
+     * @dev Returns the amount of claimed tokens for `wallet` in `mintData`.
+     * @param edition Address of the edition.
+     * @param mintId Mint identifier.
      * @param wallet Address of the wallet.
-     * @return claimedQuantity is defaulted to 0 when the wallet address key
-     * is not found in the `claimed` map.
+     * @return claimedQuantity is defaulted to 0 when the wallet address key is not found
+     * in the `claimed` map.
      */
-    function getClaimed(address wallet) public view returns (uint256) {
-        (bool success, uint256 claimedQuantity) = claimed.tryGet(wallet);
+    function getClaimed(address edition, uint256 mintId, address wallet) public view returns (uint256) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+        (bool success, uint256 claimedQuantity) = data.claimed.tryGet(wallet);
         claimedQuantity = success ? claimedQuantity : 0;
         return claimedQuantity;
     }
