@@ -117,6 +117,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /// @dev Returns the base token URI for the collection
     function baseURI() external view returns (string memory);
 
-    /// @dev Returns token id for the golden egg, after randomness is locked. Else returns 0
-    function getGoldenEggTokenId() external view returns (uint256 tokenId);
+    /// @dev Returns the total amount of tokens minted in the contract
+    function totalMinted() external view returns (uint256);
+
+    function randomnessLockedAfterMinted() external view returns (uint32);
+
+    function randomnessLockedTimestamp() external view returns (uint32);
+
+    function mintRandomness() external view returns (bytes32);
 }

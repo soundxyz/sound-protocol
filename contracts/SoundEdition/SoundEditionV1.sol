@@ -55,7 +55,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     uint32 public masterMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
-    bytes32 mintRandomness;
+    bytes32 public mintRandomness;
 
     // ================================
     // EVENTS
@@ -169,6 +169,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // VIEW FUNCTIONS
     // ================================
 
+    /// @inheritdoc ISoundEditionV1
+    function totalMinted() external view returns (uint256) {
+        return _totalMinted();
+    }
+
     /// @inheritdoc IERC721AUpgradeable
     function tokenURI(uint256 tokenId)
         public
@@ -211,13 +216,5 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     /// @inheritdoc ERC721AUpgradeable
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
-    }
-
-    /// @inheritdoc ISoundEditionV1
-    function getGoldenEggTokenId() external view returns (uint256 tokenId) {
-        if (_totalMinted() >= randomnessLockedAfterMinted || block.timestamp >= randomnessLockedTimestamp) {
-            // calculate number between 1 and randomnessLockedAfterMinted, corresponding to the blockhash
-            tokenId = (uint256(mintRandomness) % randomnessLockedAfterMinted) + 1;
-        }
     }
 }

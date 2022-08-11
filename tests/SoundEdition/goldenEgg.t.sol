@@ -20,15 +20,22 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     error InvalidRandomnessLock();
 
-    function _createEdition() internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
+    function _createEdition()
+        internal
+        returns (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        )
+    {
         minter = new FixedPricePublicSaleMinter();
-        GoldenEggMetadataModule goldenEggMetadataModule = new GoldenEggMetadataModule();
+        goldenEggModule = new GoldenEggMetadataModule();
 
         edition = SoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
-                goldenEggMetadataModule,
+                goldenEggModule,
                 BASE_URI,
                 CONTRACT_URI,
                 MAX_MINTABLE,
@@ -44,13 +51,17 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
     function test_getTokenURIBeforeAuctionEnded() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEdition();
+        (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        ) = _createEdition();
 
         vm.warp(START_TIME);
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
         uint256 tokenId = 1;
 
-        uint256 goldenEggTokenId = edition.getGoldenEggTokenId();
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(tokenId));
 
         assertEq(goldenEggTokenId, 0);
@@ -59,13 +70,17 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if tokenURI returns goldenEgg uri, when max tokens minted
     function test_getTokenURIAfterMaxMinted() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEdition();
+        (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
-        uint256 goldenEggTokenId = edition.getGoldenEggTokenId();
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
 
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
@@ -73,14 +88,18 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if tokenURI returns goldenEgg uri, when randomnessLockedTimestamp is passed
     function test_getTokenURIAfterRandomnessLockedTimestamp() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEdition();
+        (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         vm.warp(RANDOMNESS_LOCKED_TIMESTAMP);
-        uint256 goldenEggTokenId = edition.getGoldenEggTokenId();
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
 
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
@@ -92,7 +111,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if setMintRandomnessLock only callable by Edition's owner
     function test_setMintRandomnessRevertsForNonOwner() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEdition();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter, ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -106,7 +125,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if setMintRandomnessLock reverts when new value is lower than totalMinted
     function test_setMintRandomnessRevertsForLowValue() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEdition();
+        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter, ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -118,19 +137,23 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test when lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
     function test_setMintRandomnessLockSuccess() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEdition();
+        (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
-        uint256 goldenEggTokenId = edition.getGoldenEggTokenId();
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
         assertEq(goldenEggTokenId, 0);
 
         edition.setMintRandomnessLock(quantity);
 
-        goldenEggTokenId = edition.getGoldenEggTokenId();
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
     }
@@ -141,7 +164,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if setRandomnessLockedTimestamp only callable by Edition's owner
     function test_setRandomnessLockedTimestampRevertsForNonOwner() external {
-        (SoundEditionV1 edition, ) = _createEdition();
+        (SoundEditionV1 edition, , ) = _createEdition();
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
@@ -151,13 +174,17 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test when lowering randomnessLockedTimestamp, it generates the golden egg
     function test_setRandomnessLockedTimestampSuccess() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) = _createEdition();
+        (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
-        uint256 goldenEggTokenId = edition.getGoldenEggTokenId();
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
         assertEq(goldenEggTokenId, 0);
 
@@ -165,7 +192,7 @@ contract SoundEdition_goldenEgg is TestConfig {
         vm.warp(newTimestamp);
         edition.setRandomnessLockedTimestamp(newTimestamp);
 
-        goldenEggTokenId = edition.getGoldenEggTokenId();
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
     }
