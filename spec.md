@@ -35,19 +35,31 @@ Sound Protocol 2.0 enables creators to permissinonlessly deploy gas-efficient mi
   - Implements `contractURI` (https://docs.opensea.io/docs/contract-level-metadata).
   - Allows freezing of metadata, beyond which the variables can't be modified by `owner`.
 - Minting
-  - `editionMaxMintable` - maximum number of tokens that can be minted for the edition.
-  - Authorizes contracts with `MINTER_ROLE` to call `mint`.
-  - Authorizes owner or callers with `ADMIN_ROLE` to call `mint`.
+  - The owner, callers with `ADMIN_ROLE`, and callers with `MINTER_ROLE` (e.g. minter modules) can all call `mint`.
+  - `SoundEditionV1.maxSupply` - maximum number of tokens that can be minted for the edition.
+    - Can be initialized with any value up to `type(uint32).max`.
+    - Can be "frozen" by owner or `ADMIN_ROLE` at the current token count to prevent any further minting.
+- Payments & royalties
+  - `SoundEditionV1.fundingRecipient` - an address that receives all revenue accrued (primary sales & secondary royalty revenue). In the case where the artist is the sole recipient, this is their wallet address. If they are splitting revenue with other parties, this could be an [0xSplits SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) or alternative splitter contract.
+  - Secondary revenue can accrue to to the edition via the `receive` function, or to a separate address (ex: a [SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) set as the `fundingRecipient`).
+  - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
+  - Minter modules can also optionally pay fees to secondary recipients (e.g. developer fee for third-party integrations).
+
+### `SoundFeeRegistry.sol` 
+- A contract that exposes a Sound protocol fee used by minter modules to pay a portion of primary sales to Sound.xyz for its services.
 
 ### Sound Modules
 #### Metadata
   - Metadata modules must implement `IMetadataModule.sol`
   - No implementations included in V1.
 #### Minter
+- Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
 - Minter modules must inherit `MintControllerBase.sol`
-- Included in V1:
+- Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.maxSupply`. It is up to the artist to initialize the `maxSupply` with a value high enough to accomodate all current & future mints.
+- Referall fee: TODO
+- Current modules:
   - `FixedPricePublicSaleMinter` - Mints tokens at a fixed price.
-  - `FixedPricePermissionedSaleMinter` - Mints tokens at a fixed price for buyers white-listed via signature verification.
+  - `FixedPricePermissionedSaleMinter` - Mints tokens at a fixed price for buyers approved to buy via signature verification.
   - `RangeEditionMinter` - Mints a quantity of tokens [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30). 
-  - `MerkleDropMinter` - Enables a white-list of recipients to mint tokens at a fixed price. The price can be zero and the eligible token quantity for each recipient can be unique. They can claim up to their eligible claimable quantity of tokens for a set of addresses. in multiple transactions.
+  - `MerkleDropMinter` - Enables a predefined list of recipients to mint tokens at a fixed price. The price can be zero and the eligible token quantity for each recipient can be unique. They can claim up to their eligible claimable quantity of tokens for a set of addresses. in multiple transactions.
 
