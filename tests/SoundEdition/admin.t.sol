@@ -18,7 +18,9 @@ contract SoundEdition_admin is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 
@@ -32,7 +34,16 @@ contract SoundEdition_admin is TestConfig {
         uint32 maxQuantity = 5000;
 
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, maxQuantity)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                maxQuantity,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
         );
 
         edition.mint(address(this), maxQuantity);
@@ -50,7 +61,9 @@ contract SoundEdition_admin is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 

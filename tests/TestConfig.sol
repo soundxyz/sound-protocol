@@ -17,6 +17,7 @@ contract TestConfig is Test {
     string public constant CONTRACT_URI = "https://example.com/storefront/";
     address public constant ARTIST_ADMIN = address(8888888888);
     uint32 public constant MASTER_MAX_MINTABLE = type(uint32).max;
+    uint32 public constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 public soundCreator;
 

@@ -46,7 +46,9 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 
@@ -65,7 +67,9 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 
@@ -80,7 +84,16 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MAX_MINTABLE,
+                MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
         );
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
