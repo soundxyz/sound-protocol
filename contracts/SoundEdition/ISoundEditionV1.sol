@@ -105,9 +105,4 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *   @dev Freezes metadata by preventing any more changes to base URI
      */
     function freezeMetadata() external;
-
-    /**
-     *   @dev Sets the maximum mintable amount for the edition.
-     */
-    function setMaxMintable(uint32 newMaxMintable) external;
 }

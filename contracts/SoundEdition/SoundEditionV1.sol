@@ -148,15 +148,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         _mint(to, quantity);
     }
 
-    /// @inheritdoc ISoundEditionV1
-    function setMaxMintable(uint32 newMaxMintable) public onlyOwnerOrAdmin {
-        if (newMaxMintable > masterMaxMintable) revert InvalidAmount();
-
-        masterMaxMintable = newMaxMintable;
-
-        emit MasterMaxMintableSet(newMaxMintable);
-    }
-
     // ================================
     // MODIFIERS
     // ================================
