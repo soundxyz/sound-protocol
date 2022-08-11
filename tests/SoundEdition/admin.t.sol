@@ -48,7 +48,7 @@ contract SoundEdition_admin is TestConfig {
 
         edition.mint(address(this), maxQuantity);
 
-        vm.expectRevert(SoundEditionV1.MaxSupplyReached.selector);
+        vm.expectRevert(SoundEditionV1.MasterMaxMintableReached.selector);
 
         edition.mint(address(this), 1);
     }

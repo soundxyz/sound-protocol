@@ -75,7 +75,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     error MetadataIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error MaxSupplyReached();
+    error MasterMaxMintableReached();
     error InvalidAmount();
 
     // ================================
@@ -120,7 +120,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         // Only allow calls if caller has minter role, admin role, or is the owner.
         if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
         // Check if max supply has been reached.
-        if (_totalMinted() + quantity > masterMaxMintable) revert MaxSupplyReached();
+        if (_totalMinted() + quantity > masterMaxMintable) revert MasterMaxMintableReached();
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
