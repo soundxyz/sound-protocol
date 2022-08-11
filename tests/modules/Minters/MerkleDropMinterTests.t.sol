@@ -11,7 +11,6 @@ import "forge-std/console2.sol";
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
     uint32 public constant END_TIME = 200;
-    uint32 constant MAX_MINTABLE = 5;
 
     address[] accounts = [
         getRandomAccount(1),
@@ -37,7 +36,15 @@ contract MerkleDropMinterTests is TestConfig {
 
     function _createEditionAndMinter(uint32 _price, uint32 _maxMintable) internal returns (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) {
         edition = SoundEditionV1(
-            soundCreator.createSound(SONG_NAME, SONG_SYMBOL, METADATA_MODULE, BASE_URI, CONTRACT_URI, MAX_MINTABLE)
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP)
         );
 
         setUpMerkleTree(address(edition));
