@@ -100,15 +100,15 @@ contract MerkleDropMinter is MintControllerBase {
      * @dev Mints tokens.
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId Id of the mint instance.
-     * @param totalQuantity The total number of tokens allocated to the user.
+     * @param eligibleQuantity The total number of tokens allocated to the user.
      * This is the maximum the user can claim.
-     * @param wantedQuantity Number of tokens to actually mint. This can be anything up to the totalQuantity`
+     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `eligibleQuantity`
      * @param merkleProof Merkle proof for the claim.
      */
-    function mint(address edition, uint256 mintId, uint32 totalQuantity, uint32 wantedQuantity, bytes32[] calldata merkleProof) public payable {
+    function mint(address edition, uint256 mintId, uint32 eligibleQuantity, uint32 requestedQuantity, bytes32[] calldata merkleProof) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 nextTotalMinted = data.totalMinted + wantedQuantity;
+        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
         _requireNotSoldOut(nextTotalMinted, data.maxMintable);
         data.totalMinted = nextTotalMinted;
 
@@ -116,20 +116,20 @@ contract MerkleDropMinter is MintControllerBase {
 
         (bool success, uint256 claimedQuantity) = claimed.tryGet(msg.sender);
         claimedQuantity = success ? claimedQuantity : 0;
-        uint256 updatedClaimedQuantity = claimedQuantity + wantedQuantity;
+        uint256 updatedClaimedQuantity = claimedQuantity + requestedQuantity;
 
-        if (updatedClaimedQuantity > totalQuantity) revert ExceedsEligibleQuantity();
+        if (updatedClaimedQuantity > eligibleQuantity) revert ExceedsEligibleQuantity();
 
         // Update the claimed amount data
         claimed.set(msg.sender, updatedClaimedQuantity);
 
-        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender, totalQuantity));
+        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender, eligibleQuantity));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        _mint(edition, mintId, msg.sender, wantedQuantity, data.price * wantedQuantity);
+        _mint(edition, mintId, msg.sender, requestedQuantity, data.price * requestedQuantity);
 
-        emit DropClaimed(msg.sender, wantedQuantity);
+        emit DropClaimed(msg.sender, requestedQuantity);
     }
 
     /**

@@ -61,9 +61,9 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        uint32 totalQuantity = 1;
-        uint32 wantedQuantity = 1;
-        minter.mint(address(edition), mintId, totalQuantity, wantedQuantity, proof);
+        uint32 eligibleQuantity = 1;
+        uint32 requestedQuantity = 1;
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
     }
 
     function test_canMintMultipleTimesLessThanEligibleAmount() public {
@@ -76,16 +76,16 @@ contract MerkleDropMinterTests is TestConfig {
         vm.warp(START_TIME);
 
         // Claim 1 of 2 eligible tokens
-        uint32 totalQuantity = 2;
-        uint32 wantedQuantity = 1;
+        uint32 eligibleQuantity = 2;
+        uint32 requestedQuantity = 1;
         vm.prank(accounts[1]);
-        minter.mint(address(edition), mintId, totalQuantity, wantedQuantity, proof);
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
         user1Balance = edition.balanceOf(accounts[1]);
         assertEq(user1Balance, 1);
 
         // Claim the second of the 2 eligible tokens
         vm.prank(accounts[1]);
-        minter.mint(address(edition), mintId, totalQuantity, wantedQuantity, proof);
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
         user1Balance = edition.balanceOf(accounts[1]);
         assertEq(user1Balance, 2);
     }
@@ -96,10 +96,10 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        uint32 totalQuantity = 1;
-        uint32 wantedQuantity = 2;
+        uint32 eligibleQuantity = 1;
+        uint32 requestedQuantity = 2;
         vm.expectRevert(MerkleDropMinter.ExceedsEligibleQuantity.selector);
-        minter.mint(address(edition), mintId, totalQuantity, wantedQuantity, proof);
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
     }
 
     function test_cannotClaimMoreThanMaxMintable() public {
@@ -108,10 +108,10 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
-        uint32 totalQuantity = 3;
-        uint32 wantedQuantity = 3;
+        uint32 eligibleQuantity = 3;
+        uint32 requestedQuantity = 3;
         vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, 2));
-        minter.mint(address(edition), mintId, totalQuantity, wantedQuantity, proof);
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
     }
 
     function test_cannotClaimWithInvalidProof() public {
@@ -120,9 +120,9 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        uint32 totalQuantity = 1;
-        uint32 wantedQuantity = 1;
+        uint32 eligibleQuantity = 1;
+        uint32 requestedQuantity = 1;
         vm.expectRevert(MerkleDropMinter.InvalidMerkleProof.selector);
-        minter.mint(address(edition), mintId, totalQuantity, wantedQuantity, proof);
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
     }
 }
