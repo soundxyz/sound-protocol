@@ -4,6 +4,7 @@ import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/MerkleDropMinter.sol";
+import "../../../contracts/modules/Minters/FixedPricePublicSaleMinter.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "murky/Merkle.sol";
 import "forge-std/console2.sol";
@@ -12,14 +13,15 @@ contract MintersIntegration is TestConfig {
     uint32 public constant START_TIME_FREE_DROP = 100;
     uint32 public constant START_TIME_PRESALE = START_TIME_FREE_DROP + 1 days;
     uint32 public constant START_TIME_PUBLIC_SALE = START_TIME_PRESALE + 1 days;
+    uint32 public constant END_TIME_PUBLIC_SALE = START_TIME_PUBLIC_SALE + 1 days;
 
     address[] public userAccounts = [
-      getRandomAccount(1), // User 1
-      getRandomAccount(2), // User 2
-      getRandomAccount(3), // User 3
-      getRandomAccount(4), // User 4
-      getRandomAccount(5), // User 5
-      getRandomAccount(6)  // User 6
+      getRandomAccount(1), // User 1 - participate in free drop
+      getRandomAccount(2), // User 2 - participate in free drop
+      getRandomAccount(3), // User 3 - participate in presale
+      getRandomAccount(4), // User 4 - participate in presale
+      getRandomAccount(5), // User 5 - participate in public sale
+      getRandomAccount(6)  // User 6 - participate in public sale
     ];
 
     SoundEditionV1 public edition;
@@ -187,8 +189,44 @@ contract MintersIntegration is TestConfig {
         assertEq(user1Balance, 150);
 
         // END PRESALE START AND START PUBLIC SALE
-        vm.warp(START_TIME_PRESALE);
+        vm.warp(START_TIME_PUBLIC_SALE);
     }
 
-    function run_PublicSale() public {}
+    function run_PublicSale() public {
+        uint256 PRICE_PUBLIC_SALE = 100000000000000000; // Price is 0.1 ETH
+        uint32 MINTER_MAX_MINTABLE_PUBLIC_SALE = 700;
+        uint32 MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 50;
+
+        FixedPricePublicSaleMinter minter = new FixedPricePublicSaleMinter();
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        uint256 mintId = minter.createEditionMint(
+          address(edition),
+          PRICE_PUBLIC_SALE,
+          START_TIME_PUBLIC_SALE,
+          END_TIME_PUBLIC_SALE,
+          MINTER_MAX_MINTABLE_PUBLIC_SALE,
+          MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+        );
+
+        // Check user 5 has no tokens
+        uint256 user5Balance = edition.balanceOf(userAccounts[4]);
+        assertEq(user5Balance, 0);
+        // Mint 5 tokens
+        vm.prank(userAccounts[4]);
+        minter.mint{ value: 5 * PRICE_PUBLIC_SALE }(address(edition), mintId, 5);
+        user5Balance = edition.balanceOf(userAccounts[4]);
+        assertEq(user5Balance, 5);
+
+        // Check user 6 has no tokens
+        uint256 user6Balance = edition.balanceOf(userAccounts[5]);
+        assertEq(user6Balance, 0);
+        // Claim maximum allowed tokens
+        vm.prank(userAccounts[5]);
+        minter.mint{ value: MAX_ALLOWED_PER_WALLET_PUBLIC_SALE * PRICE_PUBLIC_SALE }(address(edition), mintId, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
+        user6Balance = edition.balanceOf(userAccounts[5]);
+        assertEq(user6Balance, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
+
+        // END PUBLIC SALE
+        vm.warp(END_TIME_PUBLIC_SALE);
+    }
 }
