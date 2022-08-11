@@ -99,6 +99,7 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 eligibleQuantity = 1;
         uint32 requestedQuantity = 2;
         vm.expectRevert(MerkleDropMinter.ExceedsEligibleQuantity.selector);
+        // User is eligible for 1 but is requesting 2
         minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
     }
 
@@ -124,5 +125,19 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 requestedQuantity = 1;
         vm.expectRevert(MerkleDropMinter.InvalidMerkleProof.selector);
         minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
+    }
+
+    function test_canGetClaimedAmountForWallet() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6);
+        bytes32[] memory proof = m.getProof(leaves, 0);
+
+        vm.warp(START_TIME);
+        vm.prank(accounts[0]);
+        uint32 eligibleQuantity = 1;
+        uint32 requestedQuantity = 1;
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
+
+        uint256 claimedAmount = minter.getClaimed(accounts[0]);
+        assertEq(claimedAmount, 1);
     }
 }

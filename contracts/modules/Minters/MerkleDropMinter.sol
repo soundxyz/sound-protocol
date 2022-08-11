@@ -114,9 +114,7 @@ contract MerkleDropMinter is MintControllerBase {
 
         _requireMintOpen(data.startTime, data.endTime);
 
-        (bool success, uint256 claimedQuantity) = claimed.tryGet(msg.sender);
-        claimedQuantity = success ? claimedQuantity : 0;
-        uint256 updatedClaimedQuantity = claimedQuantity + requestedQuantity;
+        uint256 updatedClaimedQuantity = getClaimed(msg.sender) + requestedQuantity;
 
         if (updatedClaimedQuantity > eligibleQuantity) revert ExceedsEligibleQuantity();
 
@@ -135,8 +133,12 @@ contract MerkleDropMinter is MintControllerBase {
     /**
      * @dev Returns the amount of claimed tokens for `wallet`.
      * @param wallet Address of the wallet.
+     * @return claimedQuantity is defaulted to 0 when the wallet address key
+     * is not found in the `claimed` map.
      */
-    function getClaimed(address wallet) public view returns (bool, uint256) {
-        return claimed.tryGet(wallet);
+    function getClaimed(address wallet) public view returns (uint256) {
+        (bool success, uint256 claimedQuantity) = claimed.tryGet(wallet);
+        claimedQuantity = success ? claimedQuantity : 0;
+        return claimedQuantity;
     }
 }
