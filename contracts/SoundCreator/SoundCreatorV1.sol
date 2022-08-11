@@ -42,7 +42,7 @@ contract SoundCreatorV1 {
                 STORAGE
     ***********************************/
 
-    address public nftImplementation;
+    address payable public nftImplementation;
     address public soundRegistry;
     SoundFeeRegistry public soundFeeRegistry;
 
@@ -51,7 +51,7 @@ contract SoundCreatorV1 {
     ***********************************/
 
     constructor(
-        address _nftImplementation,
+        address payable _nftImplementation,
         address _soundRegistry,
         SoundFeeRegistry _soundFeeRegistry
     ) {
@@ -64,30 +64,36 @@ contract SoundCreatorV1 {
      * @dev Deploys a Sound edition contract.
      */
     function createSound(
-        string memory _name,
-        string memory _symbol,
-        IMetadataModule _metadataModule,
-        string memory _baseURI,
-        string memory _contractURI,
-        address _fundingRecipient,
-        uint32 _royaltyBPS
-    ) external returns (address soundEdition) {
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule,
+        string memory baseURI,
+        string memory contractURI,
+        address fundingRecipient,
+        uint32 royaltyBPS,
+        uint32 masterMaxMintable,
+        uint32 randomnessLockedAfterMinted,
+        uint32 randomnessLockedTimestamp
+    ) external returns (address payable soundEdition) {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement module configurations
 
         // todo: research if we can get any gas savings by using a more minimal version of Clones lib
-        soundEdition = Clones.clone(nftImplementation);
+        soundEdition = payable(Clones.clone(nftImplementation));
 
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
-            _name,
-            _symbol,
-            _metadataModule,
-            _baseURI,
-            _contractURI,
-            _fundingRecipient,
-            _royaltyBPS,
-            soundFeeRegistry
+            name,
+            symbol,
+            metadataModule,
+            baseURI,
+            contractURI,
+            fundingRecipient,
+            royaltyBPS,
+            soundFeeRegistry,
+            masterMaxMintable,
+            randomnessLockedAfterMinted,
+            randomnessLockedTimestamp
         );
 
         // todo: emit event

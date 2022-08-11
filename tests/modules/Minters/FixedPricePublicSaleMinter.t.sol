@@ -14,9 +14,12 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE = 5;
 
+    uint32 constant MINT_ID = 0;
+
     // prettier-ignore
     event FixedPricePublicSaleMintCreated(
         address indexed edition,
+        uint256 indexed mintId,
         uint256 price,
         uint32 startTime,
         uint32 endTime,
@@ -24,18 +27,22 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         uint32 maxAllowedPerWallet
     );
 
-    function _createEditionAndMinter(uint32 _maxAllowedPerWallet) internal returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter) {
+    function _createEditionAndMinter(uint32 _maxAllowedPerWallet)
+        internal
+        returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter)
+    {
         edition = SoundEditionV1(
-            payable(
-                soundCreator.createSound(
-                    SONG_NAME,
-                    SONG_SYMBOL,
-                    METADATA_MODULE,
-                    BASE_URI,
-                    CONTRACT_URI,
-                    FUNDING_RECIPIENT,
-                    ROYALTY_BPS
-                )
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                MAX_MINTABLE,
+                MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 
@@ -48,16 +55,17 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = SoundEditionV1(
-            payable(
-                soundCreator.createSound(
-                    SONG_NAME,
-                    SONG_SYMBOL,
-                    METADATA_MODULE,
-                    BASE_URI,
-                    CONTRACT_URI,
-                    FUNDING_RECIPIENT,
-                    ROYALTY_BPS
-                )
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                MAX_MINTABLE,
+                MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 
@@ -65,7 +73,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPricePublicSaleMintCreated(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, 0);
+        emit FixedPricePublicSaleMintCreated(address(edition), MINT_ID, PRICE, START_TIME, END_TIME, MAX_MINTABLE, 0);
 
         minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, 0);
     }
@@ -77,12 +85,14 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.MintNotStarted.selector);
-        minter.mint{ value: PRICE }(address(edition), 1);
+        vm.expectRevert(
+            abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
+        );
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
 
         vm.warp(START_TIME);
         vm.prank(caller);
-        minter.mint{ value: PRICE }(address(edition), 1);
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
     }
 
     function test_mintAfterEndTimeReverts() public {
@@ -92,12 +102,14 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.MintHasEnded.selector);
-        minter.mint{ value: PRICE }(address(edition), 1);
+        vm.expectRevert(
+            abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
+        );
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
 
         vm.warp(END_TIME);
         vm.prank(caller);
-        minter.mint{ value: PRICE }(address(edition), 1);
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
     }
 
     function test_mintWhenSoldOutReverts() public {
@@ -107,15 +119,15 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.SoldOut.selector);
-        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MAX_MINTABLE + 1);
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE));
+        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MAX_MINTABLE);
+        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE);
 
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.SoldOut.selector);
-        minter.mint{ value: PRICE }(address(edition), 1);
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
     }
 
     function test_mintWithWrongEtherValueReverts() public {
@@ -125,8 +137,8 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(FixedPricePublicSaleMinter.WrongEtherValue.selector);
-        minter.mint{ value: PRICE * 2 }(address(edition), 1);
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, PRICE * 2, PRICE));
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1);
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
@@ -140,7 +152,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         (status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(FixedPricePublicSaleMinter.mint.selector, address(edition), 1)
+            abi.encodeWithSelector(FixedPricePublicSaleMinter.mint.selector, address(edition), MINT_ID, 1)
         );
         assertTrue(status);
 
@@ -149,7 +161,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         (status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(FixedPricePublicSaleMinter.mint.selector, address(edition), 1)
+            abi.encodeWithSelector(FixedPricePublicSaleMinter.mint.selector, address(edition), MINT_ID, 1)
         );
         assertFalse(status);
     }
@@ -163,16 +175,16 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        FixedPricePublicSaleMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        FixedPricePublicSaleMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * quantity }(address(edition), quantity);
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
-        data = minter.editionMintData(address(edition));
+        data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
     }
@@ -184,7 +196,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         address caller = getRandomAccount(1);
         vm.prank(caller);
         vm.expectRevert(FixedPricePublicSaleMinter.ExceedsMaxPerWallet.selector);
-        minter.mint{ value: PRICE * 2 }(address(edition), 2);
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2);
     }
 
     function test_mintWhenAllowedPerWalletIsSetAndSatisfied() public {
@@ -195,11 +207,11 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         address caller = getRandomAccount(1);
         vm.warp(START_TIME);
         vm.prank(caller);
-        minter.mint{ value: PRICE * 2 }(address(edition), 2);
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2);
 
         assertEq(edition.balanceOf(caller), 2);
 
-        FixedPricePublicSaleMinter.EditionMintData memory data = minter.editionMintData(address(edition));
+        FixedPricePublicSaleMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
         assertEq(data.totalMinted, 2);
     }
 }

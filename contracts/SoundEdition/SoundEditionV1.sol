@@ -54,26 +54,37 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // ================================
 
     IMetadataModule public metadataModule;
-    string internal baseURI;
+    string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
     address public fundingRecipient;
     uint32 public royaltyBPS;
     SoundFeeRegistry public soundFeeRegistry;
+    uint32 public masterMaxMintable;
+    uint32 public randomnessLockedAfterMinted;
+    uint32 public randomnessLockedTimestamp;
+    bytes32 public mintRandomness;
 
     // ================================
-    // EVENTS & ERRORS
+    // EVENTS
     // ================================
 
     event MetadataModuleSet(IMetadataModule metadataModule);
-    event BaseURISet(string baseURI_);
+    event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
-    event MetadataFrozen(IMetadataModule metadataModule, string baseURI_, string contractURI);
+    event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
     event FundingRecipientSet(address fundingRecipient);
     event RoyaltySet(uint32 royaltyBPS);
 
+    // ================================
+    // ERRORS
+    // ================================
+
     error MetadataIsFrozen();
     error InvalidRoyaltyBPS();
+    error InvalidRandomnessLock();
+    error Unauthorized();
+    error MaxSupplyReached();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -89,7 +100,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         string memory contractURI_,
         address fundingRecipient_,
         uint32 royaltyBPS_,
-        SoundFeeRegistry soundFeeRegistry_
+        SoundFeeRegistry soundFeeRegistry_,
+        uint32 masterMaxMintable_,
+        uint32 randomnessLockedAfterMinted_,
+        uint32 randomnessLockedTimestamp_
     ) public initializerERC721A initializer {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -103,6 +117,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
         _verifyBPS(royaltyBPS_);
         royaltyBPS = royaltyBPS_;
+        masterMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
+        randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
+        randomnessLockedTimestamp = randomnessLockedTimestamp_;
 
         __AccessControl_init();
 
@@ -115,7 +132,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     /// @inheritdoc ISoundEditionV1
     function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
+        if (_totalMinted() + quantity > masterMaxMintable) revert MaxSupplyReached();
         _mint(to, quantity);
+
+        if (_totalMinted() <= randomnessLockedAfterMinted && block.timestamp <= randomnessLockedTimestamp) {
+            mintRandomness = blockhash(block.number - 1);
+        }
     }
 
     /// @inheritdoc ISoundEditionV1
@@ -182,6 +204,18 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         emit RoyaltySet(royaltyBPS_);
     }
 
+    /// @inheritdoc ISoundEditionV1
+    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwner {
+        if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
+
+        randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwner {
+        randomnessLockedTimestamp = randomnessLockedTimestamp_;
+    }
+
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
@@ -197,6 +231,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // ================================
     // VIEW FUNCTIONS
     // ================================
+
+    /// @inheritdoc ISoundEditionV1
+    function totalMinted() external view returns (uint256) {
+        return _totalMinted();
+    }
 
     /// @inheritdoc IERC721AUpgradeable
     function tokenURI(uint256 tokenId)
@@ -234,6 +273,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     ) external view override(IERC2981Upgradeable) returns (address fundingRecipient_, uint256 royaltyAmount) {
         fundingRecipient_ = address(this);
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
+    }
+
+    /// @inheritdoc ERC721AUpgradeable
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
     }
 
     // ================================

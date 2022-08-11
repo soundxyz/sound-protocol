@@ -50,6 +50,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param fundingRecipient Address that receive royalties
      * @param royaltyBPS Royalty amount in bps
      * @param soundFeeRegistry Registry for providing platform fee details
+     * @param masterMaxMintable The maximum amount of tokens that can be minted for this edition.
+     * @param randomnessLockedAfterMinted Token supply after which randomness gets locked
+     * @param randomnessLockedTimestamp Timestamp after which randomness gets locked
      */
     function initialize(
         address owner,
@@ -60,7 +63,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory contractURI,
         address fundingRecipient,
         uint32 royaltyBPS,
-        SoundFeeRegistry soundFeeRegistry
+        SoundFeeRegistry soundFeeRegistry,
+        uint32 masterMaxMintable,
+        uint32 randomnessLockedAfterMinted,
+        uint32 randomnessLockedTimestamp
     ) external;
 
     /**
@@ -73,6 +79,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param quantity Number of tokens to mint
      */
     function mint(address to, uint256 quantity) external payable;
+
+    /**
+     * @dev Withdraws collected ETH and ERC20 royalties to the platform and fundingRecipient
+     * @param tokens array of ERC20 tokens to withdraw
+     */
+    function withdrawAll(address[] calldata tokens) external;
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.
@@ -116,8 +128,24 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function setRoyalty(uint32 royaltyBPS) external;
 
     /**
-     * @dev Withdraws collected ETH and ERC20 royalties to the platform and fundingRecipient
-     * @param tokens array of ERC20 tokens to withdraw
+     * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
      */
-    function withdrawAll(address[] calldata tokens) external;
+    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted) external;
+
+    /**
+     * @dev sets randomnessLockedTimestamp
+     */
+    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external;
+
+    /// @dev Returns the base token URI for the collection
+    function baseURI() external view returns (string memory);
+
+    /// @dev Returns the total amount of tokens minted in the contract
+    function totalMinted() external view returns (uint256);
+
+    function randomnessLockedAfterMinted() external view returns (uint32);
+
+    function randomnessLockedTimestamp() external view returns (uint32);
+
+    function mintRandomness() external view returns (bytes32);
 }

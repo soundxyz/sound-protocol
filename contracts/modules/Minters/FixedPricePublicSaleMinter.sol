@@ -3,23 +3,21 @@
 pragma solidity ^0.8.15;
 
 import "./MintControllerBase.sol";
-import "../../SoundEdition/ISoundEditionV1.sol";
 
 /**
  * @title Fixed Price Public Sale Minter
  * @dev Minter class for sales at a fixed price within a time range.
  */
 contract FixedPricePublicSaleMinter is MintControllerBase {
-    error WrongEtherValue();
-    error SoldOut();
-    error MintNotStarted();
-    error MintHasEnded();
-
+    /**
+     * The number of tokens minted has exceeded the number allowed for each wallet.
+     */
     error ExceedsMaxPerWallet();
 
     // prettier-ignore
     event FixedPricePublicSaleMintCreated(
         address indexed edition,
+        uint256 indexed mintId, 
         uint256 price,
         uint32 startTime,
         uint32 endTime,
@@ -42,7 +40,7 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         uint32 totalMinted;
     }
 
-    mapping(address => EditionMintData) internal _editionMintData;
+    mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev Initializes the configuration for an edition mint.
@@ -60,9 +58,10 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         uint32 endTime,
         uint32 maxMintable,
         uint32 maxAllowedPerWallet
-    ) public {
-        _createEditionMintController(edition);
-        EditionMintData storage data = _editionMintData[edition];
+    ) public returns (uint256 mintId) {
+        mintId = _createEditionMintController(edition);
+
+        EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
         data.startTime = startTime;
         data.endTime = endTime;
@@ -71,6 +70,7 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         // prettier-ignore
         emit FixedPricePublicSaleMintCreated(
             edition,
+            mintId, 
             price,
             startTime,
             endTime,
@@ -83,17 +83,17 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
      * @dev Deletes a given edition's mint configuration.
      * @param edition The edition to delete the mint configuration for.
      */
-    function deleteEditionMint(address edition) public {
-        _deleteEditionMintController(edition);
-        delete _editionMintData[edition];
+    function deleteEditionMint(address edition, uint256 mintId) public {
+        _deleteEditionMintController(edition, mintId);
+        delete _editionMintData[edition][mintId];
     }
 
     /**
      * @dev Returns the given edition's mint configuration.
      * @param edition The edition to get the mint configuration for.
      */
-    function editionMintData(address edition) public view returns (EditionMintData memory) {
-        return _editionMintData[edition];
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 
     /**
@@ -101,8 +101,12 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
      * @param edition Address of the song edition contract we are minting for.
      * @param quantity Token quantity to mint in song `edition`.
      */
-    function mint(address edition, uint32 quantity) public payable {
-        EditionMintData storage data = _editionMintData[edition];
+    function mint(
+        address edition,
+        uint256 mintId,
+        uint32 quantity
+    ) public payable {
+        EditionMintData storage data = _editionMintData[edition][mintId];
 
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
         // If the maximum allowed per wallet is set (i.e. is different to 0)
@@ -110,10 +114,12 @@ contract FixedPricePublicSaleMinter is MintControllerBase {
         if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
             revert ExceedsMaxPerWallet();
 
-        if ((data.totalMinted += quantity) > data.maxMintable) revert SoldOut();
-        if (data.price * quantity != msg.value) revert WrongEtherValue();
-        if (block.timestamp < data.startTime) revert MintNotStarted();
-        if (data.endTime < block.timestamp) revert MintHasEnded();
-        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
+        uint32 nextTotalMinted = data.totalMinted + quantity;
+        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
+        data.totalMinted = nextTotalMinted;
+
+        _requireMintOpen(data.startTime, data.endTime);
+
+        _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
     }
 }

@@ -14,16 +14,17 @@ contract SoundEdition_payments is TestConfig {
 
     function _createEdition() internal returns (MockSoundEditionV1 soundEdition) {
         soundEdition = MockSoundEditionV1(
-            payable(
-                soundCreator.createSound(
-                    SONG_NAME,
-                    SONG_SYMBOL,
-                    METADATA_MODULE,
-                    BASE_URI,
-                    CONTRACT_URI,
-                    FUNDING_RECIPIENT,
-                    ROYALTY_BPS
-                )
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
     }
@@ -39,7 +40,10 @@ contract SoundEdition_payments is TestConfig {
             BASE_URI,
             CONTRACT_URI,
             FUNDING_RECIPIENT,
-            royaltyBPS
+            royaltyBPS,
+            MASTER_MAX_MINTABLE,
+            MASTER_MAX_MINTABLE,
+            RANDOMNESS_LOCKED_TIMESTAMP
         );
     }
 

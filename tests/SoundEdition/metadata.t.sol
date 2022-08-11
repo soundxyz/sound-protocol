@@ -18,16 +18,17 @@ contract SoundEdition_metadata is TestConfig {
     function _createEdition() internal returns (MockSoundEditionV1 soundEdition) {
         // deploy new sound contract
         soundEdition = MockSoundEditionV1(
-            payable(
-                soundCreator.createSound(
-                    SONG_NAME,
-                    SONG_SYMBOL,
-                    IMetadataModule(address(0)),
-                    BASE_URI,
-                    CONTRACT_URI,
-                    FUNDING_RECIPIENT,
-                    ROYALTY_BPS
-                )
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                IMetadataModule(address(0)),
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
     }
@@ -37,16 +38,17 @@ contract SoundEdition_metadata is TestConfig {
 
         // deploy new sound contract
         soundEdition = MockSoundEditionV1(
-            payable(
-                soundCreator.createSound(
-                    SONG_NAME,
-                    SONG_SYMBOL,
-                    metadataModule,
-                    BASE_URI,
-                    CONTRACT_URI,
-                    FUNDING_RECIPIENT,
-                    ROYALTY_BPS
-                )
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                metadataModule,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
     }
@@ -83,11 +85,29 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_tokenURIRevertsWhenTokenIdDoesntExist() public {
-        MockSoundEditionV1 soundEdition = _createEdition();
+        // deploy new sound contract
+        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
 
         vm.expectRevert(URIQueryForNonexistentToken.selector);
         soundEdition.tokenURI(2);
     }
+
+    // ================================
+    // setBaseURI()
+    // ================================
 
     function test_setBaseURIRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
@@ -136,6 +156,10 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition.setBaseURI(newBaseURI);
     }
 
+    // ================================
+    // setContractURI()
+    // ================================
+
     function test_setContractURIRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
 
@@ -177,6 +201,10 @@ contract SoundEdition_metadata is TestConfig {
         emit ContractURISet(newContractURI);
         soundEdition.setContractURI(newContractURI);
     }
+
+    // ================================
+    // setMetadataModule()
+    // ================================
 
     function test_setMetadataModuleRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
@@ -225,6 +253,10 @@ contract SoundEdition_metadata is TestConfig {
         emit MetadataModuleSet(newMetadataModule);
         soundEdition.setMetadataModule(newMetadataModule);
     }
+
+    // ================================
+    // freezeMetadata()
+    // ================================
 
     function test_freezeMetadataRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();

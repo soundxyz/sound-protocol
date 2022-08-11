@@ -11,7 +11,7 @@ contract SoundCreatorTests is TestConfig {
         SoundEditionV1 soundEditionImplementation = new SoundEditionV1();
         address soundRegistry = address(123);
         SoundCreatorV1 _soundCreator = new SoundCreatorV1(
-            address(soundEditionImplementation),
+            payable(soundEditionImplementation),
             soundRegistry,
             soundFeeRegistry
         );
@@ -25,16 +25,17 @@ contract SoundCreatorTests is TestConfig {
     // Tests that the factory creates a new sound NFT
     function test_createSound() public {
         SoundEditionV1 soundEdition = SoundEditionV1(
-            payable(
-                soundCreator.createSound(
-                    SONG_NAME,
-                    SONG_SYMBOL,
-                    METADATA_MODULE,
-                    BASE_URI,
-                    CONTRACT_URI,
-                    FUNDING_RECIPIENT,
-                    ROYALTY_BPS
-                )
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                MASTER_MAX_MINTABLE,
+                MASTER_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 

@@ -19,13 +19,15 @@ contract TestConfig is Test {
     uint32 constant PLATFORM_FEE = 200;
     address constant FUNDING_RECIPIENT = address(99);
     uint32 constant ROYALTY_BPS = 100;
+    uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
+    uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 soundCreator;
     SoundFeeRegistry soundFeeRegistry;
     address soundFeeAddress;
 
     // Set up called before each test
-    function setUp() public {
+    function setUp() public virtual {
         // Deploy SoundEdition implementation
         MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
 
@@ -35,7 +37,7 @@ contract TestConfig is Test {
 
         soundFeeRegistry = new SoundFeeRegistry(soundFeeAddress, PLATFORM_FEE);
 
-        soundCreator = new SoundCreatorV1(address(soundEditionImplementation), soundRegistry, soundFeeRegistry);
+        soundCreator = new SoundCreatorV1(payable(soundEditionImplementation), soundRegistry, soundFeeRegistry);
     }
 
     // Returns a random address funded with ETH
