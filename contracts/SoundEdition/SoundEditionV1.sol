@@ -5,6 +5,7 @@ pragma solidity ^0.8.15;
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
+import "openzeppelin/token/ERC20/IERC20.sol";
 import "solady/utils/SafeTransferLib.sol";
 import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
@@ -118,12 +119,22 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function withdrawAll() external {
+    function withdrawAll(address[] calldata tokens) external {
+        // Transfer ETH
         uint256 balance = address(this).balance;
-        uint256 platformFee = (balance * soundFeeRegistry.platformBPSFee()) / MAX_BPS;
+        uint256 platformFee = _getPlatformFee(balance);
 
         SafeTransferLib.safeTransferETH(soundFeeRegistry.soundFeeAddress(), platformFee);
         SafeTransferLib.safeTransferETH(fundingRecipient, balance - platformFee);
+
+        // Transfer ERC20s
+        for (uint256 i; i < tokens.length; ++i) {
+            balance = IERC20(tokens[i]).balanceOf(address(this));
+            platformFee = _getPlatformFee(balance);
+
+            SafeTransferLib.safeTransfer(tokens[i], soundFeeRegistry.soundFeeAddress(), platformFee);
+            SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, balance - platformFee);
+        }
     }
 
     /// @inheritdoc ISoundEditionV1
@@ -177,6 +188,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     function _verifyBPS(uint32 royalty) internal pure {
         if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
+    }
+
+    function _getPlatformFee(uint256 balance) internal view returns (uint256) {
+        return (balance * soundFeeRegistry.platformBPSFee()) / MAX_BPS;
     }
 
     // ================================

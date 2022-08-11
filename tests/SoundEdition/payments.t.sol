@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "../TestConfig.sol";
+import "../mocks/MockERC20.sol";
 
 contract SoundEdition_payments is TestConfig {
     uint256 constant MAX_BPS = 10_000;
@@ -46,30 +47,61 @@ contract SoundEdition_payments is TestConfig {
         MockSoundEditionV1 edition = _createEdition();
 
         // mint with ETH
-        uint256 primarySales = 10 ether;
-        edition.mint{ value: primarySales }(1);
+        uint256 primaryETHSales = 10 ether;
+        edition.mint{ value: primaryETHSales }(1);
 
-        // secondary royalty
-        uint256 secondarySales = 2 ether;
-        (bool success, ) = address(edition).call{ value: secondarySales }("");
+        // secondary ETH royalty
+        uint256 secondaryETHSales = 2 ether;
+        (bool success, ) = address(edition).call{ value: secondaryETHSales }("");
         require(success);
 
-        uint256 totalSales = primarySales + secondarySales;
+        uint256 totalETHSales = primaryETHSales + secondaryETHSales;
 
-        uint256 preSoundFeeAddressBal = soundFeeAddress.balance;
-        uint256 preFundingRecipitentBal = FUNDING_RECIPIENT.balance;
+        // secondary ERC20 royalties
+        MockERC20 tokenA = new MockERC20();
+        MockERC20 tokenB = new MockERC20();
 
-        edition.withdrawAll();
+        uint256 tokenASales = 1_000 ether;
+        uint256 tokenBSales = 5_000 ether;
 
-        uint256 postSoundFeeAddressBal = soundFeeAddress.balance;
-        uint256 postFundingRecipitentBal = FUNDING_RECIPIENT.balance;
+        tokenA.transfer(address(edition), tokenASales);
+        tokenB.transfer(address(edition), tokenBSales);
 
-        uint256 expectedPlatformFee = (totalSales * PLATFORM_FEE) / MAX_BPS;
-        uint256 expectedSoundFeeAddressBal = preSoundFeeAddressBal + expectedPlatformFee;
-        uint256 expectedFundingRecipitentBal = preFundingRecipitentBal + (totalSales - expectedPlatformFee);
+        // withdraw
+        uint256 preSoundFeeAddressETHBal = soundFeeAddress.balance;
+        uint256 preFundingRecipitentETHBal = FUNDING_RECIPIENT.balance;
 
-        assertEq(postSoundFeeAddressBal, expectedSoundFeeAddressBal);
-        assertEq(postFundingRecipitentBal, expectedFundingRecipitentBal);
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(tokenA);
+        tokens[1] = address(tokenB);
+        edition.withdrawAll(tokens);
+
+        // post balances
+        uint256 postSoundFeeAddressETHBal = soundFeeAddress.balance;
+        uint256 postFundingRecipitentETHBal = FUNDING_RECIPIENT.balance;
+
+        // expected ETH
+        uint256 expectedETHPlatformFee = (totalETHSales * PLATFORM_FEE) / MAX_BPS;
+        uint256 expectedSoundFeeAddressETHBal = preSoundFeeAddressETHBal + expectedETHPlatformFee;
+        uint256 expectedFundingRecipitentETHBal = preFundingRecipitentETHBal + (totalETHSales - expectedETHPlatformFee);
+
+        assertEq(postSoundFeeAddressETHBal, expectedSoundFeeAddressETHBal);
+        assertEq(postFundingRecipitentETHBal, expectedFundingRecipitentETHBal);
+
+        _assertPostTokenBalances(tokens, [tokenASales, tokenBSales]);
+    }
+
+    function _assertPostTokenBalances(address[] memory tokens, uint256[2] memory sales) internal {
+        for (uint256 i; i < tokens.length; i++) {
+            uint256 postSoundFeeAddressTokenBal = MockERC20(tokens[i]).balanceOf(soundFeeAddress);
+            uint256 postFundingRecipitentTokenBal = MockERC20(tokens[i]).balanceOf(FUNDING_RECIPIENT);
+
+            uint256 expectedTokenPlatformFee = (sales[i] * PLATFORM_FEE) / MAX_BPS;
+            uint256 expectedFundingRecipitentTokenBal = (sales[i] - expectedTokenPlatformFee);
+
+            assertEq(postSoundFeeAddressTokenBal, expectedTokenPlatformFee);
+            assertEq(postFundingRecipitentTokenBal, expectedFundingRecipitentTokenBal);
+        }
     }
 
     // ================================

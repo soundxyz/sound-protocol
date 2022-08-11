@@ -116,7 +116,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function setRoyalty(uint32 royaltyBPS) external;
 
     /**
-     * @dev Withdraws collected royalties to the platform and fundingRecipient
+     * @dev Withdraws collected ETH and ERC20 royalties to the platform and fundingRecipient
+     * @param tokens array of ERC20 tokens to withdraw
      */
-    function withdrawAll() external;
+    function withdrawAll(address[] calldata tokens) external;
 }
