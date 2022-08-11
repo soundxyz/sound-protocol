@@ -62,7 +62,7 @@ contract SoundCreatorV1 {
         IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
-        uint32 editionMaxMintable
+        uint32 masterMaxMintable
     ) external returns (address soundEdition) {
         // todo: if signature provided, pass it to SoundRegistry.register();
         // todo: implement module configurations
@@ -77,7 +77,7 @@ contract SoundCreatorV1 {
             metadataModule,
             baseURI,
             contractURI,
-            editionMaxMintable
+            masterMaxMintable
         );
 
         // todo: emit event

@@ -5,7 +5,7 @@ import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
 contract SoundEdition_admin is TestConfig {
-    event EditionMaxMintableSet(uint32 editionMaxMintable);
+    event MasterMaxMintableSet(uint32 masterMaxMintable);
 
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
@@ -142,10 +142,10 @@ contract SoundEdition_admin is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit EditionMaxMintableSet(newMax);
+        emit MasterMaxMintableSet(newMax);
 
         edition.setMaxMintable(newMax);
-        assert(edition.editionMaxMintable() == newMax);
+        assert(edition.masterMaxMintable() == newMax);
 
         /**
          * Admin can set max
@@ -158,10 +158,10 @@ contract SoundEdition_admin is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit EditionMaxMintableSet(newMax);
+        emit MasterMaxMintableSet(newMax);
 
         vm.prank(admin);
         edition.setMaxMintable(newMax);
-        assert(edition.editionMaxMintable() == newMax);
+        assert(edition.masterMaxMintable() == newMax);
     }
 }
