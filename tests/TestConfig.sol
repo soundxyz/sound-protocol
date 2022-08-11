@@ -16,6 +16,7 @@ contract TestConfig is Test {
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
     uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
+    uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 soundCreator;
 
