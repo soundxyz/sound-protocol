@@ -36,6 +36,9 @@ contract MerkleDropMinter is MintControllerBase {
     // Tracking claimed amounts per wallet
     mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
 
+    // Tracking claimed amounts per wallet
+    mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
+
     struct EditionMintData {
         // Hash of the root node for the merkle tree drop
         bytes32 merkleRootHash;
