@@ -6,6 +6,8 @@ import "../contracts/SoundEdition/SoundEditionV1.sol";
 import "../contracts/SoundCreator/SoundCreatorV1.sol";
 
 contract SoundCreatorTests is TestConfig {
+    event SoundCreated(address indexed soundEdition, address indexed creator);
+
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
         SoundEditionV1 soundEditionImplementation = new SoundEditionV1();
@@ -20,6 +22,11 @@ contract SoundCreatorTests is TestConfig {
 
     // Tests that the factory creates a new sound NFT
     function test_createSound() public {
+        // Can't test edition address is emitted from event unless we precalculate it,
+        // but cloneDeterminstic would require a salt (==more gas & complexity)
+        vm.expectEmit(false, true, false, false);
+        emit SoundCreated(address(0), address(this));
+
         SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,

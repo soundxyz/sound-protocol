@@ -38,6 +38,12 @@ import "openzeppelin/proxy/Clones.sol";
  */
 contract SoundCreatorV1 {
     /***********************************
+                EVENTS
+    ***********************************/
+
+    event SoundCreated(address indexed soundEdition, address indexed creator);
+
+    /***********************************
                 STORAGE
     ***********************************/
 
@@ -66,10 +72,6 @@ contract SoundCreatorV1 {
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
     ) external returns (address soundEdition) {
-        // todo: if signature provided, pass it to SoundRegistry.register();
-        // todo: implement module configurations
-
-        // todo: research if we can get any gas savings by using a more minimal version of Clones lib
         soundEdition = Clones.clone(nftImplementation);
 
         ISoundEditionV1(soundEdition).initialize(
@@ -84,6 +86,6 @@ contract SoundCreatorV1 {
             randomnessLockedTimestamp
         );
 
-        // todo: emit event
+        emit SoundCreated(soundEdition, msg.sender);
     }
 }
