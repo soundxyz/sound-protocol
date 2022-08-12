@@ -97,7 +97,7 @@ contract SoundEditionV1 is
         IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
-        uint32 masterMaxMintable_,
+        uint32 editionMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
     ) public initializerERC721A initializer {
@@ -108,7 +108,11 @@ contract SoundEditionV1 is
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
+<<<<<<< HEAD
         editionMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
+=======
+        editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
+>>>>>>> Changes masterMaxMintable to editionMaxMintable
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
 
