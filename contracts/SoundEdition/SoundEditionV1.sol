@@ -60,6 +60,7 @@ contract SoundEditionV1 is
     string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
+    bool public isMintingFrozen;
     uint32 public editionMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
@@ -73,13 +74,14 @@ contract SoundEditionV1 is
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event EditionMaxMintableSet(uint32 editionMaxMintable);
+    event MintingFrozen(uint32 finalTokenCount);
 
     // ================================
     // ERRORS
     // ================================
 
     error MetadataIsFrozen();
+    error MintingIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
     error EditionMaxMintableReached();
@@ -108,11 +110,7 @@ contract SoundEditionV1 is
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
-<<<<<<< HEAD
-        editionMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
-=======
         editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
->>>>>>> Changes masterMaxMintable to editionMaxMintable
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
 
@@ -170,6 +168,18 @@ contract SoundEditionV1 is
 
         isMetadataFrozen = true;
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function freezeMinting() external onlyOwnerOrAdmin {
+        if (isMintingFrozen || _totalMinted() == editionMaxMintable) revert MintingIsFrozen();
+
+        isMintingFrozen = true;
+
+        // Set max mintable to current total minted.
+        editionMaxMintable = uint32(_totalMinted());
+
+        emit MintingFrozen(editionMaxMintable);
     }
 
     /// @inheritdoc ISoundEditionV1

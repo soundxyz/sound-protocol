@@ -6,6 +6,8 @@ import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
 contract SoundEdition_mint is TestConfig {
+    event MintingFrozen(uint32 finalTokenCount);
+
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
@@ -106,5 +108,42 @@ contract SoundEdition_mint is TestConfig {
 
         vm.prank(attacker);
         edition.burn(TOKEN2_ID);
+    }
+
+    function test_freezeMintingSuccessViaOwner() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        edition.mint(address(this), 5);
+
+        vm.expectEmit(false, false, false, true);
+        emit MintingFrozen(5);
+        edition.freezeMinting();
+
+        vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
+        edition.mint(address(this), 1);
+
+        assertEq(edition.isMintingFrozen(), true);
+        assertEq(edition.totalSupply(), 5);
+    }
+
+    function test_freezeMintingSuccessViaAdmin() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        edition.mint(address(this), 5);
+
+        address admin = address(1307073);
+        edition.grantRole(edition.ADMIN_ROLE(), admin);
+
+        vm.expectEmit(false, false, false, true);
+        emit MintingFrozen(5);
+
+        vm.prank(admin);
+        edition.freezeMinting();
+
+        vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
+        edition.mint(address(this), 1);
+
+        assertEq(edition.isMintingFrozen(), true);
+        assertEq(edition.totalSupply(), 5);
     }
 }
