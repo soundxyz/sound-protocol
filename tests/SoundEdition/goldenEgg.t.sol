@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import "openzeppelin/utils/Strings.sol";
 
 import "../TestConfig.sol";
-import "../../contracts/modules/Minters/FixedPricePublicSaleMinter.sol";
+import "../../contracts/modules/Minters/RangeEditionMinter.sol";
 import "../../contracts/modules/Metadata/GoldenEggMetadataModule.sol";
 
 contract SoundEdition_goldenEgg is TestConfig {
@@ -24,11 +24,11 @@ contract SoundEdition_goldenEgg is TestConfig {
         internal
         returns (
             SoundEditionV1 edition,
-            FixedPricePublicSaleMinter minter,
+            RangeEditionMinter minter,
             GoldenEggMetadataModule goldenEggModule
         )
     {
-        minter = new FixedPricePublicSaleMinter();
+        minter = new RangeEditionMinter();
         goldenEggModule = new GoldenEggMetadataModule();
 
         edition = SoundEditionV1(
@@ -46,14 +46,14 @@ contract SoundEdition_goldenEgg is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, MAX_MINTABLE, MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME - 1, END_TIME, 0, MAX_MINTABLE);
     }
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
     function test_getTokenURIBeforeAuctionEnded() external {
         (
             SoundEditionV1 edition,
-            FixedPricePublicSaleMinter minter,
+            RangeEditionMinter minter,
             GoldenEggMetadataModule goldenEggModule
         ) = _createEdition();
 
@@ -72,7 +72,7 @@ contract SoundEdition_goldenEgg is TestConfig {
     function test_getTokenURIAfterMaxMinted() external {
         (
             SoundEditionV1 edition,
-            FixedPricePublicSaleMinter minter,
+            RangeEditionMinter minter,
             GoldenEggMetadataModule goldenEggModule
         ) = _createEdition();
 
@@ -90,7 +90,7 @@ contract SoundEdition_goldenEgg is TestConfig {
     function test_getTokenURIAfterRandomnessLockedTimestamp() external {
         (
             SoundEditionV1 edition,
-            FixedPricePublicSaleMinter minter,
+            RangeEditionMinter minter,
             GoldenEggMetadataModule goldenEggModule
         ) = _createEdition();
 
@@ -111,7 +111,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if setMintRandomnessLock only callable by Edition's owner
     function test_setMintRandomnessRevertsForNonOwner() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter, ) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -125,7 +125,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if setMintRandomnessLock reverts when new value is lower than totalMinted
     function test_setMintRandomnessRevertsForLowValue() external {
-        (SoundEditionV1 edition, FixedPricePublicSaleMinter minter, ) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, ) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -139,7 +139,7 @@ contract SoundEdition_goldenEgg is TestConfig {
     function test_setMintRandomnessLockSuccess() external {
         (
             SoundEditionV1 edition,
-            FixedPricePublicSaleMinter minter,
+            RangeEditionMinter minter,
             GoldenEggMetadataModule goldenEggModule
         ) = _createEdition();
 
@@ -176,7 +176,7 @@ contract SoundEdition_goldenEgg is TestConfig {
     function test_setRandomnessLockedTimestampSuccess() external {
         (
             SoundEditionV1 edition,
-            FixedPricePublicSaleMinter minter,
+            RangeEditionMinter minter,
             GoldenEggMetadataModule goldenEggModule
         ) = _createEdition();
 

@@ -7,7 +7,7 @@ import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/MintControllerBase.sol";
 
 contract MintControllerBaseTests is TestConfig {
-    event MintControllerSet(address indexed edition, uint256 indexed mintId, address indexed controller);
+    event MintControllerSet(address indexed edition, uint256 indexed mintId, address controller);
 
     MockMinter public minter;
 
@@ -144,7 +144,7 @@ contract MintControllerBaseTests is TestConfig {
         uint256 mintId = minter.createEditionMintController(address(edition));
 
         uint256 price = 1;
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, price * 2 - 1, price * 2));
+        vm.expectRevert(MintControllerBase.WrongEtherValue.selector);
         minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, price);
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);

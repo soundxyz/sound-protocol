@@ -13,14 +13,9 @@ contract RangeEditionMinter is MintControllerBase {
     // ================================
 
     /**
-     * The following condition must hold: `startTime` < `closingTime` < `endTime`.
-     */
-    error InvalidTimeRange(uint32 startTime, uint32 closingTime, uint32 endTime);
-
-    /**
      * The following condition must hold: `maxMintableLower` < `maxMintableUpper`.
      */
-    error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
+    error InvalidMaxMintableRange();
 
     // ================================
     // EVENTS
@@ -38,12 +33,10 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableUpper
     );
 
-    event TimeRangeSet(
+    event ClosingTimeSet(
         address indexed edition,
         uint256 indexed mintId,
-        uint32 startTime,
-        uint32 closingTime,
-        uint32 endTime
+        uint32 closingTime
     );
 
     event MaxMintableRangeSet(
@@ -60,14 +53,10 @@ contract RangeEditionMinter is MintControllerBase {
     struct EditionMintData {
         // The price at which each token will be sold, in ETH.
         uint256 price;
-        // Start timestamp of sale (in seconds since unix epoch).
-        uint32 startTime;
         // The timestamp (in seconds since unix epoch) after which the
         // max amount of tokens mintable will drop from
         // `maxMintableUpper` to `maxMintableLower`.
         uint32 closingTime;
-        // End timestamp of sale (in seconds since unix epoch).
-        uint32 endTime;
         // The total number of tokens minted. Includes permissioned mints.
         uint32 totalMinted;
         // The lower limit of the maximum number of tokens that can be minted.
@@ -107,21 +96,19 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition);
+        mintId = _createEditionMintController(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
-        data.startTime = startTime;
         data.closingTime = closingTime;
-        data.endTime = endTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
 
-        if (!(data.startTime < data.closingTime && data.closingTime < data.endTime))
-            revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
+        if (!(startTime < closingTime && closingTime < endTime))
+            revert InvalidTimeRange();
 
-        if (!(data.maxMintableLower < data.maxMintableUpper))
-            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
+        if (!(maxMintableLower < maxMintableUpper))
+            revert InvalidMaxMintableRange();
 
         // prettier-ignore
         emit RangeEditionMintCreated(
@@ -169,8 +156,6 @@ contract RangeEditionMinter is MintControllerBase {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        _requireMintOpen(data.startTime, data.endTime);
-
         uint32 maxMintable;
         if (block.timestamp < data.closingTime) {
             maxMintable = data.maxMintableUpper;
@@ -206,15 +191,15 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 closingTime,
         uint32 endTime
     ) public onlyEditionMintController(edition, mintId) {
+        if (!(startTime < closingTime && closingTime < endTime))
+            revert InvalidTimeRange();
+
+        _setTimeRange(edition, mintId, startTime, endTime);
+
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.startTime = startTime;
         data.closingTime = closingTime;
-        data.endTime = endTime;
 
-        if (!(data.startTime < data.closingTime && data.closingTime < data.endTime))
-            revert InvalidTimeRange(data.startTime, data.closingTime, data.endTime);
-
-        emit TimeRangeSet(edition, mintId, startTime, closingTime, endTime);
+        emit ClosingTimeSet(edition, mintId, closingTime);
     }
 
     /*
@@ -234,7 +219,7 @@ contract RangeEditionMinter is MintControllerBase {
         data.maxMintableUpper = maxMintableUpper;
 
         if (!(data.maxMintableLower < data.maxMintableUpper))
-            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
+            revert InvalidMaxMintableRange();
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
     }
