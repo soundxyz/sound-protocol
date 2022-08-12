@@ -20,11 +20,8 @@ Sound Protocol 2.0 enables creators to permissionlessly deploy gas-efficient min
 - Extended version of the [721a implementation](https://www.azuki.com/erc721a) with `ERC721AQueryable` extension.
 - Implements [EIP-2981 Royalty Standard](https://eips.ethereum.org/EIPS/eip-2981).
 - Implements [EIP-165](https://eips.ethereum.org/EIPS/eip-165).
-- Access control
-  - Implements OpenZeppelin `OwnableUpgradeable` and `AccessControlUpgradeable` (upgradeable versions of each in order to support the proxy's `initialize` function).
-  - Roles can be granted & revoked for addresses. ex: 
-    - Minter contracts must have `MINTER_ROLE`.
-    - Owner-defined admins must have `ADMIN_ROLE`.
+
+Features:
 - Implements "module" contracts that augment or override the base functionality for:
   - Metadata - `tokenURI`.
   - Payments - royalties & withdrawals.
@@ -34,21 +31,22 @@ Sound Protocol 2.0 enables creators to permissionlessly deploy gas-efficient min
   - If `metadataModule` is not present, `tokenURI` uses `baseURI`.
   - Implements `contractURI` (https://docs.opensea.io/docs/contract-level-metadata).
   - Allows freezing of metadata, beyond which the variables can't be modified by `owner`.
+- Payments
+  - `SoundEditionV1.fundingRecipient` - an address that receives all revenue accrued (primary sales & secondary royalty revenue). In the case where the artist is the sole recipient, this is their wallet address. If they are splitting revenue with other parties, this could be an [0xSplits SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) or alternative splitter contract.
+  - Secondary revenue can accrue to to the edition via the `receive` function, or to a separate address (ex: a [SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) set as the `fundingRecipient`).
+  - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
+  - Minter modules can also optionally pay fees to secondary recipients (e.g. developer fee for third-party integrations).
 - Minting
   - The owner, callers with `ADMIN_ROLE`, and callers with `MINTER_ROLE` (e.g. minter modules) can all call `mint`.
   - `SoundEditionV1.maxSupply` - maximum number of tokens that can be minted for the edition.
     - Can be initialized with any value up to `type(uint32).max`.
     - Can be "frozen" by owner or `ADMIN_ROLE` at the current token count to prevent any further minting.
-- Payments & royalties
-  - `SoundEditionV1.fundingRecipient` - an address that receives all revenue accrued (primary sales & secondary royalty revenue). In the case where the artist is the sole recipient, this is their wallet address. If they are splitting revenue with other parties, this could be an [0xSplits SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) or alternative splitter contract.
-  - Secondary revenue can accrue to to the edition via the `receive` function, or to a separate address (ex: a [SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) set as the `fundingRecipient`).
-  - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
-  - Minter modules can also optionally pay fees to secondary recipients (e.g. developer fee for third-party integrations).
-- Golden egg
-  - The Golden Egg is a single token per edition that is randomly selected from the set of minted tokens.
-  - The `mintRandomness` is determined by storing the blockhash of each mint on the edition contract, up until a token quantity threshold or timestamp (whichever comes first). NOTE: The randommness doesn't necessarily need to be used for the golden egg.
-  - `GoldenEggMetadataModule.sol` uses the `mintRandomness` on the edition to return the golden egg token ID.
-
+- Access control
+  - Implements OpenZeppelin `OwnableUpgradeable` and `AccessControlUpgradeable` (upgradeable versions of each in order to support the proxy's `initialize` function).
+  - Roles can be granted & revoked for addresses. ex: 
+    - Minter contracts must have `MINTER_ROLE`.
+    - Owner-defined admins must have `ADMIN_ROLE`.
+- Golden egg - see `GoldenEggMetadataModule.sol` section.
 ### `SoundFeeRegistry.sol` 
 - A contract that exposes a Sound protocol fee used by minter modules to pay a portion of primary sales to Sound.xyz for its services.
 
@@ -56,7 +54,10 @@ Sound Protocol 2.0 enables creators to permissionlessly deploy gas-efficient min
 #### Metadata
 - Metadata modules must implement `IMetadataModule.sol`
 - Current modules: 
-  - `GoldenEggMetadataModule.sol` uses the `mintRandomness` on the edition to return the golden egg token ID.
+  - `GoldenEggMetadataModule.sol`
+    - Uses the `mintRandomness` on the edition to return the golden egg token ID. The Golden Egg is a single token per edition that is randomly selected from the set of minted tokens.
+    - The `mintRandomness` is determined by storing the blockhash of each mint on the edition contract, up until a token quantity threshold or timestamp (whichever comes first). NOTE: The randommness doesn't necessarily need to be used for the golden egg.
+    - `GoldenEggMetadataModule.sol` uses the `mintRandomness` on the edition to return the golden egg token ID.
 
 #### Minter
 - Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
