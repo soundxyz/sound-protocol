@@ -34,7 +34,7 @@ contract MerkleDropMinterTests is TestConfig {
         root = m.getRoot(leaves);
     }
 
-    function _createEditionAndMinter(uint32 _price, uint32 _maxMintable) internal returns (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) {
+    function _createEditionAndMinter(uint32 _price, uint32 _maxMintable, uint32 _maxAllowedPerWallet) internal returns (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) {
         edition = SoundEditionV1(
             soundCreator.createSound(
                 SONG_NAME,
@@ -51,11 +51,11 @@ contract MerkleDropMinterTests is TestConfig {
 
         minter = new MerkleDropMinter();
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
-        mintId = minter.createEditionMint(address(edition), root, _price, START_TIME, END_TIME, _maxMintable);
+        mintId = minter.createEditionMint(address(edition), root, _price, START_TIME, END_TIME, _maxMintable, _maxAllowedPerWallet);
     }
 
     function test_canSuccessfullyMintWhenEligible() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 0);
         bytes32[] memory proof = m.getProof(leaves, 0);
 
         // Test we can verify proof using OZ MerkleProof lib, used by the minter
@@ -74,7 +74,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_canMintMultipleTimesLessThanEligibleAmount() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 0);
         bytes32[] memory proof = m.getProof(leaves, 1);
 
         uint256 user1Balance = edition.balanceOf(accounts[1]);
@@ -98,7 +98,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimMoreThanEligible() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 0);
         bytes32[] memory proof = m.getProof(leaves, 0);
 
         vm.warp(START_TIME);
@@ -111,7 +111,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimMoreThanMaxMintable() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 2);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 2, 0);
         bytes32[] memory proof = m.getProof(leaves, 2);
 
         vm.warp(START_TIME);
@@ -123,7 +123,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimWithInvalidProof() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 0);
         bytes32[] memory proof = m.getProof(leaves, 1);
 
         vm.warp(START_TIME);
@@ -135,7 +135,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_canGetClaimedAmountForWallet() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 0);
         bytes32[] memory proof = m.getProof(leaves, 0);
 
         vm.warp(START_TIME);
@@ -146,5 +146,39 @@ contract MerkleDropMinterTests is TestConfig {
 
         uint256 claimedAmount = minter.getClaimed(address(edition), mintId, accounts[0]);
         assertEq(claimedAmount, 1);
+    }
+
+    function test_cannotMintWhenOverMaxAllowedPerWallet() public {
+        // Create a minter with overall maximum limit of 6 tokens and per wallet limit of 1
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, 1);
+        bytes32[] memory proof = m.getProof(leaves, 1);
+
+        vm.warp(START_TIME);
+
+        // Try to claim 2 of the 2 eligible tokens. This is more than the allowed 1 and test it reverts.
+        uint32 eligibleQuantity = 2;
+        uint32 requestedQuantity = 2;
+        vm.prank(accounts[1]);
+        vm.expectRevert(MerkleDropMinter.ExceedsMaxPerWallet.selector);
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
+    }
+
+    function test_canMintUpToMinterMaximumWhenNoPerWalletMaximumIsSet() public {
+        // Create a minter with overall maximum limit of 2 tokens and per wallet limit not set (i.e. set to 0)
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 2, 0);
+        bytes32[] memory proof = m.getProof(leaves, 1);
+
+        vm.warp(START_TIME);
+
+        uint256 user1Balance = edition.balanceOf(accounts[1]);
+        assertEq(user1Balance, 0);
+        // Try to claim 2 of the 2 eligible tokens. This is more than the allowed 1 and test it reverts.
+        uint32 eligibleQuantity = 2;
+        uint32 requestedQuantity = 2;
+        vm.prank(accounts[1]);
+        minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
+
+        user1Balance = edition.balanceOf(accounts[1]);
+        assertEq(user1Balance, 2);
     }
 }
