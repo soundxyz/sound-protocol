@@ -15,6 +15,21 @@ contract MintersIntegration is TestConfig {
     uint32 public constant START_TIME_PUBLIC_SALE = START_TIME_PRESALE + 1 days;
     uint32 public constant END_TIME_PUBLIC_SALE = START_TIME_PUBLIC_SALE + 1 days;
 
+    // Free drop constant properties
+    uint256 PRICE_FREE_DROP = 0;
+    uint32 MINTER_MAX_MINTABLE_FREE_DROP = 100;
+    uint32 MAX_ALLOWED_PER_WALLET = 0; // There is no per wallet limit set on the free sale.
+
+    // Presale constant properties
+    uint256 PRICE_PRESALE = 50000000 gwei; // Price is 0.05 ETH
+    uint32 MINTER_MAX_MINTABLE_PRESALE = 45;
+    uint32 MAX_ALLOWED_PER_WALLET_PRESALE = 25; // There is a 25 tokens per wallet limit set on the presale.
+
+    // Public sale constant properties
+    uint256 PRICE_PUBLIC_SALE = 100000000000000000; // Price is 0.1 ETH
+    uint32 MINTER_MAX_MINTABLE_PUBLIC_SALE = 700;
+    uint32 MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 50;
+
     address[] public userAccounts = [
       getRandomAccount(1), // User 1 - participate in free drop
       getRandomAccount(2), // User 2 - participate in free drop
@@ -51,30 +66,21 @@ contract MintersIntegration is TestConfig {
       - Public Sale: executed as 1 day long public sale
     */
     function test_Glasshouse() public {
-      run_FreeAirdrop();
-      run_Presale();
-      run_PublicSale();
-    }
+        uint32 MASTER_MAX_MINTABLE = 1000;
+        // Setup Glass house sound edition
+        edition = SoundEditionV1(
+              soundCreator.createSound(
+                  "Glass House",
+                  "GLASS",
+                  METADATA_MODULE,
+                  BASE_URI,
+                  CONTRACT_URI,
+                  MASTER_MAX_MINTABLE,
+                  MASTER_MAX_MINTABLE,
+                  RANDOMNESS_LOCKED_TIMESTAMP)
+          );
 
-    function run_FreeAirdrop() public {
-      uint32 MASTER_MAX_MINTABLE = 1000;
-
-      // Setup Glass house sound edition
-      edition = SoundEditionV1(
-            soundCreator.createSound(
-                "Glass House",
-                "GLASS",
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP)
-        );
-
-        // START THE FREE DROP
-        vm.warp(START_TIME_FREE_DROP);
-
+        // Setup the FREE MINT
         // Setup the free mint for 2 accounts able to claim 100 tokens in total.
         address[] memory accountsFreeMerkleDrop = new address[](2);
         accountsFreeMerkleDrop[0] = userAccounts[0];
@@ -86,15 +92,12 @@ contract MintersIntegration is TestConfig {
         eligibleAmountsFreeMerkleDrop[1] = uint32(70);
 
         // Setup the Merkle tree
-        (Merkle m, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(address(edition), accountsFreeMerkleDrop, eligibleAmountsFreeMerkleDrop);
+        (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(address(edition), accountsFreeMerkleDrop, eligibleAmountsFreeMerkleDrop);
 
         MerkleDropMinter freeMerkleDropMinter = new MerkleDropMinter();
         edition.grantRole(edition.MINTER_ROLE(), address(freeMerkleDropMinter));
 
-        uint256 PRICE_FREE_DROP = 0;
-        uint32 MINTER_MAX_MINTABLE_FREE_DROP = 100;
-        uint32 MAX_ALLOWED_PER_WALLET = 0; // There is no per wallet limit set on the free sale.
-        bytes32 root = m.getRoot(leavesFreeMerkleDrop);
+        bytes32 root = merkleFreeDrop.getRoot(leavesFreeMerkleDrop);
         uint256 mintId = freeMerkleDropMinter.createEditionMint(
           address(edition),
           root,
@@ -105,38 +108,8 @@ contract MintersIntegration is TestConfig {
           MAX_ALLOWED_PER_WALLET
         );
 
-        // Check user has no tokens
-        uint256 user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
-        assertEq(user0Balance, 0);
-        // Claim 20 of 30 eligible tokens
-        bytes32[] memory proof0 = m.getProof(leavesFreeMerkleDrop, 0);
-        vm.prank(accountsFreeMerkleDrop[0]);
-        freeMerkleDropMinter.mint(address(edition), mintId, 30, 20, proof0);
-        user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
-        assertEq(user0Balance, 20);
-
-        // Check user 1 has no tokens
-        bytes32[] memory proof1 = m.getProof(leavesFreeMerkleDrop, 1);
-        uint256 user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
-        assertEq(user1Balance, 0);
-        // Claim all 70 eligible tokens
-        vm.prank(accountsFreeMerkleDrop[1]);
-        freeMerkleDropMinter.mint(address(edition), mintId, 70, 70, proof1);
-        user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
-        assertEq(user1Balance, 70);
-
-        // User 0 comes back to claim 5 more tokens of the 10 remaining eligible quantity
-        vm.prank(accountsFreeMerkleDrop[0]);
-        freeMerkleDropMinter.mint(address(edition), mintId, 30, 5, proof0);
-        user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
-        assertEq(user0Balance, 25);
-
-        // END FREE DROP, START PRESALE
-        vm.warp(START_TIME_PRESALE);
-    }
-
-    function run_Presale() public {
-        // Setup the presale for 2 accounts able to claim 45 tokens in total.
+      // SETUP THE PRESALE
+      // Setup the presale for 2 accounts able to claim 45 tokens in total.
         address[] memory accountsPresale = new address[](2);
         accountsPresale[0] = userAccounts[2];
         accountsPresale[1] = userAccounts[3];
@@ -158,11 +131,8 @@ contract MintersIntegration is TestConfig {
         MerkleDropMinter presaleMerkleDropMinter = new MerkleDropMinter();
         edition.grantRole(edition.MINTER_ROLE(), address(presaleMerkleDropMinter));
 
-        uint256 PRICE_PRESALE = 50000000000000000; // Price is 0.05 ETH
-        uint32 MINTER_MAX_MINTABLE_PRESALE = 45;
-        uint32 MAX_ALLOWED_PER_WALLET_PRESALE = 25; // There is a 25 tokens per wallet limit set on the presale.
-        bytes32 root = mPresale.getRoot(leavesPresale);
-        uint256 mintId = presaleMerkleDropMinter.createEditionMint(
+        root = mPresale.getRoot(leavesPresale);
+        mintId = presaleMerkleDropMinter.createEditionMint(
           address(edition),
           root,
           PRICE_PRESALE,
@@ -172,6 +142,58 @@ contract MintersIntegration is TestConfig {
           MAX_ALLOWED_PER_WALLET_PRESALE
         );
 
+      // SETUP PUBLIC SALE
+      FixedPricePublicSaleMinter publicSaleMinter = new FixedPricePublicSaleMinter();
+      edition.grantRole(edition.MINTER_ROLE(), address(publicSaleMinter));
+      mintId = publicSaleMinter.createEditionMint(
+          address(edition),
+          PRICE_PUBLIC_SALE,
+          START_TIME_PUBLIC_SALE,
+          END_TIME_PUBLIC_SALE,
+          MINTER_MAX_MINTABLE_PUBLIC_SALE,
+          MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+        );
+
+      run_FreeAirdrop(accountsFreeMerkleDrop, leavesFreeMerkleDrop, freeMerkleDropMinter, merkleFreeDrop, mintId);
+      run_Presale(accountsPresale, leavesPresale, presaleMerkleDropMinter, mPresale, mintId);
+      run_PublicSale(publicSaleMinter, mintId);
+    }
+
+    function run_FreeAirdrop(address[] memory accountsFreeMerkleDrop, bytes32[] memory leavesFreeMerkleDrop, MerkleDropMinter freeMerkleDropMinter, Merkle merkleFreeDrop, uint256 mintId) public {
+        // START THE FREE DROP
+        vm.warp(START_TIME_FREE_DROP);
+
+        // Check user has no tokens
+        uint256 user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
+        assertEq(user0Balance, 0);
+        // Claim 20 of 30 eligible tokens
+        bytes32[] memory proof0 = merkleFreeDrop.getProof(leavesFreeMerkleDrop, 0);
+        vm.prank(accountsFreeMerkleDrop[0]);
+        freeMerkleDropMinter.mint(address(edition), mintId, 30, 20, proof0);
+        user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
+        assertEq(user0Balance, 20);
+
+        // Check user 1 has no tokens
+        bytes32[] memory proof1 = merkleFreeDrop.getProof(leavesFreeMerkleDrop, 1);
+        uint256 user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
+        assertEq(user1Balance, 0);
+        // Claim all 70 eligible tokens
+        vm.prank(accountsFreeMerkleDrop[1]);
+        freeMerkleDropMinter.mint(address(edition), mintId, 70, 70, proof1);
+        user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
+        assertEq(user1Balance, 70);
+
+        // User 0 comes back to claim 5 more tokens of the 10 remaining eligible quantity
+        vm.prank(accountsFreeMerkleDrop[0]);
+        freeMerkleDropMinter.mint(address(edition), mintId, 30, 5, proof0);
+        user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
+        assertEq(user0Balance, 25);
+
+        // END FREE DROP, START PRESALE
+        vm.warp(START_TIME_PRESALE);
+    }
+
+    function run_Presale(address[] memory accountsPresale, bytes32[] memory leavesPresale, MerkleDropMinter presaleMerkleDropMinter, Merkle mPresale, uint256 mintId) public {
         // Check user 0 has no tokens
         uint256 user0Balance = edition.balanceOf(accountsPresale[0]);
         assertEq(user0Balance, 0);
@@ -196,28 +218,13 @@ contract MintersIntegration is TestConfig {
         vm.warp(START_TIME_PUBLIC_SALE);
     }
 
-    function run_PublicSale() public {
-        uint256 PRICE_PUBLIC_SALE = 100000000000000000; // Price is 0.1 ETH
-        uint32 MINTER_MAX_MINTABLE_PUBLIC_SALE = 700;
-        uint32 MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 50;
-
-        FixedPricePublicSaleMinter minter = new FixedPricePublicSaleMinter();
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
-        uint256 mintId = minter.createEditionMint(
-          address(edition),
-          PRICE_PUBLIC_SALE,
-          START_TIME_PUBLIC_SALE,
-          END_TIME_PUBLIC_SALE,
-          MINTER_MAX_MINTABLE_PUBLIC_SALE,
-          MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
-        );
-
+    function run_PublicSale(FixedPricePublicSaleMinter publicSaleMinter, uint256 mintId) public {
         // Check user 5 has no tokens
         uint256 user5Balance = edition.balanceOf(userAccounts[4]);
         assertEq(user5Balance, 0);
         // Mint 5 tokens
         vm.prank(userAccounts[4]);
-        minter.mint{ value: 5 * PRICE_PUBLIC_SALE }(address(edition), mintId, 5);
+        publicSaleMinter.mint{ value: 5 * PRICE_PUBLIC_SALE }(address(edition), mintId, 5);
         user5Balance = edition.balanceOf(userAccounts[4]);
         assertEq(user5Balance, 5);
 
@@ -226,7 +233,7 @@ contract MintersIntegration is TestConfig {
         assertEq(user6Balance, 0);
         // Claim maximum allowed tokens
         vm.prank(userAccounts[5]);
-        minter.mint{ value: MAX_ALLOWED_PER_WALLET_PUBLIC_SALE * PRICE_PUBLIC_SALE }(address(edition), mintId, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
+        publicSaleMinter.mint{ value: MAX_ALLOWED_PER_WALLET_PUBLIC_SALE * PRICE_PUBLIC_SALE }(address(edition), mintId, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
         user6Balance = edition.balanceOf(userAccounts[5]);
         assertEq(user6Balance, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
 
