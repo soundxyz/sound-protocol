@@ -10,16 +10,16 @@ import "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {
     // Artist contract creation vars
-    string public constant SONG_NAME = "Never Gonna Give You Up";
-    string public constant SONG_SYMBOL = "NEVER";
-    IMetadataModule public constant METADATA_MODULE = IMetadataModule(address(0));
-    string public constant BASE_URI = "https://example.com/metadata/";
-    string public constant CONTRACT_URI = "https://example.com/storefront/";
+    string constant SONG_NAME = "Never Gonna Give You Up";
+    string constant SONG_SYMBOL = "NEVER";
+    IMetadataModule constant METADATA_MODULE = IMetadataModule(address(390720730));
+    string constant BASE_URI = "https://example.com/metadata/";
+    string constant CONTRACT_URI = "https://example.com/storefront/";
     address public constant ARTIST_ADMIN = address(8888888888);
-    uint32 public constant MASTER_MAX_MINTABLE = type(uint32).max;
-    uint32 public constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
+    uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
+    uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
-    SoundCreatorV1 public soundCreator;
+    SoundCreatorV1 soundCreator;
 
     // Set up called before each test
     function setUp() public virtual {

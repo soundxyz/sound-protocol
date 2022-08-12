@@ -32,8 +32,11 @@ contract SoundEdition_metadata is TestConfig {
         );
     }
 
-    function _createEditionWithMetadata() internal returns (MockSoundEditionV1 soundEdition) {
-        MockMetadataModule metadataModule = new MockMetadataModule();
+    function _createEditionWithMetadata()
+        internal
+        returns (MockSoundEditionV1 soundEdition, MockMetadataModule metadataModule)
+    {
+        metadataModule = new MockMetadataModule();
 
         // deploy new sound contract
         soundEdition = MockSoundEditionV1(
@@ -71,7 +74,7 @@ contract SoundEdition_metadata is TestConfig {
 
     // Generate tokenURI using the metadata module
     function test_metadataModule() public {
-        MockSoundEditionV1 soundEdition = _createEditionWithMetadata();
+        (MockSoundEditionV1 soundEdition, ) = _createEditionWithMetadata();
 
         // mint NFTs
         soundEdition.mint(2);
@@ -330,10 +333,10 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_freezeMetadataEmitsEvent() public {
-        MockSoundEditionV1 soundEdition = _createEdition();
+        (MockSoundEditionV1 soundEdition, IMetadataModule metadataModule) = _createEditionWithMetadata();
 
         vm.expectEmit(false, false, false, true);
-        emit MetadataFrozen(METADATA_MODULE, BASE_URI, CONTRACT_URI);
+        emit MetadataFrozen(metadataModule, BASE_URI, CONTRACT_URI);
         soundEdition.freezeMetadata();
     }
 }
