@@ -43,6 +43,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // CONSTANTS
     // ================================
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     // ================================
     // STORAGE
@@ -65,6 +66,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
+    event MasterMaxMintableSet(uint32 masterMaxMintable);
 
     // ================================
     // ERRORS
@@ -73,7 +75,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     error MetadataIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error MaxSupplyReached();
+    error MasterMaxMintableReached();
+    error InvalidAmount();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -112,17 +115,22 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
-        if (_totalMinted() + quantity > masterMaxMintable) revert MaxSupplyReached();
+    function mint(address to, uint256 quantity) public payable {
+        address caller = _msgSender();
+        // Only allow calls if caller has minter role, admin role, or is the owner.
+        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
+        // Check if max supply has been reached.
+        if (_totalMinted() + quantity > masterMaxMintable) revert MasterMaxMintableReached();
+        // Mint the tokens.
         _mint(to, quantity);
-
+        // Set randomness
         if (_totalMinted() <= randomnessLockedAfterMinted && block.timestamp <= randomnessLockedTimestamp) {
             mintRandomness = blockhash(block.number - 1);
         }
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwner {
+    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
 
@@ -130,7 +138,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setBaseURI(string memory baseURI_) external onlyOwner {
+    function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
 
@@ -138,7 +146,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setContractURI(string memory contractURI_) external onlyOwner {
+    function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
 
@@ -146,7 +154,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function freezeMetadata() external onlyOwner {
+    function freezeMetadata() external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
         isMetadataFrozen = true;
@@ -163,6 +171,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     /// @inheritdoc ISoundEditionV1
     function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwner {
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
+    }
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    modifier onlyOwnerOrAdmin() {
+        if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
+        _;
     }
 
     // ================================

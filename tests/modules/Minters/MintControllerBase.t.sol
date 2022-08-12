@@ -4,7 +4,6 @@ import "../../TestConfig.sol";
 import "../../mocks/MockMinter.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minters/MintControllerBase.sol";
 
 contract MintControllerBaseTests is TestConfig {
     event MintControllerSet(address indexed edition, uint256 indexed mintId, address controller);
@@ -197,7 +196,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.mint(address(edition1), mintId1, maxSupply, 0);
 
         // try minting 1 more
-        vm.expectRevert(SoundEditionV1.MaxSupplyReached.selector);
+        vm.expectRevert(SoundEditionV1.MasterMaxMintableReached.selector);
         minter.mint(address(edition1), mintId1, 1, 0);
     }
 }

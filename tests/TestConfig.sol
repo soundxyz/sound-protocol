@@ -12,9 +12,10 @@ contract TestConfig is Test {
     // Artist contract creation vars
     string constant SONG_NAME = "Never Gonna Give You Up";
     string constant SONG_SYMBOL = "NEVER";
-    IMetadataModule constant METADATA_MODULE = IMetadataModule(address(0));
+    IMetadataModule constant METADATA_MODULE = IMetadataModule(address(390720730));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
+    address public constant ARTIST_ADMIN = address(8888888888);
     uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 

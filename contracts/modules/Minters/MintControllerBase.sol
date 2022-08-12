@@ -57,6 +57,11 @@ abstract contract MintControllerBase {
      */
     error InvalidTimeRange();
 
+    /**
+     * Unauthorized caller
+     */
+    error Unauthorized();
+
     // ================================
     // EVENTS
     // ================================
