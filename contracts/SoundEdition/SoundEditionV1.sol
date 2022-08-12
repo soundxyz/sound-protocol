@@ -180,7 +180,7 @@ contract SoundEditionV1 is
 
     /// @inheritdoc ISoundEditionV1
     function freezeMinting() external onlyOwnerOrAdmin {
-        if (isMintingFrozen == true || _totalMinted() == editionMaxMintable) revert MintingIsFrozen();
+        if (isMintingFrozen == true) revert MintingIsFrozen();
 
         isMintingFrozen = true;
 
