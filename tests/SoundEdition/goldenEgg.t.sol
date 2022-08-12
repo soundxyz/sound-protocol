@@ -119,7 +119,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         edition.setMintRandomnessLock(quantity);
     }
 
@@ -135,8 +135,8 @@ contract SoundEdition_goldenEgg is TestConfig {
         edition.setMintRandomnessLock(quantity - 1);
     }
 
-    // Test when lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
-    function test_setMintRandomnessLockSuccess() external {
+    // Test when owner lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
+    function test_setMintRandomnessLockViaOwnerSuccess() external {
         (
             SoundEditionV1 edition,
             FixedPricePublicSaleMinter minter,
@@ -158,6 +158,33 @@ contract SoundEdition_goldenEgg is TestConfig {
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
     }
 
+    // Test when admin lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
+    function test_setMintRandomnessLockViaAdminSuccess() external {
+        (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        ) = _createEdition();
+
+        address admin = address(789);
+        edition.grantRole(edition.ADMIN_ROLE(), admin);
+
+        vm.warp(START_TIME);
+        uint32 quantity = MAX_MINTABLE - 1;
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
+
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        // golden egg not generated
+        assertEq(goldenEggTokenId, 0);
+
+        vm.prank(admin);
+        edition.setMintRandomnessLock(quantity);
+
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
+        assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
+    }
+
     // ================================
     // setRandomnessLockedTimestamp()
     // ================================
@@ -168,12 +195,12 @@ contract SoundEdition_goldenEgg is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         edition.setRandomnessLockedTimestamp(START_TIME);
     }
 
-    // Test when lowering randomnessLockedTimestamp, it generates the golden egg
-    function test_setRandomnessLockedTimestampSuccess() external {
+    // Test when owner lowering randomnessLockedTimestamp, it generates the golden egg
+    function test_setRandomnessLockedTimestampViaOwnerSuccess() external {
         (
             SoundEditionV1 edition,
             FixedPricePublicSaleMinter minter,
@@ -190,6 +217,36 @@ contract SoundEdition_goldenEgg is TestConfig {
 
         uint32 newTimestamp = END_TIME - 1;
         vm.warp(newTimestamp);
+        edition.setRandomnessLockedTimestamp(newTimestamp);
+
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
+        assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
+    }
+
+    // Test when admin lowering randomnessLockedTimestamp, it generates the golden egg
+    function test_setRandomnessLockedTimestampViaAdminSuccess() external {
+        (
+            SoundEditionV1 edition,
+            FixedPricePublicSaleMinter minter,
+            GoldenEggMetadataModule goldenEggModule
+        ) = _createEdition();
+
+        address admin = address(789);
+        edition.grantRole(edition.ADMIN_ROLE(), admin);
+
+        vm.warp(START_TIME);
+        uint32 quantity = MAX_MINTABLE - 1;
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
+
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        // golden egg not generated
+        assertEq(goldenEggTokenId, 0);
+
+        uint32 newTimestamp = END_TIME - 1;
+        vm.warp(newTimestamp);
+
+        vm.prank(admin);
         edition.setRandomnessLockedTimestamp(newTimestamp);
 
         goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
