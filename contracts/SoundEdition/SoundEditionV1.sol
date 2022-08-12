@@ -162,14 +162,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwner {
+    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
         if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
 
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwner {
+    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
     }
 
