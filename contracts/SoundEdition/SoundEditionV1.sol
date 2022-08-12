@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.16;
 
+// import "forge-std/Test.sol";
+
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
@@ -74,7 +76,7 @@ contract SoundEditionV1 is
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event MintingFrozen(uint32 finalTokenCount);
+    event MintingFrozen(uint256 finalMintedCount);
 
     // ================================
     // ERRORS
@@ -126,15 +128,21 @@ contract SoundEditionV1 is
     /// @inheritdoc ISoundEditionV1
     function mint(address to, uint256 quantity) public payable {
         address caller = _msgSender();
+        uint256 newTotal = _totalMinted() + quantity;
         // Only allow calls if caller has minter role, admin role, or is the owner.
         if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
         // Check if max supply has been reached.
-        if (_totalMinted() + quantity > editionMaxMintable) revert EditionMaxMintableReached();
+        if (newTotal > editionMaxMintable) revert EditionMaxMintableReached();
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
         if (_totalMinted() <= randomnessLockedAfterMinted && block.timestamp <= randomnessLockedTimestamp) {
             mintRandomness = blockhash(block.number - 1);
+        }
+        // Freeze minting if we've reached the max
+        if (newTotal == editionMaxMintable) {
+            isMintingFrozen = true;
+            emit MintingFrozen(newTotal);
         }
     }
 
@@ -172,14 +180,14 @@ contract SoundEditionV1 is
 
     /// @inheritdoc ISoundEditionV1
     function freezeMinting() external onlyOwnerOrAdmin {
-        if (isMintingFrozen || _totalMinted() == editionMaxMintable) revert MintingIsFrozen();
+        if (isMintingFrozen == true || _totalMinted() == editionMaxMintable) revert MintingIsFrozen();
 
         isMintingFrozen = true;
 
         // Set max mintable to current total minted.
         editionMaxMintable = uint32(_totalMinted());
 
-        emit MintingFrozen(editionMaxMintable);
+        emit MintingFrozen(uint256(editionMaxMintable));
     }
 
     /// @inheritdoc ISoundEditionV1

@@ -5,6 +5,9 @@ import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
 import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
+/**
+ * @dev Tests base minting functionality directly from edition.
+ */
 contract SoundEdition_mint is TestConfig {
     event MintingFrozen(uint32 finalTokenCount);
 
@@ -112,30 +115,32 @@ contract SoundEdition_mint is TestConfig {
 
     function test_freezeMintingSuccessViaOwner() external {
         SoundEditionV1 edition = createGenericEdition();
+        uint32 editionMaxMintable = 2;
 
-        edition.mint(address(this), 5);
+        edition.mint(address(this), editionMaxMintable);
 
         vm.expectEmit(false, false, false, true);
-        emit MintingFrozen(5);
+        emit MintingFrozen(editionMaxMintable);
         edition.freezeMinting();
 
         vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
         edition.mint(address(this), 1);
 
         assertEq(edition.isMintingFrozen(), true);
-        assertEq(edition.totalSupply(), 5);
+        assertEq(edition.totalMinted(), editionMaxMintable);
     }
 
     function test_freezeMintingSuccessViaAdmin() external {
         SoundEditionV1 edition = createGenericEdition();
+        uint32 editionMaxMintable = 2;
 
-        edition.mint(address(this), 5);
+        edition.mint(address(this), editionMaxMintable);
 
         address admin = address(1307073);
         edition.grantRole(edition.ADMIN_ROLE(), admin);
 
         vm.expectEmit(false, false, false, true);
-        emit MintingFrozen(5);
+        emit MintingFrozen(editionMaxMintable);
 
         vm.prank(admin);
         edition.freezeMinting();
@@ -144,6 +149,39 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(address(this), 1);
 
         assertEq(edition.isMintingFrozen(), true);
-        assertEq(edition.totalSupply(), 5);
+        assertEq(edition.totalMinted(), editionMaxMintable);
+    }
+
+    function test_editionFreezesWhenEditionMaxMintableReached() external {
+        uint32 editionMaxMintable = 2;
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                editionMaxMintable,
+                editionMaxMintable,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
+
+        // First mint succeeds
+        edition.mint(address(this), 1);
+
+        vm.expectEmit(false, false, false, true);
+        emit MintingFrozen(2);
+
+        // Next mint should emit freeze event
+        edition.mint(address(this), 1);
+
+        // Additional mints should error
+        vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
+        edition.mint(address(this), 1);
+
+        assertEq(edition.isMintingFrozen(), true);
+        assertEq(edition.totalMinted(), 2);
     }
 }
