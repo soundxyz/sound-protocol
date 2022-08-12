@@ -44,19 +44,26 @@ Sound Protocol 2.0 enables creators to permissinonlessly deploy gas-efficient mi
   - Secondary revenue can accrue to to the edition via the `receive` function, or to a separate address (ex: a [SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) set as the `fundingRecipient`).
   - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
   - Minter modules can also optionally pay fees to secondary recipients (e.g. developer fee for third-party integrations).
+- Golden egg
+  - The Golden Egg is a single token per edition that is randomly selected from the set of minted tokens.
+  - The `mintRandomness` is determined by storing the blockhash of each mint on the edition contract, up until a token quantity threshold or timestamp (whichever comes first). NOTE: The randommness doesn't necessarily need to be used for the golden egg.
+  - `GoldenEggMetadataModule.sol` uses the `mintRandomness` on the edition to return the golden egg token ID.
 
 ### `SoundFeeRegistry.sol` 
 - A contract that exposes a Sound protocol fee used by minter modules to pay a portion of primary sales to Sound.xyz for its services.
 
 ### Sound Modules
 #### Metadata
-  - Metadata modules must implement `IMetadataModule.sol`
-  - No implementations included in V1.
+- Metadata modules must implement `IMetadataModule.sol`
+- Current modules: 
+  - `GoldenEggMetadataModule.sol` uses the `mintRandomness` on the edition to return the golden egg token ID.
+
 #### Minter
 - Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
 - Minter modules must inherit `MintControllerBase.sol`
 - Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.maxSupply`. It is up to the artist to initialize the `maxSupply` with a value high enough to accomodate all current & future mints.
-- Referall fee: TODO
+- Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
+- Referral fee: TODO
 - Current modules:
   - `FixedPricePublicSaleMinter` - Mints tokens at a fixed price.
   - `FixedPricePermissionedSaleMinter` - Mints tokens at a fixed price for buyers approved to buy via signature verification.
