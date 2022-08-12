@@ -52,6 +52,9 @@ abstract contract MintControllerBase {
      */
     error CallerNotEditionOwner();
 
+    /// @dev Unauthorized caller
+    error Unauthorized();
+
     // ================================
     // EVENTS
     // ================================
