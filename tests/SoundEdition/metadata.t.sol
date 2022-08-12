@@ -25,8 +25,8 @@ contract SoundEdition_metadata is TestConfig {
                 IMetadataModule(address(0)),
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
@@ -46,8 +46,8 @@ contract SoundEdition_metadata is TestConfig {
                 metadataModule,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );

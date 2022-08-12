@@ -62,7 +62,7 @@ contract SoundCreatorV1 {
         IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
-        uint32 masterMaxMintable,
+        uint32 editionMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
     ) external returns (address soundEdition) {
@@ -79,7 +79,7 @@ contract SoundCreatorV1 {
             metadataModule,
             baseURI,
             contractURI,
-            masterMaxMintable,
+            editionMaxMintable,
             randomnessLockedAfterMinted,
             randomnessLockedTimestamp
         );

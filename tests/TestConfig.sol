@@ -16,7 +16,7 @@ contract TestConfig is Test {
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
     address public constant ARTIST_ADMIN = address(8888888888);
-    uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
+    uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 soundCreator;
@@ -39,5 +39,21 @@ contract TestConfig is Test {
         vm.deal(addr, 1e19);
 
         return addr;
+    }
+
+    function createGenericEdition() public returns (SoundEditionV1) {
+        return
+            SoundEditionV1(
+                soundCreator.createSound(
+                    SONG_NAME,
+                    SONG_SYMBOL,
+                    METADATA_MODULE,
+                    BASE_URI,
+                    CONTRACT_URI,
+                    EDITION_MAX_MINTABLE,
+                    EDITION_MAX_MINTABLE,
+                    RANDOMNESS_LOCKED_TIMESTAMP
+                )
+            );
     }
 }

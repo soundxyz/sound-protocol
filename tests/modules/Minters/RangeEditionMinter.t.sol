@@ -49,18 +49,7 @@ contract RangeEditionMinterTests is TestConfig {
     );
 
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, RangeEditionMinter minter) {
-        edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MAX_MINTABLE_UPPER,
-                MASTER_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        edition = createGenericEdition();
 
         minter = new RangeEditionMinter();
 
@@ -93,7 +82,7 @@ contract RangeEditionMinterTests is TestConfig {
                 BASE_URI,
                 CONTRACT_URI,
                 MAX_MINTABLE_UPPER,
-                MASTER_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
@@ -332,18 +321,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
     function setUp() public override {
         super.setUp();
 
-        edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MAX_MINTABLE_UPPER,
-                MASTER_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        edition = createGenericEdition();
 
         minter = new RangeEditionMinter();
 
