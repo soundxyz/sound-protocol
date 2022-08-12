@@ -11,12 +11,10 @@ contract SoundCreatorTests is TestConfig {
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
         SoundEditionV1 soundEditionImplementation = new SoundEditionV1();
-        address soundRegistry = address(123);
-        SoundCreatorV1 _soundCreator = new SoundCreatorV1(address(soundEditionImplementation), soundRegistry);
+        SoundCreatorV1 _soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
 
         assert(address(_soundCreator) != address(0));
 
-        assertEq(address(_soundCreator.soundRegistry()), soundRegistry);
         assertEq(address(_soundCreator.nftImplementation()), address(soundEditionImplementation));
     }
 

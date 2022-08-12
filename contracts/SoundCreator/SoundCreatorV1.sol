@@ -48,15 +48,13 @@ contract SoundCreatorV1 {
     ***********************************/
 
     address public nftImplementation;
-    address public soundRegistry;
 
     /***********************************
               PUBLIC FUNCTIONS
     ***********************************/
 
-    constructor(address _nftImplementation, address _soundRegistry) {
+    constructor(address _nftImplementation) {
         nftImplementation = _nftImplementation;
-        soundRegistry = _soundRegistry;
     }
 
     /**
