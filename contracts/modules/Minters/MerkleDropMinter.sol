@@ -29,12 +29,9 @@ contract MerkleDropMinter is MintControllerBase {
     error ExceedsEligibleQuantity();
 
     error InvalidMerkleProof();
-    
+
     // The number of tokens minted has exceeded the number allowed for each wallet.
     error ExceedsMaxPerWallet();
-
-    // Tracking claimed amounts per wallet
-    mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
 
     // Tracking claimed amounts per wallet
     mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
@@ -44,10 +41,6 @@ contract MerkleDropMinter is MintControllerBase {
         bytes32 merkleRootHash;
         // The price at which each token will be sold, in ETH.
         uint256 price;
-        // Start timestamp of sale (in seconds since unix epoch).
-        uint32 startTime;
-        // End timestamp of sale (in seconds since unix epoch).
-        uint32 endTime;
         // The maximum number of tokens that can can be minted for this sale.
         uint32 maxMintable;
         // The maximum number of tokens that a wallet can mint.
@@ -77,13 +70,11 @@ contract MerkleDropMinter is MintControllerBase {
         uint32 maxMintable,
         uint32 maxAllowedPerWallet
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition);
+        mintId = _createEditionMintController(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
         data.price = price;
-        data.startTime = startTime;
-        data.endTime = endTime;
         data.maxMintable = maxMintable;
         data.maxAllowedPerWallet = maxAllowedPerWallet;
         // prettier-ignore
@@ -144,8 +135,6 @@ contract MerkleDropMinter is MintControllerBase {
         // check the required additional quantity does not exceed the set maximum
         if (data.maxAllowedPerWallet > 0 && ((userBalance + requestedQuantity) > data.maxAllowedPerWallet))
             revert ExceedsMaxPerWallet();
-
-        _requireMintOpen(data.startTime, data.endTime);
 
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 

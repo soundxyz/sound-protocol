@@ -4,7 +4,7 @@ import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/MerkleDropMinter.sol";
-import "../../../contracts/modules/Minters/FixedPricePublicSaleMinter.sol";
+import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "murky/Merkle.sol";
 import "forge-std/console2.sol";
@@ -147,13 +147,15 @@ contract MintersIntegration is TestConfig {
         );
 
         // SETUP PUBLIC SALE
-        FixedPricePublicSaleMinter publicSaleMinter = new FixedPricePublicSaleMinter();
+        RangeEditionMinter publicSaleMinter = new RangeEditionMinter();
         edition.grantRole(edition.MINTER_ROLE(), address(publicSaleMinter));
         uint256 mintIdPublicSale = publicSaleMinter.createEditionMint(
             address(edition),
             PRICE_PUBLIC_SALE,
             START_TIME_PUBLIC_SALE,
+            END_TIME_PUBLIC_SALE - 1,
             END_TIME_PUBLIC_SALE,
+            0,
             MINTER_MAX_MINTABLE_PUBLIC_SALE,
             MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
         );
@@ -233,7 +235,7 @@ contract MintersIntegration is TestConfig {
         vm.warp(START_TIME_PUBLIC_SALE);
     }
 
-    function run_PublicSale(FixedPricePublicSaleMinter publicSaleMinter, uint256 mintId) public {
+    function run_PublicSale(RangeEditionMinter publicSaleMinter, uint256 mintId) public {
         // Check user 5 has no tokens
         uint256 user5Balance = edition.balanceOf(userAccounts[4]);
         assertEq(user5Balance, 0);
