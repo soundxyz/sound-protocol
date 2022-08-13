@@ -26,10 +26,7 @@ contract TestConfig is Test {
         // Deploy SoundEdition implementation
         MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
 
-        // todo: deploy registry here
-        address soundRegistry = address(123);
-
-        soundCreator = new SoundCreatorV1(address(soundEditionImplementation), soundRegistry);
+        soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
     }
 
     // Returns a random address funded with ETH
