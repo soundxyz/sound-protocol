@@ -3,10 +3,14 @@ cache/
 out/
 
 # Ignores development broadcast logs
-!/broadcast
 /broadcast/*
 /broadcast/*/31337/
+
+# Don't ignore run-latest.json
+!/broadcast/run-latest.json
 
 # Node
 
 node_modules
+
+.env
