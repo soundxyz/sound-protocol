@@ -6,7 +6,7 @@ import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 
 contract MintControllerBaseTests is TestConfig {
-    event MintControllerSet(address indexed edition, uint256 indexed mintId, address indexed controller);
+    event MintControllerSet(address indexed edition, uint256 mintId, address controller);
 
     MockMinter public minter;
 
