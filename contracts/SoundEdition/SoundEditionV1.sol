@@ -62,7 +62,6 @@ contract SoundEditionV1 is
     string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
-    bool public isMintingFrozen;
     uint32 public editionMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
@@ -141,7 +140,6 @@ contract SoundEditionV1 is
         }
         // Freeze minting if we've reached the max
         if (newTotal == editionMaxMintable) {
-            isMintingFrozen = true;
             emit MintingFrozen(newTotal);
         }
     }
@@ -179,10 +177,8 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function freezeMinting() external onlyOwnerOrAdmin {
-        if (isMintingFrozen == true) revert MintingIsFrozen();
-
-        isMintingFrozen = true;
+    function freezeMint() external onlyOwnerOrAdmin {
+        if (_totalMinted() == editionMaxMintable) revert MintingIsFrozen();
 
         // Set max mintable to current total minted.
         editionMaxMintable = uint32(_totalMinted());

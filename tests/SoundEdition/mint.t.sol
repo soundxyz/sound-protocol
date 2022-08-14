@@ -113,7 +113,7 @@ contract SoundEdition_mint is TestConfig {
         edition.burn(TOKEN2_ID);
     }
 
-    function test_freezeMintingSuccessViaOwner() external {
+    function test_freezeMintSuccessViaOwner() external {
         SoundEditionV1 edition = createGenericEdition();
         uint32 editionMaxMintable = 2;
 
@@ -121,16 +121,15 @@ contract SoundEdition_mint is TestConfig {
 
         vm.expectEmit(false, false, false, true);
         emit MintingFrozen(editionMaxMintable);
-        edition.freezeMinting();
+        edition.freezeMint();
 
         vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
         edition.mint(address(this), 1);
 
-        assertEq(edition.isMintingFrozen(), true);
         assertEq(edition.totalMinted(), editionMaxMintable);
     }
 
-    function test_freezeMintingSuccessViaAdmin() external {
+    function test_freezeMintSuccessViaAdmin() external {
         SoundEditionV1 edition = createGenericEdition();
         uint32 editionMaxMintable = 2;
 
@@ -143,12 +142,11 @@ contract SoundEdition_mint is TestConfig {
         emit MintingFrozen(editionMaxMintable);
 
         vm.prank(admin);
-        edition.freezeMinting();
+        edition.freezeMint();
 
         vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
         edition.mint(address(this), 1);
 
-        assertEq(edition.isMintingFrozen(), true);
         assertEq(edition.totalMinted(), editionMaxMintable);
     }
 
@@ -181,7 +179,6 @@ contract SoundEdition_mint is TestConfig {
         vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
         edition.mint(address(this), 1);
 
-        assertEq(edition.isMintingFrozen(), true);
-        assertEq(edition.totalMinted(), 2);
+        assertEq(edition.totalMinted(), editionMaxMintable);
     }
 }
