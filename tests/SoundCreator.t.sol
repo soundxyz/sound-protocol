@@ -24,19 +24,8 @@ contract SoundCreatorTests is TestConfig {
         // but cloneDeterminstic would require a salt (==more gas & complexity)
         vm.expectEmit(false, true, false, false);
         emit SoundCreated(address(0), address(this));
-
-        SoundEditionV1 soundEdition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        
+        SoundEditionV1 soundEdition = createGenericEdition();
 
         assert(address(soundEdition) != address(0));
         assertEq(soundEdition.name(), SONG_NAME);

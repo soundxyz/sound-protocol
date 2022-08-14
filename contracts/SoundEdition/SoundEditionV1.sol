@@ -53,7 +53,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
-    uint32 public masterMaxMintable;
+    uint32 public editionMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
     bytes32 public mintRandomness;
@@ -66,7 +66,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event MasterMaxMintableSet(uint32 masterMaxMintable);
+    event EditionMaxMintableSet(uint32 editionMaxMintable);
 
     // ================================
     // ERRORS
@@ -75,7 +75,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     error MetadataIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error MasterMaxMintableReached();
+    error EditionMaxMintableReached();
     error InvalidAmount();
 
     // ================================
@@ -101,7 +101,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
-        masterMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
+        editionMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
 
@@ -120,7 +120,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         // Only allow calls if caller has minter role, admin role, or is the owner.
         if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
         // Check if max supply has been reached.
-        if (_totalMinted() + quantity > masterMaxMintable) revert MasterMaxMintableReached();
+        if (_totalMinted() + quantity > editionMaxMintable) revert EditionMaxMintableReached();
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness

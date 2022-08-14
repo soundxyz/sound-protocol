@@ -31,22 +31,26 @@ contract MintersIntegration is TestConfig {
     uint32 MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 50;
 
     address[] public userAccounts = [
-      getRandomAccount(1), // User 1 - participate in free drop
-      getRandomAccount(2), // User 2 - participate in free drop
-      getRandomAccount(3), // User 3 - participate in presale
-      getRandomAccount(4), // User 4 - participate in presale
-      getRandomAccount(5), // User 5 - participate in public sale
-      getRandomAccount(6)  // User 6 - participate in public sale
+        getRandomAccount(1), // User 1 - participate in free drop
+        getRandomAccount(2), // User 2 - participate in free drop
+        getRandomAccount(3), // User 3 - participate in presale
+        getRandomAccount(4), // User 4 - participate in presale
+        getRandomAccount(5), // User 5 - participate in public sale
+        getRandomAccount(6) // User 6 - participate in public sale
     ];
 
     SoundEditionV1 public edition;
 
     // Helper function to setup a MerkleTree construct
-    function setUpMerkleTree(address editionAddress, address[] memory accounts, uint32[] memory eligibleQuantities) public returns(Merkle, bytes32[] memory) {
+    function setUpMerkleTree(
+        address editionAddress,
+        address[] memory accounts,
+        uint32[] memory eligibleQuantities
+    ) public returns (Merkle, bytes32[] memory) {
         Merkle m = new Merkle();
 
         bytes32[] memory leaves = new bytes32[](accounts.length);
-        for (uint256 i = 0; i<accounts.length; ++i) {
+        for (uint256 i = 0; i < accounts.length; ++i) {
             leaves[i] = keccak256(abi.encodePacked(editionAddress, accounts[i], eligibleQuantities[i]));
         }
 
@@ -66,19 +70,20 @@ contract MintersIntegration is TestConfig {
       - Public Sale: executed as 1 day long public sale
     */
     function test_Glasshouse() public {
-        uint32 MASTER_MAX_MINTABLE = 1000;
+        uint32 EDITION_MAX_MINTABLE = 1000;
         // Setup Glass house sound edition
         edition = SoundEditionV1(
-              soundCreator.createSound(
-                  "Glass House",
-                  "GLASS",
-                  METADATA_MODULE,
-                  BASE_URI,
-                  CONTRACT_URI,
-                  MASTER_MAX_MINTABLE,
-                  MASTER_MAX_MINTABLE,
-                  RANDOMNESS_LOCKED_TIMESTAMP)
-          );
+            soundCreator.createSound(
+                "Glass House",
+                "GLASS",
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
 
         // Setup the FREE MINT
         // Setup the free mint for 2 accounts able to claim 100 tokens in total.
@@ -92,70 +97,79 @@ contract MintersIntegration is TestConfig {
         eligibleAmountsFreeMerkleDrop[1] = uint32(70);
 
         // Setup the Merkle tree
-        (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(address(edition), accountsFreeMerkleDrop, eligibleAmountsFreeMerkleDrop);
+        (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(
+            address(edition),
+            accountsFreeMerkleDrop,
+            eligibleAmountsFreeMerkleDrop
+        );
 
         MerkleDropMinter merkleDropMinter = new MerkleDropMinter();
         edition.grantRole(edition.MINTER_ROLE(), address(merkleDropMinter));
 
         bytes32 root = merkleFreeDrop.getRoot(leavesFreeMerkleDrop);
         uint256 mintIdFreeMint = merkleDropMinter.createEditionMint(
-          address(edition),
-          root,
-          PRICE_FREE_DROP,
-          START_TIME_FREE_DROP,
-          START_TIME_PRESALE,
-          MINTER_MAX_MINTABLE_FREE_DROP,
-          MAX_ALLOWED_PER_WALLET
+            address(edition),
+            root,
+            PRICE_FREE_DROP,
+            START_TIME_FREE_DROP,
+            START_TIME_PRESALE,
+            MINTER_MAX_MINTABLE_FREE_DROP,
+            MAX_ALLOWED_PER_WALLET
         );
 
-      // SETUP THE PRESALE
-      // Setup the presale for 2 accounts able to claim 45 tokens in total.
-      address[] memory accountsPresale = new address[](2);
-      accountsPresale[0] = userAccounts[2];
-      accountsPresale[1] = userAccounts[3];
+        // SETUP THE PRESALE
+        // Setup the presale for 2 accounts able to claim 45 tokens in total.
+        address[] memory accountsPresale = new address[](2);
+        accountsPresale[0] = userAccounts[2];
+        accountsPresale[1] = userAccounts[3];
 
-      // User 2 is eligible for 20 tokens, and User 3 for 25.
-      uint32[] memory eligibleAmountsPresale = new uint32[](2);
-      eligibleAmountsPresale[0] = uint32(20);
-      eligibleAmountsPresale[1] = uint32(25);
+        // User 2 is eligible for 20 tokens, and User 3 for 25.
+        uint32[] memory eligibleAmountsPresale = new uint32[](2);
+        eligibleAmountsPresale[0] = uint32(20);
+        eligibleAmountsPresale[1] = uint32(25);
 
-      // Setup the Merkle tree
-      (Merkle mPresale, bytes32[] memory leavesPresale) =
-      setUpMerkleTree(
-        address(edition),
-        accountsPresale,
-        eligibleAmountsPresale
-      );
-
-      root = mPresale.getRoot(leavesPresale);
-      uint256 mintIdPresale = merkleDropMinter.createEditionMint(
-        address(edition),
-        root,
-        PRICE_PRESALE,
-        START_TIME_PRESALE,
-        START_TIME_PUBLIC_SALE,
-        MINTER_MAX_MINTABLE_PRESALE,
-        MAX_ALLOWED_PER_WALLET_PRESALE
-      );
-
-      // SETUP PUBLIC SALE
-      FixedPricePublicSaleMinter publicSaleMinter = new FixedPricePublicSaleMinter();
-      edition.grantRole(edition.MINTER_ROLE(), address(publicSaleMinter));
-      uint256 mintIdPublicSale = publicSaleMinter.createEditionMint(
-          address(edition),
-          PRICE_PUBLIC_SALE,
-          START_TIME_PUBLIC_SALE,
-          END_TIME_PUBLIC_SALE,
-          MINTER_MAX_MINTABLE_PUBLIC_SALE,
-          MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+        // Setup the Merkle tree
+        (Merkle mPresale, bytes32[] memory leavesPresale) = setUpMerkleTree(
+            address(edition),
+            accountsPresale,
+            eligibleAmountsPresale
         );
 
-      run_FreeAirdrop(accountsFreeMerkleDrop, leavesFreeMerkleDrop, merkleDropMinter, merkleFreeDrop, mintIdFreeMint);
-      run_Presale(accountsPresale, leavesPresale, merkleDropMinter, mPresale, mintIdPresale);
-      run_PublicSale(publicSaleMinter, mintIdPublicSale);
+        root = mPresale.getRoot(leavesPresale);
+        uint256 mintIdPresale = merkleDropMinter.createEditionMint(
+            address(edition),
+            root,
+            PRICE_PRESALE,
+            START_TIME_PRESALE,
+            START_TIME_PUBLIC_SALE,
+            MINTER_MAX_MINTABLE_PRESALE,
+            MAX_ALLOWED_PER_WALLET_PRESALE
+        );
+
+        // SETUP PUBLIC SALE
+        FixedPricePublicSaleMinter publicSaleMinter = new FixedPricePublicSaleMinter();
+        edition.grantRole(edition.MINTER_ROLE(), address(publicSaleMinter));
+        uint256 mintIdPublicSale = publicSaleMinter.createEditionMint(
+            address(edition),
+            PRICE_PUBLIC_SALE,
+            START_TIME_PUBLIC_SALE,
+            END_TIME_PUBLIC_SALE,
+            MINTER_MAX_MINTABLE_PUBLIC_SALE,
+            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+        );
+
+        run_FreeAirdrop(accountsFreeMerkleDrop, leavesFreeMerkleDrop, merkleDropMinter, merkleFreeDrop, mintIdFreeMint);
+        run_Presale(accountsPresale, leavesPresale, merkleDropMinter, mPresale, mintIdPresale);
+        run_PublicSale(publicSaleMinter, mintIdPublicSale);
     }
 
-    function run_FreeAirdrop(address[] memory accountsFreeMerkleDrop, bytes32[] memory leavesFreeMerkleDrop, MerkleDropMinter merkleDropMinter, Merkle merkleFreeDrop, uint256 mintId) public {
+    function run_FreeAirdrop(
+        address[] memory accountsFreeMerkleDrop,
+        bytes32[] memory leavesFreeMerkleDrop,
+        MerkleDropMinter merkleDropMinter,
+        Merkle merkleFreeDrop,
+        uint256 mintId
+    ) public {
         // START THE FREE DROP
         vm.warp(START_TIME_FREE_DROP);
         // Check user has no tokens
@@ -188,7 +202,13 @@ contract MintersIntegration is TestConfig {
         vm.warp(START_TIME_PRESALE);
     }
 
-    function run_Presale(address[] memory accountsPresale, bytes32[] memory leavesPresale, MerkleDropMinter merkleDropMinter, Merkle mPresale, uint256 mintId) public {
+    function run_Presale(
+        address[] memory accountsPresale,
+        bytes32[] memory leavesPresale,
+        MerkleDropMinter merkleDropMinter,
+        Merkle mPresale,
+        uint256 mintId
+    ) public {
         // Check user 0 has no tokens
         uint256 user0Balance = edition.balanceOf(accountsPresale[0]);
         assertEq(user0Balance, 0);
@@ -228,7 +248,11 @@ contract MintersIntegration is TestConfig {
         assertEq(user6Balance, 0);
         // Claim maximum allowed tokens
         vm.prank(userAccounts[5]);
-        publicSaleMinter.mint{ value: MAX_ALLOWED_PER_WALLET_PUBLIC_SALE * PRICE_PUBLIC_SALE }(address(edition), mintId, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
+        publicSaleMinter.mint{ value: MAX_ALLOWED_PER_WALLET_PUBLIC_SALE * PRICE_PUBLIC_SALE }(
+            address(edition),
+            mintId,
+            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+        );
         user6Balance = edition.balanceOf(userAccounts[5]);
         assertEq(user6Balance, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
 
