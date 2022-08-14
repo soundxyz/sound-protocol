@@ -31,18 +31,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
         internal
         returns (SoundEditionV1 edition, FixedPricePublicSaleMinter minter)
     {
-        edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MAX_MINTABLE,
-                MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        edition = createGenericEdition();
 
         minter = new FixedPricePublicSaleMinter();
 
@@ -52,18 +41,7 @@ contract FixedPricePublicSaleMinterTests is TestConfig {
     }
 
     function test_createEditionMintEmitsEvent() public {
-        SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MAX_MINTABLE,
-                MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        SoundEditionV1 edition = createGenericEdition();
 
         FixedPricePublicSaleMinter minter = new FixedPricePublicSaleMinter();
 
