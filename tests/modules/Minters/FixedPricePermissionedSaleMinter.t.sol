@@ -45,7 +45,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, 0, type(uint32).max);
     }
 
     function test_createEditionMintEmitsEvent() public {
@@ -57,7 +57,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         emit FixedPricePermissionedMintCreated(address(edition), MINT_ID, PRICE, _signerAddress(), MAX_MINTABLE);
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, 0, type(uint32).max);
     }
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
@@ -67,7 +67,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.expectRevert(FixedPricePermissionedSaleMinter.SignerIsZeroAddress.selector);
 
-        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE, 0, type(uint32).max);
     }
 
     function test_mintWithoutCorrectSignatureReverts() public {
@@ -159,5 +159,31 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
+    }
+
+    function test_setTimeRange(address nonController) public {
+        vm.assume(nonController != address(this));
+
+        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+
+        FixedPricePermissionedSaleMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+
+        // Check initial values are correct
+        assertEq(baseData.startTime, 0);
+        assertEq(baseData.endTime, type(uint32).max);
+
+        // Set new values
+        minter.setTimeRange(address(edition), MINT_ID, 123, 456);
+
+        baseData = minter.baseMintData(address(edition), MINT_ID);
+
+        // Check new values
+        assertEq(baseData.startTime, 123);
+        assertEq(baseData.endTime, 456);
+
+        // Ensure only controller can set time range
+        vm.prank(nonController);
+        vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
+        minter.setTimeRange(address(edition), MINT_ID, 456, 789);
     }
 }
