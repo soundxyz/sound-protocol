@@ -90,10 +90,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
 
-        if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.InvalidTimeRange.selector));
-            hasRevert = true;
-        } else if (!(maxMintableLower < maxMintableUpper)) {
+        if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     RangeEditionMinter.InvalidMaxMintableRange.selector,
@@ -101,6 +98,9 @@ contract RangeEditionMinterTests is TestConfig {
                     maxMintableUpper
                 )
             );
+            hasRevert = true;
+        } else if (!(startTime < endTime)) {
+            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.InvalidTimeRange.selector));
             hasRevert = true;
         }
 
@@ -261,7 +261,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
 
-        if (!(startTime < closingTime && closingTime < endTime)) {
+        if (!(startTime < endTime)) {
             vm.expectRevert(abi.encodeWithSelector(MintControllerBase.InvalidTimeRange.selector));
             hasRevert = true;
         }
@@ -347,16 +347,6 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
     function invariant_maxMintableRange() public {
         RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
         assertTrue(data.maxMintableLower < data.maxMintableUpper);
-    }
-
-    function invariant_timeRange() public {
-        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-        MintControllerBase.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
-
-        uint32 startTime = baseData.startTime;
-        uint32 closingTime = data.closingTime;
-        uint32 endTime = baseData.endTime;
-        assertTrue(startTime < closingTime && closingTime < endTime);
     }
 }
 

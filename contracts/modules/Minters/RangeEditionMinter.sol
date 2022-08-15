@@ -99,7 +99,6 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet
     ) public returns (uint256 mintId) {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMintController(edition, startTime, endTime);
@@ -199,8 +198,6 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 closingTime,
         uint32 endTime
     ) public onlyEditionMintController(edition, mintId) {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-
         _setTimeRange(edition, mintId, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
