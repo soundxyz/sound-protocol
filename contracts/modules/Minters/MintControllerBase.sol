@@ -116,16 +116,36 @@ abstract contract MintControllerBase {
     // ================================
 
     /**
-     * @dev Restricts the function to be only callable by the controller of `edition`.
+     * @dev Sets the new `controller` for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
      */
-    modifier onlyEditionMintController(address edition, uint256 mintId) virtual {
-        BaseData storage data = _baseData[edition][mintId];
-
-        if (data.controller == address(0)) revert MintControllerNotFound();
-        if (msg.sender != data.controller) revert MintControllerUnauthorized();
-
-        _;
+    function setEditionMintController(
+        address edition,
+        uint256 mintId,
+        address controller
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _baseData[edition][mintId].controller = controller;
+        emit MintControllerSet(edition, mintId, controller);
     }
+
+    /**
+     * @dev Sets the `paused` status for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
+     */
+    function setEditionMintPaused(
+        address edition,
+        uint256 mintId,
+        bool paused
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _baseData[edition][mintId].mintPaused = paused;
+        emit MintPausedSet(edition, mintId, paused);
+    }
+
+    // ================================
+    // INTERNAL HELPER FUNCTIONS
+    // ================================
 
     /**
      * @dev Assigns the current caller as the controller to `edition`.
@@ -193,16 +213,8 @@ abstract contract MintControllerBase {
     }
 
     /**
-     * @dev Returns the mint controller for `edition`.
+     * @dev Sets the time range for an edition mint.
      */
-    function editionMintController(address edition, uint256 mintId) public view returns (address) {
-        return _baseData[edition][mintId].controller;
-    }
-
-    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
-        return _baseData[edition][mintId];
-    }
-
     function _setTimeRange(
         address edition,
         uint256 mintId,
@@ -214,45 +226,6 @@ abstract contract MintControllerBase {
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
     }
-
-    /**
-     * @dev Sets the new `controller` for `edition`.
-     * Calling conditions:
-     * - The caller must be the current controller for `edition`.
-     */
-    function setEditionMintController(
-        address edition,
-        uint256 mintId,
-        address controller
-    ) public virtual onlyEditionMintController(edition, mintId) {
-        _baseData[edition][mintId].controller = controller;
-        emit MintControllerSet(edition, mintId, controller);
-    }
-
-    /**
-     * @dev Sets the `paused` status for `edition`.
-     * Calling conditions:
-     * - The caller must be the current controller for `edition`.
-     */
-    function setEditionMintPaused(
-        address edition,
-        uint256 mintId,
-        bool paused
-    ) public virtual onlyEditionMintController(edition, mintId) {
-        _baseData[edition][mintId].mintPaused = paused;
-        emit MintPausedSet(edition, mintId, paused);
-    }
-
-    /**
-     * @dev Returns the next mint ID for `edition`.
-     */
-    function nextMintId(address edition) public view returns (uint256) {
-        return _nextMintIds[edition];
-    }
-
-    // ================================
-    // INTERNAL HELPER FUNCTIONS
-    // ================================
 
     /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
@@ -279,5 +252,46 @@ abstract contract MintControllerBase {
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
+    }
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the function to be only callable by the controller of `edition`.
+     */
+    modifier onlyEditionMintController(address edition, uint256 mintId) virtual {
+        BaseData storage data = _baseData[edition][mintId];
+
+        if (data.controller == address(0)) revert MintControllerNotFound();
+        if (msg.sender != data.controller) revert MintControllerUnauthorized();
+
+        _;
+    }
+
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Returns the next mint ID for `edition`.
+     */
+    function nextMintId(address edition) public view returns (uint256) {
+        return _nextMintIds[edition];
+    }
+
+    /**
+     * @dev Returns the mint controller for `edition`.
+     */
+    function editionMintController(address edition, uint256 mintId) public view returns (address) {
+        return _baseData[edition][mintId].controller;
+    }
+
+    /**
+     * @dev Returns the configuration data for an edition mint.
+     */
+    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
+        return _baseData[edition][mintId];
     }
 }
