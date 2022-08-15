@@ -154,7 +154,7 @@ contract RangeEditionMinter is MintControllerBase {
     function mint(
         address edition,
         uint256 mintId,
-        uint32 requestedQuantity
+        uint32 quantity
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -166,17 +166,17 @@ contract RangeEditionMinter is MintControllerBase {
         }
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
+        uint32 nextTotalMinted = data.totalMinted + quantity;
         _requireNotSoldOut(nextTotalMinted, maxMintable);
         data.totalMinted = nextTotalMinted;
 
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + requestedQuantity) > data.maxAllowedPerWallet))
+        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
             revert ExceedsMaxPerWallet();
 
-        _mint(edition, mintId, msg.sender, requestedQuantity, requestedQuantity * data.price);
+        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
 
     // ================================
