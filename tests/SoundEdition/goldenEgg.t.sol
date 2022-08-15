@@ -5,7 +5,7 @@ import "openzeppelin/utils/Strings.sol";
 
 import "../TestConfig.sol";
 import "../../contracts/modules/Minters/RangeEditionMinter.sol";
-import "../../contracts/modules/Metadata/GoldenEggMetadataModule.sol";
+import "../../contracts/modules/Metadata/GoldenEggMetadata.sol";
 
 contract SoundEdition_goldenEgg is TestConfig {
     uint256 constant PRICE = 1 ether;
@@ -27,11 +27,11 @@ contract SoundEdition_goldenEgg is TestConfig {
         returns (
             SoundEditionV1 edition,
             RangeEditionMinter minter,
-            GoldenEggMetadataModule goldenEggModule
+            GoldenEggMetadata goldenEggModule
         )
     {
         minter = new RangeEditionMinter();
-        goldenEggModule = new GoldenEggMetadataModule();
+        goldenEggModule = new GoldenEggMetadata();
 
         edition = SoundEditionV1(
             soundCreator.createSound(
@@ -62,7 +62,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
     function test_getTokenURIBeforeAuctionEnded() external {
-        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadataModule goldenEggModule) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         vm.warp(START_TIME);
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
@@ -77,7 +77,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if tokenURI returns goldenEgg uri, when max tokens minted
     function test_getTokenURIAfterMaxMinted() external {
-        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadataModule goldenEggModule) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE;
@@ -91,7 +91,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test if tokenURI returns goldenEgg uri, when randomnessLockedTimestamp is passed
     function test_getTokenURIAfterRandomnessLockedTimestamp() external {
-        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadataModule goldenEggModule) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -136,7 +136,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test when owner lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
     function test_setMintRandomnessLockViaOwnerSuccess() external {
-        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadataModule goldenEggModule) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -155,7 +155,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test when admin lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
     function test_setMintRandomnessLockViaAdminSuccess() external {
-        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadataModule goldenEggModule) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         address admin = address(789);
         edition.grantRole(edition.ADMIN_ROLE(), admin);
@@ -192,7 +192,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test when owner lowering randomnessLockedTimestamp, it generates the golden egg
     function test_setRandomnessLockedTimestampViaOwnerSuccess() external {
-        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadataModule goldenEggModule) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -213,7 +213,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     // Test when admin lowering randomnessLockedTimestamp, it generates the golden egg
     function test_setRandomnessLockedTimestampViaAdminSuccess() external {
-        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadataModule goldenEggModule) = _createEdition();
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         address admin = address(789);
         edition.grantRole(edition.ADMIN_ROLE(), admin);

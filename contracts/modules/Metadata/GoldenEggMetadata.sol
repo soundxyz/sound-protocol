@@ -6,7 +6,7 @@ import "solady/utils/LibString.sol";
 
 import "../../SoundEdition/ISoundEditionV1.sol";
 
-contract GoldenEggMetadataModule is IMetadataModule {
+contract GoldenEggMetadata is IMetadataModule {
     function tokenURI(uint256 tokenId) external view returns (string memory) {
         uint256 goldenEggTokenId = getGoldenEggTokenId(ISoundEditionV1(msg.sender));
         string memory baseURI = ISoundEditionV1(msg.sender).baseURI();
