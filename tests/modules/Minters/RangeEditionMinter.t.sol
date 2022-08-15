@@ -1,4 +1,4 @@
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "../../TestConfig.sol";
 import "../../utils/InvariantTest.sol";
@@ -26,7 +26,7 @@ contract RangeEditionMinterTests is TestConfig {
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
-        uint256 indexed mintId, 
+        uint256 indexed mintId,
         uint256 price,
         uint32 startTime,
         uint32 closingTime,
