@@ -60,3 +60,24 @@ We generally follow OpenZeppelin's conventions:
 - [Natspec](https://docs.soliditylang.org/en/develop/natspec-format.html) format for comments, using `@dev` for function descriptions.
 
 To run prettier on all solidity files, uncomment the last line in `.prettierrc.js`, then run `npx prettier --write ./contracts/**/*.sol`
+
+## Deployment
+
+Create a .env in the root with:
+```
+PRIVATE_KEY=...
+ETHERSCAN_KEY=...
+# Make one of these for every network
+GOERLI_RPC_URL=...
+```
+
+Then run:
+```
+source .env && forge script scripts/Deploy.s.sol:Deploy --rpc-url $<NETWORK>_RPC_URL  --private-key $PRIVATE_KEY --broadcast
+```
+
+According to the foundry docs, we _should_ be able to verify on etherscan by appending this to the above command: ` --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv`, but that doesn't seem to work. Instead, we can verify each contract individually. Ex:
+
+```
+forge verify-contract --chain-id 5 --num-of-optimizations 200 --compiler-version v0.8.15 0x4613283c53669847c40eb0cf7946f1fb30b1f030 contracts/modules/Metadata/GoldenEggMetadataModule.sol:GoldenEggMetadataModule
+```
