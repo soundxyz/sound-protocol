@@ -128,6 +128,14 @@ abstract contract MintControllerBase {
     }
 
     /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidTimeRange(uint32 startTime, uint32 endTime) virtual {
+        if (startTime >= endTime) revert InvalidTimeRange();
+        _;
+    }
+
+    /**
      * @dev Assigns the current caller as the controller to `edition`.
      * Calling conditions:
      * - The `edition` must not have a controller.
@@ -136,9 +144,8 @@ abstract contract MintControllerBase {
         address edition,
         uint32 startTime,
         uint32 endTime
-    ) internal returns (uint256 mintId) {
+    ) internal onlyValidTimeRange(startTime, endTime) returns (uint256 mintId) {
         if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
-        if (!(startTime < endTime)) revert InvalidTimeRange();
 
         mintId = _nextMintIds[edition];
 
@@ -208,9 +215,7 @@ abstract contract MintControllerBase {
         uint256 mintId,
         uint32 startTime,
         uint32 endTime
-    ) internal {
-        if (!(startTime < endTime)) revert InvalidTimeRange();
-
+    ) internal onlyValidTimeRange(startTime, endTime) {
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
     }
