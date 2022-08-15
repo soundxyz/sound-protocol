@@ -144,6 +144,15 @@ abstract contract MintControllerBase is IBaseMinter {
         emit MintPausedSet(edition, mintId, paused);
     }
 
+    function setTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _setTimeRange(edition, mintId, startTime, endTime);
+    }
+
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
@@ -182,6 +191,26 @@ abstract contract MintControllerBase is IBaseMinter {
     }
 
     /**
+     * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     */
+    function _mint(
+        address edition,
+        uint256 mintId,
+        address to,
+        uint32 quantity,
+        uint256 requiredEtherValue
+    ) internal {
+        uint32 startTime = _baseData[edition][mintId].startTime;
+        uint32 endTime = _baseData[edition][mintId].endTime;
+        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+
+        if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
+        if (_baseData[edition][mintId].mintPaused) revert MintPaused();
+        ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
+    }
+
+    /**
      * @dev Returns whether the caller is the owner of `edition`.
      */
     function _callerIsEditionOwner(address edition) private returns (bool result) {
@@ -213,6 +242,13 @@ abstract contract MintControllerBase is IBaseMinter {
     }
 
     /**
+     * @dev Requires that `totalMinted <= maxMintable`.
+     */
+    function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
+        if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
+    }
+
+    /**
      * @dev Convenience function for deleting a mint controller.
      * Equivalent to `setEditionMintController(edition, address(0))`.
      */
@@ -231,33 +267,6 @@ abstract contract MintControllerBase is IBaseMinter {
     ) internal onlyValidTimeRange(startTime, endTime) {
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
-    }
-
-    /**
-     * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
-     */
-    function _mint(
-        address edition,
-        uint256 mintId,
-        address to,
-        uint32 quantity,
-        uint256 requiredEtherValue
-    ) internal {
-        uint32 startTime = _baseData[edition][mintId].startTime;
-        uint32 endTime = _baseData[edition][mintId].endTime;
-        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-
-        if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
-        if (_baseData[edition][mintId].mintPaused) revert MintPaused();
-        ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
-    }
-
-    /**
-     * @dev Requires that `totalMinted <= maxMintable`.
-     */
-    function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
-        if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
     }
 
     // ================================

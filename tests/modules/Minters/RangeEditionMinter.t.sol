@@ -416,7 +416,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
         uint32 startTime = baseData.startTime;
         uint32 closingTime = data.closingTime;
         uint32 endTime = baseData.endTime;
-        assertTrue(startTime < closingTime && closingTime < endTime);
+        assertTrue(startTime < endTime);
     }
 }
 

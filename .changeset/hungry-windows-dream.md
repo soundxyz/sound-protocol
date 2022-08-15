@@ -2,4 +2,5 @@
 "sound-protocol": minor
 ---
 
-Adds setTimeRange to FixedPricePermissionedSaleMinter & MerkelDropMinter
+- Adds public setTimeRange function to MintControllerBase
+- Removes closingTime constraints from RangeEditionMinter
