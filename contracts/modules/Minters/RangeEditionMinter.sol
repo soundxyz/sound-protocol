@@ -98,7 +98,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet
-    ) public returns (uint256 mintId) {
+    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMintController(edition, startTime, endTime);
@@ -197,7 +197,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) {
+    ) public onlyEditionMintController(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
         _setTimeRange(edition, mintId, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -226,5 +226,21 @@ contract RangeEditionMinter is MintControllerBase {
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
+    }
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidRangeTimes(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) virtual {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        _;
     }
 }
