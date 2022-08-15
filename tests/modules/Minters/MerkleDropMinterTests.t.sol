@@ -12,11 +12,7 @@ contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
     uint32 public constant END_TIME = 200;
 
-    address[] accounts = [
-        getRandomAccount(1),
-        getRandomAccount(2),
-        getRandomAccount(3)
-    ];
+    address[] accounts = [getRandomAccount(1), getRandomAccount(2), getRandomAccount(3)];
     bytes32[] leaves;
     bytes32 public root;
     Merkle public m;
@@ -26,32 +22,41 @@ contract MerkleDropMinterTests is TestConfig {
         m = new Merkle();
 
         leaves = new bytes32[](accounts.length);
-        for (uint256 i = 0; i<accounts.length; ++i) {
+        for (uint256 i = 0; i < accounts.length; ++i) {
             // Set eligibility for account[0] to 1 token, account[1] to 2 tokens and account[2] to 3 tokens
-            leaves[i] = keccak256(abi.encodePacked(edition, accounts[i], uint32(i+1)));
+            leaves[i] = keccak256(abi.encodePacked(edition, accounts[i], uint32(i + 1)));
         }
 
         root = m.getRoot(leaves);
     }
 
-    function _createEditionAndMinter(uint32 _price, uint32 _maxMintable, uint32 _maxAllowedPerWallet) internal returns (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) {
-        edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP)
-        );
+    function _createEditionAndMinter(
+        uint32 _price,
+        uint32 _maxMintable,
+        uint32 _maxAllowedPerWallet
+    )
+        internal
+        returns (
+            SoundEditionV1 edition,
+            MerkleDropMinter minter,
+            uint256 mintId
+        )
+    {
+        edition = createGenericEdition();
 
         setUpMerkleTree(address(edition));
 
         minter = new MerkleDropMinter();
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
-        mintId = minter.createEditionMint(address(edition), root, _price, START_TIME, END_TIME, _maxMintable, _maxAllowedPerWallet);
+        mintId = minter.createEditionMint(
+            address(edition),
+            root,
+            _price,
+            START_TIME,
+            END_TIME,
+            _maxMintable,
+            _maxAllowedPerWallet
+        );
     }
 
     function test_canSuccessfullyMintWhenEligible() public {
@@ -118,7 +123,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.prank(accounts[2]);
         uint32 eligibleQuantity = 3;
         uint32 requestedQuantity = 3;
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, 2));
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, 2));
         minter.mint(address(edition), mintId, eligibleQuantity, requestedQuantity, proof);
     }
 

@@ -38,19 +38,23 @@ import "openzeppelin/proxy/Clones.sol";
  */
 contract SoundCreatorV1 {
     /***********************************
+                EVENTS
+    ***********************************/
+
+    event SoundCreated(address indexed soundEdition, address indexed creator);
+
+    /***********************************
                 STORAGE
     ***********************************/
 
     address public nftImplementation;
-    address public soundRegistry;
 
     /***********************************
               PUBLIC FUNCTIONS
     ***********************************/
 
-    constructor(address _nftImplementation, address _soundRegistry) {
+    constructor(address _nftImplementation) {
         nftImplementation = _nftImplementation;
-        soundRegistry = _soundRegistry;
     }
 
     /**
@@ -62,14 +66,10 @@ contract SoundCreatorV1 {
         IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
-        uint32 masterMaxMintable,
+        uint32 editionMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
     ) external returns (address soundEdition) {
-        // todo: if signature provided, pass it to SoundRegistry.register();
-        // todo: implement module configurations
-
-        // todo: research if we can get any gas savings by using a more minimal version of Clones lib
         soundEdition = Clones.clone(nftImplementation);
 
         ISoundEditionV1(soundEdition).initialize(
@@ -79,11 +79,11 @@ contract SoundCreatorV1 {
             metadataModule,
             baseURI,
             contractURI,
-            masterMaxMintable,
+            editionMaxMintable,
             randomnessLockedAfterMinted,
             randomnessLockedTimestamp
         );
 
-        // todo: emit event
+        emit SoundCreated(soundEdition, msg.sender);
     }
 }

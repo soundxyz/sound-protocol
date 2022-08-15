@@ -5,7 +5,7 @@ import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
 contract SoundEdition_admin is TestConfig {
-    event MasterMaxMintableSet(uint32 masterMaxMintable);
+    event EditionMaxMintableSet(uint32 editionMaxMintable);
 
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
@@ -18,8 +18,8 @@ contract SoundEdition_admin is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
@@ -41,14 +41,14 @@ contract SoundEdition_admin is TestConfig {
                 BASE_URI,
                 CONTRACT_URI,
                 maxQuantity,
-                MASTER_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
 
         edition.mint(address(this), maxQuantity);
 
-        vm.expectRevert(SoundEditionV1.MasterMaxMintableReached.selector);
+        vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
 
         edition.mint(address(this), 1);
     }
@@ -61,8 +61,8 @@ contract SoundEdition_admin is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
