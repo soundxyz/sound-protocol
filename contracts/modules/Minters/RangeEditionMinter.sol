@@ -99,6 +99,9 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet
     ) public returns (uint256 mintId) {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+
         mintId = _createEditionMintController(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -107,10 +110,6 @@ contract RangeEditionMinter is MintControllerBase {
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
         data.maxAllowedPerWallet = maxAllowedPerWallet;
-
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-
-        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         // prettier-ignore
         emit RangeEditionMintCreated(
