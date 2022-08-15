@@ -1,4 +1,4 @@
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
@@ -39,20 +39,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         internal
         returns (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter)
     {
-        edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                FUNDING_RECIPIENT,
-                ROYALTY_BPS,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        edition = createGenericEdition();
 
         minter = new FixedPricePermissionedSaleMinter();
 
@@ -62,20 +49,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     }
 
     function test_createEditionMintEmitsEvent() public {
-        SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                FUNDING_RECIPIENT,
-                ROYALTY_BPS,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        SoundEditionV1 edition = createGenericEdition();
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
 
@@ -87,20 +61,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     }
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
-        SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                FUNDING_RECIPIENT,
-                ROYALTY_BPS,
-                MAX_MINTABLE,
-                MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        SoundEditionV1 edition = createGenericEdition();
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
 
@@ -140,14 +101,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig);
 
         vm.prank(caller);
         minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig);
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.SoldOut.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 

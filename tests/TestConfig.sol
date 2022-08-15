@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "forge-std/Test.sol";
 
@@ -12,12 +12,13 @@ contract TestConfig is Test {
     // Artist contract creation vars
     string constant SONG_NAME = "Never Gonna Give You Up";
     string constant SONG_SYMBOL = "NEVER";
-    IMetadataModule constant METADATA_MODULE = IMetadataModule(address(0));
+    IMetadataModule constant METADATA_MODULE = IMetadataModule(address(390720730));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
     address constant FUNDING_RECIPIENT = address(99);
     uint32 constant ROYALTY_BPS = 100;
-    uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
+    address public constant ARTIST_ADMIN = address(8888888888);
+    uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 soundCreator;
@@ -28,10 +29,7 @@ contract TestConfig is Test {
         // Deploy SoundEdition implementation
         MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
 
-        // todo: deploy registry here
-        address soundRegistry = address(123);
-
-        soundCreator = new SoundCreatorV1(payable(soundEditionImplementation), soundRegistry);
+        soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
     }
 
     // Returns a random address funded with ETH
@@ -41,5 +39,23 @@ contract TestConfig is Test {
         vm.deal(addr, 1e19);
 
         return addr;
+    }
+
+    function createGenericEdition() public returns (SoundEditionV1) {
+        return
+            SoundEditionV1(
+                soundCreator.createSound(
+                    SONG_NAME,
+                    SONG_SYMBOL,
+                    METADATA_MODULE,
+                    BASE_URI,
+                    CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS,
+                    EDITION_MAX_MINTABLE,
+                    EDITION_MAX_MINTABLE,
+                    RANDOMNESS_LOCKED_TIMESTAMP
+                )
+            );
     }
 }

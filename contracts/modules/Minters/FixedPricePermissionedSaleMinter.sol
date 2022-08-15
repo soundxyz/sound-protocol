@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "./MintControllerBase.sol";
 import "solady/utils/ECDSA.sol";
@@ -46,7 +46,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         address signer,
         uint32 maxMintable
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition);
+        mintId = _createEditionMintController(edition, 0, type(uint32).max);
         if (signer == address(0)) revert SignerIsZeroAddress();
 
         EditionMintData storage data = _editionMintData[edition][mintId];

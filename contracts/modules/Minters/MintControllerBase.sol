@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "../../SoundEdition/ISoundEditionV1.sol";
 
@@ -28,17 +28,17 @@ abstract contract MintControllerBase {
     error MintControllerAlreadyExists(address controller);
 
     /**
-     * The `paid` Ether value must be equal to the `required` Ether value.
+     * The Ether value paid is not the exact value required.
      */
     error WrongEtherValue(uint256 paid, uint256 required);
 
     /**
-     * The total minted cannot exceed `maxMintable`.
+     * The number minted has exceeded the max mintable amount.
      */
-    error SoldOut(uint32 maxMintable);
+    error MaxMintableReached(uint32 maxMintable);
 
     /**
-     * The current block timestamp must be between `startTime` and `endTime`, inclusive.
+     * The mint is not opened.
      */
     error MintNotOpen(uint256 blockTimestamp, uint32 startTime, uint32 endTime);
 
@@ -52,6 +52,16 @@ abstract contract MintControllerBase {
      */
     error CallerNotEditionOwner();
 
+    /**
+     * The `startTime` is not less than the `endTime`.
+     */
+    error InvalidTimeRange();
+
+    /**
+     * Unauthorized caller
+     */
+    error Unauthorized();
+
     // ================================
     // EVENTS
     // ================================
@@ -59,17 +69,22 @@ abstract contract MintControllerBase {
     /**
      * @notice Emitted when the mint `controller` for `edition` renounces their own access.
      */
-    event MintControllerAccessRenounced(address indexed edition, uint256 indexed mintId, address indexed controller);
+    event MintControllerAccessRenounced(address indexed edition, uint256 mintId, address controller);
 
     /**
      * @notice Emitted when the mint `controller` for `edition` is updated.
      */
-    event MintControllerSet(address indexed edition, uint256 indexed mintId, address indexed controller);
+    event MintControllerSet(address indexed edition, uint256 mintId, address controller);
 
     /**
      * @notice Emitted when the `paused` status of `edition` is updated.
      */
-    event MintPausedSet(address indexed edition, uint256 indexed mintId, bool indexed paused);
+    event MintPausedSet(address indexed edition, uint256 mintId, bool paused);
+
+    /**
+     * @notice Emitted when the `startTime` and `endTime` are updated.
+     */
+    event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
 
     // ================================
     // STRUCTS
@@ -77,6 +92,8 @@ abstract contract MintControllerBase {
 
     struct BaseData {
         address controller;
+        uint32 startTime;
+        uint32 endTime;
         bool mintPaused;
     }
 
@@ -99,30 +116,57 @@ abstract contract MintControllerBase {
     // ================================
 
     /**
-     * @dev Restricts the function to be only callable by the controller of `edition`.
+     * @dev Sets the new `controller` for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
      */
-    modifier onlyEditionMintController(address edition, uint256 mintId) virtual {
-        BaseData storage data = _baseData[edition][mintId];
-
-        if (data.controller == address(0)) revert MintControllerNotFound();
-        if (msg.sender != data.controller) revert MintControllerUnauthorized();
-
-        _;
+    function setEditionMintController(
+        address edition,
+        uint256 mintId,
+        address controller
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _baseData[edition][mintId].controller = controller;
+        emit MintControllerSet(edition, mintId, controller);
     }
+
+    /**
+     * @dev Sets the `paused` status for `edition`.
+     * Calling conditions:
+     * - The caller must be the current controller for `edition`.
+     */
+    function setEditionMintPaused(
+        address edition,
+        uint256 mintId,
+        bool paused
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _baseData[edition][mintId].mintPaused = paused;
+        emit MintPausedSet(edition, mintId, paused);
+    }
+
+    // ================================
+    // INTERNAL HELPER FUNCTIONS
+    // ================================
 
     /**
      * @dev Assigns the current caller as the controller to `edition`.
      * Calling conditions:
      * - The `edition` must not have a controller.
      */
-    function _createEditionMintController(address edition) internal returns (uint256 mintId) {
+    function _createEditionMintController(
+        address edition,
+        uint32 startTime,
+        uint32 endTime
+    ) internal returns (uint256 mintId) {
         if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
+        if (!(startTime < endTime)) revert InvalidTimeRange();
 
         mintId = _nextMintIds[edition];
 
         BaseData storage data = _baseData[edition][mintId];
         if (data.controller != address(0)) revert MintControllerAlreadyExists(data.controller);
         data.controller = msg.sender;
+        data.startTime = startTime;
+        data.endTime = endTime;
 
         _nextMintIds[edition] += 1;
 
@@ -169,50 +213,19 @@ abstract contract MintControllerBase {
     }
 
     /**
-     * @dev Returns the mint controller for `edition`.
+     * @dev Sets the time range for an edition mint.
      */
-    function editionMintController(address edition, uint256 mintId) public view returns (address) {
-        return _baseData[edition][mintId].controller;
-    }
-
-    /**
-     * @dev Sets the new `controller` for `edition`.
-     * Calling conditions:
-     * - The caller must be the current controller for `edition`.
-     */
-    function setEditionMintController(
+    function _setTimeRange(
         address edition,
         uint256 mintId,
-        address controller
-    ) public virtual onlyEditionMintController(edition, mintId) {
-        _baseData[edition][mintId].controller = controller;
-        emit MintControllerSet(edition, mintId, controller);
-    }
+        uint32 startTime,
+        uint32 endTime
+    ) internal {
+        if (!(startTime < endTime)) revert InvalidTimeRange();
 
-    /**
-     * @dev Sets the `paused` status for `edition`.
-     * Calling conditions:
-     * - The caller must be the current controller for `edition`.
-     */
-    function setEditionMintPaused(
-        address edition,
-        uint256 mintId,
-        bool paused
-    ) public virtual onlyEditionMintController(edition, mintId) {
-        _baseData[edition][mintId].mintPaused = paused;
-        emit MintPausedSet(edition, mintId, paused);
+        _baseData[edition][mintId].startTime = startTime;
+        _baseData[edition][mintId].endTime = endTime;
     }
-
-    /**
-     * @dev Returns the next mint ID for `edition`.
-     */
-    function nextMintId(address edition) public view returns (uint256) {
-        return _nextMintIds[edition];
-    }
-
-    // ================================
-    // INTERNAL HELPER FUNCTIONS
-    // ================================
 
     /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
@@ -224,23 +237,61 @@ abstract contract MintControllerBase {
         uint32 quantity,
         uint256 requiredEtherValue
     ) internal {
+        uint32 startTime = _baseData[edition][mintId].startTime;
+        uint32 endTime = _baseData[edition][mintId].endTime;
+        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
         if (_baseData[edition][mintId].mintPaused) revert MintPaused();
         ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
     }
 
     /**
-     * @dev Requires that `startTime <= block.timestamp <= endTime`.
-     */
-    function _requireMintOpen(uint32 startTime, uint32 endTime) internal view {
-        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-    }
-
-    /**
      * @dev Requires that `totalMinted <= maxMintable`.
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
-        if (totalMinted > maxMintable) revert SoldOut(maxMintable);
+        if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
+    }
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the function to be only callable by the controller of `edition`.
+     */
+    modifier onlyEditionMintController(address edition, uint256 mintId) virtual {
+        BaseData storage data = _baseData[edition][mintId];
+
+        if (data.controller == address(0)) revert MintControllerNotFound();
+        if (msg.sender != data.controller) revert MintControllerUnauthorized();
+
+        _;
+    }
+
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Returns the next mint ID for `edition`.
+     */
+    function nextMintId(address edition) public view returns (uint256) {
+        return _nextMintIds[edition];
+    }
+
+    /**
+     * @dev Returns the mint controller for `edition`.
+     */
+    function editionMintController(address edition, uint256 mintId) public view returns (address) {
+        return _baseData[edition][mintId].controller;
+    }
+
+    /**
+     * @dev Returns the configuration data for an edition mint.
+     */
+    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
+        return _baseData[edition][mintId];
     }
 }

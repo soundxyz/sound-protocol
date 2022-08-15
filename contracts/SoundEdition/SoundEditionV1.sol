@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
@@ -11,18 +11,18 @@ import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
 
 /*
-                 ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
-               ▒███████████████████████████████████████████████████████████               
-               ▒███████████████████████████████████████████████████████████               
- ▒▓▓▓▓▓▓▓▓▓▓▓▓▓████████████████▓▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████████████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒ 
- █████████████████████████████▓              ████████████████████████████████████████████ 
- █████████████████████████████▓              ████████████████████████████████████████████ 
- █████████████████████████████▓               ▒▒▒▒▒▒▒▒▒▒▒▒▒██████████████████████████████ 
- █████████████████████████████▓                            ▒█████████████████████████████ 
- █████████████████████████████▓                             ▒████████████████████████████ 
- █████████████████████████████████████████████████████████▓                              
- ███████████████████████████████████████████████████████████                              
- ███████████████████████████████████████████████████████████▒                             
+                 ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+               ▒███████████████████████████████████████████████████████████
+               ▒███████████████████████████████████████████████████████████
+ ▒▓▓▓▓▓▓▓▓▓▓▓▓▓████████████████▓▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████████████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒
+ █████████████████████████████▓              ████████████████████████████████████████████
+ █████████████████████████████▓              ████████████████████████████████████████████
+ █████████████████████████████▓               ▒▒▒▒▒▒▒▒▒▒▒▒▒██████████████████████████████
+ █████████████████████████████▓                            ▒█████████████████████████████
+ █████████████████████████████▓                             ▒████████████████████████████
+ █████████████████████████████████████████████████████████▓
+ ███████████████████████████████████████████████████████████
+ ███████████████████████████████████████████████████████████▒
                               ███████████████████████████████████████████████████████████▒
                               ▓██████████████████████████████████████████████████████████▒
                                ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████████████████████▒
@@ -31,9 +31,9 @@ import "../modules/Metadata/IMetadataModule.sol";
  ██████████████████████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒              ▒█████████████████████████████▒
  ████████████████████████████████████████████▒             ▒█████████████████████████████▒
  ████████████████████████████████████████████▒             ▒█████████████████████████████▒
- ▒▒▒▒▒▒▒▒▒▒▒▒▒▒███████████████████████████████▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒ 
-               ▓██████████████████████████████████████████████████████████▒               
-               ▓██████████████████████████████████████████████████████████                
+ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒███████████████████████████████▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+               ▓██████████████████████████████████████████████████████████▒
+               ▓██████████████████████████████████████████████████████████
 */
 
 /**
@@ -45,8 +45,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     // CONSTANTS
     // ================================
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    uint256 private constant MAX_BPS = 10_000;
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    uint32 internal constant MAX_BPS = 10_000;
 
     // ================================
     // STORAGE
@@ -58,7 +58,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     bool public isMetadataFrozen;
     address public fundingRecipient;
     uint32 public royaltyBPS;
-    uint32 public masterMaxMintable;
+    uint32 public editionMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
     bytes32 public mintRandomness;
@@ -73,6 +73,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
     event FundingRecipientSet(address fundingRecipient);
     event RoyaltySet(uint32 royaltyBPS);
+    event EditionMaxMintableSet(uint32 editionMaxMintable);
 
     // ================================
     // ERRORS
@@ -82,7 +83,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     error InvalidRoyaltyBPS();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error MaxSupplyReached();
+    error EditionMaxMintableReached();
+    error InvalidAmount();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -113,7 +115,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
         _verifyBPS(royaltyBPS_);
         royaltyBPS = royaltyBPS_;
-        masterMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
+        editionMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
 
@@ -127,10 +129,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function mint(address to, uint256 quantity) public payable onlyRole(MINTER_ROLE) {
-        if (_totalMinted() + quantity > masterMaxMintable) revert MaxSupplyReached();
+    function mint(address to, uint256 quantity) public payable {
+        address caller = _msgSender();
+        // Only allow calls if caller has minter role, admin role, or is the owner.
+        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
+        // Check if max supply has been reached.
+        if (_totalMinted() + quantity > editionMaxMintable) revert EditionMaxMintableReached();
+        // Mint the tokens.
         _mint(to, quantity);
-
+        // Set randomness
         if (_totalMinted() <= randomnessLockedAfterMinted && block.timestamp <= randomnessLockedTimestamp) {
             mintRandomness = blockhash(block.number - 1);
         }
@@ -149,7 +156,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwner {
+    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
 
@@ -157,7 +164,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setBaseURI(string memory baseURI_) external onlyOwner {
+    function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
 
@@ -165,7 +172,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setContractURI(string memory contractURI_) external onlyOwner {
+    function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
 
@@ -173,7 +180,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function freezeMetadata() external onlyOwner {
+    function freezeMetadata() external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
         isMetadataFrozen = true;
@@ -181,28 +188,37 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setFundingRecipient(address fundingRecipient_) external onlyOwner {
+    function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRoyalty(uint32 royaltyBPS_) external onlyOwner {
+    function setRoyalty(uint32 royaltyBPS_) external onlyOwnerOrAdmin {
         _verifyBPS(royaltyBPS_);
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwner {
+    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
         if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
 
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwner {
+    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
+    }
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    modifier onlyOwnerOrAdmin() {
+        if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
+        _;
     }
 
     // ================================

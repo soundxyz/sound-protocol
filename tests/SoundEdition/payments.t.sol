@@ -11,6 +11,7 @@ contract SoundEdition_payments is TestConfig {
     event RoyaltySet(uint32 royaltyBPS);
 
     error InvalidRoyaltyBPS();
+    error Unauthorized();
 
     function _createEdition() internal returns (MockSoundEditionV1 soundEdition) {
         soundEdition = MockSoundEditionV1(
@@ -22,8 +23,8 @@ contract SoundEdition_payments is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                MASTER_MAX_MINTABLE,
-                MASTER_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
@@ -41,8 +42,8 @@ contract SoundEdition_payments is TestConfig {
             CONTRACT_URI,
             FUNDING_RECIPIENT,
             royaltyBPS,
-            MASTER_MAX_MINTABLE,
-            MASTER_MAX_MINTABLE,
+            EDITION_MAX_MINTABLE,
+            EDITION_MAX_MINTABLE,
             RANDOMNESS_LOCKED_TIMESTAMP
         );
     }
@@ -115,7 +116,7 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(Unauthorized.selector);
         edition.setFundingRecipient(getRandomAccount(2));
     }
 
@@ -147,7 +148,7 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(Unauthorized.selector);
         edition.setRoyalty(500);
     }
 
