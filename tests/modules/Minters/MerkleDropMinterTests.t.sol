@@ -185,30 +185,4 @@ contract MerkleDropMinterTests is TestConfig {
         user1Balance = edition.balanceOf(accounts[1]);
         assertEq(user1Balance, 2);
     }
-
-    function test_setTimeRange(address nonController) public {
-        vm.assume(nonController != address(this));
-
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 0, 0);
-
-        MerkleDropMinter.BaseData memory baseData = minter.baseMintData(address(edition), mintId);
-
-        // Check initial values are correct
-        assertEq(baseData.startTime, START_TIME);
-        assertEq(baseData.endTime, END_TIME);
-
-        // Set new values
-        minter.setTimeRange(address(edition), mintId, 123, 456);
-
-        baseData = minter.baseMintData(address(edition), mintId);
-
-        // Check new values
-        assertEq(baseData.startTime, 123);
-        assertEq(baseData.endTime, 456);
-
-        // Ensure only controller can set time range
-        vm.prank(nonController);
-        vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
-        minter.setTimeRange(address(edition), mintId, 456, 789);
-    }
 }

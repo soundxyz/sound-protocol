@@ -160,30 +160,4 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         assertEq(data.totalMinted, quantity);
     }
-
-    function test_setTimeRange(address nonController) public {
-        vm.assume(nonController != address(this));
-
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
-
-        FixedPricePermissionedSaleMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
-
-        // Check initial values are correct
-        assertEq(baseData.startTime, 0);
-        assertEq(baseData.endTime, type(uint32).max);
-
-        // Set new values
-        minter.setTimeRange(address(edition), MINT_ID, 123, 456);
-
-        baseData = minter.baseMintData(address(edition), MINT_ID);
-
-        // Check new values
-        assertEq(baseData.startTime, 123);
-        assertEq(baseData.endTime, 456);
-
-        // Ensure only controller can set time range
-        vm.prank(nonController);
-        vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
-        minter.setTimeRange(address(edition), MINT_ID, 456, 789);
-    }
 }

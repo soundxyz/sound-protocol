@@ -144,6 +144,9 @@ abstract contract MintControllerBase is IBaseMinter {
         emit MintPausedSet(edition, mintId, paused);
     }
 
+    /**
+     * @dev Sets the time range for an edition mint, only callable by the current controller.
+     */
     function setTimeRange(
         address edition,
         uint256 mintId,
