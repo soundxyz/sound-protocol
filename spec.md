@@ -32,11 +32,10 @@ Features:
 - Payments
   - `SoundEditionV1.fundingRecipient` - an address that receives all revenue accrued (primary sales & secondary royalty revenue). In the case where the artist is the sole recipient, this is their wallet address. If they are splitting revenue with other parties, this could be an [0xSplits SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) or alternative splitter contract.
   - Secondary revenue can accrue to to the edition via the `receive` function, or to a separate address (ex: a [SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) set as the `fundingRecipient`).
-  - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
-  - Minter modules can also optionally pay fees to secondary recipients (e.g. developer fee for third-party integrations).
+  - Minter modules created by Sound collect a platform fee governed by SoundFeeRegistry.sol
 - Minting
-  - The owner, callers with `ADMIN_ROLE`, and callers with `MINTER_ROLE` (e.g. minter modules) can all call `mint`.
-  - `SoundEditionV1.maxSupply` - maximum number of tokens that can be minted for the edition.
+  - Only the owner, callers with ADMIN_ROLE, and callers with MINTER_ROLE (e.g. minter modules) can call mint.
+  - `SoundEditionV1.editionMaxMintable` - maximum number of tokens that can be minted for the edition.
     - Can be initialized with any value up to `type(uint32).max`.
     - Can be "frozen" by owner or `ADMIN_ROLE` at the current token count to prevent any further minting.
 - Access control
@@ -60,12 +59,21 @@ Features:
 #### Minter modules
 - Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
 - Minter modules must inherit `MintControllerBase.sol`
-- Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.maxSupply`. It is up to the artist to initialize the `maxSupply` with a value high enough to accomodate all current & future mints.
+- Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.editionMaxMintable`. It is up to the artist to initialize the `editionMaxMintable` with a value high enough to accomodate all current & future mints.
 - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
 - Referral fee: TODO
 - Current modules:
-  - `FixedPricePublicSaleMinter` - Mints tokens at a fixed price.
-  - `FixedPricePermissionedSaleMinter` - Mints tokens at a fixed price for buyers approved to buy via signature verification.
-  - `RangeEditionMinter` - Mints a quantity of tokens [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30). 
-  - `MerkleDropMinter` - Enables a predefined list of recipients to mint tokens at a fixed price. The price can be zero and the eligible token quantity for each recipient can be unique. They can claim up to their eligible claimable quantity of tokens for a set of addresses. in multiple transactions.
-
+  - `FixedPricePublicSaleMinter` 
+    - Mints tokens at a fixed price.
+    - The quantity of tokens an address can mint is constrained by `maxAllowedPerWallet`.
+  - `FixedPricePermissionedSaleMinter` 
+    - Mints tokens at a fixed price for buyers approved to buy via signature verification.
+    - The quantity of tokens an address can mint is controlled by the off-chain signature granting process.
+  - `RangeEditionMinter`
+    - Mints a quantity of tokens [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30). 
+    - The quantity of tokens an address can mint is constrained by `maxAllowedPerWallet`.
+  - `MerkleDropMinter` 
+    - Enables a predefined list of recipients to mint tokens at a fixed price.
+    - The price can be zero.
+    - The eligible token quantity for each recipient can be unique. 
+    - Each whitelisted user can claim their eligible amount in multiple transactions.
