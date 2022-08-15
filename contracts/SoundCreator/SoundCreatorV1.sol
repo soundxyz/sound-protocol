@@ -31,7 +31,6 @@ pragma solidity ^0.8.15;
 import "../SoundEdition/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
-import "../SoundFeeRegistry/SoundFeeRegistry.sol";
 
 /**
  * @title Sound Creator V1
@@ -44,20 +43,14 @@ contract SoundCreatorV1 {
 
     address payable public nftImplementation;
     address public soundRegistry;
-    SoundFeeRegistry public soundFeeRegistry;
 
     /***********************************
               PUBLIC FUNCTIONS
     ***********************************/
 
-    constructor(
-        address payable _nftImplementation,
-        address _soundRegistry,
-        SoundFeeRegistry _soundFeeRegistry
-    ) {
+    constructor(address payable _nftImplementation, address _soundRegistry) {
         nftImplementation = _nftImplementation;
         soundRegistry = _soundRegistry;
-        soundFeeRegistry = _soundFeeRegistry;
     }
 
     /**
@@ -90,7 +83,6 @@ contract SoundCreatorV1 {
             contractURI,
             fundingRecipient,
             royaltyBPS,
-            soundFeeRegistry,
             masterMaxMintable,
             randomnessLockedAfterMinted,
             randomnessLockedTimestamp

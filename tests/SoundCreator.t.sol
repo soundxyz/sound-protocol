@@ -10,11 +10,7 @@ contract SoundCreatorTests is TestConfig {
     function test_deploysSoundCreator() public {
         SoundEditionV1 soundEditionImplementation = new SoundEditionV1();
         address soundRegistry = address(123);
-        SoundCreatorV1 _soundCreator = new SoundCreatorV1(
-            payable(soundEditionImplementation),
-            soundRegistry,
-            soundFeeRegistry
-        );
+        SoundCreatorV1 _soundCreator = new SoundCreatorV1(payable(soundEditionImplementation), soundRegistry);
 
         assert(address(_soundCreator) != address(0));
 

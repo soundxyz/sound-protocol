@@ -2,4 +2,4 @@
 "sound-protocol": minor
 ---
 
-Allows to collect royalties and platform fees
+Allows to distribute ETH and ERC20 royalties

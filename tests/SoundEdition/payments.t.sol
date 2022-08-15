@@ -62,21 +62,16 @@ contract SoundEdition_payments is TestConfig {
         uint256 totalETHSales = primaryETHSales + secondaryETHSales;
 
         // withdraw
-        uint256 preSoundFeeAddressETHBal = soundFeeAddress.balance;
         uint256 preFundingRecipitentETHBal = FUNDING_RECIPIENT.balance;
 
         edition.withdrawETH();
 
         // post balances
-        uint256 postSoundFeeAddressETHBal = soundFeeAddress.balance;
         uint256 postFundingRecipitentETHBal = FUNDING_RECIPIENT.balance;
 
         // expected ETH
-        uint256 expectedETHPlatformFee = (totalETHSales * PLATFORM_FEE) / MAX_BPS;
-        uint256 expectedSoundFeeAddressETHBal = preSoundFeeAddressETHBal + expectedETHPlatformFee;
-        uint256 expectedFundingRecipitentETHBal = preFundingRecipitentETHBal + (totalETHSales - expectedETHPlatformFee);
+        uint256 expectedFundingRecipitentETHBal = preFundingRecipitentETHBal + totalETHSales;
 
-        assertEq(postSoundFeeAddressETHBal, expectedSoundFeeAddressETHBal);
         assertEq(postFundingRecipitentETHBal, expectedFundingRecipitentETHBal);
     }
 
@@ -104,13 +99,9 @@ contract SoundEdition_payments is TestConfig {
 
     function _assertPostTokenBalances(address[] memory tokens, uint256[2] memory sales) internal {
         for (uint256 i; i < tokens.length; i++) {
-            uint256 postSoundFeeAddressTokenBal = MockERC20(tokens[i]).balanceOf(soundFeeAddress);
             uint256 postFundingRecipitentTokenBal = MockERC20(tokens[i]).balanceOf(FUNDING_RECIPIENT);
+            uint256 expectedFundingRecipitentTokenBal = sales[i];
 
-            uint256 expectedTokenPlatformFee = (sales[i] * PLATFORM_FEE) / MAX_BPS;
-            uint256 expectedFundingRecipitentTokenBal = (sales[i] - expectedTokenPlatformFee);
-
-            assertEq(postSoundFeeAddressTokenBal, expectedTokenPlatformFee);
             assertEq(postFundingRecipitentTokenBal, expectedFundingRecipitentTokenBal);
         }
     }

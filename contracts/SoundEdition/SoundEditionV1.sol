@@ -9,7 +9,6 @@ import "openzeppelin/token/ERC20/IERC20.sol";
 import "solady/utils/SafeTransferLib.sol";
 import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
-import "../SoundFeeRegistry/SoundFeeRegistry.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
@@ -59,7 +58,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     bool public isMetadataFrozen;
     address public fundingRecipient;
     uint32 public royaltyBPS;
-    SoundFeeRegistry public soundFeeRegistry;
     uint32 public masterMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
@@ -100,7 +98,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         string memory contractURI_,
         address fundingRecipient_,
         uint32 royaltyBPS_,
-        SoundFeeRegistry soundFeeRegistry_,
         uint32 masterMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
@@ -113,7 +110,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         baseURI = baseURI_;
         contractURI = contractURI_;
         fundingRecipient = fundingRecipient_;
-        soundFeeRegistry = soundFeeRegistry_;
 
         _verifyBPS(royaltyBPS_);
         royaltyBPS = royaltyBPS_;
@@ -142,24 +138,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     /// @inheritdoc ISoundEditionV1
     function withdrawETH() external {
-        uint256 balance = address(this).balance;
-        uint256 platformFee = _getPlatformFee(balance);
-
-        SafeTransferLib.safeTransferETH(soundFeeRegistry.soundFeeAddress(), platformFee);
-        SafeTransferLib.safeTransferETH(fundingRecipient, balance - platformFee);
+        SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
     }
 
     /// @inheritdoc ISoundEditionV1
     function withdrawERC20(address[] calldata tokens) external {
-        uint256 balance;
-        uint256 platformFee;
-
         for (uint256 i; i < tokens.length; ++i) {
-            balance = IERC20(tokens[i]).balanceOf(address(this));
-            platformFee = _getPlatformFee(balance);
-
-            SafeTransferLib.safeTransfer(tokens[i], soundFeeRegistry.soundFeeAddress(), platformFee);
-            SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, balance - platformFee);
+            SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
         }
     }
 
@@ -226,10 +211,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     function _verifyBPS(uint32 royalty) internal pure {
         if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
-    }
-
-    function _getPlatformFee(uint256 balance) internal view returns (uint256) {
-        return (balance * soundFeeRegistry.platformBPSFee()) / MAX_BPS;
     }
 
     // ================================

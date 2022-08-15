@@ -7,7 +7,6 @@ import "../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../contracts/SoundEdition/SoundEditionV1.sol";
 import "../contracts/modules/Metadata/IMetadataModule.sol";
 import "./mocks/MockSoundEditionV1.sol";
-import "../contracts/SoundFeeRegistry/SoundFeeRegistry.sol";
 
 contract TestConfig is Test {
     // Artist contract creation vars
@@ -16,14 +15,12 @@ contract TestConfig is Test {
     IMetadataModule constant METADATA_MODULE = IMetadataModule(address(0));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
-    uint32 constant PLATFORM_FEE = 200;
     address constant FUNDING_RECIPIENT = address(99);
     uint32 constant ROYALTY_BPS = 100;
     uint32 constant MASTER_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 soundCreator;
-    SoundFeeRegistry soundFeeRegistry;
     address soundFeeAddress;
 
     // Set up called before each test
@@ -33,11 +30,8 @@ contract TestConfig is Test {
 
         // todo: deploy registry here
         address soundRegistry = address(123);
-        soundFeeAddress = getRandomAccount(100);
 
-        soundFeeRegistry = new SoundFeeRegistry(soundFeeAddress, PLATFORM_FEE);
-
-        soundCreator = new SoundCreatorV1(payable(soundEditionImplementation), soundRegistry, soundFeeRegistry);
+        soundCreator = new SoundCreatorV1(payable(soundEditionImplementation), soundRegistry);
     }
 
     // Returns a random address funded with ETH

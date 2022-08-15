@@ -6,7 +6,6 @@ import "chiru-labs/ERC721A-Upgradeable/interfaces/IERC721AUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "../modules/Metadata/IMetadataModule.sol";
-import "../SoundFeeRegistry/SoundFeeRegistry.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                
@@ -49,7 +48,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param contractURI Contract URI for OpenSea storefront
      * @param fundingRecipient Address that receive royalties
      * @param royaltyBPS Royalty amount in bps
-     * @param soundFeeRegistry Registry for providing platform fee details
      * @param masterMaxMintable The maximum amount of tokens that can be minted for this edition.
      * @param randomnessLockedAfterMinted Token supply after which randomness gets locked
      * @param randomnessLockedTimestamp Timestamp after which randomness gets locked
@@ -63,7 +61,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory contractURI,
         address fundingRecipient,
         uint32 royaltyBPS,
-        SoundFeeRegistry soundFeeRegistry,
         uint32 masterMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
