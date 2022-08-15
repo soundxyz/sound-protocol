@@ -231,4 +231,26 @@ contract RangeEditionMinter is MintControllerBase {
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
     }
+
+    // ================================
+    // EXTERNAL VIEW
+    // ================================
+
+    function price(address edition, uint256 mintId) external view returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
+
+    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+
+        if (block.timestamp < data.closingTime) {
+            return data.maxMintableUpper;
+        } else {
+            return data.maxMintableLower;
+        }
+    }
+
+    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
+        return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    }
 }

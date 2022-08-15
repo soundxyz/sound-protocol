@@ -42,24 +42,24 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
      */
     function createEditionMint(
         address edition,
-        uint256 price,
+        uint256 price_,
         address signer,
-        uint32 maxMintable
+        uint32 maxMintable_
     ) public returns (uint256 mintId) {
         mintId = _createEditionMintController(edition, 0, type(uint32).max);
         if (signer == address(0)) revert SignerIsZeroAddress();
 
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.price = price;
+        data.price = price_;
         data.signer = signer;
-        data.maxMintable = maxMintable;
+        data.maxMintable = maxMintable_;
         // prettier-ignore
         emit FixedPricePermissionedMintCreated(
             edition,
             mintId,
-            price,
+            price_,
             signer,
-            maxMintable
+            maxMintable_
         );
     }
 
@@ -98,5 +98,17 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
         _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
+    }
+
+    function price(address edition, uint256 mintId) external view returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
+
+    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+        return _editionMintData[edition][mintId].maxMintable;
+    }
+
+    function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
+        return type(uint32).max;
     }
 }

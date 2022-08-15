@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.15;
 
+import "./IBaseMinter.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 
 /**
  * @title Mint Controller Base
  * @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
  */
-abstract contract MintControllerBase {
+abstract contract MintControllerBase is IBaseMinter {
     // ================================
     // CUSTOM ERRORS
     // ================================
