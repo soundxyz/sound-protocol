@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "./MintControllerBase.sol";
 
@@ -24,7 +24,7 @@ contract RangeEditionMinter is MintControllerBase {
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
-        uint256 indexed mintId, 
+        uint256 indexed mintId,
         uint256 price,
         uint32 startTime,
         uint32 closingTime,
@@ -115,7 +115,7 @@ contract RangeEditionMinter is MintControllerBase {
         // prettier-ignore
         emit RangeEditionMintCreated(
             edition,
-            mintId, 
+            mintId,
             price,
             startTime,
             closingTime,

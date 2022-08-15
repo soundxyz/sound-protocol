@@ -1,4 +1,4 @@
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
