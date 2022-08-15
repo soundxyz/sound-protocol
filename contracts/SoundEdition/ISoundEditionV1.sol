@@ -81,10 +81,15 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mint(address to, uint256 quantity) external payable;
 
     /**
-     * @dev Withdraws collected ETH and ERC20 royalties to the platform and fundingRecipient
+     * @dev Withdraws collected ETH royalties to the platform and fundingRecipient
+     */
+    function withdrawETH() external;
+
+    /**
+     * @dev Withdraws collected ERC20 royalties to the platform and fundingRecipient
      * @param tokens array of ERC20 tokens to withdraw
      */
-    function withdrawAll(address[] calldata tokens) external;
+    function withdrawERC20(address[] calldata tokens) external;
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.

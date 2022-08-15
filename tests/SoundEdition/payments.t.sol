@@ -47,7 +47,7 @@ contract SoundEdition_payments is TestConfig {
         );
     }
 
-    function test_withdrawAllSuccess() public {
+    function test_withdrawETHSuccess() public {
         MockSoundEditionV1 edition = _createEdition();
 
         // mint with ETH
@@ -61,24 +61,11 @@ contract SoundEdition_payments is TestConfig {
 
         uint256 totalETHSales = primaryETHSales + secondaryETHSales;
 
-        // secondary ERC20 royalties
-        MockERC20 tokenA = new MockERC20();
-        MockERC20 tokenB = new MockERC20();
-
-        uint256 tokenASales = 1_000 ether;
-        uint256 tokenBSales = 5_000 ether;
-
-        tokenA.transfer(address(edition), tokenASales);
-        tokenB.transfer(address(edition), tokenBSales);
-
         // withdraw
         uint256 preSoundFeeAddressETHBal = soundFeeAddress.balance;
         uint256 preFundingRecipitentETHBal = FUNDING_RECIPIENT.balance;
 
-        address[] memory tokens = new address[](2);
-        tokens[0] = address(tokenA);
-        tokens[1] = address(tokenB);
-        edition.withdrawAll(tokens);
+        edition.withdrawETH();
 
         // post balances
         uint256 postSoundFeeAddressETHBal = soundFeeAddress.balance;
@@ -91,6 +78,26 @@ contract SoundEdition_payments is TestConfig {
 
         assertEq(postSoundFeeAddressETHBal, expectedSoundFeeAddressETHBal);
         assertEq(postFundingRecipitentETHBal, expectedFundingRecipitentETHBal);
+    }
+
+    function test_withdrawERC20Success() public {
+        MockSoundEditionV1 edition = _createEdition();
+
+        // secondary ERC20 royalties
+        MockERC20 tokenA = new MockERC20();
+        MockERC20 tokenB = new MockERC20();
+
+        uint256 tokenASales = 1_000 ether;
+        uint256 tokenBSales = 5_000 ether;
+
+        tokenA.transfer(address(edition), tokenASales);
+        tokenB.transfer(address(edition), tokenBSales);
+
+        // withdraw
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(tokenA);
+        tokens[1] = address(tokenB);
+        edition.withdrawERC20(tokens);
 
         _assertPostTokenBalances(tokens, [tokenASales, tokenBSales]);
     }

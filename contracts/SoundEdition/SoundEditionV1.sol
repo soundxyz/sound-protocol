@@ -141,15 +141,19 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     }
 
     /// @inheritdoc ISoundEditionV1
-    function withdrawAll(address[] calldata tokens) external {
-        // Transfer ETH
+    function withdrawETH() external {
         uint256 balance = address(this).balance;
         uint256 platformFee = _getPlatformFee(balance);
 
         SafeTransferLib.safeTransferETH(soundFeeRegistry.soundFeeAddress(), platformFee);
         SafeTransferLib.safeTransferETH(fundingRecipient, balance - platformFee);
+    }
 
-        // Transfer ERC20s
+    /// @inheritdoc ISoundEditionV1
+    function withdrawERC20(address[] calldata tokens) external {
+        uint256 balance;
+        uint256 platformFee;
+
         for (uint256 i; i < tokens.length; ++i) {
             balance = IERC20(tokens[i]).balanceOf(address(this));
             platformFee = _getPlatformFee(balance);
