@@ -312,7 +312,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
     }
 
-    function test_setTime(
+    function test_setTimeRange(
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
@@ -320,7 +320,6 @@ contract RangeEditionMinterTests is TestConfig {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
 
         bool hasRevert;
-
         if (!(startTime < closingTime && closingTime < endTime)) {
             vm.expectRevert(MintControllerBase.InvalidTimeRange.selector);
             hasRevert = true;

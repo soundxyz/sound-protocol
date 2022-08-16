@@ -4,6 +4,8 @@ pragma solidity ^0.8.16;
 
 import "./MintControllerBase.sol";
 
+import "forge-std/Test.sol";
+
 /*
  * @dev Minter class for range edition sales.
  */
@@ -167,6 +169,28 @@ contract RangeEditionMinter is MintControllerBase {
     }
 
     /*
+     * @dev Sets the max mintable range.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
+     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     */
+    function setMaxMintableRange(
+        address edition,
+        uint256 mintId,
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper
+    ) public onlyEditionMintController(edition, mintId) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+        data.maxMintableLower = maxMintableLower;
+        data.maxMintableUpper = maxMintableUpper;
+
+        if (!(data.maxMintableLower < data.maxMintableUpper))
+            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
+
+        emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
+    }
+
+    /*
      * @dev Sets the time range.
      * @param edition Address of the song edition contract we are minting for.
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
@@ -187,29 +211,39 @@ contract RangeEditionMinter is MintControllerBase {
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
 
+        // This calls _beforeSetTimeRange, which does the closingTime validation.
+        _setTimeRange(edition, mintId, startTime, endTime);
+
         emit ClosingTimeSet(edition, mintId, closingTime);
     }
 
-    /*
-     * @dev Sets the max mintable range.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Optional validation function that gets called by _setTimeRange()
      */
-    function setMaxMintableRange(
+    function _beforeSetTimeRange(
         address edition,
         uint256 mintId,
-        uint32 maxMintableLower,
-        uint32 maxMintableUpper
-    ) public onlyEditionMintController(edition, mintId) {
-        EditionMintData storage data = _editionMintData[edition][mintId];
-        data.maxMintableLower = maxMintableLower;
-        data.maxMintableUpper = maxMintableUpper;
+        uint32 startTime,
+        uint32 endTime
+    ) internal view override {
+        uint32 closingTime = _editionMintData[edition][mintId].closingTime;
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    }
 
-        if (!(data.maxMintableLower < data.maxMintableUpper))
-            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
 
-        emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
+    /**
+     * @dev Returns the `EditionMintData` for `edition.
+     * @param edition Address of the song edition contract we are minting for.
+     */
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 
     // ================================

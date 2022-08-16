@@ -241,9 +241,21 @@ abstract contract MintControllerBase is IBaseMinter {
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) {
+        _beforeSetTimeRange(edition, mintId, startTime, endTime);
+
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
     }
+
+    /**
+     * @dev Called before setTimeRange to do optional validation checks.
+     */
+    function _beforeSetTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) internal virtual {}
 
     /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
