@@ -91,22 +91,22 @@ contract RangeEditionMinter is MintControllerBase {
      */
     function createEditionMint(
         address edition,
-        uint256 price,
+        uint256 price_,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet
+        uint32 maxAllowedPerWallet_
     ) public returns (uint256 mintId) {
         mintId = _createEditionMintController(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.price = price;
+        data.price = price_;
         data.closingTime = closingTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-        data.maxAllowedPerWallet = maxAllowedPerWallet;
+        data.maxAllowedPerWallet = maxAllowedPerWallet_;
 
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
 
@@ -116,13 +116,13 @@ contract RangeEditionMinter is MintControllerBase {
         emit RangeEditionMintCreated(
             edition,
             mintId, 
-            price,
+            price_,
             startTime,
             closingTime,
             endTime,
             maxMintableLower,
             maxMintableUpper,
-            maxAllowedPerWallet
+            maxAllowedPerWallet_
         );
     }
 
@@ -159,16 +159,16 @@ contract RangeEditionMinter is MintControllerBase {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 maxMintable;
+        uint32 _maxMintable;
         if (block.timestamp < data.closingTime) {
-            maxMintable = data.maxMintableUpper;
+            _maxMintable = data.maxMintableUpper;
         } else {
-            maxMintable = data.maxMintableLower;
+            _maxMintable = data.maxMintableLower;
         }
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
         uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
-        _requireNotSoldOut(nextTotalMinted, maxMintable);
+        _requireNotSoldOut(nextTotalMinted, _maxMintable);
         data.totalMinted = nextTotalMinted;
 
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);

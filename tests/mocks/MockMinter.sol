@@ -16,20 +16,29 @@ contract MockMinter is MintControllerBase {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        uint256 price
+        uint256 price_
     ) external payable {
-        _mint(edition, mintId, msg.sender, quantity, quantity * price);
+        _mint(edition, mintId, msg.sender, quantity, quantity * price_);
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
+    function price(
+        address, /** edition */
+        uint256 /** mintId */
+    ) external pure returns (uint256) {
         return 0;
     }
 
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+    function maxMintable(
+        address, /** edition */
+        uint256 /** mintId */
+    ) external pure returns (uint32) {
         return type(uint32).max;
     }
 
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
+    function maxAllowedPerWallet(
+        address, /** edition */
+        uint256 /** mintId */
+    ) external pure returns (uint32) {
         return type(uint32).max;
     }
 }
