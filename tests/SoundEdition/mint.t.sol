@@ -41,7 +41,7 @@ contract SoundEdition_mint is TestConfig {
 
         edition.mint(address(this), maxQuantity);
 
-        vm.expectRevert(abi.encodeWithSelector(SoundEditionV1.ExceedsEditionAvailableSupply.selector, 0));
+        vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
 
         edition.mint(address(this), 1);
     }
