@@ -75,7 +75,7 @@ contract SoundEditionV1 is
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event EditionMaxMintableSet(uint256 newMax);
+    event EditionMaxMintableSet(uint32 newMax);
 
     // ================================
     // ERRORS

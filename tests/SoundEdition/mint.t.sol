@@ -139,8 +139,8 @@ contract SoundEdition_mint is TestConfig {
 
         // Set new max mintable
         // TODO: figure out why this is failing
-        // emit EditionMaxMintableSet(MAX_2);
-        // vm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_2);
 
         edition.setEditionMaxMintable(MAX_2);
         assert(edition.editionMaxMintable() == MAX_2);
@@ -165,8 +165,8 @@ contract SoundEdition_mint is TestConfig {
         uint32 MAX_2 = 2;
         uint32 MAX_1 = 1;
 
-        emit EditionMaxMintableSet(MAX_3);
         vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_3);
 
         SoundEditionV1 edition = SoundEditionV1(
             soundCreator.createSound(
@@ -188,9 +188,8 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(address(this), 1);
 
         // Set new max mintable
-        // TODO: figure out why this is failing
-        // emit EditionMaxMintableSet(MAX_2);
-        // vm.expectEmit(false, false, false, true);
+        vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_2);
 
         vm.prank(admin);
         edition.setEditionMaxMintable(MAX_2);
