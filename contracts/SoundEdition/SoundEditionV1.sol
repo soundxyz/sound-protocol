@@ -83,7 +83,7 @@ contract SoundEditionV1 is
     error InvalidRandomnessLock();
     error Unauthorized();
     error ExceedsEditionAvailableSupply(uint256 available);
-    error AmountNotInValidRange();
+    error InvalidAmount();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -177,13 +177,19 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
-        // Only allow reducing the max to an amount more than or equal to the current total minted.
-        if (newMax < _totalMinted() || newMax >= editionMaxMintable) {
-            revert AmountNotInValidRange();
+    function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
+        // Only allow reducing below current max.
+        if (newMax >= editionMaxMintable) {
+            revert InvalidAmount();
         }
 
-        editionMaxMintable = newMax;
+        // If attempting to set below current total minted, set it to current total.
+        // Otherwise, set it to the provided value.
+        if (newMax < _totalMinted()) {
+            editionMaxMintable = uint32(_totalMinted());
+        } else {
+            editionMaxMintable = newMax;
+        }
 
         emit EditionMaxMintableSet(editionMaxMintable);
     }

@@ -2,4 +2,4 @@
 "sound-protocol": minor
 ---
 
--   Adds setEditionMaxMintable function w/ tests
+-   Adds reduceEditionMaxMintable function w/ tests

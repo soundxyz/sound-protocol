@@ -111,9 +111,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function freezeMetadata() external;
 
     /**
-     *   @dev Sets the maximum mintable quantity.
+     *   @dev Reduces the maximum mintable quantity.
      */
-    function setEditionMaxMintable(uint32 newMax) external;
+    function reduceEditionMaxMintable(uint32 newMax) external;
 
     /**
      * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg

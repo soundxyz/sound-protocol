@@ -113,7 +113,7 @@ contract SoundEdition_mint is TestConfig {
         edition.burn(TOKEN2_ID);
     }
 
-    function test_setEditionMaxMintableSuccessViaOwner() external {
+    function test_reduceEditionMaxMintableSuccessViaOwner() external {
         uint32 MAX_3 = 3;
         uint32 MAX_2 = 2;
 
@@ -140,7 +140,7 @@ contract SoundEdition_mint is TestConfig {
         vm.expectEmit(false, false, false, true);
         emit EditionMaxMintableSet(MAX_2);
 
-        edition.setEditionMaxMintable(MAX_2);
+        edition.reduceEditionMaxMintable(MAX_2);
         assert(edition.editionMaxMintable() == MAX_2);
 
         // Mint another token
@@ -150,7 +150,7 @@ contract SoundEdition_mint is TestConfig {
         assertEq(edition.totalMinted(), edition.editionMaxMintable());
     }
 
-    function test_setEditionMaxMintableSuccessViaAdmin() external {
+    function test_reduceEditionMaxMintableSuccessViaAdmin() external {
         uint32 MAX_3 = 3;
         uint32 MAX_2 = 2;
 
@@ -181,7 +181,7 @@ contract SoundEdition_mint is TestConfig {
         emit EditionMaxMintableSet(MAX_2);
 
         vm.prank(admin);
-        edition.setEditionMaxMintable(MAX_2);
+        edition.reduceEditionMaxMintable(MAX_2);
         assert(edition.editionMaxMintable() == MAX_2);
 
         // Mint another token
@@ -191,28 +191,30 @@ contract SoundEdition_mint is TestConfig {
         assertEq(edition.totalMinted(), edition.editionMaxMintable());
     }
 
-    function test_setEditionMaxMintableRevertsIfNotAuthorized(address attacker) external {
+    function test_reduceEditionMaxMintableRevertsIfNotAuthorized(address attacker) external {
         SoundEditionV1 edition = createGenericEdition();
         vm.assume(attacker != address(this));
 
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         vm.prank(attacker);
-        edition.setEditionMaxMintable(1);
+        edition.reduceEditionMaxMintable(1);
     }
 
-    function test_setEditionMaxMintableRevertsIfValueInvalid() external {
+    function test_reduceEditionMaxMintableRevertsIfValueInvalid() external {
         SoundEditionV1 edition = createGenericEdition();
 
-        edition.setEditionMaxMintable(10);
+        edition.reduceEditionMaxMintable(10);
 
         // Attempt to increase max mintable above current max - should fail
-        vm.expectRevert(SoundEditionV1.AmountNotInValidRange.selector);
-        edition.setEditionMaxMintable(11);
+        vm.expectRevert(SoundEditionV1.InvalidAmount.selector);
+        edition.reduceEditionMaxMintable(11);
 
+        // Mint some tokens
         edition.mint(address(this), 5);
 
-        // Attempt to lower max mintable below current minted count (5) - should fail
-        vm.expectRevert(SoundEditionV1.AmountNotInValidRange.selector);
-        edition.setEditionMaxMintable(4);
+        // Attempt to lower max mintable below current minted count - should set to current minted count
+        edition.reduceEditionMaxMintable(4);
+
+        assert(edition.editionMaxMintable() == 5);
     }
 }
