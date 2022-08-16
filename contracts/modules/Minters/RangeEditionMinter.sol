@@ -4,8 +4,6 @@ pragma solidity ^0.8.16;
 
 import "./MintControllerBase.sol";
 
-import "forge-std/Test.sol";
-
 /*
  * @dev Minter class for range edition sales.
  */
@@ -169,6 +167,32 @@ contract RangeEditionMinter is MintControllerBase {
     }
 
     /*
+     * @dev Sets the time range.
+     * @param edition Address of the song edition contract we are minting for.
+     * @param startTime Start timestamp of sale (in seconds since unix epoch).
+     * @param closingTime The timestamp (in seconds since unix epoch) after which the
+     * max amount of tokens mintable will drop from
+     * `maxMintableUpper` to `maxMintableLower`.
+     * @param endTime End timestamp of sale (in seconds since unix epoch).
+     */
+    function setTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) public onlyEditionMintController(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
+        // Set closingTime first, as its stored value gets validated later in the execution.
+        EditionMintData storage data = _editionMintData[edition][mintId];
+        data.closingTime = closingTime;
+
+        // This calls _beforeSetTimeRange, which does the closingTime validation.
+        _setTimeRange(edition, mintId, startTime, endTime);
+
+        emit ClosingTimeSet(edition, mintId, closingTime);
+    }
+
+    /*
      * @dev Sets the max mintable range.
      * @param edition Address of the song edition contract we are minting for.
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
@@ -188,33 +212,6 @@ contract RangeEditionMinter is MintControllerBase {
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
-    }
-
-    /*
-     * @dev Sets the time range.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime The timestamp (in seconds since unix epoch) after which the
-     * max amount of tokens mintable will drop from
-     * `maxMintableUpper` to `maxMintableLower`.
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     */
-    function setTimeRange(
-        address edition,
-        uint256 mintId,
-        uint32 startTime,
-        uint32 closingTime,
-        uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
-        _setTimeRange(edition, mintId, startTime, endTime);
-
-        EditionMintData storage data = _editionMintData[edition][mintId];
-        data.closingTime = closingTime;
-
-        // This calls _beforeSetTimeRange, which does the closingTime validation.
-        _setTimeRange(edition, mintId, startTime, endTime);
-
-        emit ClosingTimeSet(edition, mintId, closingTime);
     }
 
     // ================================

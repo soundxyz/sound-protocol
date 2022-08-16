@@ -2,4 +2,5 @@
 "sound-protocol": minor
 ---
 
-- Adds public setTimeRange function to MintControllerBase
+- Adds public MintControllerBase.setTimeRange
+- Adds internal MintControllerBase._beforeSetTimeRange that can be optionally implemented by minters

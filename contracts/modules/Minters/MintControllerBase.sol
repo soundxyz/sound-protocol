@@ -248,7 +248,7 @@ abstract contract MintControllerBase is IBaseMinter {
     }
 
     /**
-     * @dev Called before setTimeRange to do optional validation checks.
+     * @dev Called at the start of _setTimeRange (for optional validation checks, etc).
      */
     function _beforeSetTimeRange(
         address edition,
