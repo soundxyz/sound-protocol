@@ -74,7 +74,7 @@ contract RangeEditionMinter is MintControllerBase {
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     // ================================
-    // CREATE AND DELETE
+    // WRITE FUNCTIONS
     // ================================
 
     /*
@@ -133,18 +133,6 @@ contract RangeEditionMinter is MintControllerBase {
         delete _editionMintData[edition][mintId];
     }
 
-    /**
-     * @dev Returns the `EditionMintData` for `edition.
-     * @param edition Address of the song edition contract we are minting for.
-     */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
-    }
-
-    // ================================
-    // MINT
-    // ================================
-
     /*
      * @dev Mints tokens for a given edition.
      * @param edition Address of the song edition contract we are minting for.
@@ -177,10 +165,6 @@ contract RangeEditionMinter is MintControllerBase {
 
         _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
-
-    // ================================
-    // SETTER FUNCTIONS
-    // ================================
 
     /*
      * @dev Sets the time range.
@@ -242,5 +226,17 @@ contract RangeEditionMinter is MintControllerBase {
     ) virtual {
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         _;
+    }
+
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Returns the `EditionMintData` for `edition.
+     * @param edition Address of the song edition contract we are minting for.
+     */
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 }

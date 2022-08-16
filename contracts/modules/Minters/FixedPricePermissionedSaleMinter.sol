@@ -12,8 +12,9 @@ import "solady/utils/ECDSA.sol";
 contract FixedPricePermissionedSaleMinter is MintControllerBase {
     using ECDSA for bytes32;
 
-    error InvalidSignature();
-    error SignerIsZeroAddress();
+    // ================================
+    // EVENTS
+    // ================================
 
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
@@ -23,6 +24,17 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         address signer,
         uint32 maxMintable
     );
+
+    // ================================
+    // ERRORS
+    // ================================
+
+    error InvalidSignature();
+    error SignerIsZeroAddress();
+
+    // ================================
+    // STORAGE
+    // ================================
 
     struct EditionMintData {
         // The price at which each token will be sold, in ETH.
@@ -36,6 +48,10 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
     }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+
+    // ================================
+    // WRITE FUNCTIONS
+    // ================================
 
     /**
      * @dev Initializes the configuration for an edition mint.
@@ -61,14 +77,6 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
             signer,
             maxMintable
         );
-    }
-
-    /**
-     * @dev Returns the given edition's mint configuration.
-     * @param edition The edition to get the mint configuration for.
-     */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
     }
 
     /**
@@ -98,5 +106,17 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
         _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
+    }
+
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Returns the given edition's mint configuration.
+     * @param edition The edition to get the mint configuration for.
+     */
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 }
