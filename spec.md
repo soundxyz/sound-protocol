@@ -17,7 +17,9 @@ Sound Protocol 2.0 enables creators to permissinonlessly deploy gas-efficient NF
 
 - `SoundEditionV1.sol`
   - Logic contract for the proxies deployed from SoundCreatorV1
-  - Extended version of the [721a implementation](https://www.azuki.com/erc721a) with `ERC721AQueryable` extension
+  - Extended version of the [721a implementation](https://www.azuki.com/erc721a) with:
+    - `ERC721AQueryableUpgradeable` - adds convenient query functions
+    - `ERC721ABurnableUpgradeable` - adds token burn functionality
   - Implements EIP-2981 (`royaltyInfo`)
   - Implements EIP-165 (`supportsInterface)
   - Implements extension contracts for:
