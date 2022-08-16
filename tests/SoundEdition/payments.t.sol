@@ -13,23 +13,6 @@ contract SoundEdition_payments is TestConfig {
     error InvalidRoyaltyBPS();
     error Unauthorized();
 
-    function _createEdition() internal returns (MockSoundEditionV1 soundEdition) {
-        soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                FUNDING_RECIPIENT,
-                ROYALTY_BPS,
-                EDITION_MAX_MINTABLE,
-                EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
-    }
-
     function test_initializeRevertsForInvalidRoyaltyBPS(uint32 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
 
@@ -49,11 +32,11 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_withdrawETHSuccess() public {
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         // mint with ETH
         uint256 primaryETHSales = 10 ether;
-        edition.mint{ value: primaryETHSales }(1);
+        edition.mint{ value: primaryETHSales }(address(this), 1);
 
         // secondary ETH royalty
         uint256 secondaryETHSales = 2 ether;
@@ -77,7 +60,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_withdrawERC20Success() public {
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         // secondary ERC20 royalties
         MockERC20 tokenA = new MockERC20();
@@ -112,7 +95,7 @@ contract SoundEdition_payments is TestConfig {
     // ================================
 
     function test_setFundingRecipientRevertsForNonOwner() public {
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
@@ -121,7 +104,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_setFundingRecipientSuccess() public {
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         address newFundingRecipient = getRandomAccount(1);
         edition.setFundingRecipient(newFundingRecipient);
@@ -130,7 +113,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_setFundingRecipientEmitsEvent() public {
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         address newFundingRecipient = getRandomAccount(1);
 
@@ -144,7 +127,7 @@ contract SoundEdition_payments is TestConfig {
     // ================================
 
     function test_setRoyaltyRevertsForNonOwner() public {
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
@@ -154,7 +137,7 @@ contract SoundEdition_payments is TestConfig {
 
     function test_setRoyaltyRevertsForInvalidValue(uint32 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         vm.expectRevert(InvalidRoyaltyBPS.selector);
         edition.setRoyalty(royaltyBPS);
@@ -162,7 +145,7 @@ contract SoundEdition_payments is TestConfig {
 
     function test_setRoyaltySuccess(uint32 royaltyBPS) public {
         vm.assume(royaltyBPS <= MAX_BPS);
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         edition.setRoyalty(royaltyBPS);
 
@@ -171,7 +154,7 @@ contract SoundEdition_payments is TestConfig {
 
     function test_setRoyaltyEmitsEvent(uint32 royaltyBPS) public {
         vm.assume(royaltyBPS <= MAX_BPS);
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         vm.expectEmit(false, false, false, true);
         emit RoyaltySet(royaltyBPS);
@@ -186,7 +169,7 @@ contract SoundEdition_payments is TestConfig {
         // avoid overflow
         vm.assume(salePrice < 2**128);
 
-        MockSoundEditionV1 edition = _createEdition();
+        SoundEditionV1 edition = createGenericEdition();
 
         (address fundingRecipient, uint256 royaltyAmount) = edition.royaltyInfo(tokenId, salePrice);
 
