@@ -12,6 +12,10 @@ import "../../SoundEdition/ISoundEditionV1.sol";
 contract MerkleDropMinter is MintControllerBase {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
+    // ================================
+    // EVENTS
+    // ================================
+
     // prettier-ignore
     event MerkleDropMintCreated(
         address indexed edition,
@@ -26,12 +30,20 @@ contract MerkleDropMinter is MintControllerBase {
 
     event DropClaimed(address recipient, uint32 quantity);
 
+    // ================================
+    // ERRORS
+    // ================================
+
     error ExceedsEligibleQuantity();
 
     error InvalidMerkleProof();
 
     // The number of tokens minted has exceeded the number allowed for each wallet.
     error ExceedsMaxPerWallet();
+
+    // ================================
+    // STORAGE
+    // ================================
 
     // Tracking claimed amounts per wallet
     mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
@@ -50,6 +62,10 @@ contract MerkleDropMinter is MintControllerBase {
     }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+
+    // ================================
+    // WRITE FUNCTIONS
+    // ================================
 
     /**
      * @dev Initializes the configuration for an edition merkle drop mint.
@@ -100,14 +116,6 @@ contract MerkleDropMinter is MintControllerBase {
         delete _editionMintData[edition][mintId];
     }
 
-    /**
-     * @dev Returns the `EditionMintData` for `edition.
-     * @param edition Address of the song edition contract we are minting for.
-     */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
-    }
-
     /*
      * @dev Mints tokens.
      * @param edition Address of the song edition contract we are minting for.
@@ -152,6 +160,10 @@ contract MerkleDropMinter is MintControllerBase {
         emit DropClaimed(msg.sender, requestedQuantity);
     }
 
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
+
     /**
      * @dev Returns the amount of claimed tokens for `wallet` in `mintData`.
      * @param edition Address of the edition.
@@ -168,5 +180,13 @@ contract MerkleDropMinter is MintControllerBase {
         (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(wallet);
         claimedQuantity = success ? claimedQuantity : 0;
         return claimedQuantity;
+    }
+
+    /**
+     * @dev Returns the `EditionMintData` for `edition.
+     * @param edition Address of the song edition contract we are minting for.
+     */
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 }

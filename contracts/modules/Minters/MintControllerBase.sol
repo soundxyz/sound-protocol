@@ -112,7 +112,7 @@ abstract contract MintControllerBase {
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
     // ================================
-    // MINT CONTROLLER FUNCTIONS
+    // WRITE FUNCTIONS
     // ================================
 
     /**
@@ -144,7 +144,7 @@ abstract contract MintControllerBase {
     }
 
     // ================================
-    // INTERNAL HELPER FUNCTIONS
+    // INTERNAL FUNCTIONS
     // ================================
 
     /**
