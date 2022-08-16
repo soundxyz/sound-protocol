@@ -75,17 +75,16 @@ contract SoundEditionV1 is
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event MintingFrozen(uint256 finalMintedCount);
+    event EditionMaxMintableSet(uint256 newMax);
 
     // ================================
     // ERRORS
     // ================================
 
     error MetadataIsFrozen();
-    error MintingIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error EditionMaxMintableReached();
+    error InsufficientSupply();
     error InvalidAmount();
 
     // ================================
@@ -122,6 +121,8 @@ contract SoundEditionV1 is
 
         // Give owner the DEFAULT_ADMIN_ROLE
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
+
+        emit EditionMaxMintableSet(editionMaxMintable);
     }
 
     /// @inheritdoc ISoundEditionV1
@@ -131,16 +132,12 @@ contract SoundEditionV1 is
         // Only allow calls if caller has minter role, admin role, or is the owner.
         if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
         // Check if max supply has been reached.
-        if (newTotal > editionMaxMintable) revert EditionMaxMintableReached();
+        if (newTotal > editionMaxMintable) revert InsufficientSupply();
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
         if (_totalMinted() <= randomnessLockedAfterMinted && block.timestamp <= randomnessLockedTimestamp) {
             mintRandomness = blockhash(block.number - 1);
-        }
-        // Freeze minting if we've reached the max
-        if (newTotal == editionMaxMintable) {
-            emit MintingFrozen(newTotal);
         }
     }
 
@@ -177,13 +174,13 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function freezeMint() external onlyOwnerOrAdmin {
-        if (_totalMinted() == editionMaxMintable) revert MintingIsFrozen();
+    function setEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
+        // Only allow reducing the max to an amount more than or equal to the current total minted.
+        if (newMax < _totalMinted() || newMax >= editionMaxMintable) revert InvalidAmount();
 
-        // Set max mintable to current total minted.
-        editionMaxMintable = uint32(_totalMinted());
+        editionMaxMintable = newMax;
 
-        emit MintingFrozen(uint256(editionMaxMintable));
+        emit EditionMaxMintableSet(editionMaxMintable);
     }
 
     /// @inheritdoc ISoundEditionV1
