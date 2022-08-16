@@ -206,7 +206,13 @@ contract SoundEdition_mint is TestConfig {
         edition.setEditionMaxMintable(10);
 
         // Attempt to increase max mintable above current max - should fail
-        vm.expectRevert(SoundEditionV1.InvalidAmount.selector);
+        vm.expectRevert(SoundEditionV1.AmountNotInValidRange.selector);
         edition.setEditionMaxMintable(11);
+
+        edition.mint(address(this), 5);
+
+        // Attempt to lower max mintable below current minted count (5) - should fail
+        vm.expectRevert(SoundEditionV1.AmountNotInValidRange.selector);
+        edition.setEditionMaxMintable(4);
     }
 }
