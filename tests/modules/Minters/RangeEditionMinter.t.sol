@@ -94,7 +94,7 @@ contract RangeEditionMinterTests is TestConfig {
         bool hasRevert;
 
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.InvalidTimeRange.selector));
+            vm.expectRevert(MintControllerBase.InvalidTimeRange.selector);
             hasRevert = true;
         } else if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
@@ -322,7 +322,7 @@ contract RangeEditionMinterTests is TestConfig {
         bool hasRevert;
 
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.InvalidTimeRange.selector));
+            vm.expectRevert(MintControllerBase.InvalidTimeRange.selector);
             hasRevert = true;
         }
 
