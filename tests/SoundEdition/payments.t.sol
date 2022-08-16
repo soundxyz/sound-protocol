@@ -12,6 +12,7 @@ contract SoundEdition_payments is TestConfig {
 
     error InvalidRoyaltyBPS();
     error Unauthorized();
+    error InvalidFundingRecipient();
 
     function test_initializeRevertsForInvalidRoyaltyBPS(uint32 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
@@ -25,6 +26,22 @@ contract SoundEdition_payments is TestConfig {
             CONTRACT_URI,
             FUNDING_RECIPIENT,
             royaltyBPS,
+            EDITION_MAX_MINTABLE,
+            EDITION_MAX_MINTABLE,
+            RANDOMNESS_LOCKED_TIMESTAMP
+        );
+    }
+
+    function test_initializeRevertsForInvalidFundingRecipient() public {
+        vm.expectRevert(InvalidFundingRecipient.selector);
+        soundCreator.createSound(
+            SONG_NAME,
+            SONG_SYMBOL,
+            METADATA_MODULE,
+            BASE_URI,
+            CONTRACT_URI,
+            address(0),
+            ROYALTY_BPS,
             EDITION_MAX_MINTABLE,
             EDITION_MAX_MINTABLE,
             RANDOMNESS_LOCKED_TIMESTAMP
@@ -101,6 +118,13 @@ contract SoundEdition_payments is TestConfig {
         vm.prank(caller);
         vm.expectRevert(Unauthorized.selector);
         edition.setFundingRecipient(getRandomAccount(2));
+    }
+
+    function test_setFundingRecipientRevertsForZeroAddress() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        vm.expectRevert(InvalidFundingRecipient.selector);
+        edition.setFundingRecipient(address(0));
     }
 
     function test_setFundingRecipientSuccess() public {

@@ -85,6 +85,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
     error Unauthorized();
     error EditionMaxMintableReached();
     error InvalidAmount();
+    error InvalidFundingRecipient();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -111,6 +112,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
+
+        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
 
         _verifyBPS(royaltyBPS_);
@@ -189,6 +192,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, Ownable
 
     /// @inheritdoc ISoundEditionV1
     function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
+        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
