@@ -63,17 +63,15 @@ Features:
 - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
 - Referral fee: TODO
 - Current modules:
-  - `FixedPricePublicSaleMinter` 
-    - Mints tokens at a fixed price.
-    - The quantity of tokens an address can mint is constrained by `maxAllowedPerWallet`.
   - `FixedPricePermissionedSaleMinter` 
     - Mints tokens at a fixed price for buyers approved to buy via signature verification.
     - The quantity of tokens an address can mint is controlled by the off-chain signature granting process.
   - `RangeEditionMinter`
-    - Mints a quantity of tokens [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30). 
+    - Mints either a fixed quantity or a quantity [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30) based on time bounds.
     - The quantity of tokens an address can mint is constrained by `maxAllowedPerWallet`.
   - `MerkleDropMinter` 
     - Enables a predefined list of recipients to mint tokens at a fixed price.
     - The price can be zero.
     - The eligible token quantity for each recipient can be unique. 
     - Each whitelisted user can claim their eligible amount in multiple transactions.
+    - The quantity of tokens an address can mint is constrained by `maxAllowedPerWallet`.
