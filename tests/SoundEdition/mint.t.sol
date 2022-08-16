@@ -104,7 +104,7 @@ contract SoundEdition_mint is TestConfig {
 
         edition.mint(address(this), ONE_TOKEN);
 
-        vm.expectRevert(IERC721AUpgradeable.TransferCallerNotOwnerNorApproved.selector);
+        vm.expectRevert(IERC721AUpgradeable.OwnerQueryForNonexistentToken.selector);
 
         vm.prank(attacker);
         edition.burn(TOKEN2_ID);
