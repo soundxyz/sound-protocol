@@ -84,7 +84,7 @@ contract SoundEditionV1 is
     error MetadataIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error InsufficientSupply();
+    error InsufficientMintableSupply();
     error InvalidAmount();
 
     // ================================
@@ -132,7 +132,7 @@ contract SoundEditionV1 is
         // Only allow calls if caller has minter role, admin role, or is the owner.
         if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
         // Check if max supply has been reached.
-        if (newTotal > editionMaxMintable) revert InsufficientSupply();
+        if (newTotal > editionMaxMintable) revert InsufficientMintableSupply();
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
