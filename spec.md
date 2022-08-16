@@ -15,7 +15,9 @@ Sound Protocol 2.0 enables creators to permissionlessly deploy gas-efficient min
 - Upgradeable via [UUPSUpgradeable](https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable)
 - Deploys [minimal proxies (clones)](https://eips.ethereum.org/EIPS/eip-1167) of `SoundEditionV1.sol` & initializes them with customizable configurations.
 - Logic contract for the minimal proxies deployed from SoundCreatorV1.
-- Extended version of the [721a implementation](https://www.azuki.com/erc721a) with `ERC721AQueryable` extension.
+- Extended version of the [721a implementation](https://www.azuki.com/erc721a) with:
+  - `ERC721AQueryableUpgradeable` - adds convenient query functions
+  - `ERC721ABurnableUpgradeable` - adds token burn functionality
 - Implements [EIP-2981 Royalty Standard](https://eips.ethereum.org/EIPS/eip-2981).
 - Implements [EIP-165](https://eips.ethereum.org/EIPS/eip-165).
 

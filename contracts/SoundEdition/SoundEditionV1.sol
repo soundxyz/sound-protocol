@@ -3,6 +3,7 @@
 pragma solidity ^0.8.16;
 
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
+import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
@@ -38,7 +39,13 @@ import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
  * @title SoundEditionV1
  * @author Sound.xyz
  */
-contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, OwnableUpgradeable, AccessControlUpgradeable {
+contract SoundEditionV1 is
+    ISoundEditionV1,
+    ERC721AQueryableUpgradeable,
+    ERC721ABurnableUpgradeable,
+    OwnableUpgradeable,
+    AccessControlUpgradeable
+{
     // ================================
     // CONSTANTS
     // ================================
