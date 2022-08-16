@@ -41,7 +41,7 @@ contract SoundEdition_mint is TestConfig {
 
         edition.mint(address(this), maxQuantity);
 
-        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
+        vm.expectRevert(abi.encodeWithSelector(SoundEditionV1.ExceedsEditionAvailableSupply.selector, 0));
 
         edition.mint(address(this), 1);
     }
@@ -116,7 +116,6 @@ contract SoundEdition_mint is TestConfig {
     function test_setEditionMaxMintableSuccessViaOwner() external {
         uint32 MAX_3 = 3;
         uint32 MAX_2 = 2;
-        uint32 MAX_1 = 1;
 
         emit EditionMaxMintableSet(MAX_3);
         vm.expectEmit(false, false, false, true);
@@ -138,7 +137,6 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(address(this), 1);
 
         // Set new max mintable
-        // TODO: figure out why this is failing
         vm.expectEmit(false, false, false, true);
         emit EditionMaxMintableSet(MAX_2);
 
@@ -149,21 +147,12 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(address(this), 1);
 
         // We're now at editionMaxMintable
-        assertEq(edition.totalMinted(), MAX_2);
-
-        // Attempt to reduce max mintable again - should fail
-        vm.expectRevert(SoundEditionV1.InvalidAmount.selector);
-        edition.setEditionMaxMintable(MAX_1);
-
-        // Attempt to mint - should fail
-        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
-        edition.mint(address(this), 1);
+        assertEq(edition.totalMinted(), edition.editionMaxMintable());
     }
 
     function test_setEditionMaxMintableSuccessViaAdmin() external {
         uint32 MAX_3 = 3;
         uint32 MAX_2 = 2;
-        uint32 MAX_1 = 1;
 
         vm.expectEmit(false, false, false, true);
         emit EditionMaxMintableSet(MAX_3);
@@ -199,15 +188,25 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(address(this), 1);
 
         // We're now at editionMaxMintable
-        assertEq(edition.totalMinted(), MAX_2);
+        assertEq(edition.totalMinted(), edition.editionMaxMintable());
+    }
 
-        // Attempt to reduce max mintable again - should fail
+    function test_setEditionMaxMintableRevertsIfNotAuthorized(address attacker) external {
+        SoundEditionV1 edition = createGenericEdition();
+        vm.assume(attacker != address(this));
+
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.prank(attacker);
+        edition.setEditionMaxMintable(1);
+    }
+
+    function test_setEditionMaxMintableRevertsIfValueInvalid() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        edition.setEditionMaxMintable(10);
+
+        // Attempt to increase max mintable above current max - should fail
         vm.expectRevert(SoundEditionV1.InvalidAmount.selector);
-        vm.prank(admin);
-        edition.setEditionMaxMintable(MAX_1);
-
-        // Attempt to mint - should fail
-        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
-        edition.mint(address(this), 1);
+        edition.setEditionMaxMintable(11);
     }
 }

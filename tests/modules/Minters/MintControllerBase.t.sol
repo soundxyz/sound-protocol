@@ -192,11 +192,14 @@ contract MintControllerBaseTests is TestConfig {
 
         uint256 mintId1 = minter.createEditionMintController(address(edition1));
 
-        // Mint the max supply
-        minter.mint(address(edition1), mintId1, maxSupply, 0);
+        // Mint all of the supply except for 1 token
+        minter.mint(address(edition1), mintId1, maxSupply - 1, 0);
 
-        // try minting 1 more
-        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
+        // try minting 2 more - should fail and tell us there is only 1 available
+        vm.expectRevert(abi.encodeWithSelector(SoundEditionV1.ExceedsEditionAvailableSupply.selector, 1));
+        minter.mint(address(edition1), mintId1, 2, 0);
+
+        // try minting 1 more - should succeed
         minter.mint(address(edition1), mintId1, 1, 0);
     }
 }

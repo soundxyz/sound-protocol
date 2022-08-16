@@ -82,7 +82,7 @@ contract SoundEditionV1 is
     error MetadataIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error ExceedsEditionMaxMintable();
+    error ExceedsEditionAvailableSupply(uint256 available);
     error InvalidAmount();
 
     // ================================
@@ -128,9 +128,14 @@ contract SoundEditionV1 is
         address caller = _msgSender();
         uint256 newTotal = _totalMinted() + quantity;
         // Only allow calls if caller has minter role, admin role, or is the owner.
-        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
-        // Check if max supply has been reached.
-        if (newTotal > editionMaxMintable) revert ExceedsEditionMaxMintable();
+        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) {
+            revert Unauthorized();
+        }
+        // Check if there are enough tokens to mint.
+        if (newTotal > editionMaxMintable) {
+            uint256 available = editionMaxMintable - _totalMinted();
+            revert ExceedsEditionAvailableSupply(available);
+        }
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
