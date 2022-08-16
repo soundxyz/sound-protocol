@@ -71,7 +71,16 @@ contract RangeEditionMinter is MintControllerBase {
     // STORAGE
     // ================================
 
+    /**
+     * @dev Edition mint data
+     * edition => mintId => EditionMintData
+     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+    /**
+     * @dev Number of tokens minted by each buyer address.
+     * edition => mintId => buyer => mintedTallies
+     */
+    mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
 
     // ================================
     // WRITE FUNCTIONS
@@ -158,11 +167,13 @@ contract RangeEditionMinter is MintControllerBase {
         _requireNotSoldOut(nextTotalMinted, _maxMintable);
         data.totalMinted = nextTotalMinted;
 
-        uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
+        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
+        if (data.maxAllowedPerWallet > 0 && ((userMintedBalance + quantity) > data.maxAllowedPerWallet))
             revert ExceedsMaxPerWallet();
+
+        mintedTallies[edition][mintId][msg.sender] += quantity;
 
         _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
