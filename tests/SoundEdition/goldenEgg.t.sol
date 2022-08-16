@@ -20,8 +20,6 @@ contract SoundEdition_goldenEgg is TestConfig {
 
     uint32 constant MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 5;
 
-    error InvalidRandomnessLock();
-
     function _createEdition()
         internal
         returns (
@@ -130,7 +128,7 @@ contract SoundEdition_goldenEgg is TestConfig {
         uint32 quantity = MAX_MINTABLE - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
-        vm.expectRevert(InvalidRandomnessLock.selector);
+        vm.expectRevert(SoundEditionV1.InvalidRandomnessLock.selector);
         edition.setMintRandomnessLock(quantity - 1);
     }
 
