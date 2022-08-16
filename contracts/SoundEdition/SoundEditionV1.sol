@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.16;
 
-// import "forge-std/Test.sol";
-
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
@@ -84,7 +82,7 @@ contract SoundEditionV1 is
     error MetadataIsFrozen();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error InsufficientMintableSupply();
+    error ExceedsEditionMaxMintable();
     error InvalidAmount();
 
     // ================================
@@ -132,7 +130,7 @@ contract SoundEditionV1 is
         // Only allow calls if caller has minter role, admin role, or is the owner.
         if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
         // Check if max supply has been reached.
-        if (newTotal > editionMaxMintable) revert InsufficientMintableSupply();
+        if (newTotal > editionMaxMintable) revert ExceedsEditionMaxMintable();
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness

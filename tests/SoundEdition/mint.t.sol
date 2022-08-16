@@ -41,7 +41,7 @@ contract SoundEdition_mint is TestConfig {
 
         edition.mint(address(this), maxQuantity);
 
-        vm.expectRevert(SoundEditionV1.InsufficientMintableSupply.selector);
+        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
 
         edition.mint(address(this), 1);
     }
@@ -156,7 +156,7 @@ contract SoundEdition_mint is TestConfig {
         edition.setEditionMaxMintable(MAX_1);
 
         // Attempt to mint - should fail
-        vm.expectRevert(SoundEditionV1.InsufficientMintableSupply.selector);
+        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
         edition.mint(address(this), 1);
     }
 
@@ -207,7 +207,7 @@ contract SoundEdition_mint is TestConfig {
         edition.setEditionMaxMintable(MAX_1);
 
         // Attempt to mint - should fail
-        vm.expectRevert(SoundEditionV1.InsufficientMintableSupply.selector);
+        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
         edition.mint(address(this), 1);
     }
 }

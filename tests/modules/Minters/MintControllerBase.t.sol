@@ -196,7 +196,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.mint(address(edition1), mintId1, maxSupply, 0);
 
         // try minting 1 more
-        vm.expectRevert(SoundEditionV1.InsufficientMintableSupply.selector);
+        vm.expectRevert(SoundEditionV1.ExceedsEditionMaxMintable.selector);
         minter.mint(address(edition1), mintId1, 1, 0);
     }
 }
