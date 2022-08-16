@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "./TestConfig.sol";
 import "../contracts/SoundEdition/SoundEditionV1.sol";
@@ -24,7 +24,7 @@ contract SoundCreatorTests is TestConfig {
         // but cloneDeterminstic would require a salt (==more gas & complexity)
         vm.expectEmit(false, true, false, false);
         emit SoundCreated(address(0), address(this));
-        
+
         SoundEditionV1 soundEdition = createGenericEdition();
 
         assert(address(soundEdition) != address(0));

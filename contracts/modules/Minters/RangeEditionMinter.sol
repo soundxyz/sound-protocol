@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "./MintControllerBase.sol";
 
@@ -24,7 +24,7 @@ contract RangeEditionMinter is MintControllerBase {
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
-        uint256 indexed mintId, 
+        uint256 indexed mintId,
         uint256 price,
         uint32 startTime,
         uint32 closingTime,
@@ -98,7 +98,9 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet_
-    ) public returns (uint256 mintId) {
+    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
+        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+
         mintId = _createEditionMintController(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -108,14 +110,10 @@ contract RangeEditionMinter is MintControllerBase {
         data.maxMintableUpper = maxMintableUpper;
         data.maxAllowedPerWallet = maxAllowedPerWallet_;
 
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-
-        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
-
         // prettier-ignore
         emit RangeEditionMintCreated(
             edition,
-            mintId, 
+            mintId,
             price_,
             startTime,
             closingTime,
@@ -155,7 +153,7 @@ contract RangeEditionMinter is MintControllerBase {
     function mint(
         address edition,
         uint256 mintId,
-        uint32 requestedQuantity
+        uint32 quantity
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -167,17 +165,17 @@ contract RangeEditionMinter is MintControllerBase {
         }
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
+        uint32 nextTotalMinted = data.totalMinted + quantity;
         _requireNotSoldOut(nextTotalMinted, _maxMintable);
         data.totalMinted = nextTotalMinted;
 
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + requestedQuantity) > data.maxAllowedPerWallet))
+        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
             revert ExceedsMaxPerWallet();
 
-        _mint(edition, mintId, msg.sender, requestedQuantity, requestedQuantity * data.price);
+        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
 
     // ================================
@@ -199,9 +197,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-
+    ) public onlyEditionMintController(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
         _setTimeRange(edition, mintId, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -252,5 +248,21 @@ contract RangeEditionMinter is MintControllerBase {
 
     function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
         return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    }
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidRangeTimes(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) virtual {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        _;
     }
 }
