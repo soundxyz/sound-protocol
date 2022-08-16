@@ -113,8 +113,7 @@ contract MintersIntegration is TestConfig {
             PRICE_FREE_DROP,
             START_TIME_FREE_DROP,
             START_TIME_PRESALE,
-            MINTER_MAX_MINTABLE_FREE_DROP,
-            MAX_ALLOWED_PER_WALLET
+            MINTER_MAX_MINTABLE_FREE_DROP
         );
 
         // SETUP THE PRESALE
@@ -142,8 +141,7 @@ contract MintersIntegration is TestConfig {
             PRICE_PRESALE,
             START_TIME_PRESALE,
             START_TIME_PUBLIC_SALE,
-            MINTER_MAX_MINTABLE_PRESALE,
-            MAX_ALLOWED_PER_WALLET_PRESALE
+            MINTER_MAX_MINTABLE_PRESALE
         );
 
         // SETUP PUBLIC SALE
