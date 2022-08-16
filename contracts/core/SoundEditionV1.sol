@@ -144,10 +144,16 @@ contract SoundEditionV1 is
      */
     function mint(address to, uint256 quantity) public payable {
         address caller = _msgSender();
+        uint256 newTotal = _totalMinted() + quantity;
         // Only allow calls if caller has minter role, admin role, or is the owner.
-        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) revert Unauthorized();
-        // Check if max supply has been reached.
-        if (_totalMinted() + quantity > editionMaxMintable) revert EditionMaxMintableReached();
+        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) {
+            revert Unauthorized();
+        }
+        // Check if there are enough tokens to mint.
+        if (newTotal > editionMaxMintable) {
+            uint256 available = editionMaxMintable - _totalMinted();
+            revert ExceedsEditionAvailableSupply(uint32(available));
+        }
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness

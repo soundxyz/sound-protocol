@@ -16,7 +16,7 @@ interface ISoundEditionEventsAndErrors {
     error InvalidRoyaltyBPS();
     error InvalidRandomnessLock();
     error Unauthorized();
-    error EditionMaxMintableReached();
+    error ExceedsEditionAvailableSupply(uint32 available);
     error InvalidAmount();
     error InvalidFundingRecipient();
     error MaximumHasAlreadyBeenReached();
