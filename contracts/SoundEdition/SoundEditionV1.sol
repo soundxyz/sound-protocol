@@ -84,6 +84,7 @@ contract SoundEditionV1 is
     error Unauthorized();
     error ExceedsEditionAvailableSupply(uint256 available);
     error InvalidAmount();
+    error MaximumHasAlreadyBeenReached();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -178,6 +179,10 @@ contract SoundEditionV1 is
 
     /// @inheritdoc ISoundEditionV1
     function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
+        if (_totalMinted() == editionMaxMintable) {
+            revert MaximumHasAlreadyBeenReached();
+        }
+
         // Only allow reducing below current max.
         if (newMax >= editionMaxMintable) {
             revert InvalidAmount();

@@ -216,5 +216,9 @@ contract SoundEdition_mint is TestConfig {
         edition.reduceEditionMaxMintable(4);
 
         assert(edition.editionMaxMintable() == 5);
+
+        // Attempt to lower again - should revert
+        vm.expectRevert(SoundEditionV1.MaximumHasAlreadyBeenReached.selector);
+        edition.reduceEditionMaxMintable(4);
     }
 }
