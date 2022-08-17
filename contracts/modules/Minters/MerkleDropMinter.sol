@@ -82,7 +82,7 @@ contract MerkleDropMinter is MintControllerBase {
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
-        data.price = price;
+        data.price = price_;
         data.maxMintable = maxMintable;
         // prettier-ignore
         emit MerkleDropMintCreated(
@@ -182,7 +182,8 @@ contract MerkleDropMinter is MintControllerBase {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
+    // The true max per wallet is defined in the merkle tree (eligibleQuantity)
     function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].maxAllowedPerWallet;
+        return type(uint32).max;
     }
 }

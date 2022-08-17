@@ -262,7 +262,10 @@ contract RangeEditionMinter is MintControllerBase {
     }
 
     function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].maxAllowedPerWallet;
+        return
+            _editionMintData[edition][mintId].maxAllowedPerWallet > 0
+                ? _editionMintData[edition][mintId].maxAllowedPerWallet
+                : type(uint32).max;
     }
 
     // ================================

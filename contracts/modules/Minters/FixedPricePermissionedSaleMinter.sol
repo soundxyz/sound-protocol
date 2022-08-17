@@ -130,6 +130,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
+    // The true max per wallet is defined off chain by the signature granting process.
     function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
         return type(uint32).max;
     }
