@@ -117,8 +117,8 @@ contract SoundEdition_mint is TestConfig {
         uint32 MAX_3 = 3;
         uint32 MAX_2 = 2;
 
-        emit EditionMaxMintableSet(MAX_3);
         vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_3);
 
         SoundEditionV1 edition = SoundEditionV1(
             soundCreator.createSound(
