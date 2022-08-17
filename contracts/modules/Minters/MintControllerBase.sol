@@ -144,6 +144,18 @@ abstract contract MintControllerBase is IBaseMinter {
         emit MintPausedSet(edition, mintId, paused);
     }
 
+    /**
+     * @dev Sets the time range for an edition mint, only callable by the current controller.
+     */
+    function setTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) public virtual onlyEditionMintController(edition, mintId) {
+        _setTimeRange(edition, mintId, startTime, endTime);
+    }
+
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
@@ -222,6 +234,7 @@ abstract contract MintControllerBase is IBaseMinter {
 
     /**
      * @dev Sets the time range for an edition mint.
+     * Note: If calling from a child contract, the child is responsible for access control.
      */
     function _setTimeRange(
         address edition,
@@ -229,9 +242,21 @@ abstract contract MintControllerBase is IBaseMinter {
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) {
+        _beforeSetTimeRange(edition, mintId, startTime, endTime);
+
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
     }
+
+    /**
+     * @dev Called at the start of _setTimeRange (for optional validation checks, etc).
+     */
+    function _beforeSetTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) internal virtual {}
 
     /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.

@@ -60,9 +60,11 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         address edition,
         uint256 price_,
         address signer,
-        uint32 maxMintable_
+        uint32 maxMintable_,
+        uint32 startTime,
+        uint32 endTime
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition, 0, type(uint32).max);
+        mintId = _createEditionMintController(edition, startTime, endTime);
         if (signer == address(0)) revert SignerIsZeroAddress();
 
         EditionMintData storage data = _editionMintData[edition][mintId];

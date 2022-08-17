@@ -199,4 +199,32 @@ contract MintControllerBaseTests is TestConfig {
         vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
         minter.mint(address(edition1), mintId1, 1, 0);
     }
+
+    function test_setTimeRange(address nonController) public {
+        vm.assume(nonController != address(this));
+
+        SoundEditionV1 edition = _createEdition(1);
+
+        uint256 mintId = minter.createEditionMintController(address(edition));
+
+        MockMinter.BaseData memory baseData = minter.baseMintData(address(edition), mintId);
+
+        // Check initial values are correct
+        assertEq(baseData.startTime, 0);
+        assertEq(baseData.endTime, type(uint32).max);
+
+        // Set new values
+        minter.setTimeRange(address(edition), mintId, 123, 456);
+
+        baseData = minter.baseMintData(address(edition), mintId);
+
+        // Check new values
+        assertEq(baseData.startTime, 123);
+        assertEq(baseData.endTime, 456);
+
+        // Ensure only controller can set time range
+        vm.prank(nonController);
+        vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
+        minter.setTimeRange(address(edition), mintId, 456, 789);
+    }
 }
