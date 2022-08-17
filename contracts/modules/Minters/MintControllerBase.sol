@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import "./IBaseMinter.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
 
 /**
  * @title Mint Controller Base
  * @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
  */
-abstract contract MintControllerBase {
+abstract contract MintControllerBase is IBaseMinter {
     // ================================
     // CUSTOM ERRORS
     // ================================
@@ -112,7 +113,7 @@ abstract contract MintControllerBase {
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
     // ================================
-    // MINT CONTROLLER FUNCTIONS
+    // WRITE FUNCTIONS
     // ================================
 
     /**
@@ -144,8 +145,16 @@ abstract contract MintControllerBase {
     }
 
     // ================================
-    // INTERNAL HELPER FUNCTIONS
+    // INTERNAL FUNCTIONS
     // ================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidTimeRange(uint32 startTime, uint32 endTime) virtual {
+        if (startTime >= endTime) revert InvalidTimeRange();
+        _;
+    }
 
     /**
      * @dev Assigns the current caller as the controller to `edition`.
@@ -156,9 +165,8 @@ abstract contract MintControllerBase {
         address edition,
         uint32 startTime,
         uint32 endTime
-    ) internal returns (uint256 mintId) {
+    ) internal onlyValidTimeRange(startTime, endTime) returns (uint256 mintId) {
         if (!_callerIsEditionOwner(edition)) revert CallerNotEditionOwner();
-        if (!(startTime < endTime)) revert InvalidTimeRange();
 
         mintId = _nextMintIds[edition];
 
@@ -220,9 +228,7 @@ abstract contract MintControllerBase {
         uint256 mintId,
         uint32 startTime,
         uint32 endTime
-    ) internal {
-        if (!(startTime < endTime)) revert InvalidTimeRange();
-
+    ) internal onlyValidTimeRange(startTime, endTime) {
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
     }

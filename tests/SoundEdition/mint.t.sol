@@ -1,30 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
 import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
-contract SoundEdition_admin is TestConfig {
+contract SoundEdition_mint is TestConfig {
     event EditionMaxMintableSet(uint32 editionMaxMintable);
 
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
 
-        SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                FUNDING_RECIPIENT,
-                ROYALTY_BPS,
-                EDITION_MAX_MINTABLE,
-                EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        SoundEditionV1 edition = createGenericEdition();
 
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
 
@@ -58,20 +46,7 @@ contract SoundEdition_admin is TestConfig {
     }
 
     function test_adminMintSuccess() public {
-        SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                FUNDING_RECIPIENT,
-                ROYALTY_BPS,
-                EDITION_MAX_MINTABLE,
-                EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
-            )
-        );
+        SoundEditionV1 edition = createGenericEdition();
 
         // Test owner can mint to own address
         address owner = address(12345);
@@ -108,5 +83,32 @@ contract SoundEdition_admin is TestConfig {
         edition.mint(recipient2, quantity);
 
         assert(edition.balanceOf(recipient2) == quantity);
+    }
+
+    function test_burn(address attacker) public {
+        vm.assume(attacker != address(this));
+
+        uint256 ONE_TOKEN = 1;
+        uint256 TOKEN1_ID = 1;
+        uint256 TOKEN2_ID = 1;
+
+        SoundEditionV1 edition = createGenericEdition();
+
+        // Assert that the token owner can burn
+
+        edition.mint(address(this), ONE_TOKEN);
+        edition.burn(TOKEN1_ID);
+
+        assert(edition.balanceOf(address(this)) == 0);
+        assert(edition.totalSupply() == 0);
+
+        // Mint another token and assert that the attacker can't burn
+
+        edition.mint(address(this), ONE_TOKEN);
+
+        vm.expectRevert(IERC721AUpgradeable.OwnerQueryForNonexistentToken.selector);
+
+        vm.prank(attacker);
+        edition.burn(TOKEN2_ID);
     }
 }

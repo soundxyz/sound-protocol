@@ -74,7 +74,7 @@ contract RangeEditionMinter is MintControllerBase {
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     // ================================
-    // CREATE AND DELETE
+    // WRITE FUNCTIONS
     // ================================
 
     /*
@@ -91,38 +91,36 @@ contract RangeEditionMinter is MintControllerBase {
      */
     function createEditionMint(
         address edition,
-        uint256 price,
+        uint256 price_,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet
-    ) public returns (uint256 mintId) {
+        uint32 maxAllowedPerWallet_
+    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
+        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+
         mintId = _createEditionMintController(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.price = price;
+        data.price = price_;
         data.closingTime = closingTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-        data.maxAllowedPerWallet = maxAllowedPerWallet;
-
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-
-        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+        data.maxAllowedPerWallet = maxAllowedPerWallet_;
 
         // prettier-ignore
         emit RangeEditionMintCreated(
             edition,
             mintId,
-            price,
+            price_,
             startTime,
             closingTime,
             endTime,
             maxMintableLower,
             maxMintableUpper,
-            maxAllowedPerWallet
+            maxAllowedPerWallet_
         );
     }
 
@@ -135,18 +133,6 @@ contract RangeEditionMinter is MintControllerBase {
         delete _editionMintData[edition][mintId];
     }
 
-    /**
-     * @dev Returns the `EditionMintData` for `edition.
-     * @param edition Address of the song edition contract we are minting for.
-     */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
-    }
-
-    // ================================
-    // MINT
-    // ================================
-
     /*
      * @dev Mints tokens for a given edition.
      * @param edition Address of the song edition contract we are minting for.
@@ -155,34 +141,30 @@ contract RangeEditionMinter is MintControllerBase {
     function mint(
         address edition,
         uint256 mintId,
-        uint32 requestedQuantity
+        uint32 quantity
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 maxMintable;
+        uint32 _maxMintable;
         if (block.timestamp < data.closingTime) {
-            maxMintable = data.maxMintableUpper;
+            _maxMintable = data.maxMintableUpper;
         } else {
-            maxMintable = data.maxMintableLower;
+            _maxMintable = data.maxMintableLower;
         }
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
-        _requireNotSoldOut(nextTotalMinted, maxMintable);
+        uint32 nextTotalMinted = data.totalMinted + quantity;
+        _requireNotSoldOut(nextTotalMinted, _maxMintable);
         data.totalMinted = nextTotalMinted;
 
         uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + requestedQuantity) > data.maxAllowedPerWallet))
+        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
             revert ExceedsMaxPerWallet();
 
-        _mint(edition, mintId, msg.sender, requestedQuantity, requestedQuantity * data.price);
+        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
-
-    // ================================
-    // SETTER FUNCTIONS
-    // ================================
 
     /*
      * @dev Sets the time range.
@@ -199,9 +181,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-
+    ) public onlyEditionMintController(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
         _setTimeRange(edition, mintId, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -230,5 +210,55 @@ contract RangeEditionMinter is MintControllerBase {
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
+    }
+
+    // ================================
+    // EXTERNAL VIEW
+    // ================================
+
+    function price(address edition, uint256 mintId) external view returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
+
+    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+
+        if (block.timestamp < data.closingTime) {
+            return data.maxMintableUpper;
+        } else {
+            return data.maxMintableLower;
+        }
+    }
+
+    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
+        return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    }
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidRangeTimes(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) virtual {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        _;
+    }
+
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Returns the `EditionMintData` for `edition.
+     * @param edition Address of the song edition contract we are minting for.
+     */
+    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
+        return _editionMintData[edition][mintId];
     }
 }
