@@ -31,30 +31,32 @@ pragma solidity ^0.8.16;
 import "../SoundEdition/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
+import "openzeppelin/access/Ownable.sol";
 
 /**
  * @title Sound Creator V1
  * @dev Factory for deploying Sound edition contracts.
  */
-contract SoundCreatorV1 {
+contract SoundCreatorV1 is Ownable {
     /***********************************
                 EVENTS
     ***********************************/
 
-    event SoundCreated(address indexed soundEdition, address indexed creator);
+    event SoundEditionCreated(address indexed soundEdition, address indexed creator);
+    event SoundEditionImplementationSet(address newImplementation);
 
     /***********************************
                 STORAGE
     ***********************************/
 
-    address public nftImplementation;
+    address public editionImplementation;
 
     /***********************************
               PUBLIC FUNCTIONS
     ***********************************/
 
-    constructor(address _nftImplementation) {
-        nftImplementation = _nftImplementation;
+    constructor(address _editionImplementation) {
+        editionImplementation = _editionImplementation;
     }
 
     /**
@@ -71,7 +73,7 @@ contract SoundCreatorV1 {
         uint32 randomnessLockedTimestamp
     ) external returns (address soundEdition) {
         // Create Sound Edition proxy
-        soundEdition = Clones.clone(nftImplementation);
+        soundEdition = Clones.clone(editionImplementation);
         // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
@@ -85,6 +87,15 @@ contract SoundCreatorV1 {
             randomnessLockedTimestamp
         );
 
-        emit SoundCreated(soundEdition, msg.sender);
+        emit SoundEditionCreated(soundEdition, msg.sender);
+    }
+
+    /**
+     * @dev Changes the SoundEdition implementation contract address.
+     */
+    function setEditionImplementation(address newImplementation) external onlyOwner {
+        editionImplementation = newImplementation;
+
+        emit SoundEditionImplementationSet(editionImplementation);
     }
 }
