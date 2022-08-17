@@ -64,7 +64,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 startTime,
         uint32 endTime
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime);
         if (signer == address(0)) revert SignerIsZeroAddress();
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -79,14 +79,6 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
             signer,
             maxMintable_
         );
-    }
-
-    /**
-     * @dev Deletes the configuration for an edition mint.
-     */
-    function deleteEditionMint(address edition, uint256 mintId) public {
-        _deleteEditionMintController(edition, mintId);
-        delete _editionMintData[edition][mintId];
     }
 
     /**
