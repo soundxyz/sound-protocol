@@ -113,7 +113,7 @@ abstract contract MintControllerBase is IBaseMinter {
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
     // ================================
-    // MINT CONTROLLER FUNCTIONS
+    // WRITE FUNCTIONS
     // ================================
 
     /**
@@ -145,7 +145,7 @@ abstract contract MintControllerBase is IBaseMinter {
     }
 
     // ================================
-    // INTERNAL HELPER FUNCTIONS
+    // INTERNAL FUNCTIONS
     // ================================
 
     /**
