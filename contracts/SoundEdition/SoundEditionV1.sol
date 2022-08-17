@@ -73,7 +73,7 @@ contract SoundEditionV1 is
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event EditionMaxMintableSet(uint32 editionMaxMintable);
+    event EditionMaxMintableSet(uint32 newMax);
 
     // ================================
     // ERRORS
@@ -84,6 +84,7 @@ contract SoundEditionV1 is
     error Unauthorized();
     error EditionMaxMintableReached();
     error InvalidAmount();
+    error MaximumHasAlreadyBeenReached();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -97,7 +98,7 @@ contract SoundEditionV1 is
         IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
-        uint32 masterMaxMintable_,
+        uint32 editionMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
     ) public initializerERC721A initializer {
@@ -108,7 +109,7 @@ contract SoundEditionV1 is
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
-        editionMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
+        editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
 
@@ -119,6 +120,8 @@ contract SoundEditionV1 is
 
         // Give owner the DEFAULT_ADMIN_ROLE
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
+
+        emit EditionMaxMintableSet(editionMaxMintable);
     }
 
     /// @inheritdoc ISoundEditionV1
@@ -166,6 +169,28 @@ contract SoundEditionV1 is
 
         isMetadataFrozen = true;
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
+        if (_totalMinted() == editionMaxMintable) {
+            revert MaximumHasAlreadyBeenReached();
+        }
+
+        // Only allow reducing below current max.
+        if (newMax >= editionMaxMintable) {
+            revert InvalidAmount();
+        }
+
+        // If attempting to set below current total minted, set it to current total.
+        // Otherwise, set it to the provided value.
+        if (newMax < _totalMinted()) {
+            editionMaxMintable = uint32(_totalMinted());
+        } else {
+            editionMaxMintable = newMax;
+        }
+
+        emit EditionMaxMintableSet(editionMaxMintable);
     }
 
     /// @inheritdoc ISoundEditionV1

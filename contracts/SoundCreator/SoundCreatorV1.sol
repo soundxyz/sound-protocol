@@ -70,8 +70,9 @@ contract SoundCreatorV1 {
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
     ) external returns (address soundEdition) {
+        // Create Sound Edition proxy
         soundEdition = Clones.clone(nftImplementation);
-
+        // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
             name,
