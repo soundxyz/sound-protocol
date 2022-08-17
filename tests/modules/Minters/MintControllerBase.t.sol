@@ -10,6 +10,9 @@ contract MintControllerBaseTests is TestConfig {
 
     MockMinter public minter;
 
+    uint32 constant START_TIME = 0;
+    uint32 constant END_TIME = type(uint32).max;
+
     constructor() {
         minter = new MockMinter();
     }
@@ -41,7 +44,7 @@ contract MintControllerBaseTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
         emit MintControllerSet(address(edition), mintId, controller);
-        minter.createEditionMintController(address(edition));
+        minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         vm.stopPrank();
     }
@@ -52,12 +55,12 @@ contract MintControllerBaseTests is TestConfig {
 
         vm.expectRevert(MintControllerBase.CallerNotEditionOwner.selector);
         vm.prank(attacker);
-        minter.createEditionMintController(address(edition));
+        minter.createEditionMintController(address(edition), START_TIME, END_TIME);
     }
 
     function test_createEditionMintControllerRevertsIfEditionDoesNotImplementOwner() external {
         vm.expectRevert(MintControllerBase.CallerNotEditionOwner.selector);
-        minter.createEditionMintController(address(0));
+        minter.createEditionMintController(address(0), START_TIME, END_TIME);
     }
 
     function test_createEditionMintControllerChangesController() external {
@@ -67,7 +70,7 @@ contract MintControllerBaseTests is TestConfig {
 
         assertEq(minter.editionMintController(address(edition), mintId), address(0));
 
-        minter.createEditionMintController(address(edition));
+        minter.createEditionMintController(address(edition), START_TIME, END_TIME);
         assertEq(minter.editionMintController(address(edition), mintId), edition.owner());
     }
 
@@ -75,7 +78,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address newController = getRandomAccount(1);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         vm.expectEmit(false, false, false, true);
         emit MintControllerSet(address(edition), mintId, newController);
@@ -86,7 +89,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address newController = getRandomAccount(1);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         minter.setEditionMintController(address(edition), mintId, newController);
         assertEq(minter.editionMintController(address(edition), mintId), newController);
@@ -95,7 +98,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_deleteEditionMintControllerEmitsEvent() external {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         vm.expectEmit(false, false, false, true);
         emit MintControllerSet(address(edition), mintId, address(0));
@@ -107,7 +110,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address attacker = getRandomAccount(1);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         vm.prank(attacker);
         vm.expectRevert(MintControllerBase.MintControllerUnauthorized.selector);
@@ -120,7 +123,7 @@ contract MintControllerBaseTests is TestConfig {
 
         address controller = getRandomAccount(0);
 
-        uint256 mintId = minter.createEditionMintController(address(edition0));
+        uint256 mintId = minter.createEditionMintController(address(edition0), START_TIME, END_TIME);
 
         vm.prank(controller);
         vm.expectRevert(MintControllerBase.MintControllerNotFound.selector);
@@ -130,7 +133,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_deleteEditionMintControllerChangesControllerToZeroAddress() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
         assertEq(minter.editionMintController(address(edition), mintId), edition.owner());
 
         minter.deleteEditionMintController(address(edition), mintId);
@@ -140,7 +143,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_mintRevertsForWrongEtherValue() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         uint256 price = 1;
         vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, price * 2 - 1, price * 2));
@@ -152,7 +155,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_mintRevertsWhenPaused() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         minter.setEditionMintPaused(address(edition), mintId, true);
 
@@ -169,7 +172,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_mintRevertsWithZeroQuantity() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         vm.expectRevert(IERC721AUpgradeable.MintZeroQuantity.selector);
 
@@ -180,7 +183,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         for (uint256 i; i < 3; ++i) {
-            uint256 mintId = minter.createEditionMintController(address(edition));
+            uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
             assertEq(mintId, i);
         }
     }
@@ -190,7 +193,7 @@ contract MintControllerBaseTests is TestConfig {
 
         SoundEditionV1 edition1 = _createEdition(maxSupply);
 
-        uint256 mintId1 = minter.createEditionMintController(address(edition1));
+        uint256 mintId1 = minter.createEditionMintController(address(edition1), START_TIME, END_TIME);
 
         // Mint the max supply
         minter.mint(address(edition1), mintId1, maxSupply, 0);
@@ -205,7 +208,7 @@ contract MintControllerBaseTests is TestConfig {
 
         SoundEditionV1 edition = _createEdition(1);
 
-        uint256 mintId = minter.createEditionMintController(address(edition));
+        uint256 mintId = minter.createEditionMintController(address(edition), START_TIME, END_TIME);
 
         MockMinter.BaseData memory baseData = minter.baseMintData(address(edition), mintId);
 
