@@ -98,7 +98,8 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet_
-    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
+    ) public returns (uint256 mintId) {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMintController(edition, startTime, endTime);
@@ -229,18 +230,6 @@ contract RangeEditionMinter is MintControllerBase {
     ) internal view override {
         uint32 closingTime = _editionMintData[edition][mintId].closingTime;
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-    }
-
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
-
-    /**
-     * @dev Returns the `EditionMintData` for `edition.
-     * @param edition Address of the song edition contract we are minting for.
-     */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
     }
 
     // ================================

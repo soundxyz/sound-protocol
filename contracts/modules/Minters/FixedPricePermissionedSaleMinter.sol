@@ -60,7 +60,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         address edition,
         uint256 price_,
         address signer,
-        uint32 maxMintable,
+        uint32 maxMintable_,
         uint32 startTime,
         uint32 endTime
     ) public returns (uint256 mintId) {
