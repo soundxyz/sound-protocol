@@ -6,8 +6,6 @@ import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
 contract SoundEdition_mint is TestConfig {
-    event EditionMaxMintableSet(uint32 editionMaxMintable);
-
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
