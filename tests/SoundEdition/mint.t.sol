@@ -5,7 +5,12 @@ import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
 import "../TestConfig.sol";
 import "../../contracts/SoundEdition/SoundEditionV1.sol";
 
+/**
+ * @dev Tests base minting functionality directly from edition.
+ */
 contract SoundEdition_mint is TestConfig {
+    event EditionMaxMintableSet(uint32 newMax);
+
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
@@ -106,5 +111,114 @@ contract SoundEdition_mint is TestConfig {
 
         vm.prank(attacker);
         edition.burn(TOKEN2_ID);
+    }
+
+    function test_reduceEditionMaxMintableSuccessViaOwner() external {
+        uint32 MAX_3 = 3;
+        uint32 MAX_2 = 2;
+
+        vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_3);
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MAX_3,
+                EDITION_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
+
+        // Mint a token
+        edition.mint(address(this), 1);
+
+        // Set new max mintable
+        vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_2);
+
+        edition.reduceEditionMaxMintable(MAX_2);
+        assert(edition.editionMaxMintable() == MAX_2);
+
+        // Mint another token
+        edition.mint(address(this), 1);
+
+        // We're now at editionMaxMintable
+        assertEq(edition.totalMinted(), edition.editionMaxMintable());
+    }
+
+    function test_reduceEditionMaxMintableSuccessViaAdmin() external {
+        uint32 MAX_3 = 3;
+        uint32 MAX_2 = 2;
+
+        vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_3);
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                MAX_3,
+                EDITION_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
+
+        address admin = address(1203701);
+        edition.grantRole(edition.ADMIN_ROLE(), admin);
+
+        // Mint a token
+        edition.mint(address(this), 1);
+
+        // Set new max mintable
+        vm.expectEmit(false, false, false, true);
+        emit EditionMaxMintableSet(MAX_2);
+
+        vm.prank(admin);
+        edition.reduceEditionMaxMintable(MAX_2);
+        assert(edition.editionMaxMintable() == MAX_2);
+
+        // Mint another token
+        edition.mint(address(this), 1);
+
+        // We're now at editionMaxMintable
+        assertEq(edition.totalMinted(), edition.editionMaxMintable());
+    }
+
+    function test_reduceEditionMaxMintableRevertsIfNotAuthorized(address attacker) external {
+        SoundEditionV1 edition = createGenericEdition();
+        vm.assume(attacker != address(this));
+
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.prank(attacker);
+        edition.reduceEditionMaxMintable(1);
+    }
+
+    function test_reduceEditionMaxMintableRevertsIfValueInvalid() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        edition.reduceEditionMaxMintable(10);
+
+        // Attempt to increase max mintable above current max - should fail
+        vm.expectRevert(SoundEditionV1.InvalidAmount.selector);
+        edition.reduceEditionMaxMintable(11);
+
+        // Mint some tokens
+        edition.mint(address(this), 5);
+
+        // Attempt to lower max mintable below current minted count - should set to current minted count
+        edition.reduceEditionMaxMintable(4);
+
+        assert(edition.editionMaxMintable() == 5);
+
+        // Attempt to lower again - should revert
+        vm.expectRevert(SoundEditionV1.MaximumHasAlreadyBeenReached.selector);
+        edition.reduceEditionMaxMintable(4);
     }
 }
