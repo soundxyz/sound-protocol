@@ -6,7 +6,13 @@ import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 
 contract MintControllerBaseTests is TestConfig {
-    event MintConfigCreated(address indexed edition, uint256 mintId, address creator);
+    event MintConfigCreated(
+        address indexed edition,
+        address indexed creator,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    );
 
     MockMinter public minter;
 
@@ -34,21 +40,6 @@ contract MintControllerBaseTests is TestConfig {
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
     }
 
-    function test_createEditionMintEmitsEvent() external {
-        address controller = getRandomAccount(0);
-        vm.startPrank(controller);
-
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
-
-        uint256 mintId = 0;
-
-        vm.expectEmit(false, false, false, true);
-        emit MintConfigCreated(address(edition), mintId, controller);
-        minter.createEditionMint(address(edition), START_TIME, END_TIME);
-
-        vm.stopPrank();
-    }
-
     function test_createEditionMintRevertsIfCallerNotEditionOwnerOrAdmin() external {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address attacker = getRandomAccount(1);
@@ -58,17 +49,33 @@ contract MintControllerBaseTests is TestConfig {
         minter.createEditionMint(address(edition), START_TIME, END_TIME);
     }
 
-    // TODO: test owner and admins can create edition mint configs
-    // function test_createEditionMintChangesController() external {
-    //     SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+    function test_createEditionMintViaOwner() external {
+        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-    //     uint256 mintId = 0;
+        uint256 mintId = 0;
 
-    //     assertEq(minter.editionMintController(address(edition), mintId), address(0));
+        address owner = address(this);
 
-    //     minter.createEditionMint(address(edition), START_TIME, END_TIME);
-    //     assertEq(minter.editionMintController(address(edition), mintId), edition.owner());
-    // }
+        vm.expectEmit(false, false, false, true);
+        emit MintConfigCreated(address(edition), owner, mintId, START_TIME, END_TIME);
+
+        minter.createEditionMint(address(edition), START_TIME, END_TIME);
+    }
+
+    function test_createEditionMintViaAdmin() external {
+        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+
+        uint256 mintId = 0;
+        address admin = address(1037037);
+
+        edition.grantRole(edition.ADMIN_ROLE(), admin);
+
+        vm.expectEmit(false, false, false, true);
+        emit MintConfigCreated(address(edition), admin, mintId, START_TIME, END_TIME);
+
+        vm.prank(admin);
+        minter.createEditionMint(address(edition), START_TIME, END_TIME);
+    }
 
     function test_mintRevertsForWrongEtherValue() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);

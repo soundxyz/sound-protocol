@@ -51,8 +51,13 @@ abstract contract MintControllerBase is IBaseMinter {
     /**
      * @notice Emitted when the mint configuration for an `edition` is created.
      */
-    // TODO: Add startTime & endTime
-    event MintConfigCreated(address indexed edition, uint256 mintId, address creator);
+    event MintConfigCreated(
+        address indexed edition,
+        address indexed creator,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    );
 
     /**
      * @notice Emitted when the `paused` status of `edition` is updated.
@@ -107,7 +112,9 @@ abstract contract MintControllerBase is IBaseMinter {
     }
 
     /**
-     * @dev Sets the time range for an edition mint, only callable by the current controller.
+     * @dev Sets the time range for an edition mint.
+     * Calling conditions:
+     * - The caller must be the edition's owner or an admin.
      */
     function setTimeRange(
         address edition,
@@ -148,7 +155,7 @@ abstract contract MintControllerBase is IBaseMinter {
 
         _nextMintIds[edition] += 1;
 
-        emit MintConfigCreated(edition, mintId, msg.sender);
+        emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime);
     }
 
     /**
