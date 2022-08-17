@@ -13,9 +13,6 @@ contract SoundEdition_metadata is TestConfig {
     event ContractURISet(string _contractURI);
     event MetadataModuleSet(IMetadataModule _metadataModule);
 
-    error URIQueryForNonexistentToken();
-    error MetadataIsFrozen();
-
     function _createEdition() internal returns (MockSoundEditionV1 soundEdition) {
         // deploy new sound contract
         soundEdition = MockSoundEditionV1(
@@ -87,7 +84,7 @@ contract SoundEdition_metadata is TestConfig {
     function test_tokenURIRevertsWhenTokenIdDoesntExist() public {
         MockSoundEditionV1 soundEdition = _createEdition();
 
-        vm.expectRevert(URIQueryForNonexistentToken.selector);
+        vm.expectRevert(IERC721AUpgradeable.URIQueryForNonexistentToken.selector);
         soundEdition.tokenURI(2);
     }
 
@@ -114,7 +111,7 @@ contract SoundEdition_metadata is TestConfig {
 
         string memory newBaseURI = "https://abc.com/";
 
-        vm.expectRevert(MetadataIsFrozen.selector);
+        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
         soundEdition.setBaseURI(newBaseURI);
     }
 
@@ -180,7 +177,7 @@ contract SoundEdition_metadata is TestConfig {
 
         string memory newContractURI = "https://abc.com/";
 
-        vm.expectRevert(MetadataIsFrozen.selector);
+        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
         soundEdition.setContractURI(newContractURI);
     }
 
@@ -242,7 +239,7 @@ contract SoundEdition_metadata is TestConfig {
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
-        vm.expectRevert(MetadataIsFrozen.selector);
+        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
         soundEdition.setMetadataModule(newMetadataModule);
     }
 
@@ -305,7 +302,7 @@ contract SoundEdition_metadata is TestConfig {
         MockSoundEditionV1 soundEdition = _createEdition();
         soundEdition.freezeMetadata();
 
-        vm.expectRevert(MetadataIsFrozen.selector);
+        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
         soundEdition.freezeMetadata();
     }
 

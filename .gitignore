@@ -13,3 +13,7 @@ out/
 
 node_modules
 .env
+
+# Code coverage artifacts
+lcov.info
+/coverage/*
