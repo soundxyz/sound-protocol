@@ -234,6 +234,7 @@ abstract contract MintControllerBase is IBaseMinter {
 
     /**
      * @dev Sets the time range for an edition mint.
+     * Note: If calling from a child contract, the child is responsible for access control.
      */
     function _setTimeRange(
         address edition,
