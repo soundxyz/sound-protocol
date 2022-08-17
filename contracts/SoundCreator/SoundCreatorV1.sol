@@ -30,14 +30,15 @@ pragma solidity ^0.8.16;
 
 import "../SoundEdition/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
-import "openzeppelin/access/Ownable.sol";
+import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * @title Sound Creator V1
  * @dev Factory for deploying Sound edition contracts.
  */
-contract SoundCreatorV1 is Ownable {
+contract SoundCreatorV1 is OwnableUpgradeable, UUPSUpgradeable {
     event SoundEditionCreated(address indexed soundEdition, address indexed creator);
     event SoundEditionImplementationSet(address newImplementation);
 
@@ -45,7 +46,13 @@ contract SoundCreatorV1 is Ownable {
 
     address public soundEditionImplementation;
 
-    constructor(address _soundEditionImplementation) implementationNotZero(_soundEditionImplementation) {
+    function initialize(address _soundEditionImplementation)
+        public
+        implementationNotZero(_soundEditionImplementation)
+        initializer
+    {
+        __Ownable_init_unchained();
+
         soundEditionImplementation = _soundEditionImplementation;
     }
 
@@ -99,4 +106,6 @@ contract SoundCreatorV1 is Ownable {
         }
         _;
     }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }
