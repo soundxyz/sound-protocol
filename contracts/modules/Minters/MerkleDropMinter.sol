@@ -24,7 +24,8 @@ contract MerkleDropMinter is MintControllerBase {
         uint256 price,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMintable
+        uint32 maxMintable,
+        uint32 maxAllowedPerWallet
     );
 
     event DropClaimed(address recipient, uint32 quantity);
@@ -33,9 +34,10 @@ contract MerkleDropMinter is MintControllerBase {
     // ERRORS
     // ================================
 
-    error ExceedsEligibleQuantity();
-
     error InvalidMerkleProof();
+
+    // The number of tokens minted has exceeded the number allowed for each wallet.
+    error ExceedsMaxPerWallet();
 
     // ================================
     // STORAGE
@@ -48,6 +50,8 @@ contract MerkleDropMinter is MintControllerBase {
         uint256 price;
         // The maximum number of tokens that can can be minted for this sale.
         uint32 maxMintable;
+        // The maximum number of tokens that a wallet can mint.
+        uint32 maxAllowedPerWallet;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
     }
@@ -68,7 +72,8 @@ contract MerkleDropMinter is MintControllerBase {
      * @param price_ Sale price in ETH for minting a single token in `edition`.
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
      * @param endTime End timestamp of sale (in seconds since unix epoch).
-     * @param maxMintable The maximum number of tokens that can can be minted for this sale.
+     * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
+     * @param maxAllowedPerWallet_ The maximum number of tokens that a single wallet can mint.
      */
     function createEditionMint(
         address edition,
@@ -76,14 +81,16 @@ contract MerkleDropMinter is MintControllerBase {
         uint256 price_,
         uint32 startTime,
         uint32 endTime,
-        uint32 maxMintable
+        uint32 maxMintable_,
+        uint32 maxAllowedPerWallet_
     ) public returns (uint256 mintId) {
         mintId = _createEditionMintController(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
         data.price = price_;
-        data.maxMintable = maxMintable;
+        data.maxMintable = maxMintable_;
+        data.maxAllowedPerWallet = maxAllowedPerWallet_;
         // prettier-ignore
         emit MerkleDropMintCreated(
             edition,
@@ -92,7 +99,8 @@ contract MerkleDropMinter is MintControllerBase {
             price_,
             startTime,
             endTime,
-            maxMintable
+            maxMintable_,
+            maxAllowedPerWallet_
         );
     }
 
@@ -110,15 +118,13 @@ contract MerkleDropMinter is MintControllerBase {
      * @dev Mints tokens.
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId Id of the mint instance.
-     * @param eligibleQuantity The total number of tokens allocated to the user.
      * This is the maximum the user can claim.
-     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `eligibleQuantity`
+     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxAllowedPerWallet`
      * @param merkleProof Merkle proof for the claim.
      */
     function mint(
         address edition,
         uint256 mintId,
-        uint32 eligibleQuantity,
         uint32 requestedQuantity,
         bytes32[] calldata merkleProof
     ) public payable {
@@ -130,12 +136,13 @@ contract MerkleDropMinter is MintControllerBase {
 
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
-        if (updatedClaimedQuantity > eligibleQuantity) revert ExceedsEligibleQuantity();
+        // Revert if attempting to mint more than the max allowed per wallet.
+        if (updatedClaimedQuantity > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
 
-        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender, eligibleQuantity));
+        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
@@ -174,16 +181,18 @@ contract MerkleDropMinter is MintControllerBase {
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
+    function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }
 
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
-    // The true max per wallet is defined in the merkle tree (eligibleQuantity)
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
-        return type(uint32).max;
+    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
+        return
+            _editionMintData[edition][mintId].maxAllowedPerWallet > 0
+                ? _editionMintData[edition][mintId].maxAllowedPerWallet
+                : type(uint32).max;
     }
 }
