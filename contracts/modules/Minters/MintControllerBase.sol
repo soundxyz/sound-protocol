@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 import "./IBaseMinter.sol";
 import "../../SoundEdition/ISoundEditionV1.sol";
+import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 
 /**
  * @title Mint Controller Base
@@ -125,7 +126,7 @@ abstract contract MintControllerBase is IBaseMinter {
         address edition,
         uint256 mintId,
         address controller
-    ) public virtual onlyEditionMintController(edition, mintId) {
+    ) public virtual onlyEditionOwnerOrAdmin(edition, mintId) {
         _baseData[edition][mintId].controller = controller;
         emit MintControllerSet(edition, mintId, controller);
     }
@@ -139,7 +140,7 @@ abstract contract MintControllerBase is IBaseMinter {
         address edition,
         uint256 mintId,
         bool paused
-    ) public virtual onlyEditionMintController(edition, mintId) {
+    ) public virtual onlyEditionOwnerOrAdmin(edition, mintId) {
         _baseData[edition][mintId].mintPaused = paused;
         emit MintPausedSet(edition, mintId, paused);
     }
@@ -292,11 +293,16 @@ abstract contract MintControllerBase is IBaseMinter {
     /**
      * @dev Restricts the function to be only callable by the controller of `edition`.
      */
-    modifier onlyEditionMintController(address edition, uint256 mintId) virtual {
+    modifier onlyEditionOwnerOrAdmin(address edition, uint256 mintId) virtual {
         BaseData storage data = _baseData[edition][mintId];
 
         if (data.controller == address(0)) revert MintControllerNotFound();
-        if (msg.sender != data.controller) revert MintControllerUnauthorized();
+
+        // If caller is not the owner or an admin, revert.
+        if (
+            !_callerIsEditionOwner(edition) &&
+            !IAccessControlUpgradeable(edition).hasRole(ISoundEditionV1(edition).ADMIN_ROLE(), msg.sender)
+        ) revert MintControllerUnauthorized();
 
         _;
     }

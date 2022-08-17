@@ -182,7 +182,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) {
+    ) public onlyEditionOwnerOrAdmin(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
         // Set closingTime first, as its stored value gets validated later in the execution.
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
@@ -204,7 +204,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint256 mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
-    ) public onlyEditionMintController(edition, mintId) {
+    ) public onlyEditionOwnerOrAdmin(edition, mintId) {
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
