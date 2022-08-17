@@ -20,6 +20,8 @@ jobs:
         run: forge install
 
       - name: Run Slither
+        env:
+          TERM: xterm-color
         uses: crytic/slither-action@main
         continue-on-error: true
         id: slither
