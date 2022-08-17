@@ -77,7 +77,8 @@ contract RangeEditionMinter is MintControllerBase {
      */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
     /**
-     * @dev Number of tokens minted by each buyer address.
+     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxAllowedPerWallet.
+     * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
      * edition => mintId => buyer => mintedTallies
      */
     mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
