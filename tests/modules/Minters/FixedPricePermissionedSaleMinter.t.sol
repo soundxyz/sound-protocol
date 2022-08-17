@@ -9,12 +9,11 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     using ECDSA for bytes32;
 
     uint256 constant PRICE = 1;
-
     uint32 constant MAX_MINTABLE = 5;
-
     uint256 constant SIGNER_PRIVATE_KEY = 1;
-
     uint256 constant MINT_ID = 0;
+    uint32 constant START_TIME = 0;
+    uint32 constant END_TIME = type(uint32).max;
 
     // prettier-ignore
     event FixedPricePermissionedMintCreated(
@@ -45,7 +44,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, START_TIME, END_TIME);
     }
 
     function test_createEditionMintEmitsEvent() public {
@@ -57,7 +56,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         emit FixedPricePermissionedMintCreated(address(edition), MINT_ID, PRICE, _signerAddress(), MAX_MINTABLE);
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, START_TIME, END_TIME);
     }
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
@@ -67,7 +66,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.expectRevert(FixedPricePermissionedSaleMinter.SignerIsZeroAddress.selector);
 
-        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE);
+        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE, START_TIME, END_TIME);
     }
 
     function test_mintWithoutCorrectSignatureReverts() public {

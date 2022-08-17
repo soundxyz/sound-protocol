@@ -98,7 +98,8 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet_
-    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
+    ) public returns (uint256 mintId) {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMintController(edition, startTime, endTime);
@@ -181,11 +182,13 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
-        _setTimeRange(edition, mintId, startTime, endTime);
-
+    ) public onlyEditionMintController(edition, mintId) {
+        // Set closingTime first, as its stored value gets validated later in the execution.
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
+
+        // This calls _beforeSetTimeRange, which does the closingTime validation.
+        _setTimeRange(edition, mintId, startTime, endTime);
 
         emit ClosingTimeSet(edition, mintId, closingTime);
     }
@@ -210,6 +213,23 @@ contract RangeEditionMinter is MintControllerBase {
             revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Optional validation function that gets called by _setTimeRange()
+     */
+    function _beforeSetTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) internal view override {
+        uint32 closingTime = _editionMintData[edition][mintId].closingTime;
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
     }
 
     // ================================
