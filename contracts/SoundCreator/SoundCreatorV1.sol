@@ -38,25 +38,15 @@ import "openzeppelin/access/Ownable.sol";
  * @dev Factory for deploying Sound edition contracts.
  */
 contract SoundCreatorV1 is Ownable {
-    /***********************************
-                EVENTS
-    ***********************************/
-
     event SoundEditionCreated(address indexed soundEdition, address indexed creator);
     event SoundEditionImplementationSet(address newImplementation);
 
-    /***********************************
-                STORAGE
-    ***********************************/
+    error ImplementationCantBeNull();
 
-    address public editionImplementation;
+    address public soundEditionImplementation;
 
-    /***********************************
-              PUBLIC FUNCTIONS
-    ***********************************/
-
-    constructor(address _editionImplementation) {
-        editionImplementation = _editionImplementation;
+    constructor(address _soundEditionImplementation) nonNullImpl(_soundEditionImplementation) {
+        soundEditionImplementation = _soundEditionImplementation;
     }
 
     /**
@@ -73,7 +63,7 @@ contract SoundCreatorV1 is Ownable {
         uint32 randomnessLockedTimestamp
     ) external returns (address soundEdition) {
         // Create Sound Edition proxy
-        soundEdition = Clones.clone(editionImplementation);
+        soundEdition = Clones.clone(soundEditionImplementation);
         // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
@@ -93,9 +83,16 @@ contract SoundCreatorV1 is Ownable {
     /**
      * @dev Changes the SoundEdition implementation contract address.
      */
-    function setEditionImplementation(address newImplementation) external onlyOwner {
-        editionImplementation = newImplementation;
+    function setEditionImplementation(address newImplementation) external onlyOwner nonNullImpl(newImplementation) {
+        soundEditionImplementation = newImplementation;
 
-        emit SoundEditionImplementationSet(editionImplementation);
+        emit SoundEditionImplementationSet(soundEditionImplementation);
+    }
+
+    modifier nonNullImpl(address implementation) {
+        if (implementation == address(0)) {
+            revert ImplementationCantBeNull();
+        }
+        _;
     }
 }

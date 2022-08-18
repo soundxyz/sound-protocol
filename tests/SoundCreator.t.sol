@@ -47,6 +47,8 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_ownerCanSetNewImplementation(address newImplementation) public {
+        vm.assume(newImplementation != address(0));
+
         SoundEditionV1 soundEdition = createGenericEdition();
         SoundCreatorV1 soundCreator = new SoundCreatorV1(address(soundEdition));
 
