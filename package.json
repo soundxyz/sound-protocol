@@ -46,6 +46,7 @@
     "lint-staged": "^13.0.3",
     "prettier": "2.7.1",
     "prettier-plugin-solidity": "1.0.0-dev.23",
+    "semver": "^7.3.7",
     "solhint": "3.3.7",
     "solhint-plugin-prettier": "0.0.5",
     "typechain": "^8.1.0",
