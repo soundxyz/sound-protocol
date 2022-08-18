@@ -52,8 +52,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param metadataModule Address of metadata module, address(0x00) if not used
      * @param baseURI Base URI
      * @param contractURI Contract URI for OpenSea storefront
-     * @param fundingRecipient Address that receive royalties
-     * @param royaltyBPS Royalty amount in bps
+     * @param fundingRecipient Address that receives primary and secondary royalties
+     * @param royaltyBPS Royalty amount in bps (basis points)
      * @param editionMaxMintable The maximum amount of tokens that can be minted for this edition.
      * @param randomnessLockedAfterMinted Token supply after which randomness gets locked
      * @param randomnessLockedTimestamp Timestamp after which randomness gets locked
@@ -84,12 +84,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mint(address to, uint256 quantity) external payable;
 
     /**
-     * @dev Withdraws collected ETH royalties to the platform and fundingRecipient
+     * @dev Withdraws collected ETH royalties to the fundingRecipient
      */
     function withdrawETH() external;
 
     /**
-     * @dev Withdraws collected ERC20 royalties to the platform and fundingRecipient
+     * @dev Withdraws collected ERC20 royalties to the fundingRecipient
      * @param tokens array of ERC20 tokens to withdraw
      */
     function withdrawERC20(address[] calldata tokens) external;
@@ -131,7 +131,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function setFundingRecipient(address fundingRecipient) external;
 
     /**
-     * @dev Sets royalty amount in bps
+     * @dev Sets royalty amount in bps (basis points)
      */
     function setRoyalty(uint16 royaltyBPS) external;
 
