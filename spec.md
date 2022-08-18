@@ -39,7 +39,7 @@ Features:
   - Only the owner, callers with ADMIN_ROLE, and callers with MINTER_ROLE (e.g. minter modules) can call mint.
   - `SoundEditionV1.editionMaxMintable` - maximum number of tokens that can be minted for the edition.
     - Can be initialized with any value up to `type(uint32).max`.
-    - Can be "frozen" by owner or `ADMIN_ROLE` at the current token count to prevent any further minting.
+    - Can be reduced by owner or admins after initialization down to any point above or equal to the current token count.
 - Access control
   - Implements OpenZeppelin `OwnableUpgradeable` and `AccessControlUpgradeable` (upgradeable versions of each in order to support the proxy's `initialize` function).
   - Roles can be granted & revoked for addresses. ex: 

@@ -10,6 +10,7 @@ import "openzeppelin/token/ERC20/IERC20.sol";
 import "solady/utils/SafeTransferLib.sol";
 import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
+import "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -46,7 +47,7 @@ contract SoundEditionV1 is
     ERC721AQueryableUpgradeable,
     ERC721ABurnableUpgradeable,
     OwnableUpgradeable,
-    AccessControlUpgradeable
+    AccessControlEnumerableUpgradeable
 {
     // ================================
     // CONSTANTS
@@ -80,7 +81,7 @@ contract SoundEditionV1 is
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
     event FundingRecipientSet(address fundingRecipient);
     event RoyaltySet(uint16 royaltyBPS);
-    event EditionMaxMintableSet(uint32 editionMaxMintable);
+    event EditionMaxMintableSet(uint32 newMax);
 
     // ================================
     // ERRORS
@@ -93,6 +94,7 @@ contract SoundEditionV1 is
     error EditionMaxMintableReached();
     error InvalidAmount();
     error InvalidFundingRecipient();
+    error MaximumHasAlreadyBeenReached();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
@@ -108,7 +110,7 @@ contract SoundEditionV1 is
         string memory contractURI_,
         address fundingRecipient_,
         uint16 royaltyBPS_,
-        uint32 masterMaxMintable_,
+        uint32 editionMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
     ) public initializerERC721A initializer onlyValidRoyaltyBPS(royaltyBPS_) {
@@ -124,7 +126,7 @@ contract SoundEditionV1 is
         fundingRecipient = fundingRecipient_;
 
         royaltyBPS = royaltyBPS_;
-        editionMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
+        editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
 
@@ -135,6 +137,8 @@ contract SoundEditionV1 is
 
         // Give owner the DEFAULT_ADMIN_ROLE
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
+
+        emit EditionMaxMintableSet(editionMaxMintable);
     }
 
     /// @inheritdoc ISoundEditionV1
@@ -209,6 +213,27 @@ contract SoundEditionV1 is
         emit RoyaltySet(royaltyBPS_);
     }
 
+    function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
+        if (_totalMinted() == editionMaxMintable) {
+            revert MaximumHasAlreadyBeenReached();
+        }
+
+        // Only allow reducing below current max.
+        if (newMax >= editionMaxMintable) {
+            revert InvalidAmount();
+        }
+
+        // If attempting to set below current total minted, set it to current total.
+        // Otherwise, set it to the provided value.
+        if (newMax < _totalMinted()) {
+            editionMaxMintable = uint32(_totalMinted());
+        } else {
+            editionMaxMintable = newMax;
+        }
+
+        emit EditionMaxMintableSet(editionMaxMintable);
+    }
+
     /// @inheritdoc ISoundEditionV1
     function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
         if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
@@ -265,12 +290,12 @@ contract SoundEditionV1 is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable, AccessControlUpgradeable)
+        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return
             ERC721AUpgradeable.supportsInterface(interfaceId) ||
-            AccessControlUpgradeable.supportsInterface(interfaceId);
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId);
     }
 
     /// @inheritdoc IERC2981Upgradeable
@@ -285,6 +310,17 @@ contract SoundEditionV1 is
     /// @inheritdoc ERC721AUpgradeable
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
+        uint256 count = getRoleMemberCount(role);
+
+        members = new address[](count);
+
+        for (uint256 i = 0; i < count; i++) {
+            members[i] = getRoleMember(role, i);
+        }
     }
 
     // ================================

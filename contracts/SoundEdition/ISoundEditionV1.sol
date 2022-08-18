@@ -136,6 +136,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function setRoyalty(uint16 royaltyBPS) external;
 
     /**
+     *   @dev Reduces the maximum mintable quantity.
+     */
+    function reduceEditionMaxMintable(uint32 newMax) external;
+
+    /**
      * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
      */
     function setMintRandomnessLock(uint32 randomnessLockedAfterMinted) external;
@@ -156,4 +161,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function randomnessLockedTimestamp() external view returns (uint32);
 
     function mintRandomness() external view returns (bytes32);
+
+    function getMembersOfRole(bytes32 role) external view returns (address[] memory);
 }

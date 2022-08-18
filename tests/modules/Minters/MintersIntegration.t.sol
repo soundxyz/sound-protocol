@@ -18,7 +18,7 @@ contract MintersIntegration is TestConfig {
     // Free drop constant properties
     uint256 PRICE_FREE_DROP = 0;
     uint32 MINTER_MAX_MINTABLE_FREE_DROP = 100;
-    uint32 MAX_ALLOWED_PER_WALLET = 0; // There is no per wallet limit set on the free sale.
+    uint32 MAX_ALLOWED_PER_WALLET = 3;
 
     // Presale constant properties
     uint256 PRICE_PRESALE = 50000000 gwei; // Price is 0.05 ETH
@@ -42,16 +42,15 @@ contract MintersIntegration is TestConfig {
     SoundEditionV1 public edition;
 
     // Helper function to setup a MerkleTree construct
-    function setUpMerkleTree(
-        address editionAddress,
-        address[] memory accounts,
-        uint32[] memory eligibleQuantities
-    ) public returns (Merkle, bytes32[] memory) {
+    function setUpMerkleTree(address editionAddress, address[] memory accounts)
+        public
+        returns (Merkle, bytes32[] memory)
+    {
         Merkle m = new Merkle();
 
         bytes32[] memory leaves = new bytes32[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
-            leaves[i] = keccak256(abi.encodePacked(editionAddress, accounts[i], eligibleQuantities[i]));
+            leaves[i] = keccak256(abi.encodePacked(editionAddress, accounts[i]));
         }
 
         return (m, leaves);
@@ -93,16 +92,10 @@ contract MintersIntegration is TestConfig {
         accountsFreeMerkleDrop[0] = userAccounts[0];
         accountsFreeMerkleDrop[1] = userAccounts[1];
 
-        // Account 1 is eligible for 30 tokens, and account 2 for 70.
-        uint32[] memory eligibleAmountsFreeMerkleDrop = new uint32[](2);
-        eligibleAmountsFreeMerkleDrop[0] = uint32(30);
-        eligibleAmountsFreeMerkleDrop[1] = uint32(70);
-
         // Setup the Merkle tree
         (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(
             address(edition),
-            accountsFreeMerkleDrop,
-            eligibleAmountsFreeMerkleDrop
+            accountsFreeMerkleDrop
         );
 
         MerkleDropMinter merkleDropMinter = new MerkleDropMinter();
@@ -125,17 +118,8 @@ contract MintersIntegration is TestConfig {
         accountsPresale[0] = userAccounts[2];
         accountsPresale[1] = userAccounts[3];
 
-        // User 2 is eligible for 20 tokens, and User 3 for 25.
-        uint32[] memory eligibleAmountsPresale = new uint32[](2);
-        eligibleAmountsPresale[0] = uint32(20);
-        eligibleAmountsPresale[1] = uint32(25);
-
         // Setup the Merkle tree
-        (Merkle mPresale, bytes32[] memory leavesPresale) = setUpMerkleTree(
-            address(edition),
-            accountsPresale,
-            eligibleAmountsPresale
-        );
+        (Merkle mPresale, bytes32[] memory leavesPresale) = setUpMerkleTree(address(edition), accountsPresale);
 
         root = mPresale.getRoot(leavesPresale);
         uint256 mintIdPresale = merkleDropMinter.createEditionMint(
@@ -179,28 +163,28 @@ contract MintersIntegration is TestConfig {
         // Check user has no tokens
         uint256 user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
         assertEq(user0Balance, 0);
-        // Claim 20 of 30 eligible tokens
+        // Claim 1 token
         bytes32[] memory proof0 = merkleFreeDrop.getProof(leavesFreeMerkleDrop, 0);
         vm.prank(accountsFreeMerkleDrop[0]);
-        merkleDropMinter.mint(address(edition), mintId, 30, 20, proof0);
+        merkleDropMinter.mint(address(edition), mintId, 1, proof0);
         user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
-        assertEq(user0Balance, 20);
+        assertEq(user0Balance, 1);
 
-        // Check user 1 has no tokens
+        // Next user has no tokens
         bytes32[] memory proof1 = merkleFreeDrop.getProof(leavesFreeMerkleDrop, 1);
         uint256 user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
         assertEq(user1Balance, 0);
-        // Claim all 70 eligible tokens
+        // Claim 3 tokens (max per wallet)
         vm.prank(accountsFreeMerkleDrop[1]);
-        merkleDropMinter.mint(address(edition), mintId, 70, 70, proof1);
+        merkleDropMinter.mint(address(edition), mintId, 3, proof1);
         user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
-        assertEq(user1Balance, 70);
+        assertEq(user1Balance, 3);
 
-        // User 0 comes back to claim 5 more tokens of the 10 remaining eligible quantity
+        // First user comes back to claim 2 more tokens, bringing balance to 3 (max per wallet)
         vm.prank(accountsFreeMerkleDrop[0]);
-        merkleDropMinter.mint(address(edition), mintId, 30, 5, proof0);
+        merkleDropMinter.mint(address(edition), mintId, 2, proof0);
         user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
-        assertEq(user0Balance, 25);
+        assertEq(user0Balance, 3);
 
         // END FREE DROP, START PRESALE
         vm.warp(START_TIME_PRESALE);
@@ -216,10 +200,10 @@ contract MintersIntegration is TestConfig {
         // Check user 0 has no tokens
         uint256 user0Balance = edition.balanceOf(accountsPresale[0]);
         assertEq(user0Balance, 0);
-        // Claim all 20 eligible tokens
+        // Claim 20 tokens
         bytes32[] memory proof0 = mPresale.getProof(leavesPresale, 0);
         vm.prank(accountsPresale[0]);
-        merkleDropMinter.mint{ value: 20 * PRICE_PRESALE }(address(edition), mintId, 20, 20, proof0);
+        merkleDropMinter.mint{ value: 20 * PRICE_PRESALE }(address(edition), mintId, 20, proof0);
         user0Balance = edition.balanceOf(accountsPresale[0]);
         assertEq(user0Balance, 20);
 
@@ -227,9 +211,9 @@ contract MintersIntegration is TestConfig {
         bytes32[] memory proof1 = mPresale.getProof(leavesPresale, 1);
         uint256 user1Balance = edition.balanceOf(accountsPresale[1]);
         assertEq(user1Balance, 0);
-        // Claim all 25 eligible tokens
+        // Claim 25 tokens
         vm.prank(accountsPresale[1]);
-        merkleDropMinter.mint{ value: 25 * PRICE_PRESALE }(address(edition), mintId, 25, 25, proof1);
+        merkleDropMinter.mint{ value: 25 * PRICE_PRESALE }(address(edition), mintId, 25, proof1);
         user1Balance = edition.balanceOf(accountsPresale[1]);
         assertEq(user1Balance, 25);
 

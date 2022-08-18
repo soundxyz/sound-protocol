@@ -34,8 +34,6 @@ contract MerkleDropMinter is MintControllerBase {
     // ERRORS
     // ================================
 
-    error ExceedsEligibleQuantity();
-
     error InvalidMerkleProof();
 
     // The number of tokens minted has exceeded the number allowed for each wallet.
@@ -44,9 +42,6 @@ contract MerkleDropMinter is MintControllerBase {
     // ================================
     // STORAGE
     // ================================
-
-    // Tracking claimed amounts per wallet
-    mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
 
     struct EditionMintData {
         // Hash of the root node for the merkle tree drop
@@ -62,6 +57,9 @@ contract MerkleDropMinter is MintControllerBase {
     }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+
+    // Tracking claimed amounts per wallet
+    mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
 
     // ================================
     // WRITE FUNCTIONS
@@ -86,7 +84,7 @@ contract MerkleDropMinter is MintControllerBase {
         uint32 maxMintable_,
         uint32 maxAllowedPerWallet_
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
@@ -106,29 +104,17 @@ contract MerkleDropMinter is MintControllerBase {
         );
     }
 
-    /**
-     * @dev Deletes a given edition's mint configuration.
-     * @param edition Address of the edition.
-     * @param mintId The mint instance identifier, created when the mint controller was set.
-     */
-    function deleteEditionMint(address edition, uint256 mintId) public {
-        _deleteEditionMintController(edition, mintId);
-        delete _editionMintData[edition][mintId];
-    }
-
     /*
      * @dev Mints tokens.
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId Id of the mint instance.
-     * @param eligibleQuantity The total number of tokens allocated to the user.
      * This is the maximum the user can claim.
-     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `eligibleQuantity`
+     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxAllowedPerWallet`
      * @param merkleProof Merkle proof for the claim.
      */
     function mint(
         address edition,
         uint256 mintId,
-        uint32 eligibleQuantity,
         uint32 requestedQuantity,
         bytes32[] calldata merkleProof
     ) public payable {
@@ -138,20 +124,15 @@ contract MerkleDropMinter is MintControllerBase {
         _requireNotSoldOut(nextTotalMinted, data.maxMintable);
         data.totalMinted = nextTotalMinted;
 
-        uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
-        // If the maximum allowed per wallet is set (i.e. is different to 0)
-        // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + requestedQuantity) > data.maxAllowedPerWallet))
-            revert ExceedsMaxPerWallet();
-
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
-        if (updatedClaimedQuantity > eligibleQuantity) revert ExceedsEligibleQuantity();
+        // Revert if attempting to mint more than the max allowed per wallet.
+        if (updatedClaimedQuantity > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
 
-        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender, eligibleQuantity));
+        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
@@ -190,15 +171,15 @@ contract MerkleDropMinter is MintControllerBase {
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
+    function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }
 
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
+    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxAllowedPerWallet;
     }
 }

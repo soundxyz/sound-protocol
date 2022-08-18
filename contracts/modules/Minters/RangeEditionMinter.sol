@@ -71,7 +71,17 @@ contract RangeEditionMinter is MintControllerBase {
     // STORAGE
     // ================================
 
+    /**
+     * @dev Edition mint data
+     * edition => mintId => EditionMintData
+     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+    /**
+     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxAllowedPerWallet.
+     * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
+     * edition => mintId => buyer => mintedTallies
+     */
+    mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
 
     // ================================
     // WRITE FUNCTIONS
@@ -98,10 +108,11 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet_
-    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
+    ) public returns (uint256 mintId) {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
-        mintId = _createEditionMintController(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price_;
@@ -122,15 +133,6 @@ contract RangeEditionMinter is MintControllerBase {
             maxMintableUpper,
             maxAllowedPerWallet_
         );
-    }
-
-    /*
-     * @dev Deletes the configuration for an edition mint.
-     * @param edition Address of the song edition contract we are minting for.
-     */
-    function deleteEditionMint(address edition, uint256 mintId) public {
-        _deleteEditionMintController(edition, mintId);
-        delete _editionMintData[edition][mintId];
     }
 
     /*
@@ -157,11 +159,12 @@ contract RangeEditionMinter is MintControllerBase {
         _requireNotSoldOut(nextTotalMinted, _maxMintable);
         data.totalMinted = nextTotalMinted;
 
-        uint256 userBalance = ISoundEditionV1(edition).balanceOf(msg.sender);
+        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if (data.maxAllowedPerWallet > 0 && ((userBalance + quantity) > data.maxAllowedPerWallet))
-            revert ExceedsMaxPerWallet();
+        if ((userMintedBalance + quantity) > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
+
+        mintedTallies[edition][mintId][msg.sender] += quantity;
 
         _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
@@ -181,11 +184,13 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) onlyValidRangeTimes(startTime, closingTime, endTime) {
-        _setTimeRange(edition, mintId, startTime, endTime);
-
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        // Set closingTime first, as its stored value gets validated later in the execution.
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
+
+        // This calls _beforeSetTimeRange, which does the closingTime validation.
+        _setTimeRange(edition, mintId, startTime, endTime);
 
         emit ClosingTimeSet(edition, mintId, closingTime);
     }
@@ -201,7 +206,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint256 mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
-    ) public onlyEditionMintController(edition, mintId) {
+    ) public onlyEditionOwnerOrAdmin(edition) {
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
@@ -213,14 +218,31 @@ contract RangeEditionMinter is MintControllerBase {
     }
 
     // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Optional validation function that gets called by _setTimeRange()
+     */
+    function _beforeSetTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) internal view override {
+        uint32 closingTime = _editionMintData[edition][mintId].closingTime;
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    }
+
+    // ================================
     // EXTERNAL VIEW
     // ================================
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
+    function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }
 
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
         if (block.timestamp < data.closingTime) {
@@ -230,8 +252,11 @@ contract RangeEditionMinter is MintControllerBase {
         }
     }
 
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
+        return
+            _editionMintData[edition][mintId].maxAllowedPerWallet > 0
+                ? _editionMintData[edition][mintId].maxAllowedPerWallet
+                : type(uint32).max;
     }
 
     // ================================
