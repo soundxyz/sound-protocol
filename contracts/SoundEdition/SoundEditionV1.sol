@@ -7,7 +7,7 @@ import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
-import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
+import "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -44,7 +44,7 @@ contract SoundEditionV1 is
     ERC721AQueryableUpgradeable,
     ERC721ABurnableUpgradeable,
     OwnableUpgradeable,
-    AccessControlUpgradeable
+    AccessControlEnumerableUpgradeable
 {
     // ================================
     // CONSTANTS
@@ -244,12 +244,12 @@ contract SoundEditionV1 is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable, AccessControlUpgradeable)
+        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return
             ERC721AUpgradeable.supportsInterface(interfaceId) ||
-            AccessControlUpgradeable.supportsInterface(interfaceId);
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId);
     }
 
     /// @inheritdoc IERC2981Upgradeable
@@ -265,5 +265,16 @@ contract SoundEditionV1 is
     /// @inheritdoc ERC721AUpgradeable
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
+        uint256 count = getRoleMemberCount(role);
+
+        members = new address[](count);
+
+        for (uint256 i = 0; i < count; i++) {
+            members[i] = getRoleMember(role, i);
+        }
     }
 }
