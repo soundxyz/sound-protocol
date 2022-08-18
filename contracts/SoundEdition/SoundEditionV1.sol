@@ -111,7 +111,7 @@ contract SoundEditionV1 is
         uint32 masterMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
-    ) public initializerERC721A initializer {
+    ) public initializerERC721A initializer onlyValidRoyaltyBPS(royaltyBPS_) {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
         __Ownable_init();
@@ -123,7 +123,6 @@ contract SoundEditionV1 is
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
 
-        _verifyBPS(royaltyBPS_);
         royaltyBPS = royaltyBPS_;
         editionMaxMintable = masterMaxMintable_ > 0 ? masterMaxMintable_ : type(uint32).max;
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
@@ -205,8 +204,7 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin {
-        _verifyBPS(royaltyBPS_);
+    function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
@@ -232,12 +230,9 @@ contract SoundEditionV1 is
         _;
     }
 
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
-
-    function _verifyBPS(uint32 royalty) internal pure {
+    modifier onlyValidRoyaltyBPS(uint16 royalty) {
         if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
+        _;
     }
 
     // ================================
