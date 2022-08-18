@@ -22,7 +22,8 @@ contract Deploy is Script {
         new RangeEditionMinter();
 
         SoundEditionV1 soundEdition = new SoundEditionV1();
-        new SoundCreatorV1(address(soundEdition), address(0));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(0));
+        soundCreator.initialize(address(soundEdition));
 
         vm.stopBroadcast();
     }

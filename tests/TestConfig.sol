@@ -26,7 +26,8 @@ contract TestConfig is Test {
         // Deploy SoundEdition implementation
         MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
 
-        soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
+        soundCreator = new SoundCreatorV1();
+        soundCreator.initialize(address(soundEditionImplementation));
     }
 
     // Returns a random address funded with ETH

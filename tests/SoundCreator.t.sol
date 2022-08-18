@@ -12,7 +12,8 @@ contract SoundCreatorTests is TestConfig {
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
         SoundEditionV1 editionImplementation = new SoundEditionV1();
-        SoundCreatorV1 _soundCreator = new SoundCreatorV1(address(editionImplementation));
+        SoundCreatorV1 _soundCreator = new SoundCreatorV1();
+        _soundCreator.initialize(address(editionImplementation));
 
         assert(address(_soundCreator) != address(0));
 
@@ -37,7 +38,8 @@ contract SoundCreatorTests is TestConfig {
         vm.assume(attacker != address(this));
 
         SoundEditionV1 soundEdition = createGenericEdition();
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(soundEdition));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1();
+        soundCreator.initialize(address(soundEdition));
 
         assertEq(address(soundCreator.owner()), address(this));
 
@@ -50,7 +52,8 @@ contract SoundCreatorTests is TestConfig {
         vm.assume(newImplementation != address(0));
 
         SoundEditionV1 soundEdition = createGenericEdition();
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(soundEdition));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1();
+        soundCreator.initialize(address(soundEdition));
 
         vm.expectEmit(false, false, false, true);
         emit SoundEditionImplementationSet(newImplementation);
@@ -63,7 +66,8 @@ contract SoundCreatorTests is TestConfig {
         vm.assume(attacker != address(this));
 
         SoundEditionV1 soundEdition = createGenericEdition();
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(soundEdition));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1();
+        soundCreator.initialize(address(soundEdition));
 
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(attacker);
@@ -71,11 +75,14 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_implementationAddressOfZeroReverts() public {
+        SoundCreatorV1 soundCreator = new SoundCreatorV1();
+
         vm.expectRevert(SoundCreatorV1.ImplementationAddressCantBeZero.selector);
-        new SoundCreatorV1(address(0));
+        soundCreator.initialize(address(0));
 
         SoundEditionV1 soundEdition = createGenericEdition();
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(soundEdition));
+        soundCreator = new SoundCreatorV1();
+        soundCreator.initialize(address(soundEdition));
 
         vm.expectRevert(SoundCreatorV1.ImplementationAddressCantBeZero.selector);
         soundCreator.setEditionImplementation(address(0));
