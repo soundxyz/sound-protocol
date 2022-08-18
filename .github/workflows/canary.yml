@@ -50,3 +50,5 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
           npm-script: 'pnpm release:canary'
           changesets: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
