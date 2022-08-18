@@ -51,7 +51,3 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
           npm-script: 'pnpm release:canary'
           changesets: true
-        env:
-          NEXT_PUBLIC_ALCHEMY_KEY: ${{ secrets.NEXT_PUBLIC_ALCHEMY_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.ADMIN_PRIVATE_KEY }}
-          MNEMONIC: ${{ secrets.MNEMONIC }}

@@ -3,7 +3,7 @@ import type { ProjectManifest } from "@pnpm/types";
 import { buildCode } from "bob-ts";
 import { execaCommand } from "execa";
 import { copy, ensureDir } from "fs-extra";
-import { readFile, rm, writeFile } from "fs/promises";
+import { rm, writeFile } from "fs/promises";
 import { extname } from "path";
 import pkg from "./package.json";
 
