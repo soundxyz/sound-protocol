@@ -2,7 +2,7 @@
   "name": "@soundxyz/sound-protocol",
   "version": "2.0.0",
   "author": "soundxyz",
-  "main": "typechain/index.ts",
+  "main": "dist/index.js",
   "homepage": "https://github.com/soundxyz/sound-protocol#readme",
   "scripts": {
     "build": "forge build",
@@ -51,9 +51,7 @@
     "solhint": "3.3.7",
     "solhint-plugin-prettier": "0.0.5",
     "typechain": "^8.1.0",
-    "typescript": "^4.7.4"
-  },
-  "dependencies": {
+    "typescript": "^4.7.4",
     "eslint": "^5.16.0",
     "eslint-scope": "^4.0.3",
     "eslint-utils": "^1.4.3",
