@@ -64,7 +64,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         uint32 startTime,
         uint32 endTime
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMint(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime, type(uint32).max);
         if (signer == address(0)) revert SignerIsZeroAddress();
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -120,9 +120,5 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
 
     function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
-    }
-
-    function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
-        return type(uint32).max;
     }
 }

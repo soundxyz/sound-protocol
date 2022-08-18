@@ -18,6 +18,7 @@ contract MintControllerBaseTests is TestConfig {
 
     uint32 constant START_TIME = 0;
     uint32 constant END_TIME = type(uint32).max;
+    uint32 constant MAX_ALLOWED_PER_WALLET = type(uint32).max;
 
     constructor() {
         minter = new MockMinter();
@@ -46,7 +47,7 @@ contract MintControllerBaseTests is TestConfig {
 
         vm.expectRevert(MintControllerBase.Unauthorized.selector);
         vm.prank(attacker);
-        minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
     }
 
     function test_createEditionMintViaOwner() external {
@@ -59,7 +60,7 @@ contract MintControllerBaseTests is TestConfig {
         vm.expectEmit(false, false, false, true);
         emit MintConfigCreated(address(edition), owner, mintId, START_TIME, END_TIME);
 
-        minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
     }
 
     function test_createEditionMintViaAdmin() external {
@@ -74,13 +75,13 @@ contract MintControllerBaseTests is TestConfig {
         emit MintConfigCreated(address(edition), admin, mintId, START_TIME, END_TIME);
 
         vm.prank(admin);
-        minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
     }
 
     function test_mintRevertsForWrongEtherValue() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
 
         uint256 price = 1;
         vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, price * 2 - 1, price * 2));
@@ -92,7 +93,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_mintRevertsWhenPaused() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
 
         minter.setEditionMintPaused(address(edition), mintId, true);
 
@@ -109,7 +110,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_mintRevertsWithZeroQuantity() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
 
         vm.expectRevert(IERC721AUpgradeable.MintZeroQuantity.selector);
 
@@ -120,7 +121,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         for (uint256 i; i < 3; ++i) {
-            uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
+            uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
             assertEq(mintId, i);
         }
     }
@@ -130,7 +131,7 @@ contract MintControllerBaseTests is TestConfig {
 
         SoundEditionV1 edition1 = _createEdition(maxSupply);
 
-        uint256 mintId1 = minter.createEditionMint(address(edition1), START_TIME, END_TIME);
+        uint256 mintId1 = minter.createEditionMint(address(edition1), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
 
         // Mint the max supply
         minter.mint(address(edition1), mintId1, maxSupply, 0);
@@ -145,7 +146,7 @@ contract MintControllerBaseTests is TestConfig {
 
         SoundEditionV1 edition = _createEdition(1);
 
-        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, MAX_ALLOWED_PER_WALLET);
 
         MockMinter.BaseData memory baseData = minter.baseMintData(address(edition), mintId);
 

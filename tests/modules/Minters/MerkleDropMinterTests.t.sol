@@ -88,7 +88,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        vm.expectRevert(MerkleDropMinter.ExceedsMaxPerWallet.selector);
+        vm.expectRevert(MintControllerBase.ExceedsMaxPerWallet.selector);
         // Max is 1 but buyer is requesting 2
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
@@ -115,23 +115,5 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 requestedQuantity = 1;
         vm.expectRevert(MerkleDropMinter.InvalidMerkleProof.selector);
         minter.mint(address(edition), mintId, requestedQuantity, proof);
-    }
-
-    function test_canGetClaimedAmountForWallet() public {
-        uint32 maxAllowedPerWwallet = 1;
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
-            0,
-            6,
-            maxAllowedPerWwallet
-        );
-        bytes32[] memory proof = m.getProof(leaves, 0);
-
-        vm.warp(START_TIME);
-        vm.prank(accounts[0]);
-        uint32 requestedQuantity = maxAllowedPerWwallet;
-        minter.mint(address(edition), mintId, requestedQuantity, proof);
-
-        uint256 claimedAmount = minter.getClaimed(address(edition), mintId, accounts[0]);
-        assertEq(claimedAmount, 1);
     }
 }

@@ -43,9 +43,6 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableUpper
     );
 
-    // The number of tokens minted has exceeded the number allowed for each wallet.
-    error ExceedsMaxPerWallet();
-
     // ================================
     // STRUCTS
     // ================================
@@ -63,8 +60,6 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 maxMintableLower;
         // The upper limit of the maximum number of tokens that can be minted.
         uint32 maxMintableUpper;
-        // The maximum number of tokens that a wallet can mint.
-        uint32 maxAllowedPerWallet;
     }
 
     // ================================
@@ -76,12 +71,6 @@ contract RangeEditionMinter is MintControllerBase {
      * edition => mintId => EditionMintData
      */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
-    /**
-     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxAllowedPerWallet.
-     * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
-     * edition => mintId => buyer => mintedTallies
-     */
-    mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
 
     // ================================
     // WRITE FUNCTIONS
@@ -98,6 +87,7 @@ contract RangeEditionMinter is MintControllerBase {
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
      * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     * @param maxAllowedPerWallet The maximum number of tokens that a single wallet can mint.
      */
     function createEditionMint(
         address edition,
@@ -107,19 +97,18 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet_
+        uint32 maxAllowedPerWallet
     ) public returns (uint256 mintId) {
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
-        mintId = _createEditionMint(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime, maxAllowedPerWallet);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price_;
         data.closingTime = closingTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-        data.maxAllowedPerWallet = maxAllowedPerWallet_;
 
         // prettier-ignore
         emit RangeEditionMintCreated(
@@ -131,7 +120,7 @@ contract RangeEditionMinter is MintControllerBase {
             endTime,
             maxMintableLower,
             maxMintableUpper,
-            maxAllowedPerWallet_
+            maxAllowedPerWallet
         );
     }
 
@@ -158,13 +147,6 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 nextTotalMinted = data.totalMinted + quantity;
         _requireNotSoldOut(nextTotalMinted, _maxMintable);
         data.totalMinted = nextTotalMinted;
-
-        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // If the maximum allowed per wallet is set (i.e. is different to 0)
-        // check the required additional quantity does not exceed the set maximum
-        if ((userMintedBalance + quantity) > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
-
-        mintedTallies[edition][mintId][msg.sender] += quantity;
 
         _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
     }
@@ -250,13 +232,6 @@ contract RangeEditionMinter is MintControllerBase {
         } else {
             return data.maxMintableLower;
         }
-    }
-
-    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
-        return
-            _editionMintData[edition][mintId].maxAllowedPerWallet > 0
-                ? _editionMintData[edition][mintId].maxAllowedPerWallet
-                : type(uint32).max;
     }
 
     // ================================

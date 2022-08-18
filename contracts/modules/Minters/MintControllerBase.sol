@@ -25,6 +25,16 @@ abstract contract MintControllerBase is IBaseMinter {
     error MaxMintableReached(uint32 maxMintable);
 
     /**
+     * Max per wallet must be non-zero.
+     */
+    error InvalidMaxPerWallet();
+
+    /**
+     * The number of tokens minted has exceeded the number allowed for each wallet.
+     */
+    error ExceedsMaxPerWallet();
+
+    /**
      * The mint is not opened.
      */
     error MintNotOpen(uint256 blockTimestamp, uint32 startTime, uint32 endTime);
@@ -76,6 +86,7 @@ abstract contract MintControllerBase is IBaseMinter {
     struct BaseData {
         uint32 startTime;
         uint32 endTime;
+        uint32 maxAllowedPerWallet;
         bool mintPaused;
     }
 
@@ -92,6 +103,13 @@ abstract contract MintControllerBase is IBaseMinter {
      * @dev Maps an edition and the mint ID to a mint's configuration.
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
+
+    /**
+     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxAllowedPerWallet.
+     * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
+     * edition => mintId => buyer => mintedTallies
+     */
+    mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
 
     // ================================
     // WRITE FUNCTIONS
@@ -145,15 +163,23 @@ abstract contract MintControllerBase is IBaseMinter {
     function _createEditionMint(
         address edition,
         uint32 startTime,
-        uint32 endTime
+        uint32 endTime,
+        uint32 maxAllowedPerWallet
     ) internal onlyValidTimeRange(startTime, endTime) onlyEditionOwnerOrAdmin(edition) returns (uint256 mintId) {
+        if (maxAllowedPerWallet == 0) {
+            revert InvalidMaxPerWallet();
+        }
+
         mintId = _nextMintIds[edition];
 
         BaseData storage data = _baseData[edition][mintId];
         data.startTime = startTime;
         data.endTime = endTime;
+        data.maxAllowedPerWallet = maxAllowedPerWallet;
 
-        _nextMintIds[edition] += 1;
+        unchecked {
+            _nextMintIds[edition] += 1;
+        }
 
         emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime);
     }
@@ -227,11 +253,20 @@ abstract contract MintControllerBase is IBaseMinter {
     ) internal {
         uint32 startTime = _baseData[edition][mintId].startTime;
         uint32 endTime = _baseData[edition][mintId].endTime;
+        uint32 maxAllowedPerWallet = _baseData[edition][mintId].maxAllowedPerWallet;
+        bool mintPaused = _baseData[edition][mintId].mintPaused;
+
         if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
         if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-
+        if (mintPaused) revert MintPaused();
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
-        if (_baseData[edition][mintId].mintPaused) revert MintPaused();
+
+        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+        // check the required additional quantity does not exceed the set maximum
+        if ((userMintedBalance + quantity) > maxAllowedPerWallet) revert ExceedsMaxPerWallet();
+
+        mintedTallies[edition][mintId][msg.sender] += quantity;
+
         ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
     }
 

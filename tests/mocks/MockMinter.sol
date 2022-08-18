@@ -7,9 +7,10 @@ contract MockMinter is MintControllerBase {
     function createEditionMint(
         address edition,
         uint32 startTime,
-        uint32 endTime
+        uint32 endTime,
+        uint32 maxAllowedPerWallet
     ) external returns (uint256 mintId) {
-        mintId = _createEditionMint(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime, maxAllowedPerWallet);
     }
 
     function mint(
@@ -29,13 +30,6 @@ contract MockMinter is MintControllerBase {
     }
 
     function maxMintable(
-        address, /** edition */
-        uint256 /** mintId */
-    ) external pure returns (uint32) {
-        return type(uint32).max;
-    }
-
-    function maxAllowedPerWallet(
         address, /** edition */
         uint256 /** mintId */
     ) external pure returns (uint32) {
