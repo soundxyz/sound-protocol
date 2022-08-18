@@ -1,6 +1,8 @@
-# Compiler files
+# Build files
 cache/
 out/
+typechain/
+dist/
 
 # Ignores development broadcast logs
 /broadcast/*
@@ -17,4 +19,3 @@ node_modules
 # Code coverage artifacts
 lcov.info
 /coverage/*
-typechain
