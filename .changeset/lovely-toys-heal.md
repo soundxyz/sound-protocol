@@ -2,4 +2,4 @@
 "@soundxyz/sound-protocol": minor
 ---
 
-test
+- Adds typechain
