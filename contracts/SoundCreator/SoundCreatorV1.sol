@@ -41,11 +41,11 @@ contract SoundCreatorV1 is Ownable {
     event SoundEditionCreated(address indexed soundEdition, address indexed creator);
     event SoundEditionImplementationSet(address newImplementation);
 
-    error ImplementationCantBeNull();
+    error ImplementationAddressCantBeZero();
 
     address public soundEditionImplementation;
 
-    constructor(address _soundEditionImplementation) nonNullImpl(_soundEditionImplementation) {
+    constructor(address _soundEditionImplementation) implementationNotZero(_soundEditionImplementation) {
         soundEditionImplementation = _soundEditionImplementation;
     }
 
@@ -83,15 +83,19 @@ contract SoundCreatorV1 is Ownable {
     /**
      * @dev Changes the SoundEdition implementation contract address.
      */
-    function setEditionImplementation(address newImplementation) external onlyOwner nonNullImpl(newImplementation) {
+    function setEditionImplementation(address newImplementation)
+        external
+        onlyOwner
+        implementationNotZero(newImplementation)
+    {
         soundEditionImplementation = newImplementation;
 
         emit SoundEditionImplementationSet(soundEditionImplementation);
     }
 
-    modifier nonNullImpl(address implementation) {
+    modifier implementationNotZero(address implementation) {
         if (implementation == address(0)) {
-            revert ImplementationCantBeNull();
+            revert ImplementationAddressCantBeZero();
         }
         _;
     }

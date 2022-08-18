@@ -16,7 +16,7 @@ contract SoundCreatorTests is TestConfig {
 
         assert(address(_soundCreator) != address(0));
 
-        assertEq(address(_soundCreator.editionImplementation()), address(editionImplementation));
+        assertEq(address(_soundCreator.soundEditionImplementation()), address(editionImplementation));
     }
 
     // Tests that the factory creates a new sound NFT
@@ -56,7 +56,7 @@ contract SoundCreatorTests is TestConfig {
         emit SoundEditionImplementationSet(newImplementation);
 
         soundCreator.setEditionImplementation(newImplementation);
-        assertEq(address(soundCreator.editionImplementation()), newImplementation);
+        assertEq(address(soundCreator.soundEditionImplementation()), newImplementation);
     }
 
     function test_attackerCantSetNewImplementation(address attacker) public {
@@ -67,6 +67,17 @@ contract SoundCreatorTests is TestConfig {
 
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(attacker);
+        soundCreator.setEditionImplementation(address(0));
+    }
+
+    function test_implementationAddressOfZeroReverts() public {
+        vm.expectRevert(SoundCreatorV1.ImplementationAddressCantBeZero.selector);
+        new SoundCreatorV1(address(0));
+
+        SoundEditionV1 soundEdition = createGenericEdition();
+        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(soundEdition));
+
+        vm.expectRevert(SoundCreatorV1.ImplementationAddressCantBeZero.selector);
         soundCreator.setEditionImplementation(address(0));
     }
 }
