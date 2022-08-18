@@ -125,7 +125,7 @@ contract MerkleDropMinter is MintControllerBase {
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        _mint(edition, mintId, msg.sender, requestedQuantity, data.price * requestedQuantity);
+        _mint(edition, mintId, requestedQuantity, data.price * requestedQuantity);
 
         emit DropClaimed(msg.sender, requestedQuantity);
     }

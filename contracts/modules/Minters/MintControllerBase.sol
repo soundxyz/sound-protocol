@@ -247,7 +247,6 @@ abstract contract MintControllerBase is IBaseMinter {
     function _mint(
         address edition,
         uint256 mintId,
-        address to,
         uint32 quantity,
         uint256 requiredEtherValue
     ) internal {
@@ -267,7 +266,7 @@ abstract contract MintControllerBase is IBaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
+        ISoundEditionV1(edition).mint{ value: msg.value }(msg.sender, quantity);
     }
 
     /**

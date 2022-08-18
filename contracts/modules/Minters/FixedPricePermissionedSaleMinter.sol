@@ -99,7 +99,7 @@ contract FixedPricePermissionedSaleMinter is MintControllerBase {
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
+        _mint(edition, mintId, quantity, data.price * quantity);
     }
 
     // ================================

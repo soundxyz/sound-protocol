@@ -19,7 +19,7 @@ contract MockMinter is MintControllerBase {
         uint32 quantity,
         uint256 price_
     ) external payable {
-        _mint(edition, mintId, msg.sender, quantity, quantity * price_);
+        _mint(edition, mintId, quantity, quantity * price_);
     }
 
     function price(

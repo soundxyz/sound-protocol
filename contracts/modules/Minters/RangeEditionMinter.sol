@@ -148,7 +148,7 @@ contract RangeEditionMinter is MintControllerBase {
         _requireNotSoldOut(nextTotalMinted, _maxMintable);
         data.totalMinted = nextTotalMinted;
 
-        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
+        _mint(edition, mintId, quantity, quantity * data.price);
     }
 
     /*
