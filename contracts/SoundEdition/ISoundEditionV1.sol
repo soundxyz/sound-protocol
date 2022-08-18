@@ -136,4 +136,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function randomnessLockedTimestamp() external view returns (uint32);
 
     function mintRandomness() external view returns (bytes32);
+
+    function getMembersOfRole(bytes32 role) external view returns (address[] memory);
 }
