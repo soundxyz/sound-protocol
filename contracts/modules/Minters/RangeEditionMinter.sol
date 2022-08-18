@@ -102,7 +102,7 @@ contract RangeEditionMinter is MintControllerBase {
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
-        mintId = _createEditionMintController(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price_;
@@ -123,15 +123,6 @@ contract RangeEditionMinter is MintControllerBase {
             maxMintableUpper,
             maxAllowedPerWallet_
         );
-    }
-
-    /*
-     * @dev Deletes the configuration for an edition mint.
-     * @param edition Address of the song edition contract we are minting for.
-     */
-    function deleteEditionMint(address edition, uint256 mintId) public {
-        _deleteEditionMintController(edition, mintId);
-        delete _editionMintData[edition][mintId];
     }
 
     /*
@@ -182,7 +173,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionMintController(edition, mintId) {
+    ) public onlyEditionOwnerOrAdmin(edition) {
         // Set closingTime first, as its stored value gets validated later in the execution.
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
@@ -204,7 +195,7 @@ contract RangeEditionMinter is MintControllerBase {
         uint256 mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
-    ) public onlyEditionMintController(edition, mintId) {
+    ) public onlyEditionOwnerOrAdmin(edition) {
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;

@@ -4,16 +4,12 @@ pragma solidity ^0.8.16;
 import "../../contracts/modules/Minters/MintControllerBase.sol";
 
 contract MockMinter is MintControllerBase {
-    function createEditionMintController(
+    function createEditionMint(
         address edition,
         uint32 startTime,
         uint32 endTime
     ) external returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition, startTime, endTime);
-    }
-
-    function deleteEditionMintController(address edition, uint256 mintId) external {
-        _deleteEditionMintController(edition, mintId);
+        mintId = _createEditionMint(edition, startTime, endTime);
     }
 
     function mint(
