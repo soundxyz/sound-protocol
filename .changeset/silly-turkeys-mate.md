@@ -2,4 +2,4 @@
 "sound-protocol": minor
 ---
 
-Adds SoundCreated event to SoundCreator
+Adds SoundEditionCreated event to SoundCreator

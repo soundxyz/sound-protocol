@@ -31,30 +31,22 @@ pragma solidity ^0.8.16;
 import "../SoundEdition/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
+import "openzeppelin/access/Ownable.sol";
 
 /**
  * @title Sound Creator V1
  * @dev Factory for deploying Sound edition contracts.
  */
-contract SoundCreatorV1 {
-    /***********************************
-                EVENTS
-    ***********************************/
+contract SoundCreatorV1 is Ownable {
+    event SoundEditionCreated(address indexed soundEdition, address indexed creator);
+    event SoundEditionImplementationSet(address newImplementation);
 
-    event SoundCreated(address indexed soundEdition, address indexed creator);
+    error ImplementationAddressCantBeZero();
 
-    /***********************************
-                STORAGE
-    ***********************************/
+    address public soundEditionImplementation;
 
-    address public nftImplementation;
-
-    /***********************************
-              PUBLIC FUNCTIONS
-    ***********************************/
-
-    constructor(address _nftImplementation) {
-        nftImplementation = _nftImplementation;
+    constructor(address _soundEditionImplementation) implementationNotZero(_soundEditionImplementation) {
+        soundEditionImplementation = _soundEditionImplementation;
     }
 
     /**
@@ -71,7 +63,7 @@ contract SoundCreatorV1 {
         uint32 randomnessLockedTimestamp
     ) external returns (address soundEdition) {
         // Create Sound Edition proxy
-        soundEdition = Clones.clone(nftImplementation);
+        soundEdition = Clones.clone(soundEditionImplementation);
         // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
@@ -85,6 +77,26 @@ contract SoundCreatorV1 {
             randomnessLockedTimestamp
         );
 
-        emit SoundCreated(soundEdition, msg.sender);
+        emit SoundEditionCreated(soundEdition, msg.sender);
+    }
+
+    /**
+     * @dev Changes the SoundEdition implementation contract address.
+     */
+    function setEditionImplementation(address newImplementation)
+        external
+        onlyOwner
+        implementationNotZero(newImplementation)
+    {
+        soundEditionImplementation = newImplementation;
+
+        emit SoundEditionImplementationSet(soundEditionImplementation);
+    }
+
+    modifier implementationNotZero(address implementation) {
+        if (implementation == address(0)) {
+            revert ImplementationAddressCantBeZero();
+        }
+        _;
     }
 }
