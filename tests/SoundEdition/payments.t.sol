@@ -199,7 +199,7 @@ contract SoundEdition_payments is TestConfig {
 
         uint256 expectedRoyaltyAmount = (salePrice * ROYALTY_BPS) / MAX_BPS;
 
-        assertEq(fundingRecipient, address(edition));
+        assertEq(fundingRecipient, FUNDING_RECIPIENT);
         assertEq(royaltyAmount, expectedRoyaltyAmount);
     }
 }

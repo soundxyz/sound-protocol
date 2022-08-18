@@ -283,7 +283,7 @@ contract SoundEditionV1 is
         uint256, // tokenId
         uint256 salePrice
     ) external view override(IERC2981Upgradeable) returns (address fundingRecipient_, uint256 royaltyAmount) {
-        fundingRecipient_ = address(this);
+        fundingRecipient_ = fundingRecipient;
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
 
