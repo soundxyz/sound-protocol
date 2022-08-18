@@ -190,9 +190,6 @@ contract MerkleDropMinter is MintControllerBase {
     }
 
     function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
-        return
-            _editionMintData[edition][mintId].maxAllowedPerWallet > 0
-                ? _editionMintData[edition][mintId].maxAllowedPerWallet
-                : type(uint32).max;
+        return _editionMintData[edition][mintId].maxAllowedPerWallet;
     }
 }
