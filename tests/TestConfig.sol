@@ -22,7 +22,6 @@ contract TestConfig is Test {
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
 
     SoundCreatorV1 soundCreator;
-    address soundFeeAddress;
 
     // Set up called before each test
     function setUp() public virtual {
