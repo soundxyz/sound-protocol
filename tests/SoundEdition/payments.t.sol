@@ -10,14 +10,10 @@ contract SoundEdition_payments is TestConfig {
     event FundingRecipientSet(address fundingRecipient);
     event RoyaltySet(uint16 royaltyBPS);
 
-    error InvalidRoyaltyBPS();
-    error Unauthorized();
-    error InvalidFundingRecipient();
-
     function test_initializeRevertsForInvalidRoyaltyBPS(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
 
-        vm.expectRevert(InvalidRoyaltyBPS.selector);
+        vm.expectRevert(SoundEditionV1.InvalidRoyaltyBPS.selector);
         soundCreator.createSound(
             SONG_NAME,
             SONG_SYMBOL,
@@ -33,7 +29,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_initializeRevertsForInvalidFundingRecipient() public {
-        vm.expectRevert(InvalidFundingRecipient.selector);
+        vm.expectRevert(SoundEditionV1.InvalidFundingRecipient.selector);
         soundCreator.createSound(
             SONG_NAME,
             SONG_SYMBOL,
@@ -116,14 +112,14 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(Unauthorized.selector);
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         edition.setFundingRecipient(getRandomAccount(2));
     }
 
     function test_setFundingRecipientRevertsForZeroAddress() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        vm.expectRevert(InvalidFundingRecipient.selector);
+        vm.expectRevert(SoundEditionV1.InvalidFundingRecipient.selector);
         edition.setFundingRecipient(address(0));
     }
 
@@ -155,7 +151,7 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getRandomAccount(1);
         vm.prank(caller);
-        vm.expectRevert(Unauthorized.selector);
+        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         edition.setRoyalty(500);
     }
 
@@ -163,7 +159,7 @@ contract SoundEdition_payments is TestConfig {
         vm.assume(royaltyBPS > MAX_BPS);
         SoundEditionV1 edition = createGenericEdition();
 
-        vm.expectRevert(InvalidRoyaltyBPS.selector);
+        vm.expectRevert(SoundEditionV1.InvalidRoyaltyBPS.selector);
         edition.setRoyalty(royaltyBPS);
     }
 
