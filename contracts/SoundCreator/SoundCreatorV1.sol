@@ -67,7 +67,7 @@ contract SoundCreatorV1 {
         string memory baseURI,
         string memory contractURI,
         address fundingRecipient,
-        uint32 royaltyBPS,
+        uint16 royaltyBPS,
         uint32 editionMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp

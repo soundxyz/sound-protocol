@@ -8,13 +8,13 @@ contract SoundEdition_payments is TestConfig {
     uint256 constant MAX_BPS = 10_000;
 
     event FundingRecipientSet(address fundingRecipient);
-    event RoyaltySet(uint32 royaltyBPS);
+    event RoyaltySet(uint16 royaltyBPS);
 
     error InvalidRoyaltyBPS();
     error Unauthorized();
     error InvalidFundingRecipient();
 
-    function test_initializeRevertsForInvalidRoyaltyBPS(uint32 royaltyBPS) public {
+    function test_initializeRevertsForInvalidRoyaltyBPS(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
 
         vm.expectRevert(InvalidRoyaltyBPS.selector);
@@ -159,7 +159,7 @@ contract SoundEdition_payments is TestConfig {
         edition.setRoyalty(500);
     }
 
-    function test_setRoyaltyRevertsForInvalidValue(uint32 royaltyBPS) public {
+    function test_setRoyaltyRevertsForInvalidValue(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
         SoundEditionV1 edition = createGenericEdition();
 
@@ -167,7 +167,7 @@ contract SoundEdition_payments is TestConfig {
         edition.setRoyalty(royaltyBPS);
     }
 
-    function test_setRoyaltySuccess(uint32 royaltyBPS) public {
+    function test_setRoyaltySuccess(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS <= MAX_BPS);
         SoundEditionV1 edition = createGenericEdition();
 
@@ -176,7 +176,7 @@ contract SoundEdition_payments is TestConfig {
         assertEq(edition.royaltyBPS(), royaltyBPS);
     }
 
-    function test_setRoyaltyEmitsEvent(uint32 royaltyBPS) public {
+    function test_setRoyaltyEmitsEvent(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS <= MAX_BPS);
         SoundEditionV1 edition = createGenericEdition();
 

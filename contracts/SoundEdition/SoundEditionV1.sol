@@ -53,7 +53,7 @@ contract SoundEditionV1 is
     // ================================
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    uint32 internal constant MAX_BPS = 10_000;
+    uint16 internal constant MAX_BPS = 10_000;
 
     // ================================
     // STORAGE
@@ -64,7 +64,7 @@ contract SoundEditionV1 is
     string public contractURI;
     bool public isMetadataFrozen;
     address public fundingRecipient;
-    uint32 public royaltyBPS;
+    uint16 public royaltyBPS;
     uint32 public editionMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
@@ -79,7 +79,7 @@ contract SoundEditionV1 is
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
     event FundingRecipientSet(address fundingRecipient);
-    event RoyaltySet(uint32 royaltyBPS);
+    event RoyaltySet(uint16 royaltyBPS);
     event EditionMaxMintableSet(uint32 editionMaxMintable);
 
     // ================================
@@ -107,7 +107,7 @@ contract SoundEditionV1 is
         string memory baseURI_,
         string memory contractURI_,
         address fundingRecipient_,
-        uint32 royaltyBPS_,
+        uint16 royaltyBPS_,
         uint32 masterMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
@@ -205,7 +205,7 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRoyalty(uint32 royaltyBPS_) external onlyOwnerOrAdmin {
+    function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin {
         _verifyBPS(royaltyBPS_);
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);

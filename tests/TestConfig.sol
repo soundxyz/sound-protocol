@@ -16,7 +16,7 @@ contract TestConfig is Test {
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
     address constant FUNDING_RECIPIENT = address(99);
-    uint32 constant ROYALTY_BPS = 100;
+    uint16 constant ROYALTY_BPS = 100;
     address public constant ARTIST_ADMIN = address(8888888888);
     uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;

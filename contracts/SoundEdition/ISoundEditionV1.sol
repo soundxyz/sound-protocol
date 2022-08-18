@@ -66,7 +66,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory baseURI,
         string memory contractURI,
         address fundingRecipient,
-        uint32 royaltyBPS,
+        uint16 royaltyBPS,
         uint32 editionMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
@@ -133,7 +133,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /**
      * @dev Sets royalty amount in bps
      */
-    function setRoyalty(uint32 royaltyBPS) external;
+    function setRoyalty(uint16 royaltyBPS) external;
 
     /**
      * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
