@@ -14,7 +14,9 @@
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol",
     "typechain": "npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out/**/*[!metadata].json' && rm -rf typechain/**/*.t.sol",
-    "release:canary": "(node scripts/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary..."
+    "release:canary": "(node scripts/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
+    "prepack": "bob-tsm build.ts",
+    "postpublish": "gh-release"
   },
   "repository": {
     "type": "git",
@@ -23,15 +25,23 @@
   "license": "GPL-3.0-or-later",
   "devDependencies": {
     "@changesets/cli": "^2.23.2",
+    "@pnpm/exportable-manifest": "^3.1.2",
+    "@pnpm/types": "^8.5.0",
     "@typechain/ethers-v5": "^10.1.0",
+    "bob-ts": "^4.0.0",
+    "bob-tsm": "^1.1.1",
     "danger": "^11.1.1",
+    "esbuild": "^0.15.5",
+    "execa": "^6.1.0",
+    "fs-extra": "^10.1.0",
     "husky": "8.0.1",
     "lint-staged": "^13.0.3",
     "prettier": "2.7.1",
     "prettier-plugin-solidity": "1.0.0-dev.23",
     "solhint": "3.3.7",
     "solhint-plugin-prettier": "0.0.5",
-    "typechain": "^8.1.0"
+    "typechain": "^8.1.0",
+    "typescript": "^4.7.4"
   },
   "dependencies": {
     "eslint": "^5.16.0",
