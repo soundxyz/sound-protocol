@@ -15,7 +15,7 @@
     "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol",
     "typechain": "rm -rf out/**/*.t.sol && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out/**/*[!metadata].json'",
     "release:canary": "(node scripts/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
-    "prepack": "bob-tsm build.ts",
+    "prepack": "pnpm build && pnpm typechain && bob-tsm build.ts",
     "postpublish": "gh-release"
   },
   "repository": {
