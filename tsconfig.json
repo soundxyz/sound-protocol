@@ -1,0 +1,16 @@
+{
+  "target": "esnext",
+  "module": "CommonJS",
+  "exclude": ["node_modules", "./dist", "/out", "./tests", "/cache"],
+  "allowSyntheticDefaultImports": true,
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "declarationMap": true
+  }
+}
