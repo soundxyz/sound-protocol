@@ -86,7 +86,7 @@ contract MerkleDropMinter is MintControllerBase {
         uint32 maxMintable_,
         uint32 maxAllowedPerWallet_
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMintController(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
@@ -104,16 +104,6 @@ contract MerkleDropMinter is MintControllerBase {
             maxMintable_,
             maxAllowedPerWallet_
         );
-    }
-
-    /**
-     * @dev Deletes a given edition's mint configuration.
-     * @param edition Address of the edition.
-     * @param mintId The mint instance identifier, created when the mint controller was set.
-     */
-    function deleteEditionMint(address edition, uint256 mintId) public {
-        _deleteEditionMintController(edition, mintId);
-        delete _editionMintData[edition][mintId];
     }
 
     /*
