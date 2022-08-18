@@ -1,6 +1,7 @@
 name: Canary Release
 
-on: [push, pull_request]
+on:
+  workflow_dispatch:
 
 jobs:
   publish-canary:
@@ -50,5 +51,3 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
           npm-script: 'pnpm release:canary'
           changesets: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
