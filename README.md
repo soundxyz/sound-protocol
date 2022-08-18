@@ -43,7 +43,7 @@ pnpm build
 
 - Run tests
 ```
-pnpm run test
+pnpm test
 ```
 
 - Print gas reports from tests
@@ -60,6 +60,22 @@ We generally follow OpenZeppelin's conventions:
 - [Natspec](https://docs.soliditylang.org/en/develop/natspec-format.html) format for comments, using `@dev` for function descriptions.
 
 To run prettier on all solidity files, uncomment the last line in `.prettierrc.js`, then run `npx prettier --write ./contracts/**/*.sol`
+
+## Testing
+
+To see logs when testing (`v` == verbosity):
+
+`forge test -vvv`
+
+**Code coverage:**
+
+To view high-level coverage report: `forge coverage --report lcov`
+
+To view more details, `brew install lcov`, then run the command below and look at the generated html report in `/coverage` folder. Note that `forge coverage` is still in active development so it often claims if/else branches are uncovered even when there are tests executed on them.
+
+```
+genhtml lcov.info --branch-coverage --output-directory coverage --legend
+```
 
 ## Deployment
 
