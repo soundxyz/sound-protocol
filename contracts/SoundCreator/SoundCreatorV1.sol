@@ -46,6 +46,9 @@ contract SoundCreatorV1 is OwnableUpgradeable, UUPSUpgradeable {
 
     address public soundEditionImplementation;
 
+    /**
+     * @dev Initialize the creator proxy with the edition implementation.
+     */
     function initialize(address _soundEditionImplementation)
         public
         implementationNotZero(_soundEditionImplementation)
@@ -107,5 +110,8 @@ contract SoundCreatorV1 is OwnableUpgradeable, UUPSUpgradeable {
         _;
     }
 
+    /**
+     * @dev This must be included on all UUPS logic contracts. The onlyOwner on it guards against unauthorized upgrades.
+     */
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }
