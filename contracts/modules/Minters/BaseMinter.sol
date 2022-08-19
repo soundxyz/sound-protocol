@@ -8,9 +8,9 @@ import "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
  * @title Minter Base
- * @dev The `MinterBase` class maintains a central storage record of edition mint configurations.
+ * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
  */
-abstract contract MinterBase is IERC165, IBaseMinter {
+abstract contract BaseMinter is IERC165, IBaseMinter {
     // ================================
     // CUSTOM ERRORS
     // ================================

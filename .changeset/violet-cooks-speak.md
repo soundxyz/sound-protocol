@@ -2,4 +2,4 @@
 "sound-protocol": patch
 ---
 
-Adding startTime and endTime to MinterBase
+Adding startTime and endTime to BaseMinter

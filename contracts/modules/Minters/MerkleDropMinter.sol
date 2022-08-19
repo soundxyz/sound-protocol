@@ -6,12 +6,12 @@ import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "openzeppelin/utils/structs/EnumerableMap.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
-import "./MinterBase.sol";
+import "./BaseMinter.sol";
 import "../../interfaces/ISoundEditionV1.sol";
 import "../../interfaces/IMerkleDropMint.sol";
 
 /// @dev Airdrop using merkle tree logic.
-contract MerkleDropMinter is IERC165, MinterBase, IMerkleDropMint {
+contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     // ================================
@@ -186,7 +186,7 @@ contract MerkleDropMinter is IERC165, MinterBase, IMerkleDropMint {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, MinterBase) returns (bool) {
-        return MinterBase.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMint).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMint).interfaceId;
     }
 }

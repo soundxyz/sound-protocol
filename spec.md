@@ -60,7 +60,7 @@ Features:
 
 #### Minter modules
 - Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
-- Minter modules must inherit `MinterBase.sol`
+- Minter modules must inherit `BaseMinter.sol`
 - Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.editionMaxMintable`. It is up to the artist to initialize the `editionMaxMintable` with a value high enough to accomodate all current & future mints.
 - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
 - Referral fee: TODO
