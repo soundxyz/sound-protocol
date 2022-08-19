@@ -6,6 +6,7 @@ import "./BaseMinter.sol";
 import "../../interfaces/IFixedPricePermissionedMint.sol";
 import "solady/utils/ECDSA.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
+import { BaseData } from "./BaseData.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter
@@ -116,16 +117,51 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
+    /// @inheritdoc IBaseMinter
+    function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }
 
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
+    /// @inheritdoc IBaseMinter
+    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
-    function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
-        return type(uint32).max;
+    /// @inheritdoc IBaseMinter
+    function maxAllowedPerWallet(address, uint256) public pure returns (uint32) {
+        /**
+         * For this minter, we return zero to indicate that the max is defined off
+         * chain by the signature granting process.
+         */
+        return 0;
+    }
+
+    // @inheritdoc IBaseMinter
+    function getMintInfo(address edition, uint256 mintId)
+        public
+        view
+        returns (
+            uint32,
+            uint32,
+            bool,
+            uint256,
+            uint32,
+            uint32,
+            uint32
+        )
+    {
+        BaseData storage baseData = _baseData[edition][mintId];
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        return (
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            0,
+            mintData.totalMinted
+        );
     }
 
     /// @inheritdoc IERC165

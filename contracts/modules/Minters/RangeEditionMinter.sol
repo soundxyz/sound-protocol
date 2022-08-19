@@ -5,6 +5,7 @@ pragma solidity ^0.8.16;
 import "./BaseMinter.sol";
 import "../../interfaces/IStandardMint.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
+import { BaseData } from "./BaseData.sol";
 
 /*
  * @dev Minter class for range edition sales.
@@ -148,13 +149,8 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
         uint32 quantity
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
+        uint32 _maxMintable = _getMaxMintable(data);
 
-        uint32 _maxMintable;
-        if (block.timestamp < data.closingTime) {
-            _maxMintable = data.maxMintableUpper;
-        } else {
-            _maxMintable = data.maxMintableLower;
-        }
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
         uint32 nextTotalMinted = data.totalMinted + quantity;
@@ -236,8 +232,37 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
     }
 
+    /**
+     * @dev Gets the current maximum mintable quantity.
+     */
+    function _getMaxMintable(EditionMintData storage data) internal view returns (uint32) {
+        uint32 _maxMintable;
+        if (block.timestamp < data.closingTime) {
+            _maxMintable = data.maxMintableUpper;
+        } else {
+            _maxMintable = data.maxMintableLower;
+        }
+        return _maxMintable;
+    }
+
     // ================================
-    // EXTERNAL VIEW
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidRangeTimes(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) virtual {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        _;
+    }
+
+    // ================================
+    // EXTERNAL VIEW FUNCTIONS
     // ================================
 
     function price(address edition, uint256 mintId) public view returns (uint256) {
@@ -261,26 +286,6 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
                 : type(uint32).max;
     }
 
-    // ================================
-    // MODIFIERS
-    // ================================
-
-    /**
-     * @dev Restricts the start time to be less than the end time.
-     */
-    modifier onlyValidRangeTimes(
-        uint32 startTime,
-        uint32 closingTime,
-        uint32 endTime
-    ) virtual {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-        _;
-    }
-
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
-
     /**
      * @dev Returns the `EditionMintData` for `edition.
      * @param edition Address of the song edition contract we are minting for.
@@ -292,5 +297,34 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IStandardMint).interfaceId;
+    }
+
+    // @inheritdoc IBaseMinter
+    function getMintInfo(address edition, uint256 mintId)
+        public
+        view
+        returns (
+            uint32,
+            uint32,
+            bool,
+            uint256,
+            uint32,
+            uint32,
+            uint32
+        )
+    {
+        BaseData storage baseData = _baseData[edition][mintId];
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+        uint32 _maxMintable = _getMaxMintable(mintData);
+
+        return (
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            _maxMintable,
+            mintData.maxAllowedPerWallet,
+            mintData.totalMinted
+        );
     }
 }

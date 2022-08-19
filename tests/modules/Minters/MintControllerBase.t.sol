@@ -4,6 +4,7 @@ import "../../TestConfig.sol";
 import "../../mocks/MockMinter.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
+import { BaseData } from "../../../contracts/modules/Minters/BaseData.sol";
 
 contract MintControllerBaseTests is TestConfig {
     event MintConfigCreated(
@@ -149,7 +150,7 @@ contract MintControllerBaseTests is TestConfig {
 
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
-        MockMinter.BaseData memory baseData = minter.baseMintData(address(edition), mintId);
+        BaseData memory baseData = minter.baseMintData(address(edition), mintId);
 
         // Check initial values are correct
         assertEq(baseData.startTime, 0);

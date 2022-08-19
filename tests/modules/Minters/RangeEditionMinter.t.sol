@@ -6,6 +6,7 @@ import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
 import "../../../contracts/interfaces/IBaseMinter.sol";
 import "../../../contracts/interfaces/IStandardMint.sol";
+import { BaseData } from "../../../contracts/modules/Minters/BaseData.sol";
 
 contract RangeEditionMinterTests is TestConfig {
     uint256 constant PRICE = 1;
@@ -138,7 +139,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         if (!hasRevert) {
             RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
 
             assertEq(data.price, price);
             assertEq(baseData.startTime, startTime);
@@ -333,7 +334,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         if (!hasRevert) {
             RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
 
             assertEq(baseData.startTime, startTime);
             assertEq(data.closingTime, closingTime);

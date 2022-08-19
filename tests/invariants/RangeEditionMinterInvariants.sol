@@ -2,6 +2,7 @@ pragma solidity ^0.8.16;
 
 import "./InvariantTest.sol";
 import "../modules/Minters/RangeEditionMinter.t.sol";
+import { BaseData } from "../../contracts/modules/Minters/BaseData.sol";
 
 contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest {
     RangeEditionMinterUpdater minterUpdater;
@@ -40,7 +41,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
 
     function invariant_timeRange() public {
         RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-        BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+        BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
 
         uint32 startTime = baseData.startTime;
         uint32 closingTime = data.closingTime;

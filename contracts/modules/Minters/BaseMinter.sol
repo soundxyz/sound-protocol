@@ -5,6 +5,7 @@ import "../../interfaces/IBaseMinter.sol";
 import "../../interfaces/ISoundEditionV1.sol";
 import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
+import { BaseData } from "./BaseData.sol";
 
 /**
  * @title Minter Base
@@ -71,16 +72,6 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
     event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
 
     // ================================
-    // STRUCTS
-    // ================================
-
-    struct BaseData {
-        uint32 startTime;
-        uint32 endTime;
-        bool mintPaused;
-    }
-
-    // ================================
     // STORAGE
     // ================================
 
@@ -92,7 +83,7 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
     /**
      * @dev Maps an edition and the mint ID to a mint's configuration.
      */
-    mapping(address => mapping(uint256 => BaseData)) private _baseData;
+    mapping(address => mapping(uint256 => BaseData)) internal _baseData;
 
     // ================================
     // WRITE FUNCTIONS

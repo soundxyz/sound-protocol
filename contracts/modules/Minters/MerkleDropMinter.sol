@@ -173,16 +173,47 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
         return _editionMintData[edition][mintId];
     }
 
+    /// @inheritdoc IBaseMinter
     function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }
 
+    /// @inheritdoc IBaseMinter
     function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
+    /// @inheritdoc IBaseMinter
     function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    }
+
+    // @inheritdoc IBaseMinter
+    function getMintInfo(address edition, uint256 mintId)
+        public
+        view
+        returns (
+            uint32,
+            uint32,
+            bool,
+            uint256,
+            uint32,
+            uint32,
+            uint32
+        )
+    {
+        BaseData storage baseData = _baseData[edition][mintId];
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        return (
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            mintData.maxAllowedPerWallet,
+            mintData.totalMinted
+        );
     }
 
     /// @inheritdoc IERC165
