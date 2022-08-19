@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.16;
 
-import "./MintControllerBase.sol";
+import "./MinterBase.sol";
+import "../../interfaces/IStandardMint.sol";
 
 /*
  * @dev Minter class for range edition sales.
  */
-contract RangeEditionMinter is MintControllerBase {
+contract RangeEditionMinter is MinterBase, IStandardMint {
     // ================================
     // CUSTOM ERRORS
     // ================================

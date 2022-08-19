@@ -89,7 +89,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, PRICE * 2, PRICE));
+        vm.expectRevert(abi.encodeWithSelector(MinterBase.WrongEtherValue.selector, PRICE * 2, PRICE));
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig);
     }
 
@@ -100,14 +100,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(MinterBase.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig);
 
         vm.prank(caller);
         minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig);
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(MinterBase.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 

@@ -5,7 +5,7 @@ pragma solidity ^0.8.16;
 import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import "../modules/Metadata/IMetadataModule.sol";
+import "./IMetadataModule.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒

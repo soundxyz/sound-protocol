@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../contracts/SoundEdition/SoundEditionV1.sol";
-import "../contracts/modules/Metadata/IMetadataModule.sol";
+import "../contracts/interfaces/IMetadataModule.sol";
 import "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "../../contracts/modules/Minters/MintControllerBase.sol";
+import "../../contracts/modules/Minters/MinterBase.sol";
 
-contract MockMinter is MintControllerBase {
+contract MockMinter is MinterBase {
     function createEditionMint(
         address edition,
         uint32 startTime,

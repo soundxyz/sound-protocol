@@ -95,7 +95,7 @@ contract RangeEditionMinterTests is TestConfig {
         bool hasRevert;
 
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(MintControllerBase.InvalidTimeRange.selector);
+            vm.expectRevert(MinterBase.InvalidTimeRange.selector);
             hasRevert = true;
         } else if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
@@ -136,7 +136,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         if (!hasRevert) {
             RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            MintControllerBase.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            MinterBase.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
 
             assertEq(data.price, price);
             assertEq(baseData.startTime, startTime);
@@ -238,7 +238,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint256 requiredPayment = quantity * PRICE;
 
         bytes memory expectedRevert = abi.encodeWithSelector(
-            MintControllerBase.WrongEtherValue.selector,
+            MinterBase.WrongEtherValue.selector,
             requiredPayment - 1,
             requiredPayment
         );
@@ -253,18 +253,14 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 quantity = 1;
 
         vm.warp(START_TIME - 1);
-        vm.expectRevert(
-            abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
-        );
+        vm.expectRevert(abi.encodeWithSelector(MinterBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(START_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(END_TIME + 1);
-        vm.expectRevert(
-            abi.encodeWithSelector(MintControllerBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
-        );
+        vm.expectRevert(abi.encodeWithSelector(MinterBase.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(END_TIME);
@@ -283,7 +279,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 totalMinted;
 
         if (quantityToBuyBeforeClosing > MAX_MINTABLE_UPPER) {
-            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE_UPPER));
+            vm.expectRevert(abi.encodeWithSelector(MinterBase.MaxMintableReached.selector, MAX_MINTABLE_UPPER));
         } else {
             totalMinted = quantityToBuyBeforeClosing;
         }
@@ -291,7 +287,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(address(edition), MINT_ID, quantityToBuyBeforeClosing);
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
-            vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE_LOWER));
+            vm.expectRevert(abi.encodeWithSelector(MinterBase.MaxMintableReached.selector, MAX_MINTABLE_LOWER));
         }
         vm.warp(CLOSING_TIME);
         minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), MINT_ID, quantityToBuyAfterClosing);
@@ -309,7 +305,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(CLOSING_TIME);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, maxMintableLower));
+        vm.expectRevert(abi.encodeWithSelector(MinterBase.MaxMintableReached.selector, maxMintableLower));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
     }
 
@@ -322,7 +318,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(MintControllerBase.InvalidTimeRange.selector);
+            vm.expectRevert(MinterBase.InvalidTimeRange.selector);
             hasRevert = true;
         }
 
@@ -335,7 +331,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         if (!hasRevert) {
             RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            MintControllerBase.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            MinterBase.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
 
             assertEq(baseData.startTime, startTime);
             assertEq(data.closingTime, closingTime);

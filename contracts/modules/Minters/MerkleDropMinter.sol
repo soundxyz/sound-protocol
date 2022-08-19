@@ -5,11 +5,11 @@ pragma solidity ^0.8.16;
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "openzeppelin/utils/structs/EnumerableMap.sol";
-import "./MintControllerBase.sol";
-import "../../SoundEdition/ISoundEditionV1.sol";
+import "./MinterBase.sol";
+import "../../interfaces/ISoundEditionV1.sol";
 
 /// @dev Airdrop using merkle tree logic.
-contract MerkleDropMinter is MintControllerBase {
+contract MerkleDropMinter is MinterBase {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     // ================================

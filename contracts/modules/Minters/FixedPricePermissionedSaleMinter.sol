@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.16;
 
-import "./MintControllerBase.sol";
+import "./MinterBase.sol";
 import "solady/utils/ECDSA.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter
  * @dev Minter class for sales approved with signatures.
  */
-contract FixedPricePermissionedSaleMinter is MintControllerBase {
+contract FixedPricePermissionedSaleMinter is MinterBase {
     using ECDSA for bytes32;
 
     // ================================
