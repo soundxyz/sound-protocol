@@ -5,12 +5,14 @@ import "../../interfaces/IBaseMinter.sol";
 import "../../interfaces/ISoundEditionV1.sol";
 import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
+import "openzeppelin/access/Ownable.sol";
+import "solady/utils/SafeTransferLib.sol";
 
 /**
  * @title Minter Base
  * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
  */
-abstract contract BaseMinter is IERC165, IBaseMinter {
+abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     // ================================
     // CUSTOM ERRORS
     // ================================
@@ -45,6 +47,21 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
      */
     error Unauthorized();
 
+    /**
+     * The affiliate fee numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidAffiliateFeeBPS();
+
+    /**
+     * The affiliate discount numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidAffiliateDiscountBPS();
+
+    /**
+     * The platform fee numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidPlatformFeeBPS();
+
     // ================================
     // EVENTS
     // ================================
@@ -70,6 +87,33 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
      */
     event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
 
+    /**
+     * @notice Emitted when the `affiliateFeeBPS` is updated.
+     */
+    event AffiliateFeeSet(address indexed edition, uint256 indexed mintId, uint16 affiliateFeeBPS);
+
+    /**
+     * @notice Emitted when the `affiliateDiscountBPS` is updated.
+     */
+    event AffiliateDiscountSet(address indexed edition, uint256 indexed mintId, uint16 affiliateDiscountBPS);
+
+    /**
+     * @notice Emitted when the `platformFeeBPS` is changed.
+     */
+    event PlatformFeeSet(uint16 platformFeeBPS);
+
+    // ================================
+    // CONSTANTS
+    // ================================
+
+    /**
+     * @dev This is the denominator, in basis points (BPS), for:
+     * - platform fees
+     * - affiliate fees
+     * - affiliate discount
+     */
+    uint16 public constant MAX_BPS = 10_000;
+
     // ================================
     // STRUCTS
     // ================================
@@ -77,6 +121,8 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
     struct BaseData {
         uint32 startTime;
         uint32 endTime;
+        uint16 affiliateFeeBPS;
+        uint16 affiliateDiscountBPS;
         bool mintPaused;
     }
 
@@ -93,6 +139,21 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
      * @dev Maps an edition and the mint ID to a mint's configuration.
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
+
+    /**
+     * @dev Maps an address to how much affiliate fees have they accured.
+     */
+    mapping(address => uint256) public affiliateFeesAccured;
+
+    /**
+     * @dev How much platform fees have been accured.
+     */
+    uint256 public platformFeesAccured;
+
+    /**
+     * @dev The numerator of the platform fee.
+     */
+    uint16 public platformFeeBPS;
 
     // ================================
     // WRITE FUNCTIONS
@@ -126,17 +187,84 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
         _setTimeRange(edition, mintId, startTime, endTime);
     }
 
+    /**
+     * @dev Sets the `affiliateFeeBPS` for (`edition`, `mintId`).
+     * Calling conditions:
+     * - The caller must be the current controller for (`edition`, `mintId`).
+     */
+    function setAffiliateFee(
+        address edition, 
+        uint256 mintId, 
+        uint16 affiliateFeeBPS
+    ) 
+        public 
+        virtual 
+        onlyEditionOwnerOrAdmin(edition) 
+        onlyValidAffiliateFeeBPS(affiliateFeeBPS)
+    {
+        _baseData[edition][mintId].affiliateFeeBPS = affiliateFeeBPS;
+        emit AffiliateFeeSet(edition, mintId, affiliateFeeBPS);
+    }
+
+    /**
+     * @dev Sets the `affiliateDiscountBPS` for (`edition`, `mintId`).
+     * Calling conditions:
+     * - The caller must be the current controller for (`edition`, `mintId`).
+     */
+    function setAffiliateDiscount(
+        address edition, 
+        uint256 mintId, 
+        uint16 affiliateDiscountBPS
+    ) 
+        public 
+        virtual 
+        onlyEditionOwnerOrAdmin(edition) 
+        onlyValidAffiliateDiscountBPS(affiliateDiscountBPS)
+    {
+        _baseData[edition][mintId].affiliateDiscountBPS = affiliateDiscountBPS;
+        emit AffiliateDiscountSet(edition, mintId, affiliateDiscountBPS);
+    }
+
+    /**
+     * @dev Sets the `platformFeePBS`.
+     * Calling conditions:
+     * - The caller must be the owner of the contract.
+     */
+    function setPlatformFee(uint16 platformFeeBPS_) 
+        public 
+        virtual 
+        onlyOwner 
+        onlyValidPlatformFeeBPS(platformFeeBPS_)
+    {
+        platformFeeBPS = platformFeeBPS_;
+        emit PlatformFeeSet(platformFeeBPS_);
+    }
+
+    /**
+     * @dev Withdraws all the accured funds for the `affiliate`.
+     */
+    function withdrawForAffiliate(address affiliate) public {
+        uint256 accured = affiliateFeesAccured[affiliate];
+        affiliateFeesAccured[affiliate] = 0;
+        if (accured != 0) {
+            SafeTransferLib.safeTransferETH(affiliate, accured);    
+        }
+    }
+
+    /**
+     * @dev Withdraws all the accured funds for the platform.
+     */
+    function withdrawForPlatform(address to) public onlyOwner {
+        uint256 accured = platformFeesAccured;
+        platformFeesAccured = 0;
+        if (accured != 0) {
+            SafeTransferLib.safeTransferETH(to, accured);
+        }
+    }
+
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
-
-    /**
-     * @dev Restricts the start time to be less than the end time.
-     */
-    modifier onlyValidTimeRange(uint32 startTime, uint32 endTime) virtual {
-        if (startTime >= endTime) revert InvalidTimeRange();
-        _;
-    }
 
     /**
      * @dev Creates an edition mint configuration.
@@ -217,23 +345,62 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
     ) internal virtual {}
 
     /**
-     * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     * @dev Mints `quantity` of `edition` to with a required payment of `requiredEtherValue`.
      */
     function _mint(
         address edition,
         uint256 mintId,
-        address to,
         uint32 quantity,
-        uint256 requiredEtherValue
+        uint256 requiredEtherValue,
+        address affiliate
     ) internal {
-        uint32 startTime = _baseData[edition][mintId].startTime;
-        uint32 endTime = _baseData[edition][mintId].endTime;
+        BaseData storage baseData = _baseData[edition][mintId];
+
+        /* --------------------- GENERAL CHECKS --------------------- */
+
+        uint32 startTime = baseData.startTime;
+        uint32 endTime = baseData.endTime;
         if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
         if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (baseData.mintPaused) revert MintPaused();
 
+        /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
+        
+        // Check if the mint is an affliated mint.
+        bool isAffiliatedMint = isAffiliated(edition, mintId, affiliate);
+
+        // If it is, apply the affiliated discount.
+        if (isAffiliatedMint) {
+            requiredEtherValue = affiliatedPrice(edition, mintId, requiredEtherValue, affiliate);
+        }
+
+        // Reverts if the payment is not exact.
+        // For affiliated mints, the client should compute the discounted price via
+        // `affiliatedPrice(edition, mintId, requiredEtherValue, affiliate)`
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
-        if (_baseData[edition][mintId].mintPaused) revert MintPaused();
-        ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
+
+        // Compute the platform fee.
+        uint256 platformFee = requiredEtherValue * platformFeeBPS / MAX_BPS;
+
+        // Compute the affiliate fee.
+        uint256 affiliateFee = requiredEtherValue * baseData.affiliateFeeBPS / MAX_BPS;
+
+        // Deduct the platform fee from the remaining payment.
+        uint256 remainingPayment = requiredEtherValue - platformFee;
+
+        // Increment the platform fees accured.
+        platformFeesAccured += platformFee;
+
+        if (isAffiliatedMint) {
+            // Deduct the affiliate fee from the remaining payment.
+            remainingPayment -= affiliateFee;
+            // Increment the affiliate fees accured
+            affiliateFeesAccured[affiliate] += affiliateFee;            
+        }
+        
+        /* ------------------------- MINT --------------------------- */
+
+        ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
     }
 
     /**
@@ -259,9 +426,61 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
         _;
     }
 
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidTimeRange(uint32 startTime, uint32 endTime) virtual {
+        if (startTime >= endTime) revert InvalidTimeRange();
+        _;
+    }
+
+    /**
+     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidAffiliateFeeBPS(uint16 affiliateFeeBPS) virtual {
+        if (affiliateFeeBPS > MAX_BPS) revert InvalidAffiliateFeeBPS();
+        _;
+    }
+
+    /**
+     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidAffiliateDiscountBPS(uint16 affiliateDiscountBPS) virtual {
+        if (affiliateDiscountBPS > MAX_BPS) revert InvalidAffiliateDiscountBPS();
+        _;
+    }
+
+    /**
+     * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) virtual {
+        if (platformFeeBPS_ > MAX_BPS) revert InvalidPlatformFeeBPS();
+        _;
+    }
+
     // ================================
     // VIEW FUNCTIONS
     // ================================
+
+    /**
+     * @dev Returns whether `affiliate` is a valid affiliate for (`edition`, `mintId`).
+     * Child contracts may override this function to provide a custom logic.
+     */
+    function isAffiliated(address /* edition */, uint256 /* mintId */, address affiliate) public virtual view returns (bool) {
+        return affiliate != address(0);
+    }
+
+    /**
+     * @dev Returns the discounted price for affiliated purchases.
+     */
+    function affiliatedPrice(
+        address edition, 
+        uint256 mintId, 
+        uint256 originalPrice,
+        address /* affiliate */
+    ) public virtual view returns (uint256) {
+        return originalPrice - (originalPrice * _baseData[edition][mintId].affiliateDiscountBPS / MAX_BPS);        
+    }
 
     /**
      * @dev Returns the next mint ID for `edition`.

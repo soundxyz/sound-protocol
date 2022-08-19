@@ -16,9 +16,10 @@ contract MockMinter is BaseMinter {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        uint256 price_
+        uint256 price_,
+        address affiliate
     ) external payable {
-        _mint(edition, mintId, msg.sender, quantity, quantity * price_);
+        _mint(edition, mintId, quantity, quantity * price_, affiliate);
     }
 
     function price(

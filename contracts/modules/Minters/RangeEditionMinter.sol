@@ -141,11 +141,13 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
      * @dev Mints tokens for a given edition.
      * @param edition Address of the song edition contract we are minting for.
      * @param quantity Token quantity to mint in song `edition`.
+     * @param affiliate The affiliate's address. Set to the zero address if none.
      */
     function mint(
         address edition,
         uint256 mintId,
-        uint32 quantity
+        uint32 quantity,
+        address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -168,7 +170,7 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
+        _mint(edition, mintId, quantity, quantity * data.price, affiliate);
     }
 
     /*

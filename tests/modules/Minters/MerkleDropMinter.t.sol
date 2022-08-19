@@ -70,13 +70,13 @@ contract MerkleDropMinterTests is TestConfig {
 
         uint32 requestedQuantity = 1;
         vm.prank(accounts[1]);
-        minter.mint(address(edition), mintId, requestedQuantity, proof);
+        minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
         user1Balance = edition.balanceOf(accounts[1]);
         assertEq(user1Balance, 1);
 
         // Claim the second of the 2 max per wallet
         vm.prank(accounts[1]);
-        minter.mint(address(edition), mintId, requestedQuantity, proof);
+        minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
         user1Balance = edition.balanceOf(accounts[1]);
         assertEq(user1Balance, 2);
     }
@@ -91,7 +91,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.prank(accounts[0]);
         vm.expectRevert(MerkleDropMinter.ExceedsMaxPerWallet.selector);
         // Max is 1 but buyer is requesting 2
-        minter.mint(address(edition), mintId, requestedQuantity, proof);
+        minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
     function test_cannotClaimMoreThanMaxMintable() public {
@@ -104,7 +104,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
         vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, 2));
-        minter.mint(address(edition), mintId, requestedQuantity, proof);
+        minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
     function test_cannotClaimWithInvalidProof() public {
@@ -115,7 +115,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.prank(accounts[0]);
         uint32 requestedQuantity = 1;
         vm.expectRevert(MerkleDropMinter.InvalidMerkleProof.selector);
-        minter.mint(address(edition), mintId, requestedQuantity, proof);
+        minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
     function test_canGetClaimedAmountForWallet() public {
@@ -130,7 +130,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
         uint32 requestedQuantity = maxAllowedPerWwallet;
-        minter.mint(address(edition), mintId, requestedQuantity, proof);
+        minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
 
         uint256 claimedAmount = minter.getClaimed(address(edition), mintId, accounts[0]);
         assertEq(claimedAmount, 1);

@@ -113,12 +113,14 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
      * This is the maximum the user can claim.
      * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxAllowedPerWallet`
      * @param merkleProof Merkle proof for the claim.
+     * @param affiliate The affiliate's address. Set to the zero address if none.
      */
     function mint(
         address edition,
         uint256 mintId,
         uint32 requestedQuantity,
-        bytes32[] calldata merkleProof
+        bytes32[] calldata merkleProof,
+        address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -138,7 +140,7 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        _mint(edition, mintId, msg.sender, requestedQuantity, data.price * requestedQuantity);
+        _mint(edition, mintId, requestedQuantity, data.price * requestedQuantity, affiliate);
 
         emit DropClaimed(msg.sender, requestedQuantity);
     }

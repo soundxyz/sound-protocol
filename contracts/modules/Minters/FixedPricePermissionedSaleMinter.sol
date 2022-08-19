@@ -90,7 +90,8 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
         address edition,
         uint256 mintId,
         uint32 quantity,
-        bytes calldata signature
+        bytes calldata signature,
+        address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
         uint32 nextTotalMinted = data.totalMinted + quantity;
@@ -101,7 +102,7 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
+        _mint(edition, mintId, quantity, data.price * quantity, affiliate);
     }
 
     // ================================
