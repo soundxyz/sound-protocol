@@ -19,7 +19,7 @@ async function main() {
         stdio: "inherit",
     });
 
-    await ensureDir("dist/bin");
+    await ensureDir("dist");
 
     await Promise.all([
         copy("LICENSE", "dist/LICENSE"),
@@ -36,11 +36,10 @@ async function main() {
                 await makePublishManifest(".", {
                     name: pkg.name,
                     version: pkg.version,
-                    main: "src/index.js",
-                    types: "src/index.d.ts",
+                    main: "index.js",
+                    types: "typechain/index.d.ts",
                     dependencies: pkg.dependencies,
                     license: pkg.license,
-                    bin: pkg.bin,
                     repository: pkg.repository,
                 } as ProjectManifest),
                 null,
@@ -51,7 +50,7 @@ async function main() {
 
     await buildCode({
         clean: false,
-        entryPoints: ["typechain/factories", "typechain/index.ts"],
+        entryPoints: ["typechain/index.ts"],
         format: "cjs",
         outDir: "dist",
         target: "node14",
