@@ -72,7 +72,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_mintWithoutCorrectSignatureReverts() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
@@ -85,7 +85,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_mintWithWrongEtherValueReverts() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
@@ -96,7 +96,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_mintWhenSoldOutReverts() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
@@ -114,7 +114,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_mintWithUnauthorizedMinterReverts() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
         bool status;
@@ -138,7 +138,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_mintUpdatesValuesAndMintsCorrectly() public {
         (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
         uint32 quantity = 2;

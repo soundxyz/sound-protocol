@@ -110,10 +110,10 @@ contract SoundEdition_payments is TestConfig {
     function test_setFundingRecipientRevertsForNonOwner() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
-        edition.setFundingRecipient(getRandomAccount(2));
+        edition.setFundingRecipient(getFundedAccount(2));
     }
 
     function test_setFundingRecipientRevertsForZeroAddress() public {
@@ -126,7 +126,7 @@ contract SoundEdition_payments is TestConfig {
     function test_setFundingRecipientSuccess() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        address newFundingRecipient = getRandomAccount(1);
+        address newFundingRecipient = getFundedAccount(1);
         edition.setFundingRecipient(newFundingRecipient);
 
         assertEq(edition.fundingRecipient(), newFundingRecipient);
@@ -135,7 +135,7 @@ contract SoundEdition_payments is TestConfig {
     function test_setFundingRecipientEmitsEvent() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        address newFundingRecipient = getRandomAccount(1);
+        address newFundingRecipient = getFundedAccount(1);
 
         vm.expectEmit(false, false, false, true);
         emit FundingRecipientSet(newFundingRecipient);
@@ -149,7 +149,7 @@ contract SoundEdition_payments is TestConfig {
     function test_setRoyaltyRevertsForNonOwner() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         edition.setRoyalty(500);
