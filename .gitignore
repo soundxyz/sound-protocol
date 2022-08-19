@@ -1,8 +1,8 @@
 # Build files
-cache/
-out/
-typechain/
-dist/
+cache
+out*
+typechain
+dist
 
 # Ignores development broadcast logs
 /broadcast/*

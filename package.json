@@ -2,7 +2,6 @@
   "name": "@soundxyz/sound-protocol",
   "version": "2.0.0",
   "author": "soundxyz",
-  "main": "",
   "homepage": "https://github.com/soundxyz/sound-protocol#readme",
   "scripts": {
     "build": "forge build",
@@ -13,14 +12,19 @@
     "prepare": "husky install",
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol",
-    "typechain": "rm -rf out/**/*.t.sol && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out/**/*[!metadata].json'",
-    "release:canary": "(node scripts/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
+    "prep-typechain": "bob-tsm scripts/js/prep-typechain.ts",
+    "typechain": "pnpm prep-typechain && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-sound/**/*[!metadata].json'",
+    "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
     "prepack": "pnpm build && pnpm typechain && bob-tsm build.ts",
     "postpublish": "gh-release"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/soundxyz/sound-protocol.git"
+  },
+  "lint-staged": {
+    "*.sol": "solhint",
+    "*.{js,sol,md}": "prettier --write"
   },
   "license": "GPL-3.0-or-later",
   "dependencies": {
