@@ -4,6 +4,7 @@ import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/FixedPricePermissionedSaleMinter.sol";
+import "../../../contracts/interfaces/IFixedPricePermissionedMint.sol";
 
 contract FixedPricePermissionedSaleMinterTests is TestConfig {
     using ECDSA for bytes32;
@@ -158,5 +159,17 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
+    }
+
+    function test_supportsInterface() public {
+        (, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+
+        bool supportsIBaseMinter = minter.supportsInterface(type(IBaseMinter).interfaceId);
+        bool supportsIFixedPricePermissionedMint = minter.supportsInterface(
+            type(IFixedPricePermissionedMint).interfaceId
+        );
+
+        assertTrue(supportsIBaseMinter);
+        assertTrue(supportsIFixedPricePermissionedMint);
     }
 }

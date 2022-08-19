@@ -290,10 +290,7 @@ contract RangeEditionMinter is IERC165, MinterBase, IStandardMint {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public pure override(IERC165, MinterBase) returns (bool) {
-        return
-            MinterBase.supportsInterface(interfaceId) ||
-            interfaceId == type(IStandardMint).interfaceId ||
-            interfaceId == type(IBaseMinter).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, MinterBase) returns (bool) {
+        return MinterBase.supportsInterface(interfaceId) || interfaceId == type(IStandardMint).interfaceId;
     }
 }
