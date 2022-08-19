@@ -28,12 +28,13 @@ pragma solidity ^0.8.16;
 */
 
 /**
- * @title Interface for the base minter functionality, excluding the mint function.
+ * @title Mint interface for the `FixedPricePermissionedSaleMinter`.
  */
-interface IBaseMinter {
-    function price(address edition, uint256 mintId) external view returns (uint256);
-
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32);
-
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32);
+interface IFixedPricePermissionedMint {
+    function mint(
+        address edition,
+        uint256 mintId,
+        uint32 quantity,
+        bytes calldata signature
+    ) external payable;
 }

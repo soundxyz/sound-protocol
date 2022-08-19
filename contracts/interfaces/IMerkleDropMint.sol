@@ -28,12 +28,13 @@ pragma solidity ^0.8.16;
 */
 
 /**
- * @title Interface for the base minter functionality, excluding the mint function.
+ * @title Mint interface for the `MerkleDropMinter`.
  */
-interface IBaseMinter {
-    function price(address edition, uint256 mintId) external view returns (uint256);
-
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32);
-
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32);
+interface IMerkleDropMint {
+    function mint(
+        address edition,
+        uint256 mintId,
+        uint32 requestedQuantity,
+        bytes32[] calldata merkleProof
+    ) external payable;
 }
