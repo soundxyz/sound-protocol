@@ -5,11 +5,13 @@ pragma solidity ^0.8.16;
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "openzeppelin/utils/structs/EnumerableMap.sol";
-import "./MintControllerBase.sol";
-import "../../SoundEdition/ISoundEditionV1.sol";
+import "openzeppelin/utils/introspection/IERC165.sol";
+import "./BaseMinter.sol";
+import "../../interfaces/ISoundEditionV1.sol";
+import "../../interfaces/IMerkleDropMint.sol";
 
 /// @dev Airdrop using merkle tree logic.
-contract MerkleDropMinter is MintControllerBase {
+contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     // ================================
@@ -181,5 +183,10 @@ contract MerkleDropMinter is MintControllerBase {
 
     function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMint).interfaceId;
     }
 }

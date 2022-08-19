@@ -40,7 +40,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
 
     function invariant_timeRange() public {
         RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-        MintControllerBase.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+        BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
 
         uint32 startTime = baseData.startTime;
         uint32 closingTime = data.closingTime;

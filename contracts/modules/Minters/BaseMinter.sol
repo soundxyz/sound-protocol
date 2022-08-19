@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "./IBaseMinter.sol";
-import "../../SoundEdition/ISoundEditionV1.sol";
+import "../../interfaces/IBaseMinter.sol";
+import "../../interfaces/ISoundEditionV1.sol";
 import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
+import "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
- * @title Mint Controller Base
- * @dev The `MintControllerBase` class maintains a central storage record of mint controllers.
+ * @title Minter Base
+ * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
  */
-abstract contract MintControllerBase is IBaseMinter {
+abstract contract BaseMinter is IERC165, IBaseMinter {
     // ================================
     // CUSTOM ERRORS
     // ================================
@@ -274,5 +275,10 @@ abstract contract MintControllerBase is IBaseMinter {
      */
     function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
         return _baseData[edition][mintId];
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IBaseMinter).interfaceId;
     }
 }
