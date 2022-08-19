@@ -55,6 +55,7 @@ contract SoundEditionV1 is
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     uint16 internal constant MAX_BPS = 10_000;
+    bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
     // ================================
     // STORAGE
@@ -295,7 +296,8 @@ contract SoundEditionV1 is
     {
         return
             ERC721AUpgradeable.supportsInterface(interfaceId) ||
-            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId);
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
+            interfaceId == _INTERFACE_ID_ERC2981;
     }
 
     /// @inheritdoc IERC2981Upgradeable

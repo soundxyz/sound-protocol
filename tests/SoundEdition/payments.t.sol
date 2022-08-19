@@ -198,4 +198,12 @@ contract SoundEdition_payments is TestConfig {
         assertEq(fundingRecipient, FUNDING_RECIPIENT);
         assertEq(royaltyAmount, expectedRoyaltyAmount);
     }
+
+    function test_supportsERC2981Interface() public {
+        bytes4 _INTERFACE_ID_ERC2981 = 0x2a55205a;
+
+        SoundEditionV1 edition = createGenericEdition();
+        bool supportsERC2981 = edition.supportsInterface(_INTERFACE_ID_ERC2981);
+        assertTrue(supportsERC2981);
+    }
 }
