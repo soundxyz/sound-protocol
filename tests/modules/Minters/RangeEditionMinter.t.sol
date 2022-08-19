@@ -82,6 +82,8 @@ contract RangeEditionMinterTests is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 MAX_MINTABLE_UPPER,
                 EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP

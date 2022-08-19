@@ -22,6 +22,8 @@ contract SoundEdition_metadata is TestConfig {
                 IMetadataModule(address(0)),
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 EDITION_MAX_MINTABLE,
                 EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
@@ -43,6 +45,8 @@ contract SoundEdition_metadata is TestConfig {
                 metadataModule,
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 EDITION_MAX_MINTABLE,
                 EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP

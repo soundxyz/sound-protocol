@@ -52,6 +52,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param metadataModule Address of metadata module, address(0x00) if not used
      * @param baseURI Base URI
      * @param contractURI Contract URI for OpenSea storefront
+     * @param fundingRecipient Address that receives primary and secondary royalties
+     * @param royaltyBPS Royalty amount in bps (basis points)
      * @param editionMaxMintable The maximum amount of tokens that can be minted for this edition.
      * @param randomnessLockedAfterMinted Token supply after which randomness gets locked
      * @param randomnessLockedTimestamp Timestamp after which randomness gets locked
@@ -63,6 +65,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
+        address fundingRecipient,
+        uint16 royaltyBPS,
         uint32 editionMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
@@ -78,6 +82,17 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param quantity Number of tokens to mint
      */
     function mint(address to, uint256 quantity) external payable;
+
+    /**
+     * @dev Withdraws collected ETH royalties to the fundingRecipient
+     */
+    function withdrawETH() external;
+
+    /**
+     * @dev Withdraws collected ERC20 royalties to the fundingRecipient
+     * @param tokens array of ERC20 tokens to withdraw
+     */
+    function withdrawERC20(address[] calldata tokens) external;
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.
@@ -103,12 +118,22 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /**
      *   @dev Sets contract URI
      */
-    function setContractURI(string memory _contractURI) external;
+    function setContractURI(string memory contractURI) external;
 
     /**
      *   @dev Freezes metadata by preventing any more changes to base URI
      */
     function freezeMetadata() external;
+
+    /**
+     * @dev Sets funding recipient address
+     */
+    function setFundingRecipient(address fundingRecipient) external;
+
+    /**
+     * @dev Sets royalty amount in bps (basis points)
+     */
+    function setRoyalty(uint16 royaltyBPS) external;
 
     /**
      *   @dev Reduces the maximum mintable quantity.

@@ -31,6 +31,8 @@ contract MintControllerBaseTests is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 editionMaxMintable,
                 editionMaxMintable,
                 RANDOMNESS_LOCKED_TIMESTAMP
