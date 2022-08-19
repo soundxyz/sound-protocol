@@ -226,7 +226,7 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     }
 
     /**
-     * @dev Sets the `platformFeePBS`.
+     * @dev Sets the `platformFeeBPS`.
      * Calling conditions:
      * - The caller must be the owner of the contract.
      */
