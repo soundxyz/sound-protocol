@@ -369,9 +369,6 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
         // Compute the platform fee.
         uint256 platformFee = (requiredEtherValue * platformFeeBPS) / MAX_BPS;
 
-        // Compute the affiliate fee.
-        uint256 affiliateFee = (requiredEtherValue * baseData.affiliateFeeBPS) / MAX_BPS;
-
         // Deduct the platform fee from the remaining payment.
         uint256 remainingPayment = requiredEtherValue - platformFee;
 
@@ -379,6 +376,8 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
         platformFeesAccrued += platformFee;
 
         if (isAffiliatedMint) {
+            // Compute the affiliate fee.
+            uint256 affiliateFee = (requiredEtherValue * baseData.affiliateFeeBPS) / MAX_BPS;
             // Deduct the affiliate fee from the remaining payment.
             remainingPayment -= affiliateFee;
             // Increment the affiliate fees accrued
