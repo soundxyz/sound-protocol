@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import "./MinterBase.sol";
 import "../../interfaces/IStandardMint.sol";
+import "openzeppelin/utils/introspection/IERC165.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -34,7 +35,7 @@ import "../../interfaces/IStandardMint.sol";
 /*
  * @dev Minter class for range edition sales.
  */
-contract RangeEditionMinter is MinterBase, IStandardMint {
+contract RangeEditionMinter is IERC165, MinterBase, IStandardMint {
     // ================================
     // CUSTOM ERRORS
     // ================================
@@ -312,5 +313,10 @@ contract RangeEditionMinter is MinterBase, IStandardMint {
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
         return _editionMintData[edition][mintId];
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public pure override(IERC165, MinterBase) returns (bool) {
+        return interfaceId == type(IStandardMint).interfaceId || interfaceId == type(IBaseMinter).interfaceId;
     }
 }

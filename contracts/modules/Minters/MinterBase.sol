@@ -4,12 +4,13 @@ pragma solidity ^0.8.16;
 import "../../interfaces/IBaseMinter.sol";
 import "../../interfaces/ISoundEditionV1.sol";
 import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
+import "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
  * @title Minter Base
  * @dev The `MinterBase` class maintains a central storage record of edition mint configurations.
  */
-abstract contract MinterBase is IBaseMinter {
+abstract contract MinterBase is IERC165, IBaseMinter {
     // ================================
     // CUSTOM ERRORS
     // ================================
@@ -274,5 +275,10 @@ abstract contract MinterBase is IBaseMinter {
      */
     function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
         return _baseData[edition][mintId];
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IBaseMinter).interfaceId;
     }
 }

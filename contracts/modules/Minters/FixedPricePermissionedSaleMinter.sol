@@ -5,6 +5,7 @@ pragma solidity ^0.8.16;
 import "./MinterBase.sol";
 import "../../interfaces/IFixedPricePermissionedMint.sol";
 import "solady/utils/ECDSA.sol";
+import "openzeppelin/utils/introspection/IERC165.sol";
 
 /*
                  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -36,7 +37,7 @@ import "solady/utils/ECDSA.sol";
  * @title Fixed Price Permissioned Sale Minter
  * @dev Minter class for sales approved with signatures.
  */
-contract FixedPricePermissionedSaleMinter is MinterBase, IFixedPricePermissionedMint {
+contract FixedPricePermissionedSaleMinter is IERC165, MinterBase, IFixedPricePermissionedMint {
     using ECDSA for bytes32;
 
     // ================================
@@ -151,5 +152,12 @@ contract FixedPricePermissionedSaleMinter is MinterBase, IFixedPricePermissioned
 
     function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
         return type(uint32).max;
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public pure override(IERC165, MinterBase) returns (bool) {
+        return
+            interfaceId == type(IFixedPricePermissionedMint).interfaceId ||
+            interfaceId == type(IBaseMinter).interfaceId;
     }
 }
