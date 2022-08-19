@@ -368,4 +368,10 @@ contract RangeEditionMinterTests is TestConfig {
             assertEq(data.maxMintableUpper, maxMintableUpper);
         }
     }
+
+    function test_supportsInterface() public {
+        SoundEditionV1 edition = createGenericEdition();
+        bool supportsERC2981 = edition.supportsInterface(_INTERFACE_ID_ERC2981);
+        assertTrue(supportsERC2981);
+    }
 }
