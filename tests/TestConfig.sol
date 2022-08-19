@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 import "forge-std/Test.sol";
 
+import "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 import "../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../contracts/SoundEdition/SoundEditionV1.sol";
 import "../contracts/modules/Metadata/IMetadataModule.sol";
@@ -23,11 +24,16 @@ contract TestConfig is Test {
 
     // Set up called before each test
     function setUp() public virtual {
-        // Deploy SoundEdition implementation
-        MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
+        // Deploy implementations
+        SoundCreatorV1 soundCreatorImp = new SoundCreatorV1();
+        MockSoundEditionV1 editionImplementation = new MockSoundEditionV1();
 
-        soundCreator = new SoundCreatorV1();
-        soundCreator.initialize(address(soundEditionImplementation));
+        // Deploy creator
+        ERC1967Proxy proxy = new ERC1967Proxy(address(soundCreatorImp), bytes(""));
+        soundCreator = SoundCreatorV1(address(proxy));
+
+        // Initialize creator
+        soundCreator.initialize(address(editionImplementation));
     }
 
     // Returns a random address funded with ETH
