@@ -141,14 +141,14 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
     /**
-     * @dev Maps an address to how much affiliate fees have they accured.
+     * @dev Maps an address to how much affiliate fees have they accrued.
      */
-    mapping(address => uint256) public affiliateFeesAccured;
+    mapping(address => uint256) public affiliateFeesAccrued;
 
     /**
-     * @dev How much platform fees have been accured.
+     * @dev How much platform fees have been accrued.
      */
-    uint256 public platformFeesAccured;
+    uint256 public platformFeesAccrued;
 
     /**
      * @dev The numerator of the platform fee.
@@ -193,15 +193,10 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      * - The caller must be the current controller for (`edition`, `mintId`).
      */
     function setAffiliateFee(
-        address edition, 
-        uint256 mintId, 
+        address edition,
+        uint256 mintId,
         uint16 affiliateFeeBPS
-    ) 
-        public 
-        virtual 
-        onlyEditionOwnerOrAdmin(edition) 
-        onlyValidAffiliateFeeBPS(affiliateFeeBPS)
-    {
+    ) public virtual onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(affiliateFeeBPS) {
         _baseData[edition][mintId].affiliateFeeBPS = affiliateFeeBPS;
         emit AffiliateFeeSet(edition, mintId, affiliateFeeBPS);
     }
@@ -212,53 +207,43 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      * - The caller must be the current controller for (`edition`, `mintId`).
      */
     function setAffiliateDiscount(
-        address edition, 
-        uint256 mintId, 
+        address edition,
+        uint256 mintId,
         uint16 affiliateDiscountBPS
-    ) 
-        public 
-        virtual 
-        onlyEditionOwnerOrAdmin(edition) 
-        onlyValidAffiliateDiscountBPS(affiliateDiscountBPS)
-    {
+    ) public virtual onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(affiliateDiscountBPS) {
         _baseData[edition][mintId].affiliateDiscountBPS = affiliateDiscountBPS;
         emit AffiliateDiscountSet(edition, mintId, affiliateDiscountBPS);
     }
 
     /**
-     * @dev Sets the `platformFeeBPS`.
+     * @dev Sets the `platformFeePBS`.
      * Calling conditions:
      * - The caller must be the owner of the contract.
      */
-    function setPlatformFee(uint16 platformFeeBPS_) 
-        public 
-        virtual 
-        onlyOwner 
-        onlyValidPlatformFeeBPS(platformFeeBPS_)
-    {
+    function setPlatformFee(uint16 platformFeeBPS_) public virtual onlyOwner onlyValidPlatformFeeBPS(platformFeeBPS_) {
         platformFeeBPS = platformFeeBPS_;
         emit PlatformFeeSet(platformFeeBPS_);
     }
 
     /**
-     * @dev Withdraws all the accured funds for the `affiliate`.
+     * @dev Withdraws all the accrued funds for the `affiliate`.
      */
     function withdrawForAffiliate(address affiliate) public {
-        uint256 accured = affiliateFeesAccured[affiliate];
-        affiliateFeesAccured[affiliate] = 0;
-        if (accured != 0) {
-            SafeTransferLib.safeTransferETH(affiliate, accured);    
+        uint256 accrued = affiliateFeesAccrued[affiliate];
+        affiliateFeesAccrued[affiliate] = 0;
+        if (accrued != 0) {
+            SafeTransferLib.safeTransferETH(affiliate, accrued);
         }
     }
 
     /**
-     * @dev Withdraws all the accured funds for the platform.
+     * @dev Withdraws all the accrued funds for the platform.
      */
     function withdrawForPlatform(address to) public onlyOwner {
-        uint256 accured = platformFeesAccured;
-        platformFeesAccured = 0;
-        if (accured != 0) {
-            SafeTransferLib.safeTransferETH(to, accured);
+        uint256 accrued = platformFeesAccrued;
+        platformFeesAccrued = 0;
+        if (accrued != 0) {
+            SafeTransferLib.safeTransferETH(to, accrued);
         }
     }
 
@@ -332,6 +317,8 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
 
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
+
+        emit TimeRangeSet(edition, mintId, startTime, endTime);
     }
 
     /**
@@ -365,7 +352,7 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
         if (baseData.mintPaused) revert MintPaused();
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
-        
+
         // Check if the mint is an affliated mint.
         bool isAffiliatedMint = isAffiliated(edition, mintId, affiliate);
 
@@ -380,24 +367,24 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
 
         // Compute the platform fee.
-        uint256 platformFee = requiredEtherValue * platformFeeBPS / MAX_BPS;
+        uint256 platformFee = (requiredEtherValue * platformFeeBPS) / MAX_BPS;
 
         // Compute the affiliate fee.
-        uint256 affiliateFee = requiredEtherValue * baseData.affiliateFeeBPS / MAX_BPS;
+        uint256 affiliateFee = (requiredEtherValue * baseData.affiliateFeeBPS) / MAX_BPS;
 
         // Deduct the platform fee from the remaining payment.
         uint256 remainingPayment = requiredEtherValue - platformFee;
 
-        // Increment the platform fees accured.
-        platformFeesAccured += platformFee;
+        // Increment the platform fees accrued.
+        platformFeesAccrued += platformFee;
 
         if (isAffiliatedMint) {
             // Deduct the affiliate fee from the remaining payment.
             remainingPayment -= affiliateFee;
-            // Increment the affiliate fees accured
-            affiliateFeesAccured[affiliate] += affiliateFee;            
+            // Increment the affiliate fees accrued
+            affiliateFeesAccrued[affiliate] += affiliateFee;
         }
-        
+
         /* ------------------------- MINT --------------------------- */
 
         ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
@@ -466,7 +453,11 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      * @dev Returns whether `affiliate` is a valid affiliate for (`edition`, `mintId`).
      * Child contracts may override this function to provide a custom logic.
      */
-    function isAffiliated(address /* edition */, uint256 /* mintId */, address affiliate) public virtual view returns (bool) {
+    function isAffiliated(
+        address, /* edition */
+        uint256, /* mintId */
+        address affiliate
+    ) public view virtual returns (bool) {
         return affiliate != address(0);
     }
 
@@ -474,12 +465,12 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      * @dev Returns the discounted price for affiliated purchases.
      */
     function affiliatedPrice(
-        address edition, 
-        uint256 mintId, 
+        address edition,
+        uint256 mintId,
         uint256 originalPrice,
         address /* affiliate */
-    ) public virtual view returns (uint256) {
-        return originalPrice - (originalPrice * _baseData[edition][mintId].affiliateDiscountBPS / MAX_BPS);        
+    ) public view virtual returns (uint256) {
+        return originalPrice - ((originalPrice * _baseData[edition][mintId].affiliateDiscountBPS) / MAX_BPS);
     }
 
     /**

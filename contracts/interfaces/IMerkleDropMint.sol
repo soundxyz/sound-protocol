@@ -9,6 +9,7 @@ interface IMerkleDropMint {
         address edition,
         uint256 mintId,
         uint32 requestedQuantity,
-        bytes32[] calldata merkleProof
+        bytes32[] calldata merkleProof,
+        address affiliate
     ) external payable;
 }

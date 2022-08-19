@@ -255,18 +255,14 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 quantity = 1;
 
         vm.warp(START_TIME - 1);
-        vm.expectRevert(
-            abi.encodeWithSelector(BaseMinter.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
-        );
+        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
         vm.warp(START_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
         vm.warp(END_TIME + 1);
-        vm.expectRevert(
-            abi.encodeWithSelector(BaseMinter.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
-        );
+        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
         vm.warp(END_TIME);
@@ -290,13 +286,23 @@ contract RangeEditionMinterTests is TestConfig {
             totalMinted = quantityToBuyBeforeClosing;
         }
         vm.warp(START_TIME);
-        minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(address(edition), MINT_ID, quantityToBuyBeforeClosing, address(0));
+        minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(
+            address(edition),
+            MINT_ID,
+            quantityToBuyBeforeClosing,
+            address(0)
+        );
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
             vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, MAX_MINTABLE_LOWER));
         }
         vm.warp(CLOSING_TIME);
-        minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), MINT_ID, quantityToBuyAfterClosing, address(0));
+        minter.mint{ value: quantityToBuyAfterClosing * PRICE }(
+            address(edition),
+            MINT_ID,
+            quantityToBuyAfterClosing,
+            address(0)
+        );
     }
 
     function test_mintBeforeAndAfterClosingTimeBaseCase() public {
@@ -311,7 +317,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
         vm.warp(CLOSING_TIME);
-        
+
         vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, maxMintableLower));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
     }
