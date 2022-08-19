@@ -38,6 +38,8 @@ contract SoundEdition_goldenEgg is TestConfig {
                 goldenEggModule,
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 MAX_MINTABLE,
                 MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP

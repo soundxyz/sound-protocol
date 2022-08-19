@@ -5,6 +5,9 @@ pragma solidity ^0.8.16;
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
+import "openzeppelin/token/ERC20/IERC20.sol";
+import "solady/utils/SafeTransferLib.sol";
 import "./ISoundEditionV1.sol";
 import "../modules/Metadata/IMetadataModule.sol";
 import "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -51,6 +54,8 @@ contract SoundEditionV1 is
     // ================================
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    uint16 internal constant MAX_BPS = 10_000;
+    bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
     // ================================
     // STORAGE
@@ -60,6 +65,8 @@ contract SoundEditionV1 is
     string public baseURI;
     string public contractURI;
     bool public isMetadataFrozen;
+    address public fundingRecipient;
+    uint16 public royaltyBPS;
     uint32 public editionMaxMintable;
     uint32 public randomnessLockedAfterMinted;
     uint32 public randomnessLockedTimestamp;
@@ -73,6 +80,8 @@ contract SoundEditionV1 is
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
+    event FundingRecipientSet(address fundingRecipient);
+    event RoyaltySet(uint16 royaltyBPS);
     event EditionMaxMintableSet(uint32 newMax);
 
     // ================================
@@ -80,10 +89,12 @@ contract SoundEditionV1 is
     // ================================
 
     error MetadataIsFrozen();
+    error InvalidRoyaltyBPS();
     error InvalidRandomnessLock();
     error Unauthorized();
     error EditionMaxMintableReached();
     error InvalidAmount();
+    error InvalidFundingRecipient();
     error MaximumHasAlreadyBeenReached();
 
     // ================================
@@ -98,10 +109,12 @@ contract SoundEditionV1 is
         IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
+        address fundingRecipient_,
+        uint16 royaltyBPS_,
         uint32 editionMaxMintable_,
         uint32 randomnessLockedAfterMinted_,
         uint32 randomnessLockedTimestamp_
-    ) public initializerERC721A initializer {
+    ) public initializerERC721A initializer onlyValidRoyaltyBPS(royaltyBPS_) {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
         __Ownable_init();
@@ -109,6 +122,11 @@ contract SoundEditionV1 is
         metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
+
+        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
+        fundingRecipient = fundingRecipient_;
+
+        royaltyBPS = royaltyBPS_;
         editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
@@ -136,6 +154,18 @@ contract SoundEditionV1 is
         // Set randomness
         if (_totalMinted() <= randomnessLockedAfterMinted && block.timestamp <= randomnessLockedTimestamp) {
             mintRandomness = blockhash(block.number - 1);
+        }
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function withdrawETH() external {
+        SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function withdrawERC20(address[] calldata tokens) external {
+        for (uint256 i; i < tokens.length; ++i) {
+            SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
         }
     }
 
@@ -172,6 +202,18 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
+    function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
+        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
+        fundingRecipient = fundingRecipient_;
+        emit FundingRecipientSet(fundingRecipient_);
+    }
+
+    /// @inheritdoc ISoundEditionV1
+    function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin onlyValidRoyaltyBPS(royaltyBPS_) {
+        royaltyBPS = royaltyBPS_;
+        emit RoyaltySet(royaltyBPS_);
+    }
+
     function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
         if (_totalMinted() == editionMaxMintable) {
             revert MaximumHasAlreadyBeenReached();
@@ -214,6 +256,11 @@ contract SoundEditionV1 is
         _;
     }
 
+    modifier onlyValidRoyaltyBPS(uint16 royalty) {
+        if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
+        _;
+    }
+
     // ================================
     // VIEW FUNCTIONS
     // ================================
@@ -249,17 +296,17 @@ contract SoundEditionV1 is
     {
         return
             ERC721AUpgradeable.supportsInterface(interfaceId) ||
-            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId);
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
+            interfaceId == _INTERFACE_ID_ERC2981;
     }
 
     /// @inheritdoc IERC2981Upgradeable
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        override(IERC2981Upgradeable)
-        returns (address fundingRecipient, uint256 royaltyAmount)
-    {
-        // todo
+    function royaltyInfo(
+        uint256, // tokenId
+        uint256 salePrice
+    ) external view override(IERC2981Upgradeable) returns (address fundingRecipient_, uint256 royaltyAmount) {
+        fundingRecipient_ = fundingRecipient;
+        royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
 
     /// @inheritdoc ERC721AUpgradeable
@@ -277,4 +324,13 @@ contract SoundEditionV1 is
             members[i] = getRoleMember(role, i);
         }
     }
+
+    // ================================
+    // FALLBACK FUNCTIONS
+    // ================================
+
+    /**
+     * @dev receive secondary royalties
+     */
+    receive() external payable {}
 }

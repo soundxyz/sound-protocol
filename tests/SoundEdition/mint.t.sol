@@ -33,6 +33,8 @@ contract SoundEdition_mint is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 maxQuantity,
                 EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
@@ -127,6 +129,8 @@ contract SoundEdition_mint is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 MAX_3,
                 EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP
@@ -164,6 +168,8 @@ contract SoundEdition_mint is TestConfig {
                 METADATA_MODULE,
                 BASE_URI,
                 CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
                 MAX_3,
                 EDITION_MAX_MINTABLE,
                 RANDOMNESS_LOCKED_TIMESTAMP

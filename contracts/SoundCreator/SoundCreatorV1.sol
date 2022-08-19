@@ -58,12 +58,14 @@ contract SoundCreatorV1 is Ownable {
         IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
+        address fundingRecipient,
+        uint16 royaltyBPS,
         uint32 editionMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
-    ) external returns (address soundEdition) {
+    ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
-        soundEdition = Clones.clone(soundEditionImplementation);
+        soundEdition = payable(Clones.clone(soundEditionImplementation));
         // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
@@ -72,6 +74,8 @@ contract SoundCreatorV1 is Ownable {
             metadataModule,
             baseURI,
             contractURI,
+            fundingRecipient,
+            royaltyBPS,
             editionMaxMintable,
             randomnessLockedAfterMinted,
             randomnessLockedTimestamp

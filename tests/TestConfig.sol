@@ -15,6 +15,8 @@ contract TestConfig is Test {
     IMetadataModule constant METADATA_MODULE = IMetadataModule(address(390720730));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
+    address constant FUNDING_RECIPIENT = address(99);
+    uint16 constant ROYALTY_BPS = 100;
     address public constant ARTIST_ADMIN = address(8888888888);
     uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
@@ -47,6 +49,8 @@ contract TestConfig is Test {
                     METADATA_MODULE,
                     BASE_URI,
                     CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS,
                     EDITION_MAX_MINTABLE,
                     EDITION_MAX_MINTABLE,
                     RANDOMNESS_LOCKED_TIMESTAMP
