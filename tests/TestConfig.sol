@@ -31,9 +31,12 @@ contract TestConfig is Test {
         soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
     }
 
-    // Returns a random address funded with ETH
-    function getRandomAccount(uint256 num) public returns (address) {
-        address addr = address(uint160(uint256(keccak256(abi.encodePacked(num)))));
+    /**
+     * @dev Returns an address funded with ETH
+     * @param num Number used to generate the address (more convenient than passing address(num))
+     */
+    function getFundedAccount(uint256 num) public returns (address) {
+        address addr = vm.addr(num);
         // Fund with some ETH
         vm.deal(addr, 1e19);
 

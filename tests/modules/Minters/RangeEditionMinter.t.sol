@@ -183,7 +183,7 @@ contract RangeEditionMinterTests is TestConfig {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(1);
         vm.warp(START_TIME);
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(RangeEditionMinter.ExceedsMaxPerWallet.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2);
@@ -194,7 +194,7 @@ contract RangeEditionMinterTests is TestConfig {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(2);
 
         // Ensure we can mint the max allowed of 2 tokens
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.warp(START_TIME);
         vm.prank(caller);
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2);
@@ -210,7 +210,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         vm.warp(START_TIME);
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
 
         uint32 quantity = 2;
 

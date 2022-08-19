@@ -44,7 +44,7 @@ contract MintControllerBaseTests is TestConfig {
 
     function test_createEditionMintRevertsIfCallerNotEditionOwnerOrAdmin() external {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
-        address attacker = getRandomAccount(1);
+        address attacker = getFundedAccount(1);
 
         vm.expectRevert(MintControllerBase.Unauthorized.selector);
         vm.prank(attacker);

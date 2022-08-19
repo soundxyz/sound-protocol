@@ -11,7 +11,7 @@ contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
     uint32 public constant END_TIME = 200;
 
-    address[] accounts = [getRandomAccount(1), getRandomAccount(2), getRandomAccount(3)];
+    address[] accounts = [getFundedAccount(1), getFundedAccount(2), getFundedAccount(3)];
     bytes32[] leaves;
     bytes32 public root;
     Merkle public m;

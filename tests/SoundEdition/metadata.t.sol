@@ -101,7 +101,7 @@ contract SoundEdition_metadata is TestConfig {
 
         string memory newBaseURI = "https://abc.com/";
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.setBaseURI(newBaseURI);
@@ -167,7 +167,7 @@ contract SoundEdition_metadata is TestConfig {
 
         string memory newContractURI = "https://abc.com/";
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.setContractURI(newContractURI);
@@ -229,7 +229,7 @@ contract SoundEdition_metadata is TestConfig {
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.setMetadataModule(newMetadataModule);
@@ -296,7 +296,7 @@ contract SoundEdition_metadata is TestConfig {
     function test_freezeMetadataRevertsForNonOwner() public {
         MockSoundEditionV1 soundEdition = _createEdition();
 
-        address caller = getRandomAccount(1);
+        address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(SoundEditionV1.Unauthorized.selector);
         soundEdition.freezeMetadata();

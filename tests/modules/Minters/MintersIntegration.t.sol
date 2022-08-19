@@ -31,12 +31,12 @@ contract MintersIntegration is TestConfig {
     uint32 MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 50;
 
     address[] public userAccounts = [
-        getRandomAccount(1), // User 1 - participate in free drop
-        getRandomAccount(2), // User 2 - participate in free drop
-        getRandomAccount(3), // User 3 - participate in presale
-        getRandomAccount(4), // User 4 - participate in presale
-        getRandomAccount(5), // User 5 - participate in public sale
-        getRandomAccount(6) // User 6 - participate in public sale
+        getFundedAccount(1), // User 1 - participate in free drop
+        getFundedAccount(2), // User 2 - participate in free drop
+        getFundedAccount(3), // User 3 - participate in presale
+        getFundedAccount(4), // User 4 - participate in presale
+        getFundedAccount(5), // User 5 - participate in public sale
+        getFundedAccount(6) // User 6 - participate in public sale
     ];
 
     SoundEditionV1 public edition;
