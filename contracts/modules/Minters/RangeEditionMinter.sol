@@ -2,12 +2,14 @@
 
 pragma solidity ^0.8.16;
 
-import "./MintControllerBase.sol";
+import "./BaseMinter.sol";
+import "../../interfaces/IStandardMint.sol";
+import "openzeppelin/utils/introspection/IERC165.sol";
 
 /*
  * @dev Minter class for range edition sales.
  */
-contract RangeEditionMinter is MintControllerBase {
+contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
     // ================================
     // CUSTOM ERRORS
     // ================================
@@ -285,5 +287,10 @@ contract RangeEditionMinter is MintControllerBase {
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
         return _editionMintData[edition][mintId];
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IStandardMint).interfaceId;
     }
 }

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "../TestConfig.sol";
-import "../../contracts/SoundEdition/ISoundEditionV1.sol";
+import "../../contracts/interfaces/ISoundEditionV1.sol";
 import "openzeppelin-upgradeable/access/IAccessControlEnumerableUpgradeable.sol";
 
 /**

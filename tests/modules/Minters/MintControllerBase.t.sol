@@ -46,7 +46,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address attacker = getFundedAccount(1);
 
-        vm.expectRevert(MintControllerBase.Unauthorized.selector);
+        vm.expectRevert(BaseMinter.Unauthorized.selector);
         vm.prank(attacker);
         minter.createEditionMint(address(edition), START_TIME, END_TIME);
     }
@@ -85,7 +85,7 @@ contract MintControllerBaseTests is TestConfig {
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
         uint256 price = 1;
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, price * 2 - 1, price * 2));
+        vm.expectRevert(abi.encodeWithSelector(BaseMinter.WrongEtherValue.selector, price * 2 - 1, price * 2));
         minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, price);
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
@@ -99,7 +99,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.setEditionMintPaused(address(edition), mintId, true);
 
         uint256 price = 1;
-        vm.expectRevert(MintControllerBase.MintPaused.selector);
+        vm.expectRevert(BaseMinter.MintPaused.selector);
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
 
@@ -166,7 +166,7 @@ contract MintControllerBaseTests is TestConfig {
 
         // Ensure only controller can set time range
         vm.prank(nonController);
-        vm.expectRevert(MintControllerBase.Unauthorized.selector);
+        vm.expectRevert(BaseMinter.Unauthorized.selector);
         minter.setTimeRange(address(edition), mintId, 456, 789);
     }
 }

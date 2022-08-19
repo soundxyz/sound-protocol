@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 pragma solidity ^0.8.16;
-import "./IMetadataModule.sol";
+import "../../interfaces/IMetadataModule.sol";
 import "solady/utils/LibString.sol";
-
-import "../../SoundEdition/ISoundEditionV1.sol";
+import "../../interfaces/ISoundEditionV1.sol";
 
 contract GoldenEggMetadata is IMetadataModule {
     function tokenURI(uint256 tokenId) external view returns (string memory) {

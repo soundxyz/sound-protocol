@@ -4,6 +4,7 @@ import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/FixedPricePermissionedSaleMinter.sol";
+import "../../../contracts/interfaces/IFixedPricePermissionedMint.sol";
 
 contract FixedPricePermissionedSaleMinterTests is TestConfig {
     using ECDSA for bytes32;
@@ -89,7 +90,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.WrongEtherValue.selector, PRICE * 2, PRICE));
+        vm.expectRevert(abi.encodeWithSelector(BaseMinter.WrongEtherValue.selector, PRICE * 2, PRICE));
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig);
     }
 
@@ -100,14 +101,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig);
 
         vm.prank(caller);
         minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig);
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(MintControllerBase.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
@@ -158,5 +159,17 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
+    }
+
+    function test_supportsInterface() public {
+        (, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+
+        bool supportsIBaseMinter = minter.supportsInterface(type(IBaseMinter).interfaceId);
+        bool supportsIFixedPricePermissionedMint = minter.supportsInterface(
+            type(IFixedPricePermissionedMint).interfaceId
+        );
+
+        assertTrue(supportsIBaseMinter);
+        assertTrue(supportsIFixedPricePermissionedMint);
     }
 }

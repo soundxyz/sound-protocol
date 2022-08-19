@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
+/**
+ * @title Interface for the base minter functionality, excluding the mint function.
+ */
 interface IBaseMinter {
     function price(address edition, uint256 mintId) external view returns (uint256);
 
