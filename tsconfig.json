@@ -1,7 +1,6 @@
 {
   "target": "esnext",
   "module": "CommonJS",
-  "include": [],
   "exclude": ["node_modules", "./dist", "/out", "./tests", "/cache"],
   "allowSyntheticDefaultImports": true,
   "compilerOptions": {
