@@ -52,6 +52,12 @@ contract MintControllerBaseTests is TestConfig {
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
     }
 
+    function test_supportsInterfaces() public {
+        assertTrue(minter.supportsInterface(type(IERC165).interfaceId));
+        assertTrue(minter.supportsInterface(type(IBaseMinter).interfaceId));
+        assertFalse(minter.supportsInterface(bytes4(uint32(12345))));
+    }
+
     function test_createEditionMintRevertsIfCallerNotEditionOwnerOrAdmin() external {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address attacker = getFundedAccount(1);

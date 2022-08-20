@@ -114,17 +114,7 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      */
     uint16 public constant MAX_BPS = 10_000;
 
-    // ================================
-    // STRUCTS
-    // ================================
 
-    struct BaseData {
-        uint32 startTime;
-        uint32 endTime;
-        uint16 affiliateFeeBPS;
-        uint16 affiliateDiscountBPS;
-        bool mintPaused;
-    }
 
     // ================================
     // STORAGE
@@ -160,75 +150,65 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     // ================================
 
     /**
-     * @dev Sets the `paused` status for `edition`.
-     * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
+     * @inheritdoc IBaseMinter
      */
     function setEditionMintPaused(
         address edition,
         uint256 mintId,
         bool paused
-    ) public virtual onlyEditionOwnerOrAdmin(edition) {
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) {
         _baseData[edition][mintId].mintPaused = paused;
         emit MintPausedSet(edition, mintId, paused);
     }
 
     /**
-     * @dev Sets the time range for an edition mint.
-     * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
+     * @inheritdoc IBaseMinter
      */
     function setTimeRange(
         address edition,
         uint256 mintId,
         uint32 startTime,
         uint32 endTime
-    ) public virtual onlyEditionOwnerOrAdmin(edition) {
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) {
         _setTimeRange(edition, mintId, startTime, endTime);
     }
 
     /**
-     * @dev Sets the `affiliateFeeBPS` for (`edition`, `mintId`).
-     * Calling conditions:
-     * - The caller must be the current controller for (`edition`, `mintId`).
+     * @inheritdoc IBaseMinter
      */
     function setAffiliateFee(
         address edition,
         uint256 mintId,
         uint16 affiliateFeeBPS
-    ) public virtual onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(affiliateFeeBPS) {
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(affiliateFeeBPS) {
         _baseData[edition][mintId].affiliateFeeBPS = affiliateFeeBPS;
         emit AffiliateFeeSet(edition, mintId, affiliateFeeBPS);
     }
 
     /**
-     * @dev Sets the `affiliateDiscountBPS` for (`edition`, `mintId`).
-     * Calling conditions:
-     * - The caller must be the current controller for (`edition`, `mintId`).
+     * @inheritdoc IBaseMinter
      */
     function setAffiliateDiscount(
         address edition,
         uint256 mintId,
         uint16 affiliateDiscountBPS
-    ) public virtual onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(affiliateDiscountBPS) {
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(affiliateDiscountBPS) {
         _baseData[edition][mintId].affiliateDiscountBPS = affiliateDiscountBPS;
         emit AffiliateDiscountSet(edition, mintId, affiliateDiscountBPS);
     }
 
     /**
-     * @dev Sets the `platformFeePBS`.
-     * Calling conditions:
-     * - The caller must be the owner of the contract.
+     * @inheritdoc IBaseMinter
      */
-    function setPlatformFee(uint16 platformFeeBPS_) public virtual onlyOwner onlyValidPlatformFeeBPS(platformFeeBPS_) {
+    function setPlatformFee(uint16 platformFeeBPS_) public virtual override onlyOwner onlyValidPlatformFeeBPS(platformFeeBPS_) {
         platformFeeBPS = platformFeeBPS_;
         emit PlatformFeeSet(platformFeeBPS_);
     }
 
     /**
-     * @dev Withdraws all the accrued funds for the `affiliate`.
+     * @inheritdoc IBaseMinter
      */
-    function withdrawForAffiliate(address affiliate) public {
+    function withdrawForAffiliate(address affiliate) public override {
         uint256 accrued = affiliateFeesAccrued[affiliate];
         affiliateFeesAccrued[affiliate] = 0;
         if (accrued != 0) {
@@ -237,9 +217,9 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     }
 
     /**
-     * @dev Withdraws all the accrued funds for the platform.
+     * @inheritdoc IBaseMinter
      */
-    function withdrawForPlatform(address to) public onlyOwner {
+    function withdrawForPlatform(address to) public override onlyOwner {
         uint256 accrued = platformFeesAccrued;
         platformFeesAccrued = 0;
         if (accrued != 0) {
@@ -450,45 +430,46 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     // ================================
 
     /**
-     * @dev Returns whether `affiliate` is a valid affiliate for (`edition`, `mintId`).
-     * Child contracts may override this function to provide a custom logic.
+     * @inheritdoc IBaseMinter
      */
     function isAffiliated(
         address, /* edition */
         uint256, /* mintId */
         address affiliate
-    ) public view virtual returns (bool) {
+    ) public view virtual override returns (bool) {
         return affiliate != address(0);
     }
 
     /**
-     * @dev Returns the discounted price for affiliated purchases.
+     * @inheritdoc IBaseMinter
      */
     function affiliatedPrice(
         address edition,
         uint256 mintId,
         uint256 originalPrice,
         address /* affiliate */
-    ) public view virtual returns (uint256) {
+    ) public view virtual override returns (uint256) {
         return originalPrice - ((originalPrice * _baseData[edition][mintId].affiliateDiscountBPS) / MAX_BPS);
     }
 
     /**
-     * @dev Returns the next mint ID for `edition`.
+     * @inheritdoc IBaseMinter
      */
-    function nextMintId(address edition) public view returns (uint256) {
+    function nextMintId(address edition) public view override returns (uint256) {
         return _nextMintIds[edition];
     }
 
     /**
-     * @dev Returns the configuration data for an edition mint.
+     * @inheritdoc IBaseMinter
      */
-    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
+    function baseMintData(address edition, uint256 mintId) public view override returns (BaseData memory) {
         return _baseData[edition][mintId];
     }
 
-    /// @inheritdoc IERC165
+    /**
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IBaseMinter).interfaceId;
+        return interfaceId == type(IBaseMinter).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }
