@@ -381,4 +381,58 @@ contract RangeEditionMinterTests is TestConfig {
         assertTrue(supportsIBaseMinter);
         assertTrue(supportsIStandardMint);
     }
+
+    function test_getMintInfo() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        RangeEditionMinter minter = new RangeEditionMinter();
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedPrice = 1234071;
+        uint32 expectedMaxAllowedPerWallet = 937;
+
+        minter.createEditionMint(
+            address(edition),
+            expectedPrice,
+            expectedStartTime,
+            CLOSING_TIME,
+            expectedEndTime,
+            MAX_MINTABLE_LOWER,
+            MAX_MINTABLE_UPPER,
+            expectedMaxAllowedPerWallet
+        );
+
+        (
+            uint32 startTime,
+            uint32 endTime,
+            bool mintPaused,
+            uint256 price,
+            uint32 maxMintable,
+            uint32 maxAllowedPerWallet,
+            uint32 totalMinted
+        ) = minter.getMintInfo(address(edition), MINT_ID);
+
+        assertEq(startTime, expectedStartTime);
+        assertEq(endTime, expectedEndTime);
+        assertEq(mintPaused, false);
+        assertEq(price, expectedPrice);
+        assertEq(maxAllowedPerWallet, expectedMaxAllowedPerWallet);
+        assertEq(maxMintable, MAX_MINTABLE_UPPER);
+        assertEq(totalMinted, 0);
+
+        // Warp to closing time & mint some tokens to test that maxMintable & totalMinted changed
+        vm.warp(CLOSING_TIME);
+        minter.mint{ value: price * 4 }(address(edition), MINT_ID, 4);
+
+        (startTime, endTime, mintPaused, price, maxMintable, maxAllowedPerWallet, totalMinted) = minter.getMintInfo(
+            address(edition),
+            MINT_ID
+        );
+
+        assertEq(maxMintable, MAX_MINTABLE_LOWER);
+        assertEq(totalMinted, 4);
+    }
 }

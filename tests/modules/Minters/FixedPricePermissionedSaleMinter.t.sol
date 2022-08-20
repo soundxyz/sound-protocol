@@ -172,4 +172,43 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         assertTrue(supportsIBaseMinter);
         assertTrue(supportsIFixedPricePermissionedMint);
     }
+
+    function test_getMintInfo() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedPrice = 1234071;
+
+        minter.createEditionMint(
+            address(edition),
+            expectedPrice,
+            _signerAddress(),
+            MAX_MINTABLE,
+            expectedStartTime,
+            expectedEndTime
+        );
+
+        (
+            uint32 startTime,
+            uint32 endTime,
+            bool mintPaused,
+            uint256 price,
+            uint32 maxMintable,
+            uint32 maxAllowedPerWallet,
+            uint32 totalMinted
+        ) = minter.getMintInfo(address(edition), MINT_ID);
+
+        assertEq(startTime, expectedStartTime);
+        assertEq(endTime, expectedEndTime);
+        assertEq(mintPaused, false);
+        assertEq(price, expectedPrice);
+        assertEq(maxAllowedPerWallet, 0);
+        assertEq(maxMintable, MAX_MINTABLE);
+        assertEq(totalMinted, 0);
+    }
 }

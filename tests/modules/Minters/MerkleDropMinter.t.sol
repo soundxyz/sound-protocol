@@ -145,4 +145,45 @@ contract MerkleDropMinterTests is TestConfig {
         assertTrue(supportsIBaseMinter);
         assertTrue(supportsIMerkleDropMint);
     }
+
+    function test_getMintInfo() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        MerkleDropMinter minter = new MerkleDropMinter();
+        setUpMerkleTree(address(edition));
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedMaxMintable = 39730302;
+        uint32 expectedMaxPerWallet = 397;
+
+        uint256 mintId = minter.createEditionMint(
+            address(edition),
+            root,
+            0,
+            expectedStartTime,
+            expectedEndTime,
+            expectedMaxMintable,
+            expectedMaxPerWallet
+        );
+
+        (
+            uint32 startTime,
+            uint32 endTime,
+            bool mintPaused,
+            ,
+            uint32 maxMintable,
+            uint32 maxAllowedPerWallet,
+            uint32 totalMinted
+        ) = minter.getMintInfo(address(edition), mintId);
+
+        assertEq(startTime, expectedStartTime);
+        assertEq(endTime, expectedEndTime);
+        assertEq(mintPaused, false);
+        assertEq(maxMintable, expectedMaxMintable);
+        assertEq(maxAllowedPerWallet, expectedMaxPerWallet);
+        assertEq(totalMinted, 0);
+    }
 }
