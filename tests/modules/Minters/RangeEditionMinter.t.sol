@@ -5,7 +5,7 @@ import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
 import "../../../contracts/interfaces/IBaseMinter.sol";
-import "../../../contracts/interfaces/IStandardMint.sol";
+import "../../../contracts/interfaces/IStandardMinter.sol";
 
 contract RangeEditionMinterTests is TestConfig {
     uint256 constant PRICE = 1;
@@ -375,7 +375,7 @@ contract RangeEditionMinterTests is TestConfig {
         (, RangeEditionMinter minter) = _createEditionAndMinter(0);
 
         bool supportsIBaseMinter = minter.supportsInterface(type(IBaseMinter).interfaceId);
-        bool supportsIStandardMint = minter.supportsInterface(type(IStandardMint).interfaceId);
+        bool supportsIStandardMint = minter.supportsInterface(type(IStandardMinter).interfaceId);
 
         assertTrue(supportsIBaseMinter);
         assertTrue(supportsIStandardMint);

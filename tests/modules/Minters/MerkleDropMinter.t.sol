@@ -4,7 +4,7 @@ import "../../TestConfig.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/MerkleDropMinter.sol";
-import "../../../contracts/interfaces/IMerkleDropMint.sol";
+import "../../../contracts/interfaces/IMerkleDropMinter.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "murky/Merkle.sol";
 
@@ -140,7 +140,7 @@ contract MerkleDropMinterTests is TestConfig {
         (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 0);
 
         bool supportsIBaseMinter = minter.supportsInterface(type(IBaseMinter).interfaceId);
-        bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMint).interfaceId);
+        bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMinter).interfaceId);
 
         assertTrue(supportsIBaseMinter);
         assertTrue(supportsIMerkleDropMint);

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.16;
 
 import "./BaseMinter.sol";
-import "../../interfaces/IFixedPricePermissionedMint.sol";
+import "../../interfaces/IFixedPricePermissionedMinter.sol";
 import "solady/utils/ECDSA.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
 
@@ -11,7 +11,7 @@ import "openzeppelin/utils/introspection/IERC165.sol";
  * @title Fixed Price Permissioned Sale Minter
  * @dev Minter class for sales approved with signatures.
  */
-contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePermissionedMint {
+contract FixedPricePermissionedMinter is BaseMinter, IFixedPricePermissionedMinter {
     using ECDSA for bytes32;
 
     // ================================
@@ -129,8 +129,8 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
         return
-            BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPricePermissionedMint).interfaceId;
+            BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPricePermissionedMinter).interfaceId;
     }
 }

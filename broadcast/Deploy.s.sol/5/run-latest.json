@@ -20,7 +20,7 @@
     {
       "hash": "0x8a33b137b36e95eec66ca9318e02e8c3677fccf9b3f5e0bd4dec400dc36413fd",
       "transactionType": "CREATE",
-      "contractName": "FixedPricePermissionedSaleMinter",
+      "contractName": "FixedPricePermissionedMinter",
       "contractAddress": "0x838f5f644c11b2713261201ab29d86a7cb6fd745",
       "function": null,
       "arguments": null,
