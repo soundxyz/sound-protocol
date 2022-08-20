@@ -150,7 +150,7 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
             uint32
         )
     {
-        BaseData storage baseData = _baseData[edition][mintId];
+        BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
         return (

@@ -42,9 +42,9 @@ contract MockMinter is BaseMinter {
         return type(uint32).max;
     }
 
-    function getMintInfo(address edition, uint256 mintId)
+    function getMintInfo(address, uint256)
         public
-        view
+        pure
         returns (
             uint32,
             uint32,

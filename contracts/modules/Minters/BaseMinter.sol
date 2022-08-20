@@ -83,7 +83,7 @@ abstract contract BaseMinter is IERC165, IBaseMinter {
     /**
      * @dev Maps an edition and the mint ID to a mint's configuration.
      */
-    mapping(address => mapping(uint256 => BaseData)) internal _baseData;
+    mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
     // ================================
     // WRITE FUNCTIONS
