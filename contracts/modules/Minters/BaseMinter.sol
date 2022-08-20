@@ -114,8 +114,6 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      */
     uint16 public constant MAX_BPS = 10_000;
 
-
-
     // ================================
     // STORAGE
     // ================================
@@ -200,7 +198,13 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     /**
      * @inheritdoc IBaseMinter
      */
-    function setPlatformFee(uint16 platformFeeBPS_) public virtual override onlyOwner onlyValidPlatformFeeBPS(platformFeeBPS_) {
+    function setPlatformFee(uint16 platformFeeBPS_)
+        public
+        virtual
+        override
+        onlyOwner
+        onlyValidPlatformFeeBPS(platformFeeBPS_)
+    {
         platformFeeBPS = platformFeeBPS_;
         emit PlatformFeeSet(platformFeeBPS_);
     }

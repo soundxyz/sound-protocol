@@ -19,7 +19,7 @@ interface IBaseMinter is IERC165 {
         bool mintPaused;
     }
 
-	// ================================
+    // ================================
     // WRITE FUNCTIONS
     // ================================
 
@@ -94,7 +94,7 @@ interface IBaseMinter is IERC165 {
     function maxMintable(address edition, uint256 mintId) external view returns (uint32);
 
     function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32);
-    
+
     /**
      * @dev Returns whether `affiliate` is a valid affiliate for (`edition`, `mintId`).
      * Child contracts may override this function to provide a custom logic.
@@ -124,5 +124,4 @@ interface IBaseMinter is IERC165 {
      * @dev Returns the configuration data for an edition mint.
      */
     function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
-
 }
