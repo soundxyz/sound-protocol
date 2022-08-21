@@ -73,35 +73,10 @@ contract SoundEditionV1 is
     bytes32 public mintRandomness;
 
     // ================================
-    // EVENTS
-    // ================================
-
-    event MetadataModuleSet(IMetadataModule metadataModule);
-    event BaseURISet(string baseURI);
-    event ContractURISet(string contractURI);
-    event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
-    event FundingRecipientSet(address fundingRecipient);
-    event RoyaltySet(uint16 royaltyBPS);
-    event EditionMaxMintableSet(uint32 newMax);
-
-    // ================================
-    // ERRORS
-    // ================================
-
-    error MetadataIsFrozen();
-    error InvalidRoyaltyBPS();
-    error InvalidRandomnessLock();
-    error Unauthorized();
-    error EditionMaxMintableReached();
-    error InvalidAmount();
-    error InvalidFundingRecipient();
-    error MaximumHasAlreadyBeenReached();
-
-    // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
     // ================================
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function initialize(
         address owner,
         string memory name,
@@ -142,7 +117,7 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function mint(address to, uint256 quantity) public payable {
         address caller = _msgSender();
         // Only allow calls if caller has minter role, admin role, or is the owner.
@@ -157,19 +132,19 @@ contract SoundEditionV1 is
         }
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function withdrawETH() external {
         SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function withdrawERC20(address[] calldata tokens) external {
         for (uint256 i; i < tokens.length; ++i) {
             SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
         }
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
@@ -177,7 +152,7 @@ contract SoundEditionV1 is
         emit MetadataModuleSet(metadataModule_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
@@ -185,7 +160,7 @@ contract SoundEditionV1 is
         emit BaseURISet(baseURI_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
@@ -193,7 +168,7 @@ contract SoundEditionV1 is
         emit ContractURISet(contractURI_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function freezeMetadata() external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
@@ -201,19 +176,20 @@ contract SoundEditionV1 is
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
 
+    /// @inheritdoc ISoundEditionOwnerActions
     function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
         if (_totalMinted() == editionMaxMintable) {
             revert MaximumHasAlreadyBeenReached();
@@ -235,14 +211,14 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
         if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
 
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
     }
@@ -265,7 +241,7 @@ contract SoundEditionV1 is
     // VIEW FUNCTIONS
     // ================================
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionState
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
     }
@@ -314,7 +290,7 @@ contract SoundEditionV1 is
         return 1;
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionState
     function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
         uint256 count = getRoleMemberCount(role);
 

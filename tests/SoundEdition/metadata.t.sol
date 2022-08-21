@@ -103,7 +103,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
         soundEdition.setBaseURI(newBaseURI);
     }
 
@@ -115,7 +115,7 @@ contract SoundEdition_metadata is TestConfig {
 
         string memory newBaseURI = "https://abc.com/";
 
-        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.MetadataIsFrozen.selector);
         soundEdition.setBaseURI(newBaseURI);
     }
 
@@ -169,7 +169,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
         soundEdition.setContractURI(newContractURI);
     }
 
@@ -181,7 +181,7 @@ contract SoundEdition_metadata is TestConfig {
 
         string memory newContractURI = "https://abc.com/";
 
-        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.MetadataIsFrozen.selector);
         soundEdition.setContractURI(newContractURI);
     }
 
@@ -231,7 +231,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
         soundEdition.setMetadataModule(newMetadataModule);
     }
 
@@ -243,7 +243,7 @@ contract SoundEdition_metadata is TestConfig {
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
-        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.MetadataIsFrozen.selector);
         soundEdition.setMetadataModule(newMetadataModule);
     }
 
@@ -298,7 +298,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
         soundEdition.freezeMetadata();
     }
 
@@ -306,7 +306,7 @@ contract SoundEdition_metadata is TestConfig {
         MockSoundEditionV1 soundEdition = _createEdition();
         soundEdition.freezeMetadata();
 
-        vm.expectRevert(SoundEditionV1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.MetadataIsFrozen.selector);
         soundEdition.freezeMetadata();
     }
 

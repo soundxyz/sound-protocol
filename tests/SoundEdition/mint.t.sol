@@ -17,7 +17,7 @@ contract SoundEdition_mint is TestConfig {
 
         SoundEditionV1 edition = createGenericEdition();
 
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
 
         vm.prank(nonAdminOrOwner);
         edition.mint(nonAdminOrOwner, 1);
@@ -43,7 +43,7 @@ contract SoundEdition_mint is TestConfig {
 
         edition.mint(address(this), maxQuantity);
 
-        vm.expectRevert(SoundEditionV1.EditionMaxMintableReached.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.EditionMaxMintableReached.selector);
 
         edition.mint(address(this), 1);
     }
@@ -201,7 +201,7 @@ contract SoundEdition_mint is TestConfig {
         SoundEditionV1 edition = createGenericEdition();
         vm.assume(attacker != address(this));
 
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
         vm.prank(attacker);
         edition.reduceEditionMaxMintable(1);
     }
@@ -212,7 +212,7 @@ contract SoundEdition_mint is TestConfig {
         edition.reduceEditionMaxMintable(10);
 
         // Attempt to increase max mintable above current max - should fail
-        vm.expectRevert(SoundEditionV1.InvalidAmount.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidAmount.selector);
         edition.reduceEditionMaxMintable(11);
 
         // Mint some tokens
@@ -224,7 +224,7 @@ contract SoundEdition_mint is TestConfig {
         assert(edition.editionMaxMintable() == 5);
 
         // Attempt to lower again - should revert
-        vm.expectRevert(SoundEditionV1.MaximumHasAlreadyBeenReached.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.MaximumHasAlreadyBeenReached.selector);
         edition.reduceEditionMaxMintable(4);
     }
 }
