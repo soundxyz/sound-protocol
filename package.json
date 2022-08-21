@@ -1,28 +1,28 @@
 {
-    "name": "sound-protocol",
-    "version": "2.0.0",
-    "scripts": {
-        "build": "forge build",
-        "test": "forge test",
-        "test:gas": "forge test --gas-report",
-        "solhint": "solhint -f table contracts/**/*.sol",
-        "slither": "slither . --config-file slither.config.json",
-        "prepare": "husky install",
-        "postinstall": "forge install",
-        "prettier:write": "prettier --write contracts/**/*.sol"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/soundxyz/sound-protocol.git"
-    },
-    "license": "GPL-3.0-or-later",
-    "devDependencies": {
-        "husky": "8.0.1",
-        "prettier": "2.7.1",
-        "prettier-plugin-solidity": "1.0.0-dev.23",
-        "solhint": "3.3.7",
-        "solhint-plugin-prettier": "0.0.5",
-        "@changesets/cli": "^2.23.2",
-        "danger": "^11.1.1"
-    }
+  "name": "sound-protocol",
+  "version": "2.0.0",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "test:gas": "forge test --gas-report",
+    "solhint": "solhint -f table contracts/**/*.sol",
+    "slither": "slither . --config-file slither.config.json",
+    "prepare": "husky install",
+    "postinstall": "forge install",
+    "prettier:write": "prettier --write contracts/**/*.sol"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soundxyz/sound-protocol.git"
+  },
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "husky": "8.0.1",
+    "prettier": "2.7.1",
+    "prettier-plugin-solidity": "1.0.0-dev.23",
+    "solhint": "3.3.7",
+    "solhint-plugin-prettier": "0.0.5",
+    "@changesets/cli": "^2.23.2",
+    "danger": "^11.1.1"
+  }
 }
