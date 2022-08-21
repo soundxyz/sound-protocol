@@ -144,7 +144,7 @@ contract SoundEditionV1 is
         }
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
@@ -152,7 +152,7 @@ contract SoundEditionV1 is
         emit MetadataModuleSet(metadataModule_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
@@ -160,7 +160,7 @@ contract SoundEditionV1 is
         emit BaseURISet(baseURI_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
@@ -168,7 +168,7 @@ contract SoundEditionV1 is
         emit ContractURISet(contractURI_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function freezeMetadata() external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
@@ -176,19 +176,20 @@ contract SoundEditionV1 is
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
 
+    /// @inheritdoc ISoundEditionOwnerActions
     function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
         if (_totalMinted() == editionMaxMintable) {
             revert MaximumHasAlreadyBeenReached();
@@ -210,14 +211,14 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
         if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
 
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionOwnerActions
     function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
     }

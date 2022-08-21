@@ -5,14 +5,20 @@ pragma solidity ^0.8.16;
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
 import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import { IERC165Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC165Upgradeable.sol";
-import { IMetadataModule } from "./IMetadataModule.sol";
 import { ISoundEditionEventsAndErrors } from "./edition/ISoundEditionEventsAndErrors.sol";
+import { ISoundEditionOwnerActions } from "./edition/ISoundEditionOwnerActions.sol";
+import { IMetadataModule } from "./IMetadataModule.sol";
 
 /**
  * @title ISoundEditionV1
  * @author Sound.xyz
  */
-interface ISoundEditionV1 is ISoundEditionEventsAndErrors, IERC721AUpgradeable, IERC2981Upgradeable {
+interface ISoundEditionV1 is
+    ISoundEditionEventsAndErrors,
+    ISoundEditionOwnerActions,
+    IERC721AUpgradeable,
+    IERC2981Upgradeable
+{
     /// Getter for minter role hash
     function MINTER_ROLE() external returns (bytes32);
 
@@ -79,51 +85,6 @@ interface ISoundEditionV1 is ISoundEditionEventsAndErrors, IERC721AUpgradeable, 
         view
         override(IERC721AUpgradeable, IERC165Upgradeable)
         returns (bool);
-
-    /**
-     *  @dev Sets metadata module
-     */
-    function setMetadataModule(IMetadataModule metadataModule) external;
-
-    /**
-     *  @dev Sets global base URI
-     */
-    function setBaseURI(string memory baseURI) external;
-
-    /**
-     *   @dev Sets contract URI
-     */
-    function setContractURI(string memory contractURI) external;
-
-    /**
-     *   @dev Freezes metadata by preventing any more changes to base URI
-     */
-    function freezeMetadata() external;
-
-    /**
-     * @dev Sets funding recipient address
-     */
-    function setFundingRecipient(address fundingRecipient) external;
-
-    /**
-     * @dev Sets royalty amount in bps (basis points)
-     */
-    function setRoyalty(uint16 royaltyBPS) external;
-
-    /**
-     *   @dev Reduces the maximum mintable quantity.
-     */
-    function reduceEditionMaxMintable(uint32 newMax) external;
-
-    /**
-     * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
-     */
-    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted) external;
-
-    /**
-     * @dev sets randomnessLockedTimestamp
-     */
-    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external;
 
     /// @dev Returns the base token URI for the collection
     function baseURI() external view returns (string memory);
