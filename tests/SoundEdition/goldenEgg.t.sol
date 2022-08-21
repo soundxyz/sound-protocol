@@ -118,7 +118,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
         edition.setMintRandomnessLock(quantity);
     }
 
@@ -130,7 +130,7 @@ contract SoundEdition_goldenEgg is TestConfig {
         uint32 quantity = MAX_MINTABLE - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
-        vm.expectRevert(SoundEditionV1.InvalidRandomnessLock.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidRandomnessLock.selector);
         edition.setMintRandomnessLock(quantity - 1);
     }
 
@@ -186,7 +186,7 @@ contract SoundEdition_goldenEgg is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(SoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
         edition.setRandomnessLockedTimestamp(START_TIME);
     }
 

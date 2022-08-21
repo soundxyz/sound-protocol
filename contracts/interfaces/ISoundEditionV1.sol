@@ -2,16 +2,17 @@
 
 pragma solidity ^0.8.16;
 
-import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
-import "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import "./IMetadataModule.sol";
+import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
+import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import { IERC165Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC165Upgradeable.sol";
+import { IMetadataModule } from "./IMetadataModule.sol";
+import { ISoundEditionEventsAndErrors } from "./edition/ISoundEditionEventsAndErrors.sol";
 
 /**
  * @title ISoundEditionV1
  * @author Sound.xyz
  */
-interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
+interface ISoundEditionV1 is ISoundEditionEventsAndErrors, IERC721AUpgradeable, IERC2981Upgradeable {
     /// Getter for minter role hash
     function MINTER_ROLE() external returns (bytes32);
 
