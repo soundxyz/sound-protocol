@@ -129,11 +129,7 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
 
     /// @inheritdoc IBaseMinter
     function maxAllowedPerWallet(address, uint256) public pure returns (uint32) {
-        /**
-         * For this minter, we return zero to indicate that the max is defined off
-         * chain by the signature granting process.
-         */
-        return 0;
+        return type(uint32).max;
     }
 
     // @inheritdoc IBaseMinter
