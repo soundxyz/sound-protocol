@@ -4,7 +4,7 @@ import "../../TestConfig.sol";
 import "../../mocks/MockMinter.sol";
 import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import { BaseData } from "../../../contracts/modules/Minters/BaseData.sol";
+import { BaseData } from "../../../contracts/interfaces/MinterStructs.sol";
 
 contract MintControllerBaseTests is TestConfig {
     event MintConfigCreated(

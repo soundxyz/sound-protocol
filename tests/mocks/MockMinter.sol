@@ -2,6 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "../../contracts/modules/Minters/BaseMinter.sol";
+import { StandardMintData } from "../../contracts/interfaces/MinterStructs.sol";
 
 contract MockMinter is BaseMinter {
     function createEditionMint(
@@ -42,19 +43,7 @@ contract MockMinter is BaseMinter {
         return type(uint32).max;
     }
 
-    function getMintInfo(address, uint256)
-        public
-        pure
-        returns (
-            uint32,
-            uint32,
-            bool,
-            uint256,
-            uint32,
-            uint32,
-            uint32
-        )
-    {
-        return (0, 1, false, 1, 1, 1, 0);
+    function mintInfo(address, uint256) public pure returns (StandardMintData memory) {
+        return StandardMintData(0, 1, false, 1, 1, 1, 0);
     }
 }

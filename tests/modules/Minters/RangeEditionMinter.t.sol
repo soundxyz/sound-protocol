@@ -6,7 +6,7 @@ import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
 import "../../../contracts/interfaces/IBaseMinter.sol";
 import "../../../contracts/interfaces/IStandardMint.sol";
-import { BaseData } from "../../../contracts/modules/Minters/BaseData.sol";
+import { BaseData, StandardMintData } from "../../../contracts/interfaces/MinterStructs.sol";
 
 contract RangeEditionMinterTests is TestConfig {
     uint256 constant PRICE = 1;
@@ -405,34 +405,23 @@ contract RangeEditionMinterTests is TestConfig {
             expectedMaxAllowedPerWallet
         );
 
-        (
-            uint32 startTime,
-            uint32 endTime,
-            bool mintPaused,
-            uint256 price,
-            uint32 maxMintable,
-            uint32 maxAllowedPerWallet,
-            uint32 totalMinted
-        ) = minter.getMintInfo(address(edition), MINT_ID);
+        StandardMintData memory mintData = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(startTime, expectedStartTime);
-        assertEq(endTime, expectedEndTime);
-        assertEq(mintPaused, false);
-        assertEq(price, expectedPrice);
-        assertEq(maxAllowedPerWallet, expectedMaxAllowedPerWallet);
-        assertEq(maxMintable, MAX_MINTABLE_UPPER);
-        assertEq(totalMinted, 0);
+        assertEq(mintData.startTime, expectedStartTime);
+        assertEq(mintData.endTime, expectedEndTime);
+        assertEq(mintData.mintPaused, false);
+        assertEq(mintData.price, expectedPrice);
+        assertEq(mintData.maxAllowedPerWallet, expectedMaxAllowedPerWallet);
+        assertEq(mintData.maxMintable, MAX_MINTABLE_UPPER);
+        assertEq(mintData.totalMinted, 0);
 
         // Warp to closing time & mint some tokens to test that maxMintable & totalMinted changed
         vm.warp(CLOSING_TIME);
-        minter.mint{ value: price * 4 }(address(edition), MINT_ID, 4);
+        minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, 4);
 
-        (startTime, endTime, mintPaused, price, maxMintable, maxAllowedPerWallet, totalMinted) = minter.getMintInfo(
-            address(edition),
-            MINT_ID
-        );
+        mintData = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(maxMintable, MAX_MINTABLE_LOWER);
-        assertEq(totalMinted, 4);
+        assertEq(mintData.maxMintable, MAX_MINTABLE_LOWER);
+        assertEq(mintData.totalMinted, 4);
     }
 }

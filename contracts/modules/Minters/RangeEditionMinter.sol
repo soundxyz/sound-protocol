@@ -3,9 +3,9 @@
 pragma solidity ^0.8.16;
 
 import "./BaseMinter.sol";
+import { BaseData, StandardMintData } from "../../interfaces/MinterStructs.sol";
 import "../../interfaces/IStandardMint.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
-import { BaseData } from "./BaseData.sol";
 
 /*
  * @dev Minter class for range edition sales.
@@ -294,30 +294,13 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
         return _editionMintData[edition][mintId];
     }
 
-    /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
-        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IStandardMint).interfaceId;
-    }
-
-    // @inheritdoc IBaseMinter
-    function getMintInfo(address edition, uint256 mintId)
-        public
-        view
-        returns (
-            uint32,
-            uint32,
-            bool,
-            uint256,
-            uint32,
-            uint32,
-            uint32
-        )
-    {
+    /// @inheritdoc IBaseMinter
+    function mintInfo(address edition, uint256 mintId) public view returns (StandardMintData memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
         uint32 _maxMintable = _getMaxMintable(mintData);
 
-        return (
+        StandardMintData memory combinedMintData = StandardMintData(
             baseData.startTime,
             baseData.endTime,
             baseData.mintPaused,
@@ -326,5 +309,12 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
             mintData.maxAllowedPerWallet,
             mintData.totalMinted
         );
+
+        return combinedMintData;
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IStandardMint).interfaceId;
     }
 }

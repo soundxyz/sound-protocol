@@ -5,6 +5,7 @@ import "../../../contracts/SoundEdition/SoundEditionV1.sol";
 import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../../../contracts/modules/Minters/FixedPricePermissionedSaleMinter.sol";
 import "../../../contracts/interfaces/IFixedPricePermissionedMint.sol";
+import { StandardMintData } from "../../../contracts/interfaces/MinterStructs.sol";
 
 contract FixedPricePermissionedSaleMinterTests is TestConfig {
     using ECDSA for bytes32;
@@ -193,22 +194,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
             expectedEndTime
         );
 
-        (
-            uint32 startTime,
-            uint32 endTime,
-            bool mintPaused,
-            uint256 price,
-            uint32 maxMintable,
-            uint32 maxAllowedPerWallet,
-            uint32 totalMinted
-        ) = minter.getMintInfo(address(edition), MINT_ID);
+        StandardMintData memory mintData = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(startTime, expectedStartTime);
-        assertEq(endTime, expectedEndTime);
-        assertEq(mintPaused, false);
-        assertEq(price, expectedPrice);
-        assertEq(maxAllowedPerWallet, 0);
-        assertEq(maxMintable, MAX_MINTABLE);
-        assertEq(totalMinted, 0);
+        assertEq(mintData.startTime, expectedStartTime);
+        assertEq(mintData.endTime, expectedEndTime);
+        assertEq(mintData.mintPaused, false);
+        assertEq(mintData.price, expectedPrice);
+        assertEq(mintData.maxAllowedPerWallet, 0);
+        assertEq(mintData.maxMintable, MAX_MINTABLE);
+        assertEq(mintData.totalMinted, 0);
     }
 }

@@ -2,7 +2,7 @@ pragma solidity ^0.8.16;
 
 import "./InvariantTest.sol";
 import "../modules/Minters/RangeEditionMinter.t.sol";
-import { BaseData } from "../../contracts/modules/Minters/BaseData.sol";
+import { BaseData } from "../../contracts/interfaces/MinterStructs.sol";
 
 contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest {
     RangeEditionMinterUpdater minterUpdater;

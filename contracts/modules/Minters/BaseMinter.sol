@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import { BaseData } from "../../interfaces/MinterStructs.sol";
 import "../../interfaces/IBaseMinter.sol";
 import "../../interfaces/ISoundEditionV1.sol";
 import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
-import { BaseData } from "./BaseData.sol";
 
 /**
  * @title Minter Base

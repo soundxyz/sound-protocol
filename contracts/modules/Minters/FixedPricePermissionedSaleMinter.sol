@@ -3,10 +3,10 @@
 pragma solidity ^0.8.16;
 
 import "./BaseMinter.sol";
+import { BaseData, StandardMintData } from "../../interfaces/MinterStructs.sol";
 import "../../interfaces/IFixedPricePermissionedMint.sol";
 import "solady/utils/ECDSA.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
-import { BaseData } from "./BaseData.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter
@@ -132,24 +132,12 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
         return type(uint32).max;
     }
 
-    // @inheritdoc IBaseMinter
-    function getMintInfo(address edition, uint256 mintId)
-        public
-        view
-        returns (
-            uint32,
-            uint32,
-            bool,
-            uint256,
-            uint32,
-            uint32,
-            uint32
-        )
-    {
+    /// @inheritdoc IBaseMinter
+    function mintInfo(address edition, uint256 mintId) public view returns (StandardMintData memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-        return (
+        StandardMintData memory combinedMintData = StandardMintData(
             baseData.startTime,
             baseData.endTime,
             baseData.mintPaused,
@@ -158,6 +146,8 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
             0,
             mintData.totalMinted
         );
+
+        return combinedMintData;
     }
 
     /// @inheritdoc IERC165

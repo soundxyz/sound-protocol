@@ -169,21 +169,13 @@ contract MerkleDropMinterTests is TestConfig {
             expectedMaxPerWallet
         );
 
-        (
-            uint32 startTime,
-            uint32 endTime,
-            bool mintPaused,
-            ,
-            uint32 maxMintable,
-            uint32 maxAllowedPerWallet,
-            uint32 totalMinted
-        ) = minter.getMintInfo(address(edition), mintId);
+        StandardMintData memory mintData = minter.mintInfo(address(edition), mintId);
 
-        assertEq(startTime, expectedStartTime);
-        assertEq(endTime, expectedEndTime);
-        assertEq(mintPaused, false);
-        assertEq(maxMintable, expectedMaxMintable);
-        assertEq(maxAllowedPerWallet, expectedMaxPerWallet);
-        assertEq(totalMinted, 0);
+        assertEq(mintData.startTime, expectedStartTime);
+        assertEq(mintData.endTime, expectedEndTime);
+        assertEq(mintData.mintPaused, false);
+        assertEq(mintData.maxMintable, expectedMaxMintable);
+        assertEq(mintData.maxAllowedPerWallet, expectedMaxPerWallet);
+        assertEq(mintData.totalMinted, 0);
     }
 }

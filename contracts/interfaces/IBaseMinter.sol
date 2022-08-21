@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import { StandardMintData } from "./MinterStructs.sol";
+
 /**
  * @title Interface for the base minter functionality, excluding the mint function.
  */
@@ -27,16 +29,5 @@ interface IBaseMinter {
      * @param mintId The mint id.
      * @return (startTime, endTime, mintPaused, price, maxMintable, maxAllowedPerWallet, totalMinted)
      */
-    function getMintInfo(address edition, uint256 mintId)
-        external
-        view
-        returns (
-            uint32,
-            uint32,
-            bool,
-            uint256,
-            uint32,
-            uint32,
-            uint32
-        );
+    function mintInfo(address edition, uint256 mintId) external view returns (StandardMintData memory);
 }
