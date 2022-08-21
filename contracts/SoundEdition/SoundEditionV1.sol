@@ -76,7 +76,7 @@ contract SoundEditionV1 is
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
     // ================================
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function initialize(
         address owner,
         string memory name,
@@ -117,7 +117,7 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function mint(address to, uint256 quantity) public payable {
         address caller = _msgSender();
         // Only allow calls if caller has minter role, admin role, or is the owner.
@@ -132,12 +132,12 @@ contract SoundEditionV1 is
         }
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function withdrawETH() external {
         SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionActions
     function withdrawERC20(address[] calldata tokens) external {
         for (uint256 i; i < tokens.length; ++i) {
             SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
@@ -241,7 +241,7 @@ contract SoundEditionV1 is
     // VIEW FUNCTIONS
     // ================================
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionState
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
     }
@@ -290,7 +290,7 @@ contract SoundEditionV1 is
         return 1;
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /// @inheritdoc ISoundEditionState
     function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
         uint256 count = getRoleMemberCount(role);
 
