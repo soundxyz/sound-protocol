@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
 
+import "../modules/RangeEditionMinter.t.sol";
 import "./InvariantTest.sol";
-import "../modules/Minters/RangeEditionMinter.t.sol";
 
 contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest {
     RangeEditionMinterUpdater minterUpdater;
