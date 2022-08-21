@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "../TestConfig.sol";
-import "../../contracts/interfaces/ISoundEditionV1.sol";
 import "openzeppelin-upgradeable/access/IAccessControlEnumerableUpgradeable.sol";
+import "../../../contracts/core/SoundEditionV1.sol";
+import "../../TestConfig.sol";
 
 /**
  * @dev Miscellaneous tests for SoundEdition

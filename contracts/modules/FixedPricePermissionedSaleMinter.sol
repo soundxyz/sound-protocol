@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.16;
 
-import "./BaseMinter.sol";
-import "../../interfaces/IFixedPricePermissionedMint.sol";
 import "solady/utils/ECDSA.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
+import "../core/BaseMinter.sol";
+import "./interfaces/IFixedPricePermissionedMint.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter

@@ -3,9 +3,9 @@ pragma solidity ^0.8.16;
 
 import "openzeppelin/utils/Strings.sol";
 
-import "../TestConfig.sol";
-import "../mocks/MockMetadataModule.sol";
-import "../../contracts/SoundEdition/SoundEditionV1.sol";
+import "../../../contracts/core/SoundEditionV1.sol";
+import "../../TestConfig.sol";
+import "../../mocks/MockMetadataModule.sol";
 
 contract SoundEdition_metadata is TestConfig {
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);

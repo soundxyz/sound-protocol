@@ -1,13 +1,14 @@
 pragma solidity ^0.8.16;
 
-import "../../TestConfig.sol";
-import "../../../contracts/SoundEdition/SoundEditionV1.sol";
-import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minters/MerkleDropMinter.sol";
-import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
-import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "murky/Merkle.sol";
+import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "forge-std/console2.sol";
+
+import "../../contracts/core/SoundEditionV1.sol";
+import "../../contracts/core/SoundCreatorV1.sol";
+import "../../contracts/modules/MerkleDropMinter.sol";
+import "../../contracts/modules/RangeEditionMinter.sol";
+import "../TestConfig.sol";
 
 contract MintersIntegration is TestConfig {
     uint32 public constant START_TIME_FREE_DROP = 100;

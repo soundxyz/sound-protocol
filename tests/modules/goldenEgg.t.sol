@@ -3,9 +3,9 @@ pragma solidity ^0.8.16;
 
 import "openzeppelin/utils/Strings.sol";
 
+import "../../contracts/modules/RangeEditionMinter.sol";
+import "../../contracts/modules/GoldenEggMetadata.sol";
 import "../TestConfig.sol";
-import "../../contracts/modules/Minters/RangeEditionMinter.sol";
-import "../../contracts/modules/Metadata/GoldenEggMetadata.sol";
 
 contract SoundEdition_goldenEgg is TestConfig {
     uint256 constant PRICE = 1 ether;

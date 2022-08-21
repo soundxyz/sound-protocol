@@ -3,9 +3,9 @@ pragma solidity ^0.8.16;
 
 import "forge-std/Test.sol";
 
-import "../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../contracts/SoundEdition/SoundEditionV1.sol";
-import "../contracts/interfaces/IMetadataModule.sol";
+import "../contracts/core/SoundCreatorV1.sol";
+import "../contracts/core/SoundEditionV1.sol";
+import "../contracts/core/interfaces/IMetadataModule.sol";
 import "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {

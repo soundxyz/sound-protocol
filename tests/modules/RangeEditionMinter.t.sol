@@ -1,11 +1,12 @@
 pragma solidity ^0.8.16;
 
-import "../../TestConfig.sol";
-import "../../../contracts/SoundEdition/SoundEditionV1.sol";
-import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minters/RangeEditionMinter.sol";
-import "../../../contracts/interfaces/IBaseMinter.sol";
-import "../../../contracts/interfaces/IStandardMint.sol";
+import "../../contracts/core/SoundEditionV1.sol";
+import "../../contracts/core/SoundCreatorV1.sol";
+import "../../contracts/modules/RangeEditionMinter.sol";
+import "../../contracts/core/interfaces/ISoundMinter.sol";
+import { ISoundMinterEventsAndErrors } from "../../contracts/core/interfaces/minter/ISoundMinterEventsAndErrors.sol";
+import "../../contracts/modules/interfaces/IStandardMint.sol";
+import "../TestConfig.sol";
 
 contract RangeEditionMinterTests is TestConfig {
     uint256 constant PRICE = 1;
@@ -97,7 +98,7 @@ contract RangeEditionMinterTests is TestConfig {
         bool hasRevert;
 
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(BaseMinter.InvalidTimeRange.selector);
+            vm.expectRevert(ISoundMinterEventsAndErrors.InvalidTimeRange.selector);
             hasRevert = true;
         } else if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
@@ -240,7 +241,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint256 requiredPayment = quantity * PRICE;
 
         bytes memory expectedRevert = abi.encodeWithSelector(
-            BaseMinter.WrongEtherValue.selector,
+            ISoundMinterEventsAndErrors.WrongEtherValue.selector,
             requiredPayment - 1,
             requiredPayment
         );
@@ -255,14 +256,28 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 quantity = 1;
 
         vm.warp(START_TIME - 1);
-        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISoundMinterEventsAndErrors.MintNotOpen.selector,
+                block.timestamp,
+                START_TIME,
+                END_TIME
+            )
+        );
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(START_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(END_TIME + 1);
-        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISoundMinterEventsAndErrors.MintNotOpen.selector,
+                block.timestamp,
+                START_TIME,
+                END_TIME
+            )
+        );
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(END_TIME);
@@ -281,7 +296,9 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 totalMinted;
 
         if (quantityToBuyBeforeClosing > MAX_MINTABLE_UPPER) {
-            vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, MAX_MINTABLE_UPPER));
+            vm.expectRevert(
+                abi.encodeWithSelector(ISoundMinterEventsAndErrors.MaxMintableReached.selector, MAX_MINTABLE_UPPER)
+            );
         } else {
             totalMinted = quantityToBuyBeforeClosing;
         }
@@ -289,7 +306,9 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(address(edition), MINT_ID, quantityToBuyBeforeClosing);
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
-            vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, MAX_MINTABLE_LOWER));
+            vm.expectRevert(
+                abi.encodeWithSelector(ISoundMinterEventsAndErrors.MaxMintableReached.selector, MAX_MINTABLE_LOWER)
+            );
         }
         vm.warp(CLOSING_TIME);
         minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), MINT_ID, quantityToBuyAfterClosing);
@@ -307,7 +326,9 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(CLOSING_TIME);
-        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, maxMintableLower));
+        vm.expectRevert(
+            abi.encodeWithSelector(ISoundMinterEventsAndErrors.MaxMintableReached.selector, maxMintableLower)
+        );
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
     }
 
@@ -320,7 +341,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(BaseMinter.InvalidTimeRange.selector);
+            vm.expectRevert(ISoundMinterEventsAndErrors.InvalidTimeRange.selector);
             hasRevert = true;
         }
 
@@ -374,10 +395,10 @@ contract RangeEditionMinterTests is TestConfig {
     function test_supportsInterface() public {
         (, RangeEditionMinter minter) = _createEditionAndMinter(0);
 
-        bool supportsIBaseMinter = minter.supportsInterface(type(IBaseMinter).interfaceId);
+        bool supportsISoundMinter = minter.supportsInterface(type(ISoundMinter).interfaceId);
         bool supportsIStandardMint = minter.supportsInterface(type(IStandardMint).interfaceId);
 
-        assertTrue(supportsIBaseMinter);
+        assertTrue(supportsISoundMinter);
         assertTrue(supportsIStandardMint);
     }
 }

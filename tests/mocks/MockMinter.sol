@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "../../contracts/modules/Minters/BaseMinter.sol";
+import "../../contracts/core/BaseMinter.sol";
 
 contract MockMinter is BaseMinter {
     function createEditionMint(

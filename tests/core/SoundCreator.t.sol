@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "./TestConfig.sol";
-import "../contracts/SoundEdition/SoundEditionV1.sol";
-import "../contracts/SoundCreator/SoundCreatorV1.sol";
+import "../../contracts/core/SoundEditionV1.sol";
+import "../../contracts/core/SoundCreatorV1.sol";
+import "../TestConfig.sol";
 
 contract SoundCreatorTests is TestConfig {
     event SoundEditionCreated(address indexed soundEdition, address indexed creator);

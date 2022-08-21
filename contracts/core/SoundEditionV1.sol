@@ -8,8 +8,8 @@ import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "solady/utils/SafeTransferLib.sol";
-import "../interfaces/ISoundEditionV1.sol";
-import "../interfaces/IMetadataModule.sol";
+import "./interfaces/ISoundEditionV1.sol";
+import "./interfaces/IMetadataModule.sol";
 import "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 /*

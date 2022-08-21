@@ -28,7 +28,7 @@ pragma solidity ^0.8.16;
                ▓██████████████████████████████████████████████████████████
 */
 
-import "../interfaces/ISoundEditionV1.sol";
+import "./interfaces/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
 import "openzeppelin/access/Ownable.sol";

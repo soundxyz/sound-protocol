@@ -1,10 +1,11 @@
 pragma solidity ^0.8.16;
 
-import "../../TestConfig.sol";
-import "../../../contracts/SoundEdition/SoundEditionV1.sol";
-import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minters/FixedPricePermissionedSaleMinter.sol";
-import "../../../contracts/interfaces/IFixedPricePermissionedMint.sol";
+import "../../contracts/core/SoundEditionV1.sol";
+import "../../contracts/core/SoundCreatorV1.sol";
+import "../../contracts/modules/FixedPricePermissionedSaleMinter.sol";
+import "../../contracts/modules/interfaces/IFixedPricePermissionedMint.sol";
+import { ISoundMinterEventsAndErrors } from "../../contracts/core/interfaces/minter/ISoundMinterEventsAndErrors.sol";
+import "../TestConfig.sol";
 
 contract FixedPricePermissionedSaleMinterTests is TestConfig {
     using ECDSA for bytes32;
@@ -90,7 +91,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(BaseMinter.WrongEtherValue.selector, PRICE * 2, PRICE));
+        vm.expectRevert(abi.encodeWithSelector(ISoundMinterEventsAndErrors.WrongEtherValue.selector, PRICE * 2, PRICE));
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig);
     }
 
@@ -101,14 +102,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(ISoundMinterEventsAndErrors.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig);
 
         vm.prank(caller);
         minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig);
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(ISoundMinterEventsAndErrors.MaxMintableReached.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
@@ -164,12 +165,12 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_supportsInterface() public {
         (, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
 
-        bool supportsIBaseMinter = minter.supportsInterface(type(IBaseMinter).interfaceId);
+        bool supportsISoundMinter = minter.supportsInterface(type(ISoundMinter).interfaceId);
         bool supportsIFixedPricePermissionedMint = minter.supportsInterface(
             type(IFixedPricePermissionedMint).interfaceId
         );
 
-        assertTrue(supportsIBaseMinter);
+        assertTrue(supportsISoundMinter);
         assertTrue(supportsIFixedPricePermissionedMint);
     }
 }

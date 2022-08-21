@@ -2,4 +2,4 @@
 "sound-protocol": minor
 ---
 
-Create IBaseMinter for standard view functions in minters
+Create ISoundMinter for standard view functions in minters

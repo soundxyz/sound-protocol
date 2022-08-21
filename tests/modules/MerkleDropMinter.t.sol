@@ -1,12 +1,13 @@
 pragma solidity ^0.8.16;
 
-import "../../TestConfig.sol";
-import "../../../contracts/SoundEdition/SoundEditionV1.sol";
-import "../../../contracts/SoundCreator/SoundCreatorV1.sol";
-import "../../../contracts/modules/Minters/MerkleDropMinter.sol";
-import "../../../contracts/interfaces/IMerkleDropMint.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "murky/Merkle.sol";
+import "../../contracts/core/SoundEditionV1.sol";
+import "../../contracts/core/SoundCreatorV1.sol";
+import "../../contracts/modules/MerkleDropMinter.sol";
+import "../../contracts/modules/interfaces/IMerkleDropMint.sol";
+import { ISoundMinterEventsAndErrors } from "../../contracts/core/interfaces/minter/ISoundMinterEventsAndErrors.sol";
+import "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
@@ -103,7 +104,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
-        vm.expectRevert(abi.encodeWithSelector(BaseMinter.MaxMintableReached.selector, 2));
+        vm.expectRevert(abi.encodeWithSelector(ISoundMinterEventsAndErrors.MaxMintableReached.selector, 2));
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
 
@@ -139,10 +140,10 @@ contract MerkleDropMinterTests is TestConfig {
     function test_supportsInterface() public {
         (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 0);
 
-        bool supportsIBaseMinter = minter.supportsInterface(type(IBaseMinter).interfaceId);
+        bool supportsISoundMinter = minter.supportsInterface(type(ISoundMinter).interfaceId);
         bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMint).interfaceId);
 
-        assertTrue(supportsIBaseMinter);
+        assertTrue(supportsISoundMinter);
         assertTrue(supportsIMerkleDropMint);
     }
 }

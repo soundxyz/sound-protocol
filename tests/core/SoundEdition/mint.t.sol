@@ -2,8 +2,8 @@
 pragma solidity ^0.8.16;
 
 import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import "../TestConfig.sol";
-import "../../contracts/SoundEdition/SoundEditionV1.sol";
+import "../../../contracts/core/SoundEditionV1.sol";
+import "../../TestConfig.sol";
 
 /**
  * @dev Tests base minting functionality directly from edition.
