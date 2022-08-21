@@ -29,5 +29,5 @@ interface IBaseMinter {
      * @param mintId The mint id.
      * @return (startTime, endTime, mintPaused, price, maxMintable, maxAllowedPerWallet, totalMinted)
      */
-    function mintInfo(address edition, uint256 mintId) external view returns (StandardMintData memory);
+    function standardMintData(address edition, uint256 mintId) external view returns (StandardMintData memory);
 }

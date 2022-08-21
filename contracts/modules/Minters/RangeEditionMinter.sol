@@ -295,7 +295,7 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
     }
 
     /// @inheritdoc IBaseMinter
-    function mintInfo(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
         uint32 _maxMintable = _getMaxMintable(mintData);

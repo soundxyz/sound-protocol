@@ -43,7 +43,7 @@ contract MockMinter is BaseMinter {
         return type(uint32).max;
     }
 
-    function mintInfo(address, uint256) public pure returns (StandardMintData memory) {
+    function standardMintData(address, uint256) public pure returns (StandardMintData memory) {
         return StandardMintData(0, 1, false, 1, 1, 1, 0);
     }
 }

@@ -146,7 +146,7 @@ contract MerkleDropMinterTests is TestConfig {
         assertTrue(supportsIMerkleDropMint);
     }
 
-    function test_getMintInfo() public {
+    function test_standardMintData() public {
         SoundEditionV1 edition = createGenericEdition();
 
         MerkleDropMinter minter = new MerkleDropMinter();
@@ -169,7 +169,7 @@ contract MerkleDropMinterTests is TestConfig {
             expectedMaxPerWallet
         );
 
-        StandardMintData memory mintData = minter.mintInfo(address(edition), mintId);
+        StandardMintData memory mintData = minter.standardMintData(address(edition), mintId);
 
         assertEq(mintData.startTime, expectedStartTime);
         assertEq(mintData.endTime, expectedEndTime);

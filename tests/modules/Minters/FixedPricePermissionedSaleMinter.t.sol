@@ -174,7 +174,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         assertTrue(supportsIFixedPricePermissionedMint);
     }
 
-    function test_getMintInfo() public {
+    function test_standardMintData() public {
         SoundEditionV1 edition = createGenericEdition();
 
         FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
@@ -194,7 +194,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
             expectedEndTime
         );
 
-        StandardMintData memory mintData = minter.mintInfo(address(edition), MINT_ID);
+        StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
 
         assertEq(mintData.startTime, expectedStartTime);
         assertEq(mintData.endTime, expectedEndTime);

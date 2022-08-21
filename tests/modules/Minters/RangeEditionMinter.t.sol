@@ -382,7 +382,7 @@ contract RangeEditionMinterTests is TestConfig {
         assertTrue(supportsIStandardMint);
     }
 
-    function test_getMintInfo() public {
+    function test_standardMintData() public {
         SoundEditionV1 edition = createGenericEdition();
 
         RangeEditionMinter minter = new RangeEditionMinter();
@@ -405,7 +405,7 @@ contract RangeEditionMinterTests is TestConfig {
             expectedMaxAllowedPerWallet
         );
 
-        StandardMintData memory mintData = minter.mintInfo(address(edition), MINT_ID);
+        StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
 
         assertEq(mintData.startTime, expectedStartTime);
         assertEq(mintData.endTime, expectedEndTime);
@@ -419,7 +419,7 @@ contract RangeEditionMinterTests is TestConfig {
         vm.warp(CLOSING_TIME);
         minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, 4);
 
-        mintData = minter.mintInfo(address(edition), MINT_ID);
+        mintData = minter.standardMintData(address(edition), MINT_ID);
 
         assertEq(mintData.maxMintable, MAX_MINTABLE_LOWER);
         assertEq(mintData.totalMinted, 4);

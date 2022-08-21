@@ -2,4 +2,4 @@
 "sound-protocol": minor
 ---
 
-Adds mintInfo fn
+Adds standardMintData fn

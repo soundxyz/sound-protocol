@@ -133,7 +133,7 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
     }
 
     /// @inheritdoc IBaseMinter
-    function mintInfo(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
