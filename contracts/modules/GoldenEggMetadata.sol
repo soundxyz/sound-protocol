@@ -3,8 +3,8 @@
 pragma solidity ^0.8.16;
 
 import "solady/utils/LibString.sol";
-import "../core/interfaces/ISoundEditionV1.sol";
-import "../core/interfaces/IMetadataModule.sol";
+import "@core/interfaces/ISoundEditionV1.sol";
+import "@core/interfaces/IMetadataModule.sol";
 
 contract GoldenEggMetadata is IMetadataModule {
     function tokenURI(uint256 tokenId) external view returns (string memory) {

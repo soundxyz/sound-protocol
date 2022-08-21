@@ -4,10 +4,10 @@ import "murky/Merkle.sol";
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "forge-std/console2.sol";
 
-import "../../contracts/core/SoundEditionV1.sol";
-import "../../contracts/core/SoundCreatorV1.sol";
-import "../../contracts/modules/MerkleDropMinter.sol";
-import "../../contracts/modules/RangeEditionMinter.sol";
+import "@core/SoundEditionV1.sol";
+import "@core/SoundCreatorV1.sol";
+import "@modules/MerkleDropMinter.sol";
+import "@modules/RangeEditionMinter.sol";
 import "../TestConfig.sol";
 
 contract MintersIntegration is TestConfig {

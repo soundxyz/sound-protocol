@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import "../../../contracts/core/SoundEditionV1.sol";
+import "@core/SoundEditionV1.sol";
 import "../../TestConfig.sol";
 
 /**

@@ -2,11 +2,11 @@ pragma solidity ^0.8.16;
 
 import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "murky/Merkle.sol";
-import "../../contracts/core/SoundEditionV1.sol";
-import "../../contracts/core/SoundCreatorV1.sol";
-import "../../contracts/modules/MerkleDropMinter.sol";
-import "../../contracts/modules/interfaces/IMerkleDropMint.sol";
-import { ISoundMinterEventsAndErrors } from "../../contracts/core/interfaces/minter/ISoundMinterEventsAndErrors.sol";
+import "@core/SoundEditionV1.sol";
+import "@core/SoundCreatorV1.sol";
+import "@modules/MerkleDropMinter.sol";
+import "@modules/interfaces/IMerkleDropMint.sol";
+import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 import "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
@@ -104,7 +104,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
-        vm.expectRevert(abi.encodeWithSelector(ISoundMinterEventsAndErrors.MaxMintableReached.selector, 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModuleEventsAndErrors.MaxMintableReached.selector, 2));
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
 
@@ -140,10 +140,10 @@ contract MerkleDropMinterTests is TestConfig {
     function test_supportsInterface() public {
         (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 0);
 
-        bool supportsISoundMinter = minter.supportsInterface(type(ISoundMinter).interfaceId);
+        bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
         bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMint).interfaceId);
 
-        assertTrue(supportsISoundMinter);
+        assertTrue(supportsIMinterModule);
         assertTrue(supportsIMerkleDropMint);
     }
 }

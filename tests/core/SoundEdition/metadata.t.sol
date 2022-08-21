@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import "openzeppelin/utils/Strings.sol";
 
-import "../../../contracts/core/SoundEditionV1.sol";
+import "@core/SoundEditionV1.sol";
 import "../../TestConfig.sol";
 import "../../mocks/MockMetadataModule.sol";
 

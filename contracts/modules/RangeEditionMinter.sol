@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.16;
 
-import "../core/BaseMinter.sol";
-import "./interfaces/IStandardMint.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
+import "./interfaces/IStandardMint.sol";
+import "./BaseMinter.sol";
 
 /*
  * @dev Minter class for range edition sales.

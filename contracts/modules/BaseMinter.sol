@@ -3,14 +3,14 @@ pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IAccessControlUpgradeable } from "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
-import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
-import { ISoundMinter } from "./interfaces/ISoundMinter.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
  * @title Minter Base
  * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
  */
-abstract contract BaseMinter is IERC165, ISoundMinter {
+abstract contract BaseMinter is IERC165, IMinterModule {
     // ================================
     // STRUCTS
     // ================================
@@ -220,6 +220,6 @@ abstract contract BaseMinter is IERC165, ISoundMinter {
 
     // @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(ISoundMinter).interfaceId;
+        return interfaceId == type(IMinterModule).interfaceId;
     }
 }

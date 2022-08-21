@@ -2,12 +2,12 @@
 pragma solidity ^0.8.16;
 
 import "forge-std/Script.sol";
-import "../contracts/core/SoundEditionV1.sol";
-import "../contracts/core/SoundCreatorV1.sol";
-import "../contracts/modules/GoldenEggMetadata.sol";
-import "../contracts/modules/FixedPricePermissionedSaleMinter.sol";
-import "../contracts/modules/MerkleDropMinter.sol";
-import "../contracts/modules/RangeEditionMinter.sol";
+import "@core/SoundEditionV1.sol";
+import "@core/SoundCreatorV1.sol";
+import "@modules/GoldenEggMetadata.sol";
+import "@modules/FixedPricePermissionedSaleMinter.sol";
+import "@modules/MerkleDropMinter.sol";
+import "@modules/RangeEditionMinter.sol";
 
 contract Deploy is Script {
     function run() external {

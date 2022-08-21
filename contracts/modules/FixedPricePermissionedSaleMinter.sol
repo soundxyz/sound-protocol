@@ -4,7 +4,7 @@ pragma solidity ^0.8.16;
 
 import "solady/utils/ECDSA.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
-import "../core/BaseMinter.sol";
+import "@modules/BaseMinter.sol";
 import "./interfaces/IFixedPricePermissionedMint.sol";
 
 /**

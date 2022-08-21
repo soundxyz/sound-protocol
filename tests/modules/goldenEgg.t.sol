@@ -2,9 +2,8 @@
 pragma solidity ^0.8.16;
 
 import "openzeppelin/utils/Strings.sol";
-
-import "../../contracts/modules/RangeEditionMinter.sol";
-import "../../contracts/modules/GoldenEggMetadata.sol";
+import "@modules/RangeEditionMinter.sol";
+import "@modules/GoldenEggMetadata.sol";
 import "../TestConfig.sol";
 
 contract SoundEdition_goldenEgg is TestConfig {

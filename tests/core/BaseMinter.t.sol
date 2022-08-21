@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "../../contracts/core/SoundEditionV1.sol";
-import "../../contracts/core/SoundCreatorV1.sol";
+import "@core/SoundEditionV1.sol";
+import "@core/SoundCreatorV1.sol";
 import "../TestConfig.sol";
 import "../mocks/MockMinter.sol";
-import { ISoundMinterEventsAndErrors } from "../../contracts/core/interfaces/minter/ISoundMinterEventsAndErrors.sol";
+import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 
 contract MintControllerBaseTests is TestConfig {
     event MintConfigCreated(
@@ -48,7 +48,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address attacker = getFundedAccount(1);
 
-        vm.expectRevert(ISoundMinterEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(IMinterModuleEventsAndErrors.Unauthorized.selector);
         vm.prank(attacker);
         minter.createEditionMint(address(edition), START_TIME, END_TIME);
     }
@@ -88,7 +88,7 @@ contract MintControllerBaseTests is TestConfig {
 
         uint256 price = 1;
         vm.expectRevert(
-            abi.encodeWithSelector(ISoundMinterEventsAndErrors.WrongEtherValue.selector, price * 2 - 1, price * 2)
+            abi.encodeWithSelector(IMinterModuleEventsAndErrors.WrongEtherValue.selector, price * 2 - 1, price * 2)
         );
         minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, price);
 
@@ -103,7 +103,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.setEditionMintPaused(address(edition), mintId, true);
 
         uint256 price = 1;
-        vm.expectRevert(ISoundMinterEventsAndErrors.MintPaused.selector);
+        vm.expectRevert(IMinterModuleEventsAndErrors.MintPaused.selector);
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
 
@@ -170,7 +170,7 @@ contract MintControllerBaseTests is TestConfig {
 
         // Ensure only controller can set time range
         vm.prank(nonController);
-        vm.expectRevert(ISoundMinterEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(IMinterModuleEventsAndErrors.Unauthorized.selector);
         minter.setTimeRange(address(edition), mintId, 456, 789);
     }
 }

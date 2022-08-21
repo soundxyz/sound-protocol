@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-interface ISoundMinterState {
+interface IMinterModuleState {
     function price(address edition, uint256 mintId) external view returns (uint256);
 
     function maxMintable(address edition, uint256 mintId) external view returns (uint32);
