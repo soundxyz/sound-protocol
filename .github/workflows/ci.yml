@@ -1,41 +1,41 @@
 name: Continuous Integration
 on:
-    push:
-        branches:
-            - master
-    pull_request:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
-    test:
-        name: Forge tests
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  submodules: recursive
+  test:
+    name: Forge tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-            - name: Install Foundry
-              uses: foundry-rs/foundry-toolchain@v1
-              with:
-                  version: nightly
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
 
-            - name: Run Forge build
-              run: |
-                  forge --version
-                  forge build --sizes
-              id: build
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
 
-            - name: Run Forge tests
-              run: |
-                  forge test -v --gas-report
-              id: test
+      - name: Run Forge tests
+        run: |
+          forge test -v --gas-report
+        id: test
 
-            - name: Code coverage
-              run: |
-                  forge coverage --report lcov
+      - name: Code coverage
+        run: |
+          forge coverage --report lcov
 
-            - name: Upload coverage to Codecov
-              uses: codecov/codecov-action@v3
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  file: lcov.info
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: lcov.info
