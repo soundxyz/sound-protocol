@@ -11,19 +11,11 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
  */
 abstract contract BaseMinter is IERC165, IMinterModule {
-    // ================================
-    // STRUCTS
-    // ================================
-
     struct BaseData {
         uint32 startTime;
         uint32 endTime;
         bool mintPaused;
     }
-
-    // ================================
-    // STORAGE
-    // ================================
 
     /**
      * @dev Maps an edition to the its next mint ID.
@@ -34,6 +26,22 @@ abstract contract BaseMinter is IERC165, IMinterModule {
      * @dev Maps an edition and the mint ID to a mint's configuration.
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the function to be only callable by the owner or admin of `edition`.
+     */
+    modifier onlyEditionOwnerOrAdmin(address edition) virtual {
+        if (
+            !_callerIsEditionOwner(edition) &&
+            !IAccessControlUpgradeable(edition).hasRole(ISoundEditionV1(edition).ADMIN_ROLE(), msg.sender)
+        ) revert Unauthorized();
+
+        _;
+    }
 
     // ================================
     // WRITE FUNCTIONS
@@ -182,22 +190,6 @@ abstract contract BaseMinter is IERC165, IMinterModule {
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
-    }
-
-    // ================================
-    // MODIFIERS
-    // ================================
-
-    /**
-     * @dev Restricts the function to be only callable by the owner or admin of `edition`.
-     */
-    modifier onlyEditionOwnerOrAdmin(address edition) virtual {
-        if (
-            !_callerIsEditionOwner(edition) &&
-            !IAccessControlUpgradeable(edition).hasRole(ISoundEditionV1(edition).ADMIN_ROLE(), msg.sender)
-        ) revert Unauthorized();
-
-        _;
     }
 
     // ================================
