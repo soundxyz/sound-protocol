@@ -141,7 +141,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.mint(address(edition1), mintId1, maxSupply - 1, 0);
 
         // try minting 2 more - should fail and tell us there is only 1 available
-        vm.expectRevert(abi.encodeWithSelector(ISoundEditionEventsAndErrors.ExceedsEditionAvailableSupply.selector, 1));
+        vm.expectRevert(abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, 1));
         minter.mint(address(edition1), mintId1, 2, 0);
 
         // try minting 1 more - should succeed
