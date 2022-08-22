@@ -6,7 +6,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockMinter } from "../mocks/MockMinter.sol";
-import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 contract MintControllerBaseTests is TestConfig {
@@ -142,7 +142,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.mint(address(edition1), mintId1, maxSupply, 0);
 
         // try minting 1 more
-        vm.expectRevert(ISoundEditionEventsAndErrors.EditionMaxMintableReached.selector);
+        vm.expectRevert(ISoundEditionV1.EditionMaxMintableReached.selector);
         minter.mint(address(edition1), mintId1, 1, 0);
     }
 

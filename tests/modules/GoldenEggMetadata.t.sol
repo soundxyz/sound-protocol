@@ -6,7 +6,7 @@ import { Strings } from "openzeppelin/utils/Strings.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
-import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract GoldenEggMetadataTests is TestConfig {
@@ -120,7 +120,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
         edition.setMintRandomnessLock(quantity);
     }
 
@@ -132,7 +132,7 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 quantity = MAX_MINTABLE - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
-        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidRandomnessLock.selector);
+        vm.expectRevert(ISoundEditionV1.InvalidRandomnessLock.selector);
         edition.setMintRandomnessLock(quantity - 1);
     }
 
@@ -188,7 +188,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
         edition.setRandomnessLockedTimestamp(START_TIME);
     }
 
