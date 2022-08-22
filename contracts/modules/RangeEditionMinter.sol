@@ -214,6 +214,10 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
                 : type(uint32).max;
     }
 
+    function totalMinted(address edition, uint256 mintId) external view returns (uint32) {
+        return _editionMintData[edition][mintId].totalMinted;
+    }
+
     /**
      * @dev Returns the `EditionMintData` for `edition.
      * @param edition Address of the song edition contract we are minting for.

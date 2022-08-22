@@ -103,6 +103,10 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return type(uint32).max;
     }
 
+    function totalMinted(address edition, uint256 mintId) external view returns (uint32) {
+        return _editionMintData[edition][mintId].totalMinted;
+    }
+
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
