@@ -18,9 +18,16 @@ contract Deploy is Script {
         new MerkleDropMinter();
         new RangeEditionMinter();
 
-        SoundEditionV1 soundEdition = new SoundEditionV1();
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(0));
-        soundCreator.initialize(address(soundEdition));
+        // Deploy implementations
+        SoundEditionV1 editionImplementation = new SoundEditionV1();
+        SoundCreatorV1 creatorImplementation = new SoundCreatorV1();
+
+        // Deploy creator proxy
+        ERC1967Proxy proxy = new ERC1967Proxy(address(creatorImplementation), bytes(""));
+        soundCreator = SoundCreatorV1(address(proxy));
+
+        // Initialize creator
+        soundCreator.initialize(address(editionImplementation));
 
         vm.stopBroadcast();
     }
