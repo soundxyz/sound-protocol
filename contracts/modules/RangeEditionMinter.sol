@@ -115,7 +115,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     function mint(
         address edition,
         uint256 mintId,
-        uint32 quantity
+        uint32 quantity,
+        address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -138,7 +139,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     /*
@@ -230,6 +231,13 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
+
+    /**
+     * @inheritdoc BaseMinter
+     */
+    function _price(address edition, uint256 mintId) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
 
     /**
      * @dev Optional validation function that gets called by _setTimeRange()

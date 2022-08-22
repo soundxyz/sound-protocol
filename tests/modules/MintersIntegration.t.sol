@@ -166,7 +166,7 @@ contract MintersIntegration is TestConfig {
         // Claim 1 token
         bytes32[] memory proof0 = merkleFreeDrop.getProof(leavesFreeMerkleDrop, 0);
         vm.prank(accountsFreeMerkleDrop[0]);
-        merkleDropMinter.mint(address(edition), mintId, 1, proof0);
+        merkleDropMinter.mint(address(edition), mintId, 1, proof0, address(0));
         user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
         assertEq(user0Balance, 1);
 
@@ -176,13 +176,13 @@ contract MintersIntegration is TestConfig {
         assertEq(user1Balance, 0);
         // Claim 3 tokens (max per wallet)
         vm.prank(accountsFreeMerkleDrop[1]);
-        merkleDropMinter.mint(address(edition), mintId, 3, proof1);
+        merkleDropMinter.mint(address(edition), mintId, 3, proof1, address(0));
         user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
         assertEq(user1Balance, 3);
 
         // First user comes back to claim 2 more tokens, bringing balance to 3 (max per wallet)
         vm.prank(accountsFreeMerkleDrop[0]);
-        merkleDropMinter.mint(address(edition), mintId, 2, proof0);
+        merkleDropMinter.mint(address(edition), mintId, 2, proof0, address(0));
         user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
         assertEq(user0Balance, 3);
 
@@ -203,7 +203,7 @@ contract MintersIntegration is TestConfig {
         // Claim 20 tokens
         bytes32[] memory proof0 = mPresale.getProof(leavesPresale, 0);
         vm.prank(accountsPresale[0]);
-        merkleDropMinter.mint{ value: 20 * PRICE_PRESALE }(address(edition), mintId, 20, proof0);
+        merkleDropMinter.mint{ value: 20 * PRICE_PRESALE }(address(edition), mintId, 20, proof0, address(0));
         user0Balance = edition.balanceOf(accountsPresale[0]);
         assertEq(user0Balance, 20);
 
@@ -213,7 +213,7 @@ contract MintersIntegration is TestConfig {
         assertEq(user1Balance, 0);
         // Claim 25 tokens
         vm.prank(accountsPresale[1]);
-        merkleDropMinter.mint{ value: 25 * PRICE_PRESALE }(address(edition), mintId, 25, proof1);
+        merkleDropMinter.mint{ value: 25 * PRICE_PRESALE }(address(edition), mintId, 25, proof1, address(0));
         user1Balance = edition.balanceOf(accountsPresale[1]);
         assertEq(user1Balance, 25);
 
@@ -227,7 +227,7 @@ contract MintersIntegration is TestConfig {
         assertEq(user5Balance, 0);
         // Mint 5 tokens
         vm.prank(userAccounts[4]);
-        publicSaleMinter.mint{ value: 5 * PRICE_PUBLIC_SALE }(address(edition), mintId, 5);
+        publicSaleMinter.mint{ value: 5 * PRICE_PUBLIC_SALE }(address(edition), mintId, 5, address(0));
         user5Balance = edition.balanceOf(userAccounts[4]);
         assertEq(user5Balance, 5);
 
@@ -239,7 +239,8 @@ contract MintersIntegration is TestConfig {
         publicSaleMinter.mint{ value: MAX_ALLOWED_PER_WALLET_PUBLIC_SALE * PRICE_PUBLIC_SALE }(
             address(edition),
             mintId,
-            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE,
+            address(0)
         );
         user6Balance = edition.balanceOf(userAccounts[5]);
         assertEq(user6Balance, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);

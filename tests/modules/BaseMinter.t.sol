@@ -90,9 +90,9 @@ contract MintControllerBaseTests is TestConfig {
 
         uint256 price = 1;
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.WrongEtherValue.selector, price * 2 - 1, price * 2));
-        minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, price);
+        minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, price, address(0));
 
-        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
+        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price, address(0));
     }
 
     function test_mintRevertsWhenPaused() public {
@@ -105,11 +105,11 @@ contract MintControllerBaseTests is TestConfig {
         uint256 price = 1;
         vm.expectRevert(IMinterModule.MintPaused.selector);
 
-        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
+        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price, address(0));
 
         minter.setEditionMintPaused(address(edition), mintId, false);
 
-        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
+        minter.mint{ value: price * 2 }(address(edition), mintId, 2, price, address(0));
     }
 
     function test_mintRevertsWithZeroQuantity() public {
@@ -119,7 +119,7 @@ contract MintControllerBaseTests is TestConfig {
 
         vm.expectRevert(IERC721AUpgradeable.MintZeroQuantity.selector);
 
-        minter.mint{ value: 0 }(address(edition), mintId, 0, 0);
+        minter.mint{ value: 0 }(address(edition), mintId, 0, 0, address(0));
     }
 
     function test_createEditionMintMultipleTimes() external {
@@ -138,14 +138,14 @@ contract MintControllerBaseTests is TestConfig {
         uint256 mintId1 = minter.createEditionMint(address(edition1), START_TIME, END_TIME);
 
         // Mint all of the supply except for 1 token
-        minter.mint(address(edition1), mintId1, maxSupply - 1, 0);
+        minter.mint(address(edition1), mintId1, maxSupply - 1, 0, address(0));
 
         // try minting 2 more - should fail and tell us there is only 1 available
         vm.expectRevert(abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, 1));
-        minter.mint(address(edition1), mintId1, 2, 0);
+        minter.mint(address(edition1), mintId1, 2, 0, address(0));
 
         // try minting 1 more - should succeed
-        minter.mint(address(edition1), mintId1, 1, 0);
+        minter.mint(address(edition1), mintId1, 1, 0, address(0));
     }
 
     function test_setTimeRange(address nonController) public {

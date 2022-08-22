@@ -30,6 +30,21 @@ interface IMinterModule {
      */
     event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
 
+    /**
+     * @notice Emitted when the `affiliateFeeBPS` is updated.
+     */
+    event AffiliateFeeSet(address indexed edition, uint256 indexed mintId, uint16 feeBPS);
+
+    /**
+     * @notice Emitted when the `affiliateDiscountBPS` is updated.
+     */
+    event AffiliateDiscountSet(address indexed edition, uint256 indexed mintId, uint16 discountBPS);
+
+    /**
+     * @notice Emitted when the `platformFeeBPS` is changed.
+     */
+    event PlatformFeeSet(uint16 feeBPS);
+
     // ================================
     // ERRORS
     // ================================
@@ -64,6 +79,21 @@ interface IMinterModule {
      */
     error Unauthorized();
 
+    /**
+     * The affiliate fee numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidAffiliateFeeBPS();
+
+    /**
+     * The affiliate discount numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidAffiliateDiscountBPS();
+
+    /**
+     * The platform fee numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidPlatformFeeBPS();
+
     // ================================
     // WRITE FUNCTIONS
     // ================================
@@ -91,11 +121,49 @@ interface IMinterModule {
         uint32 endTime
     ) external;
 
+    function setAffiliateFee(
+        address edition,
+        uint256 mintId,
+        uint16 affiliateFeeBPS
+    ) external;
+
+    function setAffiliateDiscount(
+        address edition,
+        uint256 mintId,
+        uint16 affiliateDiscountBPS
+    ) external;
+
+    function setPlatformFee(uint16 platformFeeBPS) external;
+
+    function withdrawForAffiliate(address affiliate) external;
+
+    function withdrawForPlatform(address to) external;
+
     // ================================
     // VIEW FUNCTIONS
     // ================================
 
-    function price(address edition, uint256 mintId) external view returns (uint256);
+    function MAX_BPS() external pure returns (uint16);
+
+    function affiliateFeesAccrued(address affiliate) external view returns (uint256);
+
+    function platformFeesAccrued() external view returns (uint256);
+
+    function platformFeeBPS() external view returns (uint16);
+
+    function isAffiliated(
+        address edition,
+        uint256 mintId,
+        address affiliate
+    ) external view returns (bool);
+
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address minter,
+        uint32 quantity,
+        bool affiliated
+    ) external view returns (uint256);
 
     function maxMintable(address edition, uint256 mintId) external view returns (uint32);
 

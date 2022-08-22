@@ -5,17 +5,41 @@ import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IAccessControlUpgradeable } from "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { Ownable } from "openzeppelin/access/Ownable.sol";
+import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
 /**
  * @title Minter Base
  * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
  */
-abstract contract BaseMinter is IERC165, IMinterModule {
+abstract contract BaseMinter is IERC165, IMinterModule, Ownable {
+    // ================================
+    // STRUCTS
+    // ================================
+
     struct BaseData {
         uint32 startTime;
         uint32 endTime;
+        uint32 affiliateFeeBPS;
+        uint32 affiliateDiscountBPS;
         bool mintPaused;
     }
+
+    // ================================
+    // CONSTANTS
+    // ================================
+
+    /**
+     * @dev This is the denominator, in basis points (BPS), for:
+     * - platform fees
+     * - affiliate fees
+     * - affiliate discount
+     */
+    uint16 private constant _MAX_BPS = 10_000;
+
+    // ================================
+    // STORAGE
+    // ================================
 
     /**
      * @dev Maps an edition to the its next mint ID.
@@ -27,8 +51,23 @@ abstract contract BaseMinter is IERC165, IMinterModule {
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
+    /**
+     * @dev Maps an address to how much affiliate fees have they accrued.
+     */
+    mapping(address => uint256) private _affiliateFeesAccrued;
+
+    /**
+     * @dev How much platform fees have been accrued.
+     */
+    uint256 private _platformFeesAccrued;
+
+    /**
+     * @dev The numerator of the platform fee.
+     */
+    uint16 private _platformFeeBPS;
+
     // ================================
-    // MODIFIERS
+    // ACCESS MODIFIERS
     // ================================
 
     /**
@@ -75,8 +114,111 @@ abstract contract BaseMinter is IERC165, IMinterModule {
         _setTimeRange(edition, mintId, startTime, endTime);
     }
 
+    function setAffiliateFee(
+        address edition,
+        uint256 mintId,
+        uint16 affiliateFeeBPS
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(affiliateFeeBPS) {
+        _baseData[edition][mintId].affiliateFeeBPS = affiliateFeeBPS;
+        emit AffiliateFeeSet(edition, mintId, affiliateFeeBPS);
+    }
+
+    function setAffiliateDiscount(
+        address edition,
+        uint256 mintId,
+        uint16 affiliateDiscountBPS
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(affiliateDiscountBPS) {
+        _baseData[edition][mintId].affiliateDiscountBPS = affiliateDiscountBPS;
+        emit AffiliateDiscountSet(edition, mintId, affiliateDiscountBPS);
+    }
+
+    function setPlatformFee(uint16 platformFeeBPS)
+        public
+        virtual
+        override
+        onlyOwner
+        onlyValidPlatformFeeBPS(platformFeeBPS)
+    {
+        _platformFeeBPS = platformFeeBPS;
+        emit PlatformFeeSet(platformFeeBPS);
+    }
+
+    function withdrawForAffiliate(address affiliate) public override {
+        uint256 accrued = _affiliateFeesAccrued[affiliate];
+        _affiliateFeesAccrued[affiliate] = 0;
+        if (accrued != 0) {
+            SafeTransferLib.safeTransferETH(affiliate, accrued);
+        }
+    }
+
+    function withdrawForPlatform(address to) public override onlyOwner {
+        uint256 accrued = _platformFeesAccrued;
+        _platformFeesAccrued = 0;
+        if (accrued != 0) {
+            SafeTransferLib.safeTransferETH(to, accrued);
+        }
+    }
+
     // ================================
-    // INTERNAL FUNCTIONS
+    // VIEW FUNCTIONS
+    // ================================
+
+    function MAX_BPS() external pure returns (uint16) {
+        return _MAX_BPS;
+    }
+
+    function affiliateFeesAccrued(address affiliate) external view returns (uint256) {
+        return _affiliateFeesAccrued[affiliate];
+    }
+
+    function platformFeesAccrued() external view returns (uint256) {
+        return _platformFeesAccrued;
+    }
+
+    function platformFeeBPS() external view returns (uint16) {
+        return _platformFeeBPS;
+    }
+
+    function isAffiliated(
+        address,
+        uint256,
+        address affiliate
+    ) public view virtual override returns (bool) {
+        return affiliate != address(0);
+    }
+
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address,
+        uint32 quantity,
+        bool affiliated
+    ) public view virtual override returns (uint256) {
+        uint256 price = _price(edition, mintId);
+
+        if (price == 0) return 0;
+
+        uint256 total = quantity * price;
+
+        if (!affiliated) return total;
+
+        return total - ((total * _baseData[edition][mintId].affiliateDiscountBPS) / _MAX_BPS);
+    }
+
+    function nextMintId(address edition) public view returns (uint256) {
+        return _nextMintIds[edition];
+    }
+
+    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
+        return _baseData[edition][mintId];
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IMinterModule).interfaceId;
+    }
+
+    // ================================
+    // VALIDATION MODIFIERS
     // ================================
 
     /**
@@ -86,6 +228,39 @@ abstract contract BaseMinter is IERC165, IMinterModule {
         if (startTime >= endTime) revert InvalidTimeRange();
         _;
     }
+
+    /**
+     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidAffiliateFeeBPS(uint16 affiliateFeeBPS) virtual {
+        if (affiliateFeeBPS > _MAX_BPS) revert InvalidAffiliateFeeBPS();
+        _;
+    }
+
+    /**
+     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidAffiliateDiscountBPS(uint16 affiliateDiscountBPS) virtual {
+        if (affiliateDiscountBPS > _MAX_BPS) revert InvalidAffiliateDiscountBPS();
+        _;
+    }
+
+    /**
+     * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) virtual {
+        if (platformFeeBPS_ > _MAX_BPS) revert InvalidPlatformFeeBPS();
+        _;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Returns the unit price. Intended to be overridden by child contracts.
+     */
+    function _price(address edition, uint256 mintId) internal view virtual returns (uint256);
 
     /**
      * @dev Creates an edition mint configuration.
@@ -171,18 +346,51 @@ abstract contract BaseMinter is IERC165, IMinterModule {
     function _mint(
         address edition,
         uint256 mintId,
-        address to,
         uint32 quantity,
-        uint256 requiredEtherValue
+        address affiliate
     ) internal {
-        uint32 startTime = _baseData[edition][mintId].startTime;
-        uint32 endTime = _baseData[edition][mintId].endTime;
+        BaseData storage baseData = _baseData[edition][mintId];
+
+        /* --------------------- GENERAL CHECKS --------------------- */
+
+        uint32 startTime = baseData.startTime;
+        uint32 endTime = baseData.endTime;
         if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
         if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (baseData.mintPaused) revert MintPaused();
 
+        /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
+
+        // Check if the mint is an affliated mint.
+        bool affiliated = isAffiliated(edition, mintId, affiliate);
+
+        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, affiliated);
+
+        // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
-        if (_baseData[edition][mintId].mintPaused) revert MintPaused();
-        ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
+
+        uint256 remainingPayment = requiredEtherValue;
+
+        // Compute the platform fee.
+        uint256 platformFee = (remainingPayment * _platformFeeBPS) / _MAX_BPS;
+        // Deduct the platform fee.
+        remainingPayment -= platformFee;
+
+        // Increment the platform fees accrued.
+        _platformFeesAccrued += platformFee;
+
+        if (affiliated) {
+            // Compute the affiliate fee.
+            uint256 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
+            // Deduct the affiliate fee from the remaining payment.
+            remainingPayment -= affiliateFee;
+            // Increment the affiliate fees accrued
+            _affiliateFeesAccrued[affiliate] += affiliateFee;
+        }
+
+        /* ------------------------- MINT --------------------------- */
+
+        ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
     }
 
     /**
@@ -190,28 +398,5 @@ abstract contract BaseMinter is IERC165, IMinterModule {
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
-    }
-
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
-
-    /**
-     * @dev Returns the next mint ID for `edition`.
-     */
-    function nextMintId(address edition) public view returns (uint256) {
-        return _nextMintIds[edition];
-    }
-
-    /**
-     * @dev Returns the configuration data for an edition mint.
-     */
-    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
-        return _baseData[edition][mintId];
-    }
-
-    // @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IMinterModule).interfaceId;
     }
 }
