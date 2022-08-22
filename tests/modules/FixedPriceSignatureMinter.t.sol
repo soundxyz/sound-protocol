@@ -1,9 +1,6 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
 import { ECDSA } from "solady/utils/ECDSA.sol";
-
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
@@ -11,7 +8,7 @@ import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSigna
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
-contract FixedPriceSignatureMinterTests is TestConfig {
+contract FixedPriceSignatureMinterMinterTests is TestConfig {
     using ECDSA for bytes32;
 
     uint256 constant PRICE = 1;
@@ -170,5 +167,36 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         assertTrue(supportsIMinterModule);
         assertTrue(supportsIFixedPriceSignatureMinter);
+    }
+
+    function test_standardMintData() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedPrice = 1234071;
+
+        minter.createEditionMint(
+            address(edition),
+            expectedPrice,
+            _signerAddress(),
+            MAX_MINTABLE,
+            expectedStartTime,
+            expectedEndTime
+        );
+
+        IMinterModule.StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
+
+        assertEq(expectedStartTime, mintData.startTime);
+        assertEq(expectedEndTime, mintData.endTime);
+        assertEq(false, mintData.mintPaused);
+        assertEq(expectedPrice, mintData.price);
+        assertEq(type(uint32).max, mintData.maxAllowedPerWallet);
+        assertEq(MAX_MINTABLE, mintData.maxMintable);
+        assertEq(0, mintData.totalMinted);
     }
 }
