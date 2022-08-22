@@ -92,7 +92,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        vm.expectRevert(MerkleDropMinter.ExceedsMaxPerWallet.selector);
+        vm.expectRevert(IMerkleDropMinter.ExceedsMaxPerWallet.selector);
         // Max is 1 but buyer is requesting 2
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
@@ -117,7 +117,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
         uint32 requestedQuantity = 1;
-        vm.expectRevert(MerkleDropMinter.InvalidMerkleProof.selector);
+        vm.expectRevert(IMerkleDropMinter.InvalidMerkleProof.selector);
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
 
