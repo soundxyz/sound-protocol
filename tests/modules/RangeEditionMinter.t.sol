@@ -4,7 +4,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
@@ -99,7 +99,7 @@ contract RangeEditionMinterTests is TestConfig {
         bool hasRevert;
 
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(IMinterModuleEventsAndErrors.InvalidTimeRange.selector);
+            vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
             hasRevert = true;
         } else if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
@@ -242,7 +242,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint256 requiredPayment = quantity * PRICE;
 
         bytes memory expectedRevert = abi.encodeWithSelector(
-            IMinterModuleEventsAndErrors.WrongEtherValue.selector,
+            IMinterModule.WrongEtherValue.selector,
             requiredPayment - 1,
             requiredPayment
         );
@@ -258,12 +258,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         vm.warp(START_TIME - 1);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IMinterModuleEventsAndErrors.MintNotOpen.selector,
-                block.timestamp,
-                START_TIME,
-                END_TIME
-            )
+            abi.encodeWithSelector(IMinterModule.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
         );
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
@@ -272,12 +267,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         vm.warp(END_TIME + 1);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IMinterModuleEventsAndErrors.MintNotOpen.selector,
-                block.timestamp,
-                START_TIME,
-                END_TIME
-            )
+            abi.encodeWithSelector(IMinterModule.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
         );
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
@@ -297,9 +287,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 totalMinted;
 
         if (quantityToBuyBeforeClosing > MAX_MINTABLE_UPPER) {
-            vm.expectRevert(
-                abi.encodeWithSelector(IMinterModuleEventsAndErrors.MaxMintableReached.selector, MAX_MINTABLE_UPPER)
-            );
+            vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE_UPPER));
         } else {
             totalMinted = quantityToBuyBeforeClosing;
         }
@@ -307,9 +295,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(address(edition), MINT_ID, quantityToBuyBeforeClosing);
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
-            vm.expectRevert(
-                abi.encodeWithSelector(IMinterModuleEventsAndErrors.MaxMintableReached.selector, MAX_MINTABLE_LOWER)
-            );
+            vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE_LOWER));
         }
         vm.warp(CLOSING_TIME);
         minter.mint{ value: quantityToBuyAfterClosing * PRICE }(address(edition), MINT_ID, quantityToBuyAfterClosing);
@@ -327,9 +313,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
 
         vm.warp(CLOSING_TIME);
-        vm.expectRevert(
-            abi.encodeWithSelector(IMinterModuleEventsAndErrors.MaxMintableReached.selector, maxMintableLower)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, maxMintableLower));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);
     }
 
@@ -342,7 +326,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
         if (!(startTime < closingTime && closingTime < endTime)) {
-            vm.expectRevert(IMinterModuleEventsAndErrors.InvalidTimeRange.selector);
+            vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
             hasRevert = true;
         }
 
