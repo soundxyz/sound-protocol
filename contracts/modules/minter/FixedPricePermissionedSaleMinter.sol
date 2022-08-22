@@ -6,7 +6,7 @@ import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IFixedPricePermissionedMint } from "@modules/interfaces/IFixedPricePermissionedMint.sol";
 import { BaseMinter } from "./BaseMinter.sol";
-import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter

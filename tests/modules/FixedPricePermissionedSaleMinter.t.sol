@@ -7,7 +7,7 @@ import { FixedPricePermissionedSaleMinter } from "@modules/minter/FixedPricePerm
 import { IFixedPricePermissionedMint } from "@modules/interfaces/IFixedPricePermissionedMint.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
-import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract FixedPricePermissionedSaleMinterTests is TestConfig {

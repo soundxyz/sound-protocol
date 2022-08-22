@@ -7,7 +7,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 import { IStandardMint } from "@modules/interfaces/IStandardMint.sol";
 import { BaseMinter } from "@modules/minter/BaseMinter.sol";
-import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract RangeEditionMinterTests is TestConfig {

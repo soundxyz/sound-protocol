@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { BaseMinter } from "@modules/minter/BaseMinter.sol";
-import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 
 contract MockMinter is BaseMinter {
     function createEditionMint(

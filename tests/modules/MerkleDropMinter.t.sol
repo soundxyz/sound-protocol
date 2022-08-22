@@ -9,7 +9,7 @@ import { IMerkleDropMint } from "@modules/interfaces/IMerkleDropMint.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 import { TestConfig } from "../TestConfig.sol";
-import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
