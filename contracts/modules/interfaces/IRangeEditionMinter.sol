@@ -57,7 +57,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxAllowedPerWallet_
-    ) external returns (uint256 mintId) ;
+    ) external returns (uint256 mintId);
 
     /*
      * @dev Sets the time range.
@@ -76,7 +76,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 endTime
     ) external;
 
-     /*
+    /*
      * @dev Sets the max mintable range.
      * @param edition Address of the song edition contract we are minting for.
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
@@ -88,7 +88,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) external;
-    
+
     /*
      * @dev Mints tokens for a given edition.
      * @param edition Address of the song edition contract we are minting for.
