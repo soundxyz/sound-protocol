@@ -332,11 +332,6 @@ contract SoundEditionV1 is
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
 
-    /// @inheritdoc ERC721AUpgradeable
-    function _startTokenId() internal pure override returns (uint256) {
-        return 1;
-    }
-
     function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
         uint256 count = getRoleMemberCount(role);
 
@@ -355,4 +350,13 @@ contract SoundEditionV1 is
      * @dev receive secondary royalties
      */
     receive() external payable {}
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    /// @inheritdoc ERC721AUpgradeable
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
+    }
 }

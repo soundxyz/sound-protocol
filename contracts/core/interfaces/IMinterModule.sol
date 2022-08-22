@@ -5,6 +5,10 @@ pragma solidity ^0.8.16;
  * @title Interface for the base minter functionality, excluding the mint function.
  */
 interface IMinterModule {
+    // ================================
+    // EVENTS
+    // ================================
+
     /**
      * @notice Emitted when the mint configuration for an `edition` is created.
      */
@@ -25,6 +29,10 @@ interface IMinterModule {
      * @notice Emitted when the `startTime` and `endTime` are updated.
      */
     event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
+
+    // ================================
+    // ERRORS
+    // ================================
 
     /**
      * The Ether value paid is not the exact value required.
@@ -56,6 +64,10 @@ interface IMinterModule {
      */
     error Unauthorized();
 
+    // ================================
+    // WRITE FUNCTIONS
+    // ================================
+
     /**
      * @dev Sets the `paused` status for `edition`.
      * Calling conditions:
@@ -78,6 +90,10 @@ interface IMinterModule {
         uint32 startTime,
         uint32 endTime
     ) external;
+
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
 
     function price(address edition, uint256 mintId) external view returns (uint256);
 
