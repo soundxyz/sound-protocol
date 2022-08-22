@@ -8,7 +8,7 @@ import { IERC165Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC165U
 import { ISoundEditionActions } from "./edition/ISoundEditionActions.sol";
 import { ISoundEditionImmutables } from "./edition/ISoundEditionImmutables.sol";
 import { ISoundEditionEventsAndErrors } from "./edition/ISoundEditionEventsAndErrors.sol";
-import { ISoundEditionOwnerActions } from "./edition/ISoundEditionOwnerActions.sol";
+import { ISoundEditionAdminActions } from "./edition/ISoundEditionAdminActions.sol";
 import { ISoundEditionState } from "./edition/ISoundEditionState.sol";
 import { IMetadataModule } from "./IMetadataModule.sol";
 
@@ -22,7 +22,7 @@ interface ISoundEditionV1 is
     ISoundEditionActions,
     ISoundEditionImmutables,
     ISoundEditionEventsAndErrors,
-    ISoundEditionOwnerActions,
+    ISoundEditionAdminActions,
     ISoundEditionState
 {
     /**
