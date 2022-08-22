@@ -2,6 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { Test } from "forge-std/Test.sol";
+import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
@@ -25,10 +26,16 @@ contract TestConfig is Test {
 
     // Set up called before each test
     function setUp() public virtual {
-        // Deploy SoundEdition implementation
-        MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
+        // Deploy implementations
+        SoundCreatorV1 soundCreatorImp = new SoundCreatorV1();
+        MockSoundEditionV1 editionImplementation = new MockSoundEditionV1();
 
-        soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
+        // Deploy creator
+        ERC1967Proxy proxy = new ERC1967Proxy(address(soundCreatorImp), bytes(""));
+        soundCreator = SoundCreatorV1(address(proxy));
+
+        // Initialize creator
+        soundCreator.initialize(address(editionImplementation));
     }
 
     /**
