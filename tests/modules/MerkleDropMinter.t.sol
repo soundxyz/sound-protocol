@@ -8,7 +8,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
-import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
@@ -106,7 +106,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleEventsAndErrors.MaxMintableReached.selector, 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, 2));
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
 
