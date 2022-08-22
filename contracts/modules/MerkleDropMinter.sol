@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.16;
 
-import "openzeppelin/token/ERC20/IERC20.sol";
-import "openzeppelin/utils/cryptography/MerkleProof.sol";
-import "openzeppelin/utils/structs/EnumerableMap.sol";
-import "openzeppelin/utils/introspection/IERC165.sol";
-import "@core/interfaces/ISoundEditionV1.sol";
-import "@modules/BaseMinter.sol";
-import "./interfaces/IMerkleDropMint.sol";
+import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
+import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
+import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { BaseMinter } from "@modules/BaseMinter.sol";
+import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
 
 /// @dev Airdrop using merkle tree logic.
-contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
+contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     // ================================
@@ -186,7 +186,7 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
-        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMint).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
     }
 }

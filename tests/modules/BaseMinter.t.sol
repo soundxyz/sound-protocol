@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "@core/SoundEditionV1.sol";
-import "@core/SoundCreatorV1.sol";
-import "../TestConfig.sol";
-import "../mocks/MockMinter.sol";
+import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { TestConfig } from "../TestConfig.sol";
+import { MockMinter } from "../mocks/MockMinter.sol";
+import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 
 contract MintControllerBaseTests is TestConfig {
