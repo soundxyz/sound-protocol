@@ -43,7 +43,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 endTime,
         uint32 maxMintable_,
         uint32 maxAllowedPerWallet_
-    ) external returns (uint256 mintId) ;
+    ) external returns (uint256 mintId);
 
     function mint(
         address edition,
@@ -51,7 +51,6 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 requestedQuantity,
         bytes32[] calldata merkleProof
     ) external payable;
-
 
     /**
      * @dev Returns the amount of claimed tokens for `wallet` in `mintData`.
