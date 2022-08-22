@@ -93,6 +93,20 @@ contract MintControllerBaseTests is TestConfig {
         minter.createEditionMint(address(edition), START_TIME, END_TIME);
     }
 
+    function test_createEditionMintIncremenetsNextMintId() external {
+        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+
+        uint256 prevMintId = minter.nextMintId(address(edition));
+        minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        uint256 currentMintId = minter.nextMintId(address(edition));
+        assertEq(currentMintId, prevMintId + 1);
+
+        prevMintId = currentMintId;
+        minter.createEditionMint(address(edition), START_TIME, END_TIME);
+        currentMintId = minter.nextMintId(address(edition));
+        assertEq(currentMintId, prevMintId + 1);
+    }
+
     function test_mintRevertsForWrongEtherValue() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
@@ -180,6 +194,8 @@ contract MintControllerBaseTests is TestConfig {
         assertEq(baseData.endTime, type(uint32).max);
 
         // Set new values
+        vm.expectEmit(true, true, true, true);
+        emit TimeRangeSet(address(edition), mintId, 123, 456);
         minter.setTimeRange(address(edition), mintId, 123, 456);
 
         baseData = minter.baseMintData(address(edition), mintId);

@@ -360,6 +360,8 @@ abstract contract BaseMinter is IERC165, IMinterModule, Ownable {
 
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
+
+        emit TimeRangeSet(edition, mintId, startTime, endTime);
     }
 
     /**
