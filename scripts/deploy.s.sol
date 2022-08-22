@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "@core/SoundEditionV1.sol";
 import "@core/SoundCreatorV1.sol";
 import "@modules/GoldenEggMetadata.sol";
-import "@modules/FixedPricePermissionedSaleMinter.sol";
+import "@modules/FixedPriceSignatureMinter.sol";
 import "@modules/MerkleDropMinter.sol";
 import "@modules/RangeEditionMinter.sol";
 
@@ -14,7 +14,7 @@ contract Deploy is Script {
         vm.startBroadcast();
 
         new GoldenEggMetadataModule();
-        new FixedPricePermissionedSaleMinter();
+        new FixedPriceSignatureMinter();
         new MerkleDropMinter();
         new RangeEditionMinter();
 

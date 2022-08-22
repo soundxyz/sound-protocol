@@ -1,12 +1,13 @@
 pragma solidity ^0.8.16;
 
-import "@core/SoundEditionV1.sol";
-import "@core/SoundCreatorV1.sol";
-import "@modules/RangeEditionMinter.sol";
-import "@core/interfaces/IMinterModule.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
-import "@modules/interfaces/IStandardMint.sol";
-import "../TestConfig.sol";
+import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol";
+import { BaseMinter } from "@modules/BaseMinter.sol";
+import { TestConfig } from "../TestConfig.sol";
 
 contract RangeEditionMinterTests is TestConfig {
     uint256 constant PRICE = 1;
@@ -396,9 +397,9 @@ contract RangeEditionMinterTests is TestConfig {
         (, RangeEditionMinter minter) = _createEditionAndMinter(0);
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
-        bool supportsIStandardMint = minter.supportsInterface(type(IStandardMint).interfaceId);
+        bool supportsIRangeEditionMinter = minter.supportsInterface(type(IRangeEditionMinter).interfaceId);
 
         assertTrue(supportsIMinterModule);
-        assertTrue(supportsIStandardMint);
+        assertTrue(supportsIRangeEditionMinter);
     }
 }

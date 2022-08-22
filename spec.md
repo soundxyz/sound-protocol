@@ -65,7 +65,7 @@ Features:
 - Minter modules pay a fee to Sound.xyz exposed by `SoundFeeRegistry.sol`. Minters technically don't need to pay the fee, but it is a requirement for editions to appear on sound.xyz.
 - Referral fee: TODO
 - Current modules:
-  - `FixedPricePermissionedSaleMinter` 
+  - `FixedPriceSignatureMinter` 
     - Mints tokens at a fixed price for buyers approved to buy via signature verification.
     - The quantity of tokens an address can mint is controlled by the off-chain signature granting process.
   - `RangeEditionMinter`

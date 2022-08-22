@@ -1,13 +1,17 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "@core/SoundEditionV1.sol";
-import "@core/SoundCreatorV1.sol";
-import "@modules/FixedPricePermissionedSaleMinter.sol";
-import "@modules/interfaces/IFixedPricePermissionedMint.sol";
-import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
-import "../TestConfig.sol";
+import { ECDSA } from "solady/utils/ECDSA.sol";
 
-contract FixedPricePermissionedSaleMinterTests is TestConfig {
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
+import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
+import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
+import { TestConfig } from "../TestConfig.sol";
+
+contract FixedPriceSignatureMinterTests is TestConfig {
     using ECDSA for bytes32;
 
     uint256 constant PRICE = 1;
@@ -18,7 +22,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     uint32 constant END_TIME = type(uint32).max;
 
     // prettier-ignore
-    event FixedPricePermissionedMintCreated(
+    event FixedPriceSignatureMintCreated(
         address indexed edition,
         uint256 indexed mintId,
         uint256 price,
@@ -36,13 +40,10 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         return abi.encodePacked(r, s, v);
     }
 
-    function _createEditionAndMinter()
-        internal
-        returns (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter)
-    {
+    function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPriceSignatureMinter minter) {
         edition = createGenericEdition();
 
-        minter = new FixedPricePermissionedSaleMinter();
+        minter = new FixedPriceSignatureMinter();
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
@@ -52,11 +53,11 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPricePermissionedMintCreated(address(edition), MINT_ID, PRICE, _signerAddress(), MAX_MINTABLE);
+        emit FixedPriceSignatureMintCreated(address(edition), MINT_ID, PRICE, _signerAddress(), MAX_MINTABLE);
 
         minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, START_TIME, END_TIME);
     }
@@ -64,15 +65,15 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
 
-        vm.expectRevert(FixedPricePermissionedSaleMinter.SignerIsZeroAddress.selector);
+        vm.expectRevert(FixedPriceSignatureMinter.SignerIsZeroAddress.selector);
 
         minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE, START_TIME, END_TIME);
     }
 
     function test_mintWithoutCorrectSignatureReverts() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
@@ -80,12 +81,12 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
         vm.prank(caller);
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
 
-        vm.expectRevert(FixedPricePermissionedSaleMinter.InvalidSignature.selector);
+        vm.expectRevert(FixedPriceSignatureMinter.InvalidSignature.selector);
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintWithWrongEtherValueReverts() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
@@ -98,7 +99,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     }
 
     function test_mintWhenSoldOutReverts() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
@@ -116,7 +117,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
@@ -125,7 +126,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         (status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(FixedPricePermissionedSaleMinter.mint.selector, address(edition), MINT_ID, 1, sig)
+            abi.encodeWithSelector(FixedPriceSignatureMinter.mint.selector, address(edition), MINT_ID, 1, sig)
         );
         assertTrue(status);
 
@@ -134,23 +135,20 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         vm.prank(caller);
         (status, ) = address(minter).call{ value: PRICE }(
-            abi.encodeWithSelector(FixedPricePermissionedSaleMinter.mint.selector, address(edition), MINT_ID, 1, sig)
+            abi.encodeWithSelector(FixedPriceSignatureMinter.mint.selector, address(edition), MINT_ID, 1, sig)
         );
         assertFalse(status);
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
-        (SoundEditionV1 edition, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
         uint32 quantity = 2;
 
-        FixedPricePermissionedSaleMinter.EditionMintData memory data = minter.editionMintData(
-            address(edition),
-            MINT_ID
-        );
+        FixedPriceSignatureMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
@@ -165,14 +163,14 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     }
 
     function test_supportsInterface() public {
-        (, FixedPricePermissionedSaleMinter minter) = _createEditionAndMinter();
+        (, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
-        bool supportsIFixedPricePermissionedMint = minter.supportsInterface(
-            type(IFixedPricePermissionedMint).interfaceId
+        bool supportsIFixedPriceSignatureMinter = minter.supportsInterface(
+            type(IFixedPriceSignatureMinter).interfaceId
         );
 
         assertTrue(supportsIMinterModule);
-        assertTrue(supportsIFixedPricePermissionedMint);
+        assertTrue(supportsIFixedPriceSignatureMinter);
     }
 }

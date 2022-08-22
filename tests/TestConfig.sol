@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 
-import "@core/SoundCreatorV1.sol";
-import "@core/SoundEditionV1.sol";
-import "@core/interfaces/IMetadataModule.sol";
-import "./mocks/MockSoundEditionV1.sol";
+import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
+import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {
     // Artist contract creation vars

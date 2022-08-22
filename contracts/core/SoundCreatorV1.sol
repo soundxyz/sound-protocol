@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
 pragma solidity ^0.8.16;
 
 /*
@@ -28,11 +27,12 @@ pragma solidity ^0.8.16;
                ▓██████████████████████████████████████████████████████████
 */
 
-import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
-import "openzeppelin/proxy/Clones.sol";
-import "openzeppelin/access/Ownable.sol";
+import { ERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import { Clones } from "openzeppelin/proxy/Clones.sol";
+import { Ownable } from "openzeppelin/access/Ownable.sol";
 
-import "./interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
+import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 /**
  * @title Sound Creator V1
