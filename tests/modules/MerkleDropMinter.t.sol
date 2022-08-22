@@ -1,13 +1,14 @@
 pragma solidity ^0.8.16;
 
-import "openzeppelin/utils/cryptography/MerkleProof.sol";
-import "murky/Merkle.sol";
-import "@core/SoundEditionV1.sol";
-import "@core/SoundCreatorV1.sol";
-import "@modules/minter/MerkleDropMinter.sol";
-import "@modules/interfaces/IMerkleDropMint.sol";
+import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
+import { Merkle } from "murky/Merkle.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { MerkleDropMinter } from "@modules/minter/MerkleDropMinter.sol";
+import { IMerkleDropMint } from "@modules/interfaces/IMerkleDropMint.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
-import "../TestConfig.sol";
+import { TestConfig } from "../TestConfig.sol";
 import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
 
 contract MerkleDropMinterTests is TestConfig {

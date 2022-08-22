@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "openzeppelin/utils/Strings.sol";
-import "@modules/minter/RangeEditionMinter.sol";
-import "@modules/GoldenEggMetadata.sol";
-import "../TestConfig.sol";
+import { Strings } from "openzeppelin/utils/Strings.sol";
+import { RangeEditionMinter } from "@modules/minter/RangeEditionMinter.sol";
+import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
+import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { TestConfig } from "../TestConfig.sol";
 
 contract SoundEdition_goldenEgg is TestConfig {
     uint256 constant PRICE = 1 ether;

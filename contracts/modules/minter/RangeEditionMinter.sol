@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.16;
 
-import "openzeppelin/utils/introspection/IERC165.sol";
-import "@modules/interfaces/IStandardMint.sol";
-import "./BaseMinter.sol";
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { IStandardMint } from "@modules/interfaces/IStandardMint.sol";
+import { BaseMinter } from "./BaseMinter.sol";
 import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
 
 /*
