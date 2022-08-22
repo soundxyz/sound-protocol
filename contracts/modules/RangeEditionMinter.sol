@@ -10,48 +10,6 @@ import { BaseMinter } from "./BaseMinter.sol";
  * @dev Minter class for range edition sales.
  */
 contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
-    // ================================
-    // CUSTOM ERRORS
-    // ================================
-
-    /**
-     * The following condition must hold: `maxMintableLower` < `maxMintableUpper`.
-     */
-    error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
-
-    // ================================
-    // EVENTS
-    // ================================
-
-    // prettier-ignore
-    event RangeEditionMintCreated(
-        address indexed edition,
-        uint256 indexed mintId,
-        uint256 price,
-        uint32 startTime,
-        uint32 closingTime,
-        uint32 endTime,
-        uint32 maxMintableLower,
-        uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet
-    );
-
-    event ClosingTimeSet(address indexed edition, uint256 indexed mintId, uint32 closingTime);
-
-    event MaxMintableRangeSet(
-        address indexed edition,
-        uint256 indexed mintId,
-        uint32 maxMintableLower,
-        uint32 maxMintableUpper
-    );
-
-    // The number of tokens minted has exceeded the number allowed for each wallet.
-    error ExceedsMaxPerWallet();
-
-    // ================================
-    // STRUCTS
-    // ================================
-
     struct EditionMintData {
         // The price at which each token will be sold, in ETH.
         uint256 price;

@@ -14,37 +14,6 @@ import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
-    // ================================
-    // EVENTS
-    // ================================
-
-    // prettier-ignore
-    event MerkleDropMintCreated(
-        address indexed edition,
-        uint256 indexed mintId,
-        bytes32 merkleRootHash,
-        uint256 price,
-        uint32 startTime,
-        uint32 endTime,
-        uint32 maxMintable,
-        uint32 maxAllowedPerWallet
-    );
-
-    event DropClaimed(address recipient, uint32 quantity);
-
-    // ================================
-    // ERRORS
-    // ================================
-
-    error InvalidMerkleProof();
-
-    // The number of tokens minted has exceeded the number allowed for each wallet.
-    error ExceedsMaxPerWallet();
-
-    // ================================
-    // STORAGE
-    // ================================
-
     struct EditionMintData {
         // Hash of the root node for the merkle tree drop
         bytes32 merkleRootHash;

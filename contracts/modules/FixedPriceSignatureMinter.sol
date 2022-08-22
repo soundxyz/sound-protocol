@@ -13,29 +13,6 @@ import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMin
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
 
-    // ================================
-    // EVENTS
-    // ================================
-
-    event FixedPriceSignatureMintCreated(
-        address indexed edition,
-        uint256 indexed mintId,
-        uint256 price,
-        address signer,
-        uint32 maxMintable
-    );
-
-    // ================================
-    // ERRORS
-    // ================================
-
-    error InvalidSignature();
-    error SignerIsZeroAddress();
-
-    // ================================
-    // STORAGE
-    // ================================
-
     struct EditionMintData {
         // The price at which each token will be sold, in ETH.
         uint256 price;
