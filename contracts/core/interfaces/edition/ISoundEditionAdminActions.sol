@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 
-interface ISoundEditionOwnerActions {
+interface ISoundEditionAdminActions {
     /**
      *  @dev Sets metadata module
      */
