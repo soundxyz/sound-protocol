@@ -76,7 +76,21 @@ contract SoundEditionV1 is
     bytes32 public mintRandomness;
 
     // ================================
-    // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
+    // MODIFIERS
+    // ================================
+
+    modifier onlyOwnerOrAdmin() {
+        if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
+        _;
+    }
+
+    modifier onlyValidRoyaltyBPS(uint16 royalty) {
+        if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
+        _;
+    }
+
+    // ================================
+    // WRITE FUNCTIONS
     // ================================
 
     /**
@@ -268,20 +282,6 @@ contract SoundEditionV1 is
      */
     function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
-    }
-
-    // ================================
-    // MODIFIERS
-    // ================================
-
-    modifier onlyOwnerOrAdmin() {
-        if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
-        _;
-    }
-
-    modifier onlyValidRoyaltyBPS(uint16 royalty) {
-        if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
-        _;
     }
 
     // ================================
