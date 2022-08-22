@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { FixedPricePermissionedSaleMinter } from "@modules/minter/FixedPricePermissionedSaleMinter.sol";
+import { FixedPricePermissionedSaleMinter } from "@modules/FixedPricePermissionedSaleMinter.sol";
 import { IFixedPricePermissionedMint } from "@modules/interfaces/IFixedPricePermissionedMint.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";

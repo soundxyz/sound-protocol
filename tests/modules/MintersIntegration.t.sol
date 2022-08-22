@@ -4,8 +4,8 @@ import { Merkle } from "murky/Merkle.sol";
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { MerkleDropMinter } from "@modules/minter/MerkleDropMinter.sol";
-import { RangeEditionMinter } from "@modules/minter/RangeEditionMinter.sol";
+import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
+import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract MintersIntegration is TestConfig {

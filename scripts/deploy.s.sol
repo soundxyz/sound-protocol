@@ -5,9 +5,9 @@ import { Script } from "forge-std/Script.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
-import { FixedPricePermissionedSaleMinter } from "@modules/minter/FixedPricePermissionedSaleMinter.sol";
-import { MerkleDropMinter } from "@modules/minter/MerkleDropMinter.sol";
-import { RangeEditionMinter } from "@modules/minter/RangeEditionMinter.sol";
+import { FixedPricePermissionedSaleMinter } from "@modules/FixedPricePermissionedSaleMinter.sol";
+import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
+import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 
 contract Deploy is Script {
     function run() external {

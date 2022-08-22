@@ -2,11 +2,11 @@ pragma solidity ^0.8.16;
 
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { RangeEditionMinter } from "@modules/minter/RangeEditionMinter.sol";
+import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 import { IStandardMint } from "@modules/interfaces/IStandardMint.sol";
-import { BaseMinter } from "@modules/minter/BaseMinter.sol";
+import { BaseMinter } from "@modules/BaseMinter.sol";
 import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 import { TestConfig } from "../TestConfig.sol";
 

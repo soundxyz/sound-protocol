@@ -4,7 +4,7 @@ import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 import { Merkle } from "murky/Merkle.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { MerkleDropMinter } from "@modules/minter/MerkleDropMinter.sol";
+import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { IMerkleDropMint } from "@modules/interfaces/IMerkleDropMint.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
