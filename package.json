@@ -9,7 +9,7 @@
         "slither": "slither . --config-file slither.config.json",
         "prepare": "husky install",
         "postinstall": "forge install",
-        "prettier:write": "prettier --write contracts/**/*.sol"
+        "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol"
     },
     "repository": {
         "type": "git",
