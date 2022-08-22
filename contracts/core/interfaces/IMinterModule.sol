@@ -133,7 +133,7 @@ interface IMinterModule {
         uint16 affiliateDiscountBPS
     ) external;
 
-    function setPlatformFee(uint16 platformFeeBPS) external;
+    function setPlatformFee(uint16 bps) external;
 
     function withdrawForAffiliate(address affiliate) external;
 

@@ -117,30 +117,24 @@ abstract contract BaseMinter is IERC165, IMinterModule, Ownable {
     function setAffiliateFee(
         address edition,
         uint256 mintId,
-        uint16 affiliateFeeBPS
-    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(affiliateFeeBPS) {
-        _baseData[edition][mintId].affiliateFeeBPS = affiliateFeeBPS;
-        emit AffiliateFeeSet(edition, mintId, affiliateFeeBPS);
+        uint16 feeBPS
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(feeBPS) {
+        _baseData[edition][mintId].affiliateFeeBPS = feeBPS;
+        emit AffiliateFeeSet(edition, mintId, feeBPS);
     }
 
     function setAffiliateDiscount(
         address edition,
         uint256 mintId,
-        uint16 affiliateDiscountBPS
-    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(affiliateDiscountBPS) {
-        _baseData[edition][mintId].affiliateDiscountBPS = affiliateDiscountBPS;
-        emit AffiliateDiscountSet(edition, mintId, affiliateDiscountBPS);
+        uint16 discountBPS
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(discountBPS) {
+        _baseData[edition][mintId].affiliateDiscountBPS = discountBPS;
+        emit AffiliateDiscountSet(edition, mintId, discountBPS);
     }
 
-    function setPlatformFee(uint16 platformFeeBPS)
-        public
-        virtual
-        override
-        onlyOwner
-        onlyValidPlatformFeeBPS(platformFeeBPS)
-    {
-        _platformFeeBPS = platformFeeBPS;
-        emit PlatformFeeSet(platformFeeBPS);
+    function setPlatformFee(uint16 feeBPS) public virtual override onlyOwner onlyValidPlatformFeeBPS(feeBPS) {
+        _platformFeeBPS = feeBPS;
+        emit PlatformFeeSet(feeBPS);
     }
 
     function withdrawForAffiliate(address affiliate) public override {

@@ -18,10 +18,8 @@ contract MockMinter is BaseMinter {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        uint256 price,
         address affiliate
     ) external payable {
-        _currentPrice = price;
         _mint(edition, mintId, quantity, affiliate);
     }
 
@@ -44,5 +42,9 @@ contract MockMinter is BaseMinter {
         uint256 /** mintId */
     ) internal view virtual override returns (uint256) {
         return _currentPrice;
+    }
+
+    function setPrice(uint256 price) external {
+        _currentPrice = price;
     }
 }
