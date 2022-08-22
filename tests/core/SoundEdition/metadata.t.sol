@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "openzeppelin/utils/Strings.sol";
+import { Strings } from "openzeppelin/utils/Strings.sol";
+import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
 
-import "@core/SoundEditionV1.sol";
-import "../../TestConfig.sol";
-import "../../mocks/MockMetadataModule.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
+import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { MockSoundEditionV1 } from "../../mocks/MockSoundEditionV1.sol";
+import { MockMetadataModule } from "../../mocks/MockMetadataModule.sol";
+import { TestConfig } from "../../TestConfig.sol";
 
 contract SoundEdition_metadata is TestConfig {
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);

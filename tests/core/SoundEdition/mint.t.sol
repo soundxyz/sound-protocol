@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import "@core/SoundEditionV1.sol";
-import "../../TestConfig.sol";
+import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
+import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { TestConfig } from "../../TestConfig.sol";
 
 /**
  * @dev Tests base minting functionality directly from edition.

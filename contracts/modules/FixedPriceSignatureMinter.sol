@@ -1,25 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
 pragma solidity ^0.8.16;
 
-import "solady/utils/ECDSA.sol";
-import "openzeppelin/utils/introspection/IERC165.sol";
-import "@modules/BaseMinter.sol";
-import "./interfaces/IFixedPricePermissionedMint.sol";
+import { ECDSA } from "solady/utils/ECDSA.sol";
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { BaseMinter } from "@modules/BaseMinter.sol";
+import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter
  * @dev Minter class for sales approved with signatures.
  */
-contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePermissionedMint {
+contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
 
     // ================================
     // EVENTS
     // ================================
 
-    // prettier-ignore
-    event FixedPricePermissionedMintCreated(
+    event FixedPriceSignatureMintCreated(
         address indexed edition,
         uint256 indexed mintId,
         uint256 price,
@@ -74,7 +72,7 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
         data.signer = signer;
         data.maxMintable = maxMintable_;
         // prettier-ignore
-        emit FixedPricePermissionedMintCreated(
+        emit FixedPriceSignatureMintCreated(
             edition,
             mintId,
             price_,
@@ -129,8 +127,7 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
-        return
-            BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPricePermissionedMint).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
     }
 }

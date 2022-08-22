@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "../../TestConfig.sol";
-import "../../mocks/MockERC20.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { MockERC20 } from "../../mocks/MockERC20.sol";
+import { TestConfig } from "../../TestConfig.sol";
 
 contract SoundEdition_payments is TestConfig {
     uint256 constant MAX_BPS = 10_000;

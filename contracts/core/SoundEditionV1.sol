@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
 pragma solidity ^0.8.16;
 
 /*
@@ -28,16 +27,19 @@ pragma solidity ^0.8.16;
                ▓██████████████████████████████████████████████████████████
 */
 
-import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
-import "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
-import "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
-import "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
-import "openzeppelin/token/ERC20/IERC20.sol";
-import "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import "solady/utils/SafeTransferLib.sol";
+import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
+import { ERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import { ERC721AQueryableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
+import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
+import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
+import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import { OwnableUpgradeable } from "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import { AccessControlUpgradeable } from "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
+import { AccessControlEnumerableUpgradeable } from "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
-import "./interfaces/ISoundEditionV1.sol";
-import "./interfaces/IMetadataModule.sol";
+import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
+import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 /**
  * @title SoundEditionV1
@@ -77,7 +79,20 @@ contract SoundEditionV1 is
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
     // ================================
 
-    /// @inheritdoc ISoundEditionActions
+    /**
+     * @dev Initializes the contract
+     * @param owner Owner of contract (artist)
+     * @param name Name of the token
+     * @param symbol Symbol of the token
+     * @param metadataModule_ Address of metadata module, address(0x00) if not used
+     * @param baseURI_ Base URI
+     * @param contractURI_ Contract URI for OpenSea storefront
+     * @param fundingRecipient_ Address that receives primary and secondary royalties
+     * @param royaltyBPS_ Royalty amount in bps (basis points)
+     * @param editionMaxMintable_ The maximum amount of tokens that can be minted for this edition.
+     * @param randomnessLockedAfterMinted_ Token supply after which randomness gets locked
+     * @param randomnessLockedTimestamp_ Timestamp after which randomness gets locked
+     */
     function initialize(
         address owner,
         string memory name,
@@ -118,7 +133,15 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /// @inheritdoc ISoundEditionActions
+    /**
+     * @dev Mints `quantity` tokens to addrress `to`
+     * Each token will be assigned a token ID that is consecutively increasing.
+     * The caller must have the `MINTERROLE`, which can be granted via
+     * {grantRole}. Multiple minters, such as different minter contracts,
+     * can be authorized simultaneously.
+     * @param to Address to mint to
+     * @param quantity Number of tokens to mint
+     */
     function mint(address to, uint256 quantity) public payable {
         address caller = _msgSender();
         // Only allow calls if caller has minter role, admin role, or is the owner.
@@ -133,19 +156,26 @@ contract SoundEditionV1 is
         }
     }
 
-    /// @inheritdoc ISoundEditionActions
+    /**
+     * @dev Withdraws collected ETH royalties to the fundingRecipient
+     */
     function withdrawETH() external {
         SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
     }
 
-    /// @inheritdoc ISoundEditionActions
+    /**
+     * @dev Withdraws collected ERC20 royalties to the fundingRecipient
+     * @param tokens array of ERC20 tokens to withdraw
+     */
     function withdrawERC20(address[] calldata tokens) external {
         for (uint256 i; i < tokens.length; ++i) {
             SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
         }
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     *  @dev Sets metadata module
+     */
     function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
@@ -153,7 +183,9 @@ contract SoundEditionV1 is
         emit MetadataModuleSet(metadataModule_);
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     *  @dev Sets global base URI
+     */
     function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
@@ -161,7 +193,9 @@ contract SoundEditionV1 is
         emit BaseURISet(baseURI_);
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     *   @dev Sets contract URI
+     */
     function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
@@ -169,7 +203,9 @@ contract SoundEditionV1 is
         emit ContractURISet(contractURI_);
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     *   @dev Freezes metadata by preventing any more changes to base URI
+     */
     function freezeMetadata() external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
@@ -177,20 +213,26 @@ contract SoundEditionV1 is
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     * @dev Sets funding recipient address
+     */
     function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     * @dev Sets royalty amount in bps (basis points)
+     */
     function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     *   @dev Reduces the maximum mintable quantity.
+     */
     function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
         if (_totalMinted() == editionMaxMintable) {
             revert MaximumHasAlreadyBeenReached();
@@ -212,14 +254,18 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
+     */
     function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
         if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
 
         randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
     }
 
-    /// @inheritdoc ISoundEditionOwnerActions
+    /**
+     * @dev sets randomnessLockedTimestamp
+     */
     function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
         randomnessLockedTimestamp = randomnessLockedTimestamp_;
     }
@@ -242,7 +288,7 @@ contract SoundEditionV1 is
     // VIEW FUNCTIONS
     // ================================
 
-    /// @inheritdoc ISoundEditionState
+    /// @dev Returns the total amount of tokens minted in the contract
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
     }
@@ -291,7 +337,6 @@ contract SoundEditionV1 is
         return 1;
     }
 
-    /// @inheritdoc ISoundEditionState
     function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
         uint256 count = getRoleMemberCount(role);
 
