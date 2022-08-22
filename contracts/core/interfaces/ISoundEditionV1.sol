@@ -11,7 +11,12 @@ import { IMetadataModule } from "./IMetadataModule.sol";
  * @title ISoundEditionV1
  * @author Sound.xyz
  */
+
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
+    // ================================
+    // EVENTS
+    // ================================
+
     event MetadataModuleSet(IMetadataModule metadataModule);
     event BaseURISet(string baseURI);
     event ContractURISet(string contractURI);
@@ -19,6 +24,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     event FundingRecipientSet(address fundingRecipient);
     event RoyaltySet(uint16 royaltyBPS);
     event EditionMaxMintableSet(uint32 newMax);
+
+    // ================================
+    // ERRORS
+    // ================================
 
     error MetadataIsFrozen();
     error InvalidRoyaltyBPS();
@@ -28,6 +37,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     error InvalidAmount();
     error InvalidFundingRecipient();
     error MaximumHasAlreadyBeenReached();
+
+    // ================================
+    // WRITE FUNCTIONS
+    // ================================
 
     /**
      * @dev Initializes the contract
@@ -124,16 +137,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external;
 
-    /**
-     * @dev Informs other contracts which interfaces this contract supports.
-     * https://eips.ethereum.org/EIPS/eip-165
-     * @param interfaceId The interface id to check.
-     */
-    function supportsInterface(bytes4 interfaceId)
-        external
-        view
-        override(IERC721AUpgradeable, IERC165Upgradeable)
-        returns (bool);
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
 
     /// Getter for minter role hash
     function MINTER_ROLE() external view returns (bytes32);
@@ -154,4 +160,15 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mintRandomness() external view returns (bytes32);
 
     function getMembersOfRole(bytes32 role) external view returns (address[] memory);
+
+    /**
+     * @dev Informs other contracts which interfaces this contract supports.
+     * https://eips.ethereum.org/EIPS/eip-165
+     * @param interfaceId The interface id to check.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        external
+        view
+        override(IERC721AUpgradeable, IERC165Upgradeable)
+        returns (bool);
 }
