@@ -67,7 +67,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
 
-        vm.expectRevert(FixedPriceSignatureMinter.SignerIsZeroAddress.selector);
+        vm.expectRevert(IFixedPriceSignatureMinter.SignerIsZeroAddress.selector);
 
         minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE, START_TIME, END_TIME);
     }
@@ -81,7 +81,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         vm.prank(caller);
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
 
-        vm.expectRevert(FixedPriceSignatureMinter.InvalidSignature.selector);
+        vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 

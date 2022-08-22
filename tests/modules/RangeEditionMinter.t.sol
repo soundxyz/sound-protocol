@@ -104,7 +104,7 @@ contract RangeEditionMinterTests is TestConfig {
         } else if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    RangeEditionMinter.InvalidMaxMintableRange.selector,
+                    IRangeEditionMinter.InvalidMaxMintableRange.selector,
                     maxMintableLower,
                     maxMintableUpper
                 )
@@ -189,7 +189,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(RangeEditionMinter.ExceedsMaxPerWallet.selector);
+        vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerWallet.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2);
     }
 
@@ -371,7 +371,7 @@ contract RangeEditionMinterTests is TestConfig {
         if (!(maxMintableLower < maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    RangeEditionMinter.InvalidMaxMintableRange.selector,
+                    IRangeEditionMinter.InvalidMaxMintableRange.selector,
                     maxMintableLower,
                     maxMintableUpper
                 )
