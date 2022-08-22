@@ -130,7 +130,7 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
         // Revert if attempting to mint more than the max allowed per wallet.
-        if (updatedClaimedQuantity > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
+        if (updatedClaimedQuantity > data.maxAllowedPerWallet) revert ExceedsMaxPerWallet();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
@@ -172,18 +172,6 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
         return _editionMintData[edition][mintId];
-    }
-
-    function price(address edition, uint256 mintId) public view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
-    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
-
-    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxAllowedPerWallet;
     }
 
     function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {

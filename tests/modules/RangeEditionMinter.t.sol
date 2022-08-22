@@ -211,7 +211,7 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.warp(START_TIME);
 
@@ -234,9 +234,8 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintRevertForWrongEtherValue() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
-
         uint32 quantity = 2;
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(quantity);
 
         vm.warp(START_TIME);
 
@@ -253,7 +252,7 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintRevertsForMintNotOpen() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         uint32 quantity = 1;
 
@@ -290,7 +289,7 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintRevertsForSoldOut(uint32 quantityToBuyBeforeClosing, uint32 quantityToBuyAfterClosing) public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         quantityToBuyBeforeClosing = uint32((quantityToBuyBeforeClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
         quantityToBuyAfterClosing = uint32((quantityToBuyAfterClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
@@ -317,12 +316,11 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintBeforeAndAfterClosingTimeBaseCase() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+        uint32 quantity = 1;
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(quantity);
         uint32 maxMintableLower = 0;
         uint32 maxMintableUpper = 1;
         minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
-
-        uint32 quantity = 1;
 
         vm.warp(START_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity);

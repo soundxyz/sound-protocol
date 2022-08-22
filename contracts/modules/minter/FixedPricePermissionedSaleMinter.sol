@@ -117,18 +117,6 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
-
-    function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
-        return type(uint32).max;
-    }
-
     function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
