@@ -6,8 +6,8 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockMinter } from "../mocks/MockMinter.sol";
-import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
-import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 contract MintControllerBaseTests is TestConfig {
     event MintConfigCreated(
@@ -50,7 +50,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address attacker = getFundedAccount(1);
 
-        vm.expectRevert(IMinterModuleEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
         vm.prank(attacker);
         minter.createEditionMint(address(edition), START_TIME, END_TIME);
     }
@@ -89,9 +89,7 @@ contract MintControllerBaseTests is TestConfig {
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
         uint256 price = 1;
-        vm.expectRevert(
-            abi.encodeWithSelector(IMinterModuleEventsAndErrors.WrongEtherValue.selector, price * 2 - 1, price * 2)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.WrongEtherValue.selector, price * 2 - 1, price * 2));
         minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, price);
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
@@ -105,7 +103,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.setEditionMintPaused(address(edition), mintId, true);
 
         uint256 price = 1;
-        vm.expectRevert(IMinterModuleEventsAndErrors.MintPaused.selector);
+        vm.expectRevert(IMinterModule.MintPaused.selector);
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, price);
 
@@ -174,7 +172,7 @@ contract MintControllerBaseTests is TestConfig {
 
         // Ensure only controller can set time range
         vm.prank(nonController);
-        vm.expectRevert(IMinterModuleEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
         minter.setTimeRange(address(edition), mintId, 456, 789);
     }
 }

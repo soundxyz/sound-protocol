@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
@@ -18,7 +18,7 @@ contract SoundEdition_mint is TestConfig {
 
         SoundEditionV1 edition = createGenericEdition();
 
-        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
 
         vm.prank(nonAdminOrOwner);
         edition.mint(nonAdminOrOwner, 1);
@@ -202,7 +202,7 @@ contract SoundEdition_mint is TestConfig {
         SoundEditionV1 edition = createGenericEdition();
         vm.assume(attacker != address(this));
 
-        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
         vm.prank(attacker);
         edition.reduceEditionMaxMintable(1);
     }
@@ -213,7 +213,7 @@ contract SoundEdition_mint is TestConfig {
         edition.reduceEditionMaxMintable(10);
 
         // Attempt to increase max mintable above current max - should fail
-        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidAmount.selector);
+        vm.expectRevert(ISoundEditionV1.InvalidAmount.selector);
         edition.reduceEditionMaxMintable(11);
 
         // Mint some tokens
@@ -225,7 +225,7 @@ contract SoundEdition_mint is TestConfig {
         assert(edition.editionMaxMintable() == 5);
 
         // Attempt to lower again - should revert
-        vm.expectRevert(ISoundEditionEventsAndErrors.MaximumHasAlreadyBeenReached.selector);
+        vm.expectRevert(ISoundEditionV1.MaximumHasAlreadyBeenReached.selector);
         edition.reduceEditionMaxMintable(4);
     }
 }

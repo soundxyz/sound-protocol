@@ -5,26 +5,162 @@ import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgr
 import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import { IERC165Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC165Upgradeable.sol";
 
-import { ISoundEditionActions } from "./edition/ISoundEditionActions.sol";
-import { ISoundEditionImmutables } from "./edition/ISoundEditionImmutables.sol";
-import { ISoundEditionEventsAndErrors } from "./edition/ISoundEditionEventsAndErrors.sol";
-import { ISoundEditionOwnerActions } from "./edition/ISoundEditionOwnerActions.sol";
-import { ISoundEditionState } from "./edition/ISoundEditionState.sol";
 import { IMetadataModule } from "./IMetadataModule.sol";
 
 /**
  * @title ISoundEditionV1
  * @author Sound.xyz
  */
-interface ISoundEditionV1 is
-    IERC721AUpgradeable,
-    IERC2981Upgradeable,
-    ISoundEditionActions,
-    ISoundEditionImmutables,
-    ISoundEditionEventsAndErrors,
-    ISoundEditionOwnerActions,
-    ISoundEditionState
-{
+
+interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
+    // ================================
+    // EVENTS
+    // ================================
+
+    event MetadataModuleSet(IMetadataModule metadataModule);
+    event BaseURISet(string baseURI);
+    event ContractURISet(string contractURI);
+    event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
+    event FundingRecipientSet(address fundingRecipient);
+    event RoyaltySet(uint16 royaltyBPS);
+    event EditionMaxMintableSet(uint32 newMax);
+
+    // ================================
+    // ERRORS
+    // ================================
+
+    error MetadataIsFrozen();
+    error InvalidRoyaltyBPS();
+    error InvalidRandomnessLock();
+    error Unauthorized();
+    error EditionMaxMintableReached();
+    error InvalidAmount();
+    error InvalidFundingRecipient();
+    error MaximumHasAlreadyBeenReached();
+
+    // ================================
+    // WRITE FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Initializes the contract
+     * @param owner Owner of contract (artist)
+     * @param name Name of the token
+     * @param symbol Symbol of the token
+     * @param metadataModule Address of metadata module, address(0x00) if not used
+     * @param baseURI Base URI
+     * @param contractURI Contract URI for OpenSea storefront
+     * @param fundingRecipient Address that receives primary and secondary royalties
+     * @param royaltyBPS Royalty amount in bps (basis points)
+     * @param editionMaxMintable The maximum amount of tokens that can be minted for this edition.
+     * @param randomnessLockedAfterMinted Token supply after which randomness gets locked
+     * @param randomnessLockedTimestamp Timestamp after which randomness gets locked
+     */
+    function initialize(
+        address owner,
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule,
+        string memory baseURI,
+        string memory contractURI,
+        address fundingRecipient,
+        uint16 royaltyBPS,
+        uint32 editionMaxMintable,
+        uint32 randomnessLockedAfterMinted,
+        uint32 randomnessLockedTimestamp
+    ) external;
+
+    /**
+     * @dev Mints `quantity` tokens to addrress `to`
+     * Each token will be assigned a token ID that is consecutively increasing.
+     * The caller must have the `MINTERROLE`, which can be granted via
+     * {grantRole}. Multiple minters, such as different minter contracts,
+     * can be authorized simultaneously.
+     * @param to Address to mint to
+     * @param quantity Number of tokens to mint
+     */
+    function mint(address to, uint256 quantity) external payable;
+
+    /**
+     * @dev Withdraws collected ETH royalties to the fundingRecipient
+     */
+    function withdrawETH() external;
+
+    /**
+     * @dev Withdraws collected ERC20 royalties to the fundingRecipient
+     * @param tokens array of ERC20 tokens to withdraw
+     */
+    function withdrawERC20(address[] calldata tokens) external;
+
+    /**
+     *  @dev Sets metadata module
+     */
+    function setMetadataModule(IMetadataModule metadataModule) external;
+
+    /**
+     *  @dev Sets global base URI
+     */
+    function setBaseURI(string memory baseURI) external;
+
+    /**
+     *   @dev Sets contract URI
+     */
+    function setContractURI(string memory contractURI) external;
+
+    /**
+     *   @dev Freezes metadata by preventing any more changes to base URI
+     */
+    function freezeMetadata() external;
+
+    /**
+     * @dev Sets funding recipient address
+     */
+    function setFundingRecipient(address fundingRecipient) external;
+
+    /**
+     * @dev Sets royalty amount in bps (basis points)
+     */
+    function setRoyalty(uint16 royaltyBPS) external;
+
+    /**
+     *   @dev Reduces the maximum mintable quantity.
+     */
+    function reduceEditionMaxMintable(uint32 newMax) external;
+
+    /**
+     * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
+     */
+    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted) external;
+
+    /**
+     * @dev sets randomnessLockedTimestamp
+     */
+    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external;
+
+    // ================================
+    // VIEW FUNCTIONS
+    // ================================
+
+    /// Getter for minter role hash
+    function MINTER_ROLE() external view returns (bytes32);
+
+    /// Getter for admin role hash
+    function ADMIN_ROLE() external view returns (bytes32);
+
+    /// @dev Returns the base token URI for the collection
+    function baseURI() external view returns (string memory);
+
+    /// @dev Returns the total amount of tokens minted in the contract
+    function totalMinted() external view returns (uint256);
+
+    function randomnessLockedAfterMinted() external view returns (uint32);
+
+    function randomnessLockedTimestamp() external view returns (uint32);
+
+    function mintRandomness() external view returns (bytes32);
+
+    function getMembersOfRole(bytes32 role) external view returns (address[] memory);
+
     /**
      * @dev Informs other contracts which interfaces this contract supports.
      * https://eips.ethereum.org/EIPS/eip-165

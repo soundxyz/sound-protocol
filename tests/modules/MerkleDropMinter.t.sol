@@ -8,7 +8,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
-import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
@@ -92,7 +92,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        vm.expectRevert(MerkleDropMinter.ExceedsMaxPerWallet.selector);
+        vm.expectRevert(IMerkleDropMinter.ExceedsMaxPerWallet.selector);
         // Max is 1 but buyer is requesting 2
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
@@ -106,7 +106,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleEventsAndErrors.MaxMintableReached.selector, 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, 2));
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
 
@@ -117,7 +117,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
         uint32 requestedQuantity = 1;
-        vm.expectRevert(MerkleDropMinter.InvalidMerkleProof.selector);
+        vm.expectRevert(IMerkleDropMinter.InvalidMerkleProof.selector);
         minter.mint(address(edition), mintId, requestedQuantity, proof);
     }
 
