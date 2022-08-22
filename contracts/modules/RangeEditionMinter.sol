@@ -27,10 +27,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxAllowedPerWallet;
     }
 
-    // ================================
-    // STORAGE
-    // ================================
-
     /**
      * @dev Edition mint data
      * edition => mintId => EditionMintData
@@ -42,6 +38,22 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      * edition => mintId => buyer => mintedTallies
      */
     mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
+
+    // ================================
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidRangeTimes(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) virtual {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        _;
+    }
 
     // ================================
     // WRITE FUNCTIONS
@@ -178,24 +190,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     }
 
     // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
-
-    /**
-     * @dev Optional validation function that gets called by _setTimeRange()
-     */
-    function _beforeSetTimeRange(
-        address edition,
-        uint256 mintId,
-        uint32 startTime,
-        uint32 endTime
-    ) internal view override {
-        uint32 closingTime = _editionMintData[edition][mintId].closingTime;
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-    }
-
-    // ================================
-    // EXTERNAL VIEW
+    // VIEW FUNCTIONS
     // ================================
 
     function price(address edition, uint256 mintId) public view returns (uint256) {
@@ -219,26 +214,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
                 : type(uint32).max;
     }
 
-    // ================================
-    // MODIFIERS
-    // ================================
-
-    /**
-     * @dev Restricts the start time to be less than the end time.
-     */
-    modifier onlyValidRangeTimes(
-        uint32 startTime,
-        uint32 closingTime,
-        uint32 endTime
-    ) virtual {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-        _;
-    }
-
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
-
     /**
      * @dev Returns the `EditionMintData` for `edition.
      * @param edition Address of the song edition contract we are minting for.
@@ -250,5 +225,22 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Optional validation function that gets called by _setTimeRange()
+     */
+    function _beforeSetTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) internal view override {
+        uint32 closingTime = _editionMintData[edition][mintId].closingTime;
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
     }
 }
