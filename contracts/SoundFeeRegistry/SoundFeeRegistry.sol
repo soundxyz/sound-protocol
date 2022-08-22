@@ -13,54 +13,83 @@ contract SoundFeeRegistry is Ownable {
     // CONSTANTS
     // ================================
 
-    uint256 private constant MAX_BPS = 10_000;
+    /**
+     * @dev This is the denominator, in basis points (BPS), for platform fees
+     */
+    uint16 private constant MAX_BPS = 10_000;
 
     // ================================
     // STORAGE
     // ================================
 
+    /**
+     * @dev The sound protocol's address that receives platform fees.
+     */
     address public soundFeeAddress;
 
     /**
-     * @dev platform fee in bps (0 to 10,000)
+     * @dev The numerator of the platform fee.
      */
-    uint32 public platformBPSFee;
+    uint16 public platformFeeBPS;
 
     // ================================
     // EVENTS & ERRORS
     // ================================
-    event SoundFeeAddressSet(address soundFeeAddress);
-    event PlatformFeeSet(uint32 platformBPSFee);
 
-    error InvalidBPSFee();
+    /**
+     * @notice Emitted when the `soundFeeAddress` is changed.
+     */
+    event SoundFeeAddressSet(address soundFeeAddress);
+
+    /**
+     * @notice Emitted when the `platformFeeBPS` is changed.
+     */
+    event PlatformFeeSet(uint16 platformFeeBPS);
+
+    /**
+     * The platform fee numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidPlatformFeeBPS();
 
     // ================================
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
     // ================================
 
-    constructor(address soundFeeAddress_, uint32 platformBPSFee_) {
+    constructor(address soundFeeAddress_, uint16 platformFeeBPS_) onlyValidPlatformFeeBPS(platformFeeBPS_) {
         soundFeeAddress = soundFeeAddress_;
 
-        _verifyBPS(platformBPSFee_);
-        platformBPSFee = platformBPSFee_;
+        platformFeeBPS = platformFeeBPS_;
     }
 
+    /**
+     * @dev Sets the `soundFeeAddress`.
+     * Calling conditions:
+     * - The caller must be the owner of the contract.
+     */
     function setSoundFeeAddress(address soundFeeAddress_) external onlyOwner {
         soundFeeAddress = soundFeeAddress_;
         emit SoundFeeAddressSet(soundFeeAddress_);
     }
 
-    function setPlatformBPSFee(uint32 platformBPSFee_) external onlyOwner {
-        _verifyBPS(platformBPSFee_);
-        platformBPSFee = platformBPSFee_;
-        emit PlatformFeeSet(platformBPSFee_);
+    /**
+     * @dev Sets the `platformFeePBS`.
+     * Calling conditions:
+     * - The caller must be the owner of the contract.
+     */
+    function setPlatformFeeBPS(uint16 platformFeeBPS_) external onlyOwner onlyValidPlatformFeeBPS(platformFeeBPS_) {
+        platformFeeBPS = platformFeeBPS_;
+        emit PlatformFeeSet(platformFeeBPS_);
     }
 
     // ================================
-    // INTERNAL FUNCTIONS
+    // MODIFIERS
     // ================================
 
-    function _verifyBPS(uint32 fee) internal pure {
-        if (fee > MAX_BPS) revert InvalidBPSFee();
+    /**
+     * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) {
+        if (platformFeeBPS_ > MAX_BPS) revert InvalidPlatformFeeBPS();
+        _;
     }
 }
