@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "../contracts/SoundCreator/SoundCreatorV1.sol";
 import "../contracts/SoundEdition/SoundEditionV1.sol";
-import "../contracts/modules/Metadata/IMetadataModule.sol";
+import "../contracts/interfaces/IMetadataModule.sol";
 import "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {
@@ -15,6 +15,8 @@ contract TestConfig is Test {
     IMetadataModule constant METADATA_MODULE = IMetadataModule(address(390720730));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
+    address constant FUNDING_RECIPIENT = address(99);
+    uint16 constant ROYALTY_BPS = 100;
     address public constant ARTIST_ADMIN = address(8888888888);
     uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
@@ -29,9 +31,12 @@ contract TestConfig is Test {
         soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
     }
 
-    // Returns a random address funded with ETH
-    function getRandomAccount(uint256 num) public returns (address) {
-        address addr = address(uint160(uint256(keccak256(abi.encodePacked(num)))));
+    /**
+     * @dev Returns an address funded with ETH
+     * @param num Number used to generate the address (more convenient than passing address(num))
+     */
+    function getFundedAccount(uint256 num) public returns (address) {
+        address addr = vm.addr(num);
         // Fund with some ETH
         vm.deal(addr, 1e19);
 
@@ -47,6 +52,8 @@ contract TestConfig is Test {
                     METADATA_MODULE,
                     BASE_URI,
                     CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS,
                     EDITION_MAX_MINTABLE,
                     EDITION_MAX_MINTABLE,
                     RANDOMNESS_LOCKED_TIMESTAMP

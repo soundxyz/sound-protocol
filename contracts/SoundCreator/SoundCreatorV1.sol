@@ -28,33 +28,25 @@ pragma solidity ^0.8.16;
                ▓██████████████████████████████████████████████████████████
 */
 
-import "../SoundEdition/ISoundEditionV1.sol";
+import "../interfaces/ISoundEditionV1.sol";
 import "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import "openzeppelin/proxy/Clones.sol";
+import "openzeppelin/access/Ownable.sol";
 
 /**
  * @title Sound Creator V1
  * @dev Factory for deploying Sound edition contracts.
  */
-contract SoundCreatorV1 {
-    /***********************************
-                EVENTS
-    ***********************************/
+contract SoundCreatorV1 is Ownable {
+    event SoundEditionCreated(address indexed soundEdition, address indexed creator);
+    event SoundEditionImplementationSet(address newImplementation);
 
-    event SoundCreated(address indexed soundEdition, address indexed creator);
+    error ImplementationAddressCantBeZero();
 
-    /***********************************
-                STORAGE
-    ***********************************/
+    address public soundEditionImplementation;
 
-    address public nftImplementation;
-
-    /***********************************
-              PUBLIC FUNCTIONS
-    ***********************************/
-
-    constructor(address _nftImplementation) {
-        nftImplementation = _nftImplementation;
+    constructor(address _soundEditionImplementation) implementationNotZero(_soundEditionImplementation) {
+        soundEditionImplementation = _soundEditionImplementation;
     }
 
     /**
@@ -66,12 +58,15 @@ contract SoundCreatorV1 {
         IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
+        address fundingRecipient,
+        uint16 royaltyBPS,
         uint32 editionMaxMintable,
         uint32 randomnessLockedAfterMinted,
         uint32 randomnessLockedTimestamp
-    ) external returns (address soundEdition) {
-        soundEdition = Clones.clone(nftImplementation);
-
+    ) external returns (address payable soundEdition) {
+        // Create Sound Edition proxy
+        soundEdition = payable(Clones.clone(soundEditionImplementation));
+        // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
             name,
@@ -79,11 +74,33 @@ contract SoundCreatorV1 {
             metadataModule,
             baseURI,
             contractURI,
+            fundingRecipient,
+            royaltyBPS,
             editionMaxMintable,
             randomnessLockedAfterMinted,
             randomnessLockedTimestamp
         );
 
-        emit SoundCreated(soundEdition, msg.sender);
+        emit SoundEditionCreated(soundEdition, msg.sender);
+    }
+
+    /**
+     * @dev Changes the SoundEdition implementation contract address.
+     */
+    function setEditionImplementation(address newImplementation)
+        external
+        onlyOwner
+        implementationNotZero(newImplementation)
+    {
+        soundEditionImplementation = newImplementation;
+
+        emit SoundEditionImplementationSet(soundEditionImplementation);
+    }
+
+    modifier implementationNotZero(address implementation) {
+        if (implementation == address(0)) {
+            revert ImplementationAddressCantBeZero();
+        }
+        _;
     }
 }
