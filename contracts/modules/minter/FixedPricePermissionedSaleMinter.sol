@@ -4,8 +4,9 @@ pragma solidity ^0.8.16;
 
 import "solady/utils/ECDSA.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
-import "@modules/BaseMinter.sol";
-import "./interfaces/IFixedPricePermissionedMint.sol";
+import "@modules/interfaces/IFixedPricePermissionedMint.sol";
+import "./BaseMinter.sol";
+import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter
@@ -126,6 +127,23 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
 
     function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
         return type(uint32).max;
+    }
+
+    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        StandardMintData memory combinedMintData = StandardMintData(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            0,
+            mintData.totalMinted
+        );
+
+        return combinedMintData;
     }
 
     /// @inheritdoc IERC165

@@ -5,9 +5,9 @@ import "forge-std/Script.sol";
 import "@core/SoundEditionV1.sol";
 import "@core/SoundCreatorV1.sol";
 import "@modules/GoldenEggMetadata.sol";
-import "@modules/FixedPricePermissionedSaleMinter.sol";
-import "@modules/MerkleDropMinter.sol";
-import "@modules/RangeEditionMinter.sol";
+import "@modules/minter/FixedPricePermissionedSaleMinter.sol";
+import "@modules/minter/MerkleDropMinter.sol";
+import "@modules/minter/RangeEditionMinter.sol";
 
 contract Deploy is Script {
     function run() external {

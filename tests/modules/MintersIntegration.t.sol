@@ -6,8 +6,8 @@ import "forge-std/console2.sol";
 
 import "@core/SoundEditionV1.sol";
 import "@core/SoundCreatorV1.sol";
-import "@modules/MerkleDropMinter.sol";
-import "@modules/RangeEditionMinter.sol";
+import "@modules/minter/MerkleDropMinter.sol";
+import "@modules/minter/RangeEditionMinter.sol";
 import "../TestConfig.sol";
 
 contract MintersIntegration is TestConfig {

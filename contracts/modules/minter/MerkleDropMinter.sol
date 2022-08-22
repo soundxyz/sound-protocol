@@ -7,8 +7,9 @@ import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "openzeppelin/utils/structs/EnumerableMap.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
 import "@core/interfaces/ISoundEditionV1.sol";
-import "@modules/BaseMinter.sol";
-import "./interfaces/IMerkleDropMint.sol";
+import "@modules/interfaces/IMerkleDropMint.sol";
+import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
+import "./BaseMinter.sol";
 
 /// @dev Airdrop using merkle tree logic.
 contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
@@ -183,6 +184,23 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
 
     function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    }
+
+    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        StandardMintData memory combinedMintData = StandardMintData(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            mintData.maxAllowedPerWallet,
+            mintData.totalMinted
+        );
+
+        return combinedMintData;
     }
 
     /// @inheritdoc IERC165

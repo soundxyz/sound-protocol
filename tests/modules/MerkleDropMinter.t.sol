@@ -4,10 +4,11 @@ import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "murky/Merkle.sol";
 import "@core/SoundEditionV1.sol";
 import "@core/SoundCreatorV1.sol";
-import "@modules/MerkleDropMinter.sol";
+import "@modules/minter/MerkleDropMinter.sol";
 import "@modules/interfaces/IMerkleDropMint.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 import "../TestConfig.sol";
+import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
 
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
@@ -145,5 +146,38 @@ contract MerkleDropMinterTests is TestConfig {
 
         assertTrue(supportsIMinterModule);
         assertTrue(supportsIMerkleDropMint);
+    }
+
+    function test_standardMintData() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        MerkleDropMinter minter = new MerkleDropMinter();
+        setUpMerkleTree(address(edition));
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedMaxMintable = 39730302;
+        uint32 expectedMaxPerWallet = 397;
+
+        uint256 mintId = minter.createEditionMint(
+            address(edition),
+            root,
+            0,
+            expectedStartTime,
+            expectedEndTime,
+            expectedMaxMintable,
+            expectedMaxPerWallet
+        );
+
+        StandardMintData memory mintData = minter.standardMintData(address(edition), mintId);
+
+        assertEq(mintData.startTime, expectedStartTime);
+        assertEq(mintData.endTime, expectedEndTime);
+        assertEq(mintData.mintPaused, false);
+        assertEq(mintData.maxMintable, expectedMaxMintable);
+        assertEq(mintData.maxAllowedPerWallet, expectedMaxPerWallet);
+        assertEq(mintData.totalMinted, 0);
     }
 }

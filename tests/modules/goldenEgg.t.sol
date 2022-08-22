@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import "openzeppelin/utils/Strings.sol";
-import "@modules/RangeEditionMinter.sol";
+import "@modules/minter/RangeEditionMinter.sol";
 import "@modules/GoldenEggMetadata.sol";
 import "../TestConfig.sol";
 

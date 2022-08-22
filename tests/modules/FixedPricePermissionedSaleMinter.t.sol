@@ -2,10 +2,11 @@ pragma solidity ^0.8.16;
 
 import "@core/SoundEditionV1.sol";
 import "@core/SoundCreatorV1.sol";
-import "@modules/FixedPricePermissionedSaleMinter.sol";
+import "@modules/minter/FixedPricePermissionedSaleMinter.sol";
 import "@modules/interfaces/IFixedPricePermissionedMint.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 import "../TestConfig.sol";
+import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
 
 contract FixedPricePermissionedSaleMinterTests is TestConfig {
     using ECDSA for bytes32;
@@ -174,5 +175,36 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
 
         assertTrue(supportsIMinterModule);
         assertTrue(supportsIFixedPricePermissionedMint);
+    }
+
+    function test_standardMintData() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedPrice = 1234071;
+
+        minter.createEditionMint(
+            address(edition),
+            expectedPrice,
+            _signerAddress(),
+            MAX_MINTABLE,
+            expectedStartTime,
+            expectedEndTime
+        );
+
+        StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
+
+        assertEq(mintData.startTime, expectedStartTime);
+        assertEq(mintData.endTime, expectedEndTime);
+        assertEq(mintData.mintPaused, false);
+        assertEq(mintData.price, expectedPrice);
+        assertEq(mintData.maxAllowedPerWallet, 0);
+        assertEq(mintData.maxMintable, MAX_MINTABLE);
+        assertEq(mintData.totalMinted, 0);
     }
 }

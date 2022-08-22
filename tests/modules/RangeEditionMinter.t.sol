@@ -2,11 +2,12 @@ pragma solidity ^0.8.16;
 
 import "@core/SoundEditionV1.sol";
 import "@core/SoundCreatorV1.sol";
-import "@modules/RangeEditionMinter.sol";
+import "@modules/minter/RangeEditionMinter.sol";
 import "@core/interfaces/IMinterModule.sol";
 import { IMinterModuleEventsAndErrors } from "@core/interfaces/minter/IMinterModuleEventsAndErrors.sol";
 import "@modules/interfaces/IStandardMint.sol";
 import "../TestConfig.sol";
+import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
 
 contract RangeEditionMinterTests is TestConfig {
     uint256 constant PRICE = 1;
@@ -400,5 +401,48 @@ contract RangeEditionMinterTests is TestConfig {
 
         assertTrue(supportsIMinterModule);
         assertTrue(supportsIStandardMint);
+    }
+
+    function test_standardMintData() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        RangeEditionMinter minter = new RangeEditionMinter();
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedPrice = 1234071;
+        uint32 expectedMaxAllowedPerWallet = 937;
+
+        minter.createEditionMint(
+            address(edition),
+            expectedPrice,
+            expectedStartTime,
+            CLOSING_TIME,
+            expectedEndTime,
+            MAX_MINTABLE_LOWER,
+            MAX_MINTABLE_UPPER,
+            expectedMaxAllowedPerWallet
+        );
+
+        StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
+
+        assertEq(mintData.startTime, expectedStartTime);
+        assertEq(mintData.endTime, expectedEndTime);
+        assertEq(mintData.mintPaused, false);
+        assertEq(mintData.price, expectedPrice);
+        assertEq(mintData.maxAllowedPerWallet, expectedMaxAllowedPerWallet);
+        assertEq(mintData.maxMintable, MAX_MINTABLE_UPPER);
+        assertEq(mintData.totalMinted, 0);
+
+        // Warp to closing time & mint some tokens to test that maxMintable & totalMinted changed
+        vm.warp(CLOSING_TIME);
+        minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, 4);
+
+        mintData = minter.standardMintData(address(edition), MINT_ID);
+
+        assertEq(mintData.maxMintable, MAX_MINTABLE_LOWER);
+        assertEq(mintData.totalMinted, 4);
     }
 }

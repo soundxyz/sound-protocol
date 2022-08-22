@@ -3,8 +3,9 @@
 pragma solidity ^0.8.16;
 
 import "openzeppelin/utils/introspection/IERC165.sol";
-import "./interfaces/IStandardMint.sol";
+import "@modules/interfaces/IStandardMint.sol";
 import "./BaseMinter.sol";
+import { StandardMintData } from "@core/interfaces/minter/minterStructs.sol";
 
 /*
  * @dev Minter class for range edition sales.
@@ -236,8 +237,37 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
     }
 
+    /**
+     * @dev Gets the current maximum mintable quantity.
+     */
+    function _getMaxMintable(EditionMintData storage data) internal view returns (uint32) {
+        uint32 _maxMintable;
+        if (block.timestamp < data.closingTime) {
+            _maxMintable = data.maxMintableUpper;
+        } else {
+            _maxMintable = data.maxMintableLower;
+        }
+        return _maxMintable;
+    }
+
     // ================================
-    // EXTERNAL VIEW
+    // MODIFIERS
+    // ================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     */
+    modifier onlyValidRangeTimes(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) virtual {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        _;
+    }
+
+    // ================================
+    // VIEW FUNCTIONS
     // ================================
 
     function price(address edition, uint256 mintId) public view returns (uint256) {
@@ -261,32 +291,30 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
                 : type(uint32).max;
     }
 
-    // ================================
-    // MODIFIERS
-    // ================================
-
-    /**
-     * @dev Restricts the start time to be less than the end time.
-     */
-    modifier onlyValidRangeTimes(
-        uint32 startTime,
-        uint32 closingTime,
-        uint32 endTime
-    ) virtual {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-        _;
-    }
-
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
-
     /**
      * @dev Returns the `EditionMintData` for `edition.
      * @param edition Address of the song edition contract we are minting for.
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
         return _editionMintData[edition][mintId];
+    }
+
+    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+        uint32 _maxMintable = _getMaxMintable(mintData);
+
+        StandardMintData memory combinedMintData = StandardMintData(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            _maxMintable,
+            mintData.maxAllowedPerWallet,
+            mintData.totalMinted
+        );
+
+        return combinedMintData;
     }
 
     /// @inheritdoc IERC165
