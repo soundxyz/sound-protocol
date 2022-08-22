@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.16;
 
-import "forge-std/Script.sol";
-import "@core/SoundEditionV1.sol";
-import "@core/SoundCreatorV1.sol";
-import "@modules/GoldenEggMetadata.sol";
-import "@modules/FixedPriceSignatureMinter.sol";
-import "@modules/MerkleDropMinter.sol";
-import "@modules/RangeEditionMinter.sol";
+import { Script } from "forge-std/Script.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
+import { FixedPricePermissionedSaleMinter } from "@modules/FixedPricePermissionedSaleMinter.sol";
+import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
+import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 
 contract Deploy is Script {
     function run() external {
@@ -19,7 +19,8 @@ contract Deploy is Script {
         new RangeEditionMinter();
 
         SoundEditionV1 soundEdition = new SoundEditionV1();
-        new SoundCreatorV1(address(soundEdition), address(0));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(0));
+        soundCreator.initialize(address(soundEdition));
 
         vm.stopBroadcast();
     }
