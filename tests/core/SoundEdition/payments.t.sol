@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { ISoundEditionEventsAndErrors } from "@core/interfaces/edition/ISoundEditionEventsAndErrors.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { MockERC20 } from "../../mocks/MockERC20.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
@@ -15,7 +15,7 @@ contract SoundEdition_payments is TestConfig {
     function test_initializeRevertsForInvalidRoyaltyBPS(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
 
-        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidRoyaltyBPS.selector);
+        vm.expectRevert(ISoundEditionV1.InvalidRoyaltyBPS.selector);
         soundCreator.createSound(
             SONG_NAME,
             SONG_SYMBOL,
@@ -31,7 +31,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_initializeRevertsForInvalidFundingRecipient() public {
-        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidFundingRecipient.selector);
+        vm.expectRevert(ISoundEditionV1.InvalidFundingRecipient.selector);
         soundCreator.createSound(
             SONG_NAME,
             SONG_SYMBOL,
@@ -114,14 +114,14 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
         edition.setFundingRecipient(getFundedAccount(2));
     }
 
     function test_setFundingRecipientRevertsForZeroAddress() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidFundingRecipient.selector);
+        vm.expectRevert(ISoundEditionV1.InvalidFundingRecipient.selector);
         edition.setFundingRecipient(address(0));
     }
 
@@ -153,7 +153,7 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionEventsAndErrors.Unauthorized.selector);
+        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
         edition.setRoyalty(500);
     }
 
@@ -161,7 +161,7 @@ contract SoundEdition_payments is TestConfig {
         vm.assume(royaltyBPS > MAX_BPS);
         SoundEditionV1 edition = createGenericEdition();
 
-        vm.expectRevert(ISoundEditionEventsAndErrors.InvalidRoyaltyBPS.selector);
+        vm.expectRevert(ISoundEditionV1.InvalidRoyaltyBPS.selector);
         edition.setRoyalty(royaltyBPS);
     }
 
