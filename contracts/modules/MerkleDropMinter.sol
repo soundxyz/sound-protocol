@@ -22,7 +22,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         // The maximum number of tokens that can can be minted for this sale.
         uint32 maxMintable;
         // The maximum number of tokens that a wallet can mint.
-        uint32 maxAllowedPerWallet;
+        uint32 maxMintablePerAccount;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
     }
@@ -44,7 +44,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
-     * @param maxAllowedPerWallet_ The maximum number of tokens that a single wallet can mint.
+     * @param maxMintablePerAccount_ The maximum number of tokens that a single wallet can mint.
      */
     function createEditionMint(
         address edition,
@@ -53,7 +53,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable_,
-        uint32 maxAllowedPerWallet_
+        uint32 maxMintablePerAccount_
     ) public returns (uint256 mintId) {
         mintId = _createEditionMint(edition, startTime, endTime);
 
@@ -61,7 +61,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         data.merkleRootHash = merkleRootHash;
         data.price = price_;
         data.maxMintable = maxMintable_;
-        data.maxAllowedPerWallet = maxAllowedPerWallet_;
+        data.maxMintablePerAccount = maxMintablePerAccount_;
         // prettier-ignore
         emit MerkleDropMintCreated(
             edition,
@@ -71,7 +71,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
             startTime,
             endTime,
             maxMintable_,
-            maxAllowedPerWallet_
+            maxMintablePerAccount_
         );
     }
 
@@ -80,7 +80,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId Id of the mint instance.
      * This is the maximum the user can claim.
-     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxAllowedPerWallet`
+     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxMintablePerAccount`
      * @param merkleProof Merkle proof for the claim.
      */
     function mint(
@@ -99,7 +99,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
         // Revert if attempting to mint more than the max allowed per wallet.
-        if (updatedClaimedQuantity > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
+        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerWallet();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
@@ -151,8 +151,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
-    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxAllowedPerWallet;
+    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
+        return _editionMintData[edition][mintId].maxMintablePerAccount;
     }
 
     /// @inheritdoc IERC165

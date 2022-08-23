@@ -221,5 +221,5 @@ interface IMinterModule {
     /**
      * @dev Returns the maximum tokens mintable per wallet for (`edition`, `mintId`).
      */
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32);
+    function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
 }

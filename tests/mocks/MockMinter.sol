@@ -30,7 +30,7 @@ contract MockMinter is BaseMinter {
         return type(uint32).max;
     }
 
-    function maxAllowedPerWallet(
+    function maxMintablePerAccount(
         address, /** edition */
         uint256 /** mintId */
     ) external pure returns (uint32) {

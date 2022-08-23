@@ -77,10 +77,10 @@ Features:
         -   The quantity of tokens an address can mint is controlled by the off-chain signature granting process.
     -   `RangeEditionMinter`
         -   Mints either a fixed quantity or a quantity [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30) based on time bounds.
-        -   The quantity of tokens an address can mint is constrained by `maxAllowedPerWallet`.
+        -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.
     -   `MerkleDropMinter`
         -   Enables a predefined list of recipients to mint tokens at a fixed price.
         -   The price can be zero.
         -   The eligible token quantity for each recipient can be unique.
         -   Each whitelisted user can claim their eligible amount in multiple transactions.
-        -   The quantity of tokens an address can mint is constrained by `maxAllowedPerWallet`.
+        -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.

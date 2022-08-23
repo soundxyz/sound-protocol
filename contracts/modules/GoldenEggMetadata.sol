@@ -22,11 +22,11 @@ contract GoldenEggMetadata is IMetadataModule {
      */
     function getGoldenEggTokenId(ISoundEditionV1 edition) public view returns (uint256 tokenId) {
         if (
-            edition.totalMinted() >= edition.randomnessLockedAfterMinted() ||
-            block.timestamp >= edition.randomnessLockedTimestamp()
+            edition.totalMinted() >= edition.mintRandomnessTokenThreshold() ||
+            block.timestamp >= edition.mintRandomnessTimeThreshold()
         ) {
-            // calculate number between 1 and randomnessLockedAfterMinted, corresponding to the blockhash
-            tokenId = (uint256(edition.mintRandomness()) % edition.randomnessLockedAfterMinted()) + 1;
+            // calculate number between 1 and mintRandomnessTokenThreshold, corresponding to the blockhash
+            tokenId = (uint256(edition.mintRandomness()) % edition.mintRandomnessTokenThreshold()) + 1;
         }
     }
 }

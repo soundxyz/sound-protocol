@@ -100,7 +100,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
-    function maxAllowedPerWallet(address, uint256) external pure returns (uint32) {
+    function maxMintablePerAccount(address, uint256) external pure returns (uint32) {
         return type(uint32).max;
     }
 
