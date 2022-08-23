@@ -110,17 +110,17 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Initializes the contract
-     * @param owner Owner of contract (artist)
-     * @param name Name of the token
-     * @param symbol Symbol of the token
-     * @param metadataModule Address of metadata module, address(0x00) if not used
-     * @param baseURI Base URI
-     * @param contractURI Contract URI for OpenSea storefront
-     * @param fundingRecipient Address that receives primary and secondary royalties
-     * @param royaltyBPS Royalty amount in bps (basis points)
+     * @param owner Owner of contract (artist).
+     * @param name Name of the token.
+     * @param symbol Symbol of the token.
+     * @param metadataModule Address of metadata module, address(0x00) if not used.
+     * @param baseURI Base URI.
+     * @param contractURI Contract URI for OpenSea storefront.
+     * @param fundingRecipient Address that receives primary and secondary royalties.
+     * @param royaltyBPS Royalty amount in bps (basis points).
      * @param editionMaxMintable The maximum amount of tokens that can be minted for this edition.
-     * @param mintRandomnessTokenThreshold Token supply after which randomness gets locked
-     * @param mintRandomnessTimeThreshold Timestamp after which randomness gets locked
+     * @param mintRandomnessTokenThreshold Minted token count after which randomness gets locked.
+     * @param mintRandomnessTimeThresholdTimestamp after which randomness gets locked.
      */
     function initialize(
         address owner,
@@ -215,29 +215,51 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // VIEW FUNCTIONS
     // ================================
 
-    /// Getter for minter role hash
+    /**
+     * @dev Getter for minter role hash
+     */
     function MINTER_ROLE() external view returns (bytes32);
 
-    /// Getter for admin role hash
+    /**
+     * @dev Getter for admin role hash
+     */
     function ADMIN_ROLE() external view returns (bytes32);
 
-    /// @dev Returns the base token URI for the collection
+    /**
+     * @dev Getter for the base token URI for the collection
+     */
     function baseURI() external view returns (string memory);
 
-    /// @dev Returns the total amount of tokens minted in the contract
+    /**
+     * @dev Getter for the total amount of tokens minted in the contract
+     */
     function totalMinted() external view returns (uint256);
 
+    /**
+     * @dev Getter for the token count after which randomness gets locked.
+     */
     function mintRandomnessTokenThreshold() external view returns (uint32);
 
+    /**
+     * @dev Getter for the timestamp after which randomness gets locked.
+     */
     function mintRandomnessTimeThreshold() external view returns (uint32);
 
+    /**
+     * Getter for the previous block hash - stored on each mint unless `randomnessLockedAfterMinted` or
+     * `randomnessLockedTimestamp` have been surpassed. Used for game mechanics like the Sound Golden Egg.
+     */
     function mintRandomness() external view returns (bytes32);
 
+    /**
+     * @dev Returns all of the addresses of a given role.
+     * @param role The role to get the addresses of.
+     */
     function getMembersOfRole(bytes32 role) external view returns (address[] memory);
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.
-     * https://eips.ethereum.org/EIPS/eip-165
+     *      Required by https://eips.ethereum.org/EIPS/eip-165
      * @param interfaceId The interface id to check.
      */
     function supportsInterface(bytes4 interfaceId)
