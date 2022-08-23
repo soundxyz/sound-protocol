@@ -278,7 +278,8 @@ contract MintControllerBaseTests is TestConfig {
     function test_setAffiliateDiscount() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
-        _test_setAffiliateDiscount(edition, mintId, 10);
+        uint16 affiliateDiscountBPS = 10;
+        _test_setAffiliateDiscount(edition, mintId, affiliateDiscountBPS);
     }
 
     function test_withdrawAffiliateFeesAccrued(uint16 affiliateFeeBPS) public {
