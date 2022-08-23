@@ -261,10 +261,17 @@ interface IMinterModule is IERC165 {
      * @param edition The edition address.
      * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
      */
+<<<<<<< HEAD
     function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
+<<<<<<< HEAD
 
     /**
      * @dev Returns the base mint data for (`edition`, `mintId`).
      */
     function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
+=======
+=======
+    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32);
+>>>>>>> Revert maxAllowedPerWallet rename
+>>>>>>> Revert maxAllowedPerWallet rename
 }
