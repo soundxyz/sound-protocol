@@ -85,6 +85,7 @@ contract MintersIntegration is TestConfig {
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
+        feeRegistry.setPlatformFeeBPS(0);
 
         // Setup the FREE MINT
         // Setup the free mint for 2 accounts able to claim 100 tokens in total.
