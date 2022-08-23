@@ -52,7 +52,7 @@ contract RangeEditionMinterTests is TestConfig {
     {
         edition = createGenericEdition();
 
-        minter = new RangeEditionMinter();
+        minter = new RangeEditionMinter(feeRegistry);
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
@@ -92,7 +92,7 @@ contract RangeEditionMinterTests is TestConfig {
             )
         );
 
-        RangeEditionMinter minter = new RangeEditionMinter();
+        RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
 
         bool hasRevert;
 
@@ -153,7 +153,7 @@ contract RangeEditionMinterTests is TestConfig {
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        RangeEditionMinter minter = new RangeEditionMinter();
+        RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
 
         vm.expectEmit(false, false, false, true);
 

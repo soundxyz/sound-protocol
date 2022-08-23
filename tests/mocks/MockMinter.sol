@@ -2,8 +2,11 @@
 pragma solidity ^0.8.16;
 
 import "../../contracts/modules/Minters/BaseMinter.sol";
+import "../../contracts/interfaces/ISoundFeeRegistry.sol";
 
 contract MockMinter is BaseMinter {
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
+
     function createEditionMint(
         address edition,
         uint32 startTime,

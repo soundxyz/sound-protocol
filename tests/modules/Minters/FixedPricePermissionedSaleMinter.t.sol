@@ -41,7 +41,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     {
         edition = createGenericEdition();
 
-        minter = new FixedPricePermissionedSaleMinter();
+        minter = new FixedPricePermissionedSaleMinter(feeRegistry);
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 
@@ -51,7 +51,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter(feeRegistry);
 
         vm.expectEmit(false, false, false, true);
 
@@ -63,7 +63,7 @@ contract FixedPricePermissionedSaleMinterTests is TestConfig {
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter();
+        FixedPricePermissionedSaleMinter minter = new FixedPricePermissionedSaleMinter(feeRegistry);
 
         vm.expectRevert(FixedPricePermissionedSaleMinter.SignerIsZeroAddress.selector);
 

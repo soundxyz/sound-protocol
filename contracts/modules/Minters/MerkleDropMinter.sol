@@ -9,6 +9,7 @@ import "openzeppelin/utils/introspection/IERC165.sol";
 import "./BaseMinter.sol";
 import "../../interfaces/ISoundEditionV1.sol";
 import "../../interfaces/IMerkleDropMint.sol";
+import "../../interfaces/ISoundFeeRegistry.sol";
 
 /// @dev Airdrop using merkle tree logic.
 contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
@@ -66,6 +67,8 @@ contract MerkleDropMinter is IERC165, BaseMinter, IMerkleDropMint {
     // ================================
     // WRITE FUNCTIONS
     // ================================
+
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
     /**
      * @dev Initializes the configuration for an edition merkle drop mint.

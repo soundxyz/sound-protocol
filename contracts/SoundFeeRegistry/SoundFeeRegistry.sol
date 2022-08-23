@@ -3,12 +3,13 @@
 pragma solidity ^0.8.16;
 
 import "openzeppelin/access/Ownable.sol";
+import "../interfaces/ISoundFeeRegistry.sol";
 
 /**
  * @title SoundFeeRegistry
  * @author Sound.xyz
  */
-contract SoundFeeRegistry is Ownable {
+contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     // ================================
     // CONSTANTS
     // ================================
@@ -25,12 +26,12 @@ contract SoundFeeRegistry is Ownable {
     /**
      * @dev The sound protocol's address that receives platform fees.
      */
-    address public soundFeeAddress;
+    address public override soundFeeAddress;
 
     /**
      * @dev The numerator of the platform fee.
      */
-    uint16 public platformFeeBPS;
+    uint16 public override platformFeeBPS;
 
     // ================================
     // EVENTS & ERRORS

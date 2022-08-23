@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import "./BaseMinter.sol";
 import "../../interfaces/IStandardMint.sol";
+import "../../interfaces/ISoundFeeRegistry.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
 
 /*
@@ -88,6 +89,8 @@ contract RangeEditionMinter is IERC165, BaseMinter, IStandardMint {
     // ================================
     // WRITE FUNCTIONS
     // ================================
+
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
     /*
      * @dev Initializes the configuration for an edition mint.

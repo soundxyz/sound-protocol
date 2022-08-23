@@ -45,7 +45,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         setUpMerkleTree(address(edition));
 
-        minter = new MerkleDropMinter();
+        minter = new MerkleDropMinter(feeRegistry);
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
         mintId = minter.createEditionMint(
             address(edition),

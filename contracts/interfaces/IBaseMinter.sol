@@ -69,13 +69,6 @@ interface IBaseMinter is IERC165 {
     ) external;
 
     /**
-     * @dev Sets the `platformFeePBS`.
-     * Calling conditions:
-     * - The caller must be the owner of the contract.
-     */
-    function setPlatformFee(uint16 platformFeeBPS_) external;
-
-    /**
      * @dev Withdraws all the accrued funds for the `affiliate`.
      */
     function withdrawForAffiliate(address affiliate) external;
@@ -83,7 +76,7 @@ interface IBaseMinter is IERC165 {
     /**
      * @dev Withdraws all the accrued funds for the platform.
      */
-    function withdrawForPlatform(address to) external;
+    function withdrawForPlatform() external;
 
     // ================================
     // VIEW FUNCTIONS

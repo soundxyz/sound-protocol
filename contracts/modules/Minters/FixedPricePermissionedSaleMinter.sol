@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import "./BaseMinter.sol";
 import "../../interfaces/IFixedPricePermissionedMint.sol";
+import "../../interfaces/ISoundFeeRegistry.sol";
 import "solady/utils/ECDSA.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
 
@@ -54,6 +55,8 @@ contract FixedPricePermissionedSaleMinter is IERC165, BaseMinter, IFixedPricePer
     // ================================
     // WRITE FUNCTIONS
     // ================================
+
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
     /**
      * @dev Initializes the configuration for an edition mint.

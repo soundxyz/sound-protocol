@@ -13,7 +13,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
 
         edition = createGenericEdition();
 
-        minter = new RangeEditionMinter();
+        minter = new RangeEditionMinter(feeRegistry);
 
         edition.grantRole(edition.MINTER_ROLE(), address(minter));
 

@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 import "../../interfaces/IBaseMinter.sol";
 import "../../interfaces/ISoundEditionV1.sol";
+import "../../interfaces/ISoundFeeRegistry.sol";
 import "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 import "openzeppelin/utils/introspection/IERC165.sol";
 import "openzeppelin/access/Ownable.sol";
@@ -57,11 +58,6 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      */
     error InvalidAffiliateDiscountBPS();
 
-    /**
-     * The platform fee numerator must not exceed `MAX_BPS`.
-     */
-    error InvalidPlatformFeeBPS();
-
     // ================================
     // EVENTS
     // ================================
@@ -96,11 +92,6 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      * @notice Emitted when the `affiliateDiscountBPS` is updated.
      */
     event AffiliateDiscountSet(address indexed edition, uint256 indexed mintId, uint16 affiliateDiscountBPS);
-
-    /**
-     * @notice Emitted when the `platformFeeBPS` is changed.
-     */
-    event PlatformFeeSet(uint16 platformFeeBPS);
 
     // ================================
     // CONSTANTS
@@ -138,14 +129,15 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      */
     uint256 public platformFeesAccrued;
 
-    /**
-     * @dev The numerator of the platform fee.
-     */
-    uint16 public platformFeeBPS;
+    ISoundFeeRegistry public immutable feeRegistry;
 
     // ================================
     // WRITE FUNCTIONS
     // ================================
+
+    constructor(ISoundFeeRegistry feeRegistry_) {
+        feeRegistry = feeRegistry_;
+    }
 
     /**
      * @inheritdoc IBaseMinter
@@ -198,20 +190,6 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     /**
      * @inheritdoc IBaseMinter
      */
-    function setPlatformFee(uint16 platformFeeBPS_)
-        public
-        virtual
-        override
-        onlyOwner
-        onlyValidPlatformFeeBPS(platformFeeBPS_)
-    {
-        platformFeeBPS = platformFeeBPS_;
-        emit PlatformFeeSet(platformFeeBPS_);
-    }
-
-    /**
-     * @inheritdoc IBaseMinter
-     */
     function withdrawForAffiliate(address affiliate) public override {
         uint256 accrued = affiliateFeesAccrued[affiliate];
         affiliateFeesAccrued[affiliate] = 0;
@@ -223,11 +201,11 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
     /**
      * @inheritdoc IBaseMinter
      */
-    function withdrawForPlatform(address to) public override onlyOwner {
+    function withdrawForPlatform() public override {
         uint256 accrued = platformFeesAccrued;
         platformFeesAccrued = 0;
         if (accrued != 0) {
-            SafeTransferLib.safeTransferETH(to, accrued);
+            SafeTransferLib.safeTransferETH(feeRegistry.soundFeeAddress(), accrued);
         }
     }
 
@@ -351,7 +329,7 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
 
         // Compute the platform fee.
-        uint256 platformFee = (requiredEtherValue * platformFeeBPS) / MAX_BPS;
+        uint256 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / MAX_BPS;
 
         // Compute the affiliate fee.
         uint256 affiliateFee = (requiredEtherValue * baseData.affiliateFeeBPS) / MAX_BPS;
@@ -418,14 +396,6 @@ abstract contract BaseMinter is IERC165, IBaseMinter, Ownable {
      */
     modifier onlyValidAffiliateDiscountBPS(uint16 affiliateDiscountBPS) virtual {
         if (affiliateDiscountBPS > MAX_BPS) revert InvalidAffiliateDiscountBPS();
-        _;
-    }
-
-    /**
-     * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
-     */
-    modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) virtual {
-        if (platformFeeBPS_ > MAX_BPS) revert InvalidPlatformFeeBPS();
         _;
     }
 
