@@ -210,24 +210,65 @@ contract MintControllerBaseTests is TestConfig {
         minter.setTimeRange(address(edition), mintId, 456, 789);
     }
 
+    function test_isAffilatedReturnsFalseForZeroAddress(address edition, uint256 mintId) public {
+        address affiliate = address(0);
+        assertEq(minter.isAffiliated(edition, mintId, affiliate), false);
+        affiliate = address(1);
+        assertEq(minter.isAffiliated(edition, mintId, affiliate), true);
+    }
+
     function test_isAffilatedReturnsFalseForZeroAddress() public {
-        assertEq(minter.isAffiliated(address(0), 0, address(0)), false);
-        assertEq(minter.isAffiliated(address(0), 0, address(1)), true);
+        test_isAffilatedReturnsFalseForZeroAddress(address(0), 0);
     }
 
     function test_mintAndWithdrawlWithAffiliateAndPlatformFee() public {
-        test_mintAndWithdrawlWithAffiliateAndPlatformFee(true, 1, 10, 10, 10, 1 ether, 2);
-        test_mintAndWithdrawlWithAffiliateAndPlatformFee(false, 2, 10, 10, 10, 1 ether, 2);
+        bool affiliateIsZeroAddress = true;
+        uint256 affiliateSeed = 1;
+        uint16 affiliateDiscountBPS = 10;
+        uint16 affiliateFeeBPS = 10;
+        uint16 platformFeeBPS = 10;
+        uint256 price = 1 ether;
+        uint32 quantity = 2;
+
+        test_mintAndWithdrawlWithAffiliateAndPlatformFee(
+            affiliateIsZeroAddress,
+            affiliateSeed,
+            affiliateDiscountBPS,
+            affiliateFeeBPS,
+            platformFeeBPS,
+            price,
+            quantity
+        );
+
+        affiliateIsZeroAddress = false;
+        affiliateSeed = 2;
+        test_mintAndWithdrawlWithAffiliateAndPlatformFee(
+            affiliateIsZeroAddress,
+            affiliateSeed,
+            affiliateDiscountBPS,
+            affiliateFeeBPS,
+            platformFeeBPS,
+            price,
+            quantity
+        );
     }
 
     function test_setPlatformFee() public {
-        _test_setPlatformFee(10);
+        uint16 platformFeeBPS = 0;
+        _test_setPlatformFee(platformFeeBPS);
+        platformFeeBPS = 10;
+        _test_setPlatformFee(platformFeeBPS);
+        platformFeeBPS = minter.MAX_BPS();
+        _test_setPlatformFee(platformFeeBPS);
+        platformFeeBPS = minter.MAX_BPS() + 1;
+        _test_setPlatformFee(platformFeeBPS);
     }
 
     function test_setAffiliateFee() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
-        _test_setAffiliateFee(edition, mintId, 10);
+        uint16 affiliateFeeBPS = 10;
+        _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
     }
 
     function test_setAffiliateDiscount() public {
@@ -278,6 +319,7 @@ contract MintControllerBaseTests is TestConfig {
         _test_withdrawPlatformFeesAccrued(expectedPlatformFees);
     }
 
+    // This is an integration test to ensure that all the functions work together properly.
     function test_mintAndWithdrawlWithAffiliateAndPlatformFee(
         bool affiliateIsZeroAddress,
         uint256 affiliateSeed,
@@ -324,6 +366,7 @@ contract MintControllerBaseTests is TestConfig {
         _test_withdrawPlatformFeesAccrued(expectedPlatformFees);
     }
 
+    // Test helper for withdrawing the affiliate fees and testing the expected effects.
     function _test_withdrawAffiliateFeesAccrued(address affiliate, uint256 expectedDifference) internal {
         assertEq(minter.affiliateFeesAccrued(affiliate), expectedDifference);
 
@@ -340,6 +383,7 @@ contract MintControllerBaseTests is TestConfig {
         assertEq(minter.affiliateFeesAccrued(affiliate), 0);
     }
 
+    // Test helper for withdrawing the platform fees and testing the expected effects.
     function _test_withdrawPlatformFeesAccrued(uint256 expectedDifference) internal {
         assertEq(minter.platformFeesAccrued(), expectedDifference);
 
@@ -356,6 +400,8 @@ contract MintControllerBaseTests is TestConfig {
         assertEq(minter.platformFeesAccrued(), 0);
     }
 
+    // Test helper for `platformFeeBPS` and testing the expected effects.
+    // Returns whether setting the value is successful.
     function _test_setPlatformFee(uint16 platformFeeBPS) internal returns (bool) {
         if (platformFeeBPS > minter.MAX_BPS()) {
             vm.expectRevert(IMinterModule.InvalidPlatformFeeBPS.selector);
@@ -369,6 +415,8 @@ contract MintControllerBaseTests is TestConfig {
         return true;
     }
 
+    // Test helper for setting `affiliateFeeBPS` and testing the expected effects.
+    // Returns whether setting the value is successful.
     function _test_setAffiliateFee(
         SoundEditionV1 edition,
         uint256 mintId,
@@ -386,6 +434,8 @@ contract MintControllerBaseTests is TestConfig {
         return true;
     }
 
+    // Test helper for setting `affiliateDiscountBPS` and testing the expected effects.
+    // Returns whether setting the value is successful.
     function _test_setAffiliateDiscount(
         SoundEditionV1 edition,
         uint256 mintId,
