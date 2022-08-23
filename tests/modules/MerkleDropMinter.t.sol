@@ -62,8 +62,12 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_canMintMultipleTimesLessThanMaxMintablePerAccount() public {
-        uint32 maxPerWallet = 2;
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, maxPerWallet);
+        uint32 maxPerAccount = 2;
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
+            0,
+            6,
+            maxPerAccount
+        );
         bytes32[] memory proof = m.getProof(leaves, 1);
 
         uint256 user1Balance = edition.balanceOf(accounts[1]);
@@ -85,9 +89,13 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimMoreThanMaxMintablePerAccount() public {
-        uint32 maxPerWallet = 1;
+        uint32 maxPerAccount = 1;
         uint32 requestedQuantity = 2;
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, maxPerWallet);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
+            0,
+            6,
+            maxPerAccount
+        );
         bytes32[] memory proof = m.getProof(leaves, 0);
 
         vm.warp(START_TIME);
@@ -98,10 +106,14 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimMoreThanMaxMintable() public {
-        uint32 maxPerWallet = 3;
+        uint32 maxPerAccount = 3;
         uint32 requestedQuantity = 3;
 
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 2, maxPerWallet);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
+            0,
+            2,
+            maxPerAccount
+        );
         bytes32[] memory proof = m.getProof(leaves, 2);
 
         vm.warp(START_TIME);
@@ -122,17 +134,17 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_canGetClaimedAmountForWallet() public {
-        uint32 maxAllowedPerWwallet = 1;
+        uint32 maxMintablePerAccount = 1;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
             0,
             6,
-            maxAllowedPerWwallet
+            maxMintablePerAccount
         );
         bytes32[] memory proof = m.getProof(leaves, 0);
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        uint32 requestedQuantity = maxAllowedPerWwallet;
+        uint32 requestedQuantity = maxMintablePerAccount;
         minter.mint(address(edition), mintId, requestedQuantity, proof);
 
         uint256 claimedAmount = minter.getClaimed(address(edition), mintId, accounts[0]);
