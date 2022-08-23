@@ -294,7 +294,7 @@ contract SoundEditionV1 is
     // VIEW FUNCTIONS
     // ================================
 
-    /// @dev Returns the total amount of tokens minted in the contract.
+    /// @inheritdoc ISoundEditionV1
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
     }

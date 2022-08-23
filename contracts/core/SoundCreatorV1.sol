@@ -70,7 +70,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     /**
-     * @dev Deploys a Sound edition contract.
+     * @dev Deploys a Sound edition minimal proxy contract.
      * @param name The name of the edition.
      * @param symbol The symbol of the edition.
      * @param metadataModule The address of the metadata module.
@@ -81,6 +81,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @param editionMaxMintable The maximum number of tokens that can be minted.
      * @param mintRandomnessTimeThreshold The token count after which `SoundEdition.mintRandomness` gets locked.
      * @param mintRandomnessTimeThreshold The timestamp after which `SoundEdition.mintRandomness` gets locked.
+     * @return soundEdition The address of the deployed edition proxy.
      */
     function createSound(
         string memory name,

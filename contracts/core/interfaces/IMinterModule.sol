@@ -25,7 +25,7 @@ interface IMinterModule is IERC165 {
     // ================================
 
     /**
-     * @dev Emitted when the mint configuration for an `edition` is created.
+     * @dev Emitted when the mint instance for an `edition` is created.
      * @param edition The edition address.
      * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
      * @param startTime The start time of the mint.
@@ -203,11 +203,6 @@ interface IMinterModule is IERC165 {
     // ================================
 
     /**
-     * @dev Returns the maximum basis points (BPS).
-     */
-    function MAX_BPS() external pure returns (uint16);
-
-    /**
      * @dev Returns the total fees accrued for `affiliate`.
      */
     function affiliateFeesAccrued(address affiliate) external view returns (uint256);
@@ -250,16 +245,18 @@ interface IMinterModule is IERC165 {
     function nextMintId(address edition) external view returns (uint256);
 
     /**
-     * @dev Returns the total maximum mintable number of tokens.
+     * @dev Returns the maximum mintable number of tokens for a mint instance.
      * @param edition The edition address.
      * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @return The total maximum mintable number of tokens.
      */
     function maxMintable(address edition, uint256 mintId) external view returns (uint32);
 
     /**
-     * @dev Returns the maximum mintable number of tokens per account.
+     * @dev Returns the maximum mintable number of tokens per account for a mint instance.
      * @param edition The edition address.
      * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @return The maximum mintable number of tokens per account.
      */
     function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
 

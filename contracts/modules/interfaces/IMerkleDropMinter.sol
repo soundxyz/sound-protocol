@@ -8,6 +8,17 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  * @dev Interface for the `MerkleDropMinter` module.
  */
 interface IMerkleDropMinter is IMinterModule {
+    /**
+     * @dev Emitted when a new merkle drop mint is created.
+     * @param edition The edition address.
+     * @param mintId The mint ID.
+     * @param merkleRootHash The merkle root hash of the merkle tree containing the approved addresses.
+     * @param price The price at which each token will be sold, in ETH.
+     * @param startTime The time minting can begin.
+     * @param endTime The time minting will end.
+     * @param maxMintable The maximum number of tokens that can be minted.
+     * @param maxMintablePerAccount The maximum number of tokens that a wallet can mint.
+     */
     event MerkleDropMintCreated(
         address indexed edition,
         uint256 indexed mintId,
@@ -19,15 +30,25 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 maxMintablePerAccount
     );
 
+    /**
+     * @dev Emitted when tokens are claimed by an account.
+     * @param recipient The address of the account that claimed the tokens.
+     * @param quantity The quantity of tokens claimed.
+     */
     event DropClaimed(address recipient, uint32 quantity);
 
+    /**
+     * @dev The merkle proof is invalid.
+     */
     error InvalidMerkleProof();
 
-    // The number of tokens minted has exceeded the number allowed for each wallet.
+    /**
+     * @dev The number of tokens minted has exceeded the number allowed for each account.
+     */ 
     error ExceedsMaxPerAccount();
 
     /**
-     * @dev Initializes the configuration for an edition merkle drop mint.
+     * @dev Initializes merkle drop mint instance.
      * @param edition Address of the song edition contract we are minting for.
      * @param merkleRootHash bytes32 hash of the Merkle tree representing eligible mints.
      * @param price_ Sale price in ETH for minting a single token in `edition`.
@@ -35,6 +56,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
      * @param maxMintablePerAccount_ The maximum number of tokens that a single wallet can mint.
+     * @return mintId The ID of the new mint instance.
      */
     function createEditionMint(
         address edition,
@@ -46,6 +68,11 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 maxMintablePerAccount_
     ) external returns (uint256 mintId);
 
+    /**
+     * @dev Mints a token for a particular mint instance.
+     * @param mintId The ID of the mint instance.
+     * @param requestedQuantity The quantity of tokens to mint.
+     */
     function mint(
         address edition,
         uint256 mintId,
