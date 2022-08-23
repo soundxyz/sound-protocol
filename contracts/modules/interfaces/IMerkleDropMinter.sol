@@ -15,7 +15,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable,
-        uint32 maxAllowedPerWallet
+        uint32 maxMintablePerAccount
     );
 
     event DropClaimed(address recipient, uint32 quantity);
@@ -33,7 +33,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
-     * @param maxAllowedPerWallet_ The maximum number of tokens that a single wallet can mint.
+     * @param maxMintablePerAccount_ The maximum number of tokens that a single wallet can mint.
      */
     function createEditionMint(
         address edition,
@@ -42,7 +42,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable_,
-        uint32 maxAllowedPerWallet_
+        uint32 maxMintablePerAccount_
     ) external returns (uint256 mintId);
 
     function mint(

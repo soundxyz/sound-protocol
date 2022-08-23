@@ -71,8 +71,8 @@ contract SoundEditionV1 is
     address public fundingRecipient;
     uint16 public royaltyBPS;
     uint32 public editionMaxMintable;
-    uint32 public randomnessLockedAfterMinted;
-    uint32 public randomnessLockedTimestamp;
+    uint32 public mintRandomnessTokenThreshold;
+    uint32 public mintRandomnessTimeThreshold;
     bytes32 public mintRandomness;
 
     // ================================
@@ -104,8 +104,8 @@ contract SoundEditionV1 is
      * @param fundingRecipient_ Address that receives primary and secondary royalties
      * @param royaltyBPS_ Royalty amount in bps (basis points)
      * @param editionMaxMintable_ The maximum amount of tokens that can be minted for this edition.
-     * @param randomnessLockedAfterMinted_ Token supply after which randomness gets locked
-     * @param randomnessLockedTimestamp_ Timestamp after which randomness gets locked
+     * @param mintRandomnessTokenThreshold_ Token supply after which randomness gets locked
+     * @param mintRandomnessTimeThreshold_ Timestamp after which randomness gets locked
      */
     function initialize(
         address owner,
@@ -117,8 +117,8 @@ contract SoundEditionV1 is
         address fundingRecipient_,
         uint16 royaltyBPS_,
         uint32 editionMaxMintable_,
-        uint32 randomnessLockedAfterMinted_,
-        uint32 randomnessLockedTimestamp_
+        uint32 mintRandomnessTokenThreshold_,
+        uint32 mintRandomnessTimeThreshold_
     ) public initializerERC721A initializer onlyValidRoyaltyBPS(royaltyBPS_) {
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
@@ -133,8 +133,8 @@ contract SoundEditionV1 is
 
         royaltyBPS = royaltyBPS_;
         editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
-        randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
-        randomnessLockedTimestamp = randomnessLockedTimestamp_;
+        mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
+        mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
 
         __AccessControl_init();
 
@@ -170,7 +170,7 @@ contract SoundEditionV1 is
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
-        if (_totalMinted() <= randomnessLockedAfterMinted && block.timestamp <= randomnessLockedTimestamp) {
+        if (_totalMinted() <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
             mintRandomness = blockhash(block.number - 1);
         }
     }
@@ -274,19 +274,19 @@ contract SoundEditionV1 is
     }
 
     /**
-     * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
+     * @dev sets mintRandomnessTokenThreshold in case of insufficient sales, to finalize goldenEgg
      */
-    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
-        if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
+    function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold_) external onlyOwnerOrAdmin {
+        if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
 
-        randomnessLockedAfterMinted = randomnessLockedAfterMinted_;
+        mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
     }
 
     /**
-     * @dev sets randomnessLockedTimestamp
+     * @dev sets mintRandomnessTimeThreshold
      */
-    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
-        randomnessLockedTimestamp = randomnessLockedTimestamp_;
+    function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external onlyOwnerOrAdmin {
+        mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
     }
 
     // ================================

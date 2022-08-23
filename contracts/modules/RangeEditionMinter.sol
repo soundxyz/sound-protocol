@@ -24,7 +24,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         // The upper limit of the maximum number of tokens that can be minted.
         uint32 maxMintableUpper;
         // The maximum number of tokens that a wallet can mint.
-        uint32 maxAllowedPerWallet;
+        uint32 maxMintablePerAccount;
     }
 
     /**
@@ -33,7 +33,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
     /**
-     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxAllowedPerWallet.
+     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxMintablePerAccount.
      * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
      * edition => mintId => buyer => mintedTallies
      */
@@ -79,7 +79,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet_
+        uint32 maxMintablePerAccount_
     ) public returns (uint256 mintId) {
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
@@ -91,7 +91,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.closingTime = closingTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-        data.maxAllowedPerWallet = maxAllowedPerWallet_;
+        data.maxMintablePerAccount = maxMintablePerAccount_;
 
         // prettier-ignore
         emit RangeEditionMintCreated(
@@ -103,7 +103,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             endTime,
             maxMintableLower,
             maxMintableUpper,
-            maxAllowedPerWallet_
+            maxMintablePerAccount_
         );
     }
 
@@ -134,7 +134,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if ((userMintedBalance + quantity) > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
+        if ((userMintedBalance + quantity) > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerWallet();
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
@@ -207,10 +207,10 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         }
     }
 
-    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
+    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
         return
-            _editionMintData[edition][mintId].maxAllowedPerWallet > 0
-                ? _editionMintData[edition][mintId].maxAllowedPerWallet
+            _editionMintData[edition][mintId].maxMintablePerAccount > 0
+                ? _editionMintData[edition][mintId].maxMintablePerAccount
                 : type(uint32).max;
     }
 

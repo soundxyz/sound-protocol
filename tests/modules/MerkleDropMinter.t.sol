@@ -35,7 +35,7 @@ contract MerkleDropMinterTests is TestConfig {
     function _createEditionAndMinter(
         uint32 _price,
         uint32 _maxMintable,
-        uint32 _maxAllowedPerWallet
+        uint32 _maxMintablePerAccount
     )
         internal
         returns (
@@ -57,11 +57,11 @@ contract MerkleDropMinterTests is TestConfig {
             START_TIME,
             END_TIME,
             _maxMintable,
-            _maxAllowedPerWallet
+            _maxMintablePerAccount
         );
     }
 
-    function test_canMintMultipleTimesLessThanMaxAllowedPerWallet() public {
+    function test_canMintMultipleTimesLessThanMaxMintablePerAccount() public {
         uint32 maxPerWallet = 2;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, maxPerWallet);
         bytes32[] memory proof = m.getProof(leaves, 1);
@@ -84,7 +84,7 @@ contract MerkleDropMinterTests is TestConfig {
         assertEq(user1Balance, 2);
     }
 
-    function test_cannotClaimMoreThanMaxAllowedPerWallet() public {
+    function test_cannotClaimMoreThanMaxMintablePerAccount() public {
         uint32 maxPerWallet = 1;
         uint32 requestedQuantity = 2;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 6, maxPerWallet);
