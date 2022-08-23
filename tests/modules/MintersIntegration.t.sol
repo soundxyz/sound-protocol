@@ -18,17 +18,17 @@ contract MintersIntegration is TestConfig {
     // Free drop constant properties
     uint256 PRICE_FREE_DROP = 0;
     uint32 MINTER_MAX_MINTABLE_FREE_DROP = 100;
-    uint32 MAX_ALLOWED_PER_WALLET = 3;
+    uint32 MAX_MINTABLE_PER_ACCOUNT = 3;
 
     // Presale constant properties
     uint256 PRICE_PRESALE = 50000000 gwei; // Price is 0.05 ETH
     uint32 MINTER_MAX_MINTABLE_PRESALE = 45;
-    uint32 MAX_ALLOWED_PER_WALLET_PRESALE = 25; // There is a 25 tokens per wallet limit set on the presale.
+    uint32 MAX_MINTABLE_PER_ACCOUNT_PRESALE = 25; // There is a 25 tokens per wallet limit set on the presale.
 
     // Public sale constant properties
     uint256 PRICE_PUBLIC_SALE = 100000000000000000; // Price is 0.1 ETH
     uint32 MINTER_MAX_MINTABLE_PUBLIC_SALE = 700;
-    uint32 MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 50;
+    uint32 MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE = 50;
 
     address[] public userAccounts = [
         getFundedAccount(1), // User 1 - participate in free drop
@@ -109,7 +109,7 @@ contract MintersIntegration is TestConfig {
             START_TIME_FREE_DROP,
             START_TIME_PRESALE,
             MINTER_MAX_MINTABLE_FREE_DROP,
-            MAX_ALLOWED_PER_WALLET
+            MAX_MINTABLE_PER_ACCOUNT
         );
 
         // SETUP THE PRESALE
@@ -129,7 +129,7 @@ contract MintersIntegration is TestConfig {
             START_TIME_PRESALE,
             START_TIME_PUBLIC_SALE,
             MINTER_MAX_MINTABLE_PRESALE,
-            MAX_ALLOWED_PER_WALLET_PRESALE
+            MAX_MINTABLE_PER_ACCOUNT_PRESALE
         );
 
         // SETUP PUBLIC SALE
@@ -143,7 +143,7 @@ contract MintersIntegration is TestConfig {
             END_TIME_PUBLIC_SALE,
             0,
             MINTER_MAX_MINTABLE_PUBLIC_SALE,
-            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+            MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE
         );
 
         run_FreeAirdrop(accountsFreeMerkleDrop, leavesFreeMerkleDrop, merkleDropMinter, merkleFreeDrop, mintIdFreeMint);
@@ -236,14 +236,14 @@ contract MintersIntegration is TestConfig {
         assertEq(user6Balance, 0);
         // Claim maximum allowed tokens
         vm.prank(userAccounts[5]);
-        publicSaleMinter.mint{ value: MAX_ALLOWED_PER_WALLET_PUBLIC_SALE * PRICE_PUBLIC_SALE }(
+        publicSaleMinter.mint{ value: MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE * PRICE_PUBLIC_SALE }(
             address(edition),
             mintId,
-            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE,
+            MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE,
             address(0)
         );
         user6Balance = edition.balanceOf(userAccounts[5]);
-        assertEq(user6Balance, MAX_ALLOWED_PER_WALLET_PUBLIC_SALE);
+        assertEq(user6Balance, MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE);
 
         // END PUBLIC SALE
         vm.warp(END_TIME_PUBLIC_SALE);

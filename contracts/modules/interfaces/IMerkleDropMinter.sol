@@ -23,7 +23,7 @@ interface IMerkleDropMinter is IMinterModule {
     error InvalidMerkleProof();
 
     // The number of tokens minted has exceeded the number allowed for each wallet.
-    error ExceedsMaxPerWallet();
+    error ExceedsMaxPerAccount();
 
     /**
      * @dev Initializes the configuration for an edition merkle drop mint.

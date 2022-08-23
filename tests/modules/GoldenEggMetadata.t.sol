@@ -20,7 +20,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
     uint32 constant MINT_ID = 0;
 
-    uint32 constant MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 5;
+    uint32 constant MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE = 5;
 
     function _createEdition()
         internal
@@ -58,7 +58,7 @@ contract GoldenEggMetadataTests is TestConfig {
             END_TIME,
             0,
             MAX_MINTABLE,
-            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+            MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE
         );
     }
 

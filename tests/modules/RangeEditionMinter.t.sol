@@ -24,7 +24,7 @@ contract RangeEditionMinterTests is TestConfig {
 
     uint256 constant MINT_ID = 0;
 
-    uint32 constant MAX_ALLOWED_PER_WALLET = 0;
+    uint32 constant MAX_MINTABLE_PER_ACCOUNT = 0;
 
     // prettier-ignore
     event RangeEditionMintCreated(
@@ -189,7 +189,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerWallet.selector);
+        vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerAccount.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2, address(0));
     }
 
