@@ -25,19 +25,15 @@ const soundContracts = [
     "ISoundEditionV1.sol",
 ];
 
-async function main() {
-    await rm(destDir, {
-        force: true,
-        recursive: true,
-    });
+await rm(destDir, {
+    force: true,
+    recursive: true,
+});
 
-    await ensureDir(destDir);
+await ensureDir(destDir);
 
-    await Promise.all(
-        soundContracts.map((contractName) => {
-            return copy(sourceDir + contractName, destDir + contractName);
-        })
-    );
-}
-
-main();
+await Promise.all(
+    soundContracts.map((contractName) => {
+        return copy(sourceDir + contractName, destDir + contractName);
+    })
+);
