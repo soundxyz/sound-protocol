@@ -189,7 +189,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerWallet.selector);
+        vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerAccount.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2);
     }
 
