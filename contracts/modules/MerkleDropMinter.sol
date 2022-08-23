@@ -98,7 +98,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
         // Revert if attempting to mint more than the max allowed per wallet.
-        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerWallet();
+        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);

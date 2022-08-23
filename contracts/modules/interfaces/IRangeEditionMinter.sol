@@ -34,7 +34,7 @@ interface IRangeEditionMinter is IMinterModule {
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
     // The number of tokens minted has exceeded the number allowed for each wallet.
-    error ExceedsMaxPerWallet();
+    error ExceedsMaxPerAccount();
 
     /*
      * @dev Initializes the configuration for an edition mint.
