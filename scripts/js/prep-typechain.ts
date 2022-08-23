@@ -11,7 +11,7 @@ const destDir = "out-sound/";
 
 const soundContracts = [
     "BaseMinter.sol",
-    "GoldenEggMetaData.sol",
+    "GoldenEggMetadata.sol",
     "MerkleDropMinter.sol",
     "FixedPriceSignatureMinter.sol",
     "RangeEditionMinter.sol",
