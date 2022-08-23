@@ -9,9 +9,8 @@ import { IMetadataModule } from "./IMetadataModule.sol";
 
 /**
  * @title ISoundEditionV1
- * @author Sound.xyz
+ * @notice The interface for Sound editions, a general NFT format primarily associated with individual songs.
  */
-
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // ================================
     // EVENTS

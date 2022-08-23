@@ -36,8 +36,9 @@ import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 /**
- * @title Sound Creator V1
- * @dev Factory for deploying Sound edition contracts.
+ * @title SoundCreatorV1
+ * @notice A factory that deploys minimal proxies of `SoundEditionV1.sol`.
+ * @dev The proxies are OpenZeppelin's Clones implementation of https://eips.ethereum.org/EIPS/eip-1167
  */
 contract SoundCreatorV1 is OwnableUpgradeable, UUPSUpgradeable {
     event SoundEditionCreated(address indexed soundEdition, address indexed creator);

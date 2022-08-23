@@ -43,7 +43,7 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 /**
  * @title SoundEditionV1
- * @author Sound.xyz
+ * @notice A general NFT format primarily associated with individual songs.
  */
 contract SoundEditionV1 is
     ISoundEditionV1,

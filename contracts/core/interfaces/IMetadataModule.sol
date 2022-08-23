@@ -3,8 +3,11 @@ pragma solidity ^0.8.16;
 
 /**
  * @title IMetadataModule
- * @author Sound.xyz
+ * @notice The interface for custom Sound metadata modules.
  */
 interface IMetadataModule {
+    /**
+     * @dev When implemented, SoundEdition's `tokenURI` redirects execution to this `tokenURI`.
+     */
     function tokenURI(uint256 tokenId) external view returns (string memory);
 }
