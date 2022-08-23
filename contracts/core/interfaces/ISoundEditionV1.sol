@@ -16,25 +16,92 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // EVENTS
     // ================================
 
+    /**
+     * @dev Emitted when the metadata module is set.
+     * @param metadataModule the address of the metadata module.
+     */
     event MetadataModuleSet(IMetadataModule metadataModule);
+
+    /**
+     * @dev Emitted when the `baseURI` is set.
+     * @param baseURI the base URI of the edition.
+     */
     event BaseURISet(string baseURI);
+
+    /**
+     * @dev Emitted when the `contractURI` is set.
+     * @param contractURI The contract URI of the edition.
+     */
     event ContractURISet(string contractURI);
+
+    /**
+     * @dev Emitted when the metadata is frozen (e.g.: `baseURI` can no longer be changed).
+     * @param metadataModule The address of the metadata module.
+     * @param baseURI The base URI of the edition.
+     * @param contractURI The contract URI of the edition.
+     */
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
+
+    /**
+     * @dev Emitted when the `fundingRecipient` is set.
+     * @param fundingRecipient The address of the funding recipient.
+     */
     event FundingRecipientSet(address fundingRecipient);
+
+    /**
+     * @dev Emitted when the `royaltyBPS` is set.
+     * @param royaltyBPS The new royalty, measured in basis points.
+     */
     event RoyaltySet(uint16 royaltyBPS);
+
+    /**
+     * @dev Emitted when the edition's maximum mintable token quantity is set.
+     * @param newMax The new maximum mintable token quantity.
+     */
     event EditionMaxMintableSet(uint32 newMax);
 
     // ================================
     // ERRORS
     // ================================
 
+    /**
+     * @dev The edition's metadata is frozen (e.g.: `baseURI` can no longer be changed).
+     */
     error MetadataIsFrozen();
+
+    /**
+     * @dev The given `royaltyBPS` is invalid.
+     */
     error InvalidRoyaltyBPS();
+
+    /**
+     * @dev The given `randomnessLockedAfterMinted` value is invalid.
+     */
     error InvalidRandomnessLock();
+
+    /**
+     * @dev The caller is unauthorized to call this function.
+     */
     error Unauthorized();
+
+    /**
+     * @dev The requested quantity exceeds the edition's remaining mintable token quantity.
+     */
     error ExceedsEditionAvailableSupply(uint32 available);
+
+    /**
+     * @dev The given amount is invalid.
+     */
     error InvalidAmount();
+
+    /**
+     * @dev The given `fundingRecipient` address is invalid.
+     */
     error InvalidFundingRecipient();
+
+    /**
+     * @dev The `editionMaxMintable` has already been reached.
+     */
     error MaximumHasAlreadyBeenReached();
 
     // ================================
@@ -70,11 +137,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     ) external;
 
     /**
-     * @dev Mints `quantity` tokens to addrress `to`
-     * Each token will be assigned a token ID that is consecutively increasing.
-     * The caller must have the `MINTERROLE`, which can be granted via
-     * {grantRole}. Multiple minters, such as different minter contracts,
-     * can be authorized simultaneously.
+     * @dev Mints `quantity` tokens to addrress `to`.
+     *      Each token will be assigned a token ID that is consecutively increasing.
+     *      The caller must have the `MINTERROLE`, which can be granted via
+     *      {grantRole}. Multiple minters, such as different minter contracts,
+     *      can be authorized simultaneously.
      * @param to Address to mint to
      * @param quantity Number of tokens to mint
      */
@@ -92,47 +159,55 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function withdrawERC20(address[] calldata tokens) external;
 
     /**
-     *  @dev Sets metadata module
+     * @dev Sets metadata module.
+     * @param metadataModule Address of metadata module.
      */
     function setMetadataModule(IMetadataModule metadataModule) external;
 
     /**
-     *  @dev Sets global base URI
+     * @dev Sets global base URI.
+     * @param baseURI The base URI to be set.
      */
     function setBaseURI(string memory baseURI) external;
 
     /**
-     *   @dev Sets contract URI
+     * @dev Sets contract URI.
+     * @param contractURI The contract URI to be set.
      */
     function setContractURI(string memory contractURI) external;
 
     /**
-     *   @dev Freezes metadata by preventing any more changes to base URI
+     * @dev Freezes metadata by preventing any more changes to base URI.
      */
     function freezeMetadata() external;
 
     /**
-     * @dev Sets funding recipient address
+     * @dev Sets funding recipient address.
+     * @param fundingRecipient Address to be set as the new funding recipient.
      */
     function setFundingRecipient(address fundingRecipient) external;
 
     /**
-     * @dev Sets royalty amount in bps (basis points)
+     * @dev Sets royalty amount in bps (basis points).
+     * @param royaltyBPS The new royalty to be set.
      */
     function setRoyalty(uint16 royaltyBPS) external;
 
     /**
-     *   @dev Reduces the maximum mintable quantity.
+     * @dev Reduces the maximum mintable quantity for the edition.
+     * @param newMax The maximum mintable quantity to be set.
      */
     function reduceEditionMaxMintable(uint32 newMax) external;
 
     /**
-     * @dev sets mintRandomnessTokenThreshold in case of insufficient sales, to finalize goldenEgg
+     * @dev Sets a minted token count, after which `mintRandomness` gets locked.
+     * @param mintRandomnessTokenThreshold The token quantity to be set.
      */
     function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold) external;
 
     /**
-     * @dev sets mintRandomnessTimeThreshold
+     * @dev Sets the timestamp, after which `mintRandomness` gets locked.
+     * @param mintRandomnessTimeThreshold_ The randomness timestamp to be set.
      */
     function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external;
 
