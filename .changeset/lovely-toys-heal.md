@@ -2,4 +2,4 @@
 "@soundxyz/sound-protocol": major
 ---
 
-- Adds typechain
+-   Typescript bindings for Sound Protocol (V2)
