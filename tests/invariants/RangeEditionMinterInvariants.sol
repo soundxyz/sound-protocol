@@ -1,7 +1,11 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "./InvariantTest.sol";
-import "../modules/Minters/RangeEditionMinter.t.sol";
+import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
+import { BaseMinter } from "@modules/BaseMinter.sol";
+import { RangeEditionMinterTests } from "../modules/RangeEditionMinter.t.sol";
+import { InvariantTest } from "./InvariantTest.sol";
 
 contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest {
     RangeEditionMinterUpdater minterUpdater;

@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
 
 import "../TestConfig.sol";
-import "../../contracts/SoundFeeRegistry/SoundFeeRegistry.sol";
+import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 
 contract SoundFeeRegistryTests is TestConfig {
     event SoundFeeAddressSet(address soundFeeAddress);
