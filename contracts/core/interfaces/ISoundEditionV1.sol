@@ -9,7 +9,7 @@ import { IMetadataModule } from "./IMetadataModule.sol";
 
 /**
  * @title ISoundEditionV1
- * @notice The interface for Sound editions, a general NFT format primarily associated with individual songs.
+ * @notice The interface for Sound edition contracts.
  */
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // ================================
@@ -120,7 +120,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param royaltyBPS Royalty amount in bps (basis points).
      * @param editionMaxMintable The maximum amount of tokens that can be minted for this edition.
      * @param mintRandomnessTokenThreshold Minted token count after which randomness gets locked.
-     * @param mintRandomnessTimeThresholdTimestamp after which randomness gets locked.
+     * @param mintRandomnessTimeThreshold after which randomness gets locked.
      */
     function initialize(
         address owner,

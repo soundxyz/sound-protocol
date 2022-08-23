@@ -4,9 +4,13 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Mint interface for the `FixedPriceSignatureMinter`.
+ * @title IFixedPriceSignatureMinter
+ * @dev Interface for the `FixedPriceSignatureMinter` module.
  */
 interface IFixedPriceSignatureMinter is IMinterModule {
+    /**
+     * Emits event when a new fixed price signature mint is created.
+     */
     event FixedPriceSignatureMintCreated(
         address indexed edition,
         uint256 indexed mintId,

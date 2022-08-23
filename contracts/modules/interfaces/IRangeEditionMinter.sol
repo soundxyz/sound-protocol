@@ -4,7 +4,8 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Interface for the standard mint function.
+ * @title IRangeEditionMinter
+ * @dev Interface for the `RangeEditionMinter` module.
  */
 interface IRangeEditionMinter is IMinterModule {
     event RangeEditionMintCreated(

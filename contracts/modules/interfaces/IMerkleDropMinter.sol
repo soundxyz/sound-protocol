@@ -4,7 +4,8 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Mint interface for the `MerkleDropMinter`.
+ * @title IMerkleDropMinter
+ * @dev Interface for the `MerkleDropMinter` module.
  */
 interface IMerkleDropMinter is IMinterModule {
     event MerkleDropMintCreated(

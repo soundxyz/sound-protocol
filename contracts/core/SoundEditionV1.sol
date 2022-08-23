@@ -43,7 +43,7 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 /**
  * @title SoundEditionV1
- * @notice A general NFT format primarily associated with individual songs.
+ * @notice Mints non-fungible tokens of a Sound edition.
  */
 contract SoundEditionV1 is
     ISoundEditionV1,
@@ -83,19 +83,14 @@ contract SoundEditionV1 is
     uint16 public royaltyBPS;
     // The max mintable quantity for the edition.
     uint32 public editionMaxMintable;
-<<<<<<< HEAD
-    uint32 public mintRandomnessTokenThreshold;
-    uint32 public mintRandomnessTimeThreshold;
-=======
     // The token count after which `mintRandomness` gets locked.
-    uint32 public randomnessLockedAfterMinted;
+    uint32 public mintRandomnessTokenThreshold;
     // The timestamp after which `mintRandomness` gets locked.
-    uint32 public randomnessLockedTimestamp;
+    uint32 public mintRandomnessTimeThreshold;
     /**
-     * Getter for the previous block hash - stored on each mint unless `randomnessLockedAfterMinted` or
-     * `randomnessLockedTimestamp` have been surpassed. Used for game mechanics like the Sound Golden Egg.
+     * Getter for the previous block hash - stored on each mint unless `mintRandomnessTokenThreshold` or
+     * `mintRandomnessTimeThreshold` have been surpassed. Used for game mechanics like the Sound Golden Egg.
      */
->>>>>>> Finishes SoundEditionV1
     bytes32 public mintRandomness;
 
     // ================================
@@ -283,32 +278,16 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-<<<<<<< HEAD
-    /**
-     * @dev sets mintRandomnessTokenThreshold in case of insufficient sales, to finalize goldenEgg
-     */
+    /// @inheritdoc ISoundEditionV1
     function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold_) external onlyOwnerOrAdmin {
         if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
-=======
-    /// @inheritdoc ISoundEditionV1
-    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted_) external onlyOwnerOrAdmin {
-        if (randomnessLockedAfterMinted_ < _totalMinted()) revert InvalidRandomnessLock();
->>>>>>> Finishes SoundEditionV1
 
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
     }
 
-<<<<<<< HEAD
-    /**
-     * @dev sets mintRandomnessTimeThreshold
-     */
+    /// @inheritdoc ISoundEditionV1
     function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external onlyOwnerOrAdmin {
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
-=======
-    /// @inheritdoc ISoundEditionV1
-    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external onlyOwnerOrAdmin {
-        randomnessLockedTimestamp = randomnessLockedTimestamp_;
->>>>>>> Finishes SoundEditionV1
     }
 
     // ================================
