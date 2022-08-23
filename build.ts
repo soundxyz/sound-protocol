@@ -4,7 +4,6 @@ import { buildCode } from "bob-ts";
 import { execaCommand } from "execa";
 import { copy, ensureDir } from "fs-extra";
 import { rm, writeFile } from "fs/promises";
-import { extname } from "path";
 import pkg from "./package.json";
 
 const makePublishManifest = getDefault(makePublishManifestPkg);
@@ -22,24 +21,31 @@ await ensureDir("dist");
 
 await Promise.all([
     copy("LICENSE", "dist/LICENSE"),
-    copy("typechain", "dist/typechain", {
-        filter(file) {
-            if (extname(file) === "") return true;
-
-            return file.endsWith(".d.ts");
-        },
-    }),
     writeFile(
         "dist/package.json",
         JSON.stringify(
             await makePublishManifest(".", {
                 name: pkg.name,
                 version: pkg.version,
+                author: pkg.author,
+                homepage: pkg.homepage,
                 main: "index.js",
-                types: "typechain/index.d.ts",
+                types: "index.d.ts",
                 dependencies: pkg.dependencies,
                 license: pkg.license,
                 repository: pkg.repository,
+                exports: {
+                    ".": {
+                        types: "./index.d.ts",
+                        require: "./index.js",
+                        import: "./index.mjs",
+                    },
+                    "./*": {
+                        types: "./*.d.ts",
+                        require: "./*.js",
+                        import: "./*.mjs",
+                    },
+                },
             } as ProjectManifest),
             null,
             2
@@ -49,8 +55,8 @@ await Promise.all([
 
 await buildCode({
     clean: false,
-    entryPoints: ["typechain/index.ts"],
-    format: "cjs",
+    entryPoints: ["typechain/**/*.ts"],
+    format: "interop",
     outDir: "dist",
     target: "node14",
     sourcemap: false,
