@@ -2,4 +2,4 @@
 "sound-protocol": patch
 ---
 
-Adding maxAllowedPerWallet to RangeEditionMinter
+Adding maxMintablePerAccount to RangeEditionMinter

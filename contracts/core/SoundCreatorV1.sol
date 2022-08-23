@@ -72,8 +72,8 @@ contract SoundCreatorV1 is OwnableUpgradeable, UUPSUpgradeable {
         address fundingRecipient,
         uint16 royaltyBPS,
         uint32 editionMaxMintable,
-        uint32 randomnessLockedAfterMinted,
-        uint32 randomnessLockedTimestamp
+        uint32 mintRandomnessTokenThreshold,
+        uint32 mintRandomnessTimeThreshold
     ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
         soundEdition = payable(Clones.clone(soundEditionImplementation));
@@ -88,8 +88,8 @@ contract SoundCreatorV1 is OwnableUpgradeable, UUPSUpgradeable {
             fundingRecipient,
             royaltyBPS,
             editionMaxMintable,
-            randomnessLockedAfterMinted,
-            randomnessLockedTimestamp
+            mintRandomnessTokenThreshold,
+            mintRandomnessTimeThreshold
         );
 
         emit SoundEditionCreated(soundEdition, msg.sender);

@@ -36,7 +36,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet
+        uint32 maxMintablePerAccount
     );
 
     event ClosingTimeSet(address indexed edition, uint256 indexed mintId, uint32 closingTime);
@@ -48,7 +48,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintableUpper
     );
 
-    function _createEditionAndMinter(uint32 _maxAllowedPerWallet)
+    function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
         returns (SoundEditionV1 edition, RangeEditionMinter minter)
     {
@@ -66,7 +66,7 @@ contract RangeEditionMinterTests is TestConfig {
             END_TIME,
             MAX_MINTABLE_LOWER,
             MAX_MINTABLE_UPPER,
-            _maxAllowedPerWallet
+            _maxMintablePerAccount
         );
     }
 
@@ -77,7 +77,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet
+        uint32 maxMintablePerAccount
     ) public {
         SoundEditionV1 edition = SoundEditionV1(
             soundCreator.createSound(
@@ -123,7 +123,7 @@ contract RangeEditionMinterTests is TestConfig {
                 endTime,
                 maxMintableLower,
                 maxMintableUpper,
-                maxAllowedPerWallet
+                maxMintablePerAccount
             );
         }
 
@@ -135,7 +135,7 @@ contract RangeEditionMinterTests is TestConfig {
             endTime,
             maxMintableLower,
             maxMintableUpper,
-            maxAllowedPerWallet
+            maxMintablePerAccount
         );
 
         if (!hasRevert) {
@@ -183,7 +183,7 @@ contract RangeEditionMinterTests is TestConfig {
         );
     }
 
-    function test_mintWhenOverMaxAllowedPerWalletReverts() public {
+    function test_mintWhenOverMaxMintablePerAccountReverts() public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(1);
         vm.warp(START_TIME);
 

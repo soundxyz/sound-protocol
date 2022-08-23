@@ -53,8 +53,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param fundingRecipient Address that receives primary and secondary royalties
      * @param royaltyBPS Royalty amount in bps (basis points)
      * @param editionMaxMintable The maximum amount of tokens that can be minted for this edition.
-     * @param randomnessLockedAfterMinted Token supply after which randomness gets locked
-     * @param randomnessLockedTimestamp Timestamp after which randomness gets locked
+     * @param mintRandomnessTokenThreshold Token supply after which randomness gets locked
+     * @param mintRandomnessTimeThreshold Timestamp after which randomness gets locked
      */
     function initialize(
         address owner,
@@ -66,8 +66,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         address fundingRecipient,
         uint16 royaltyBPS,
         uint32 editionMaxMintable,
-        uint32 randomnessLockedAfterMinted,
-        uint32 randomnessLockedTimestamp
+        uint32 mintRandomnessTokenThreshold,
+        uint32 mintRandomnessTimeThreshold
     ) external;
 
     /**
@@ -128,14 +128,14 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function reduceEditionMaxMintable(uint32 newMax) external;
 
     /**
-     * @dev sets randomnessLockedAfterMinted in case of insufficient sales, to finalize goldenEgg
+     * @dev sets mintRandomnessTokenThreshold in case of insufficient sales, to finalize goldenEgg
      */
-    function setMintRandomnessLock(uint32 randomnessLockedAfterMinted) external;
+    function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold) external;
 
     /**
-     * @dev sets randomnessLockedTimestamp
+     * @dev sets mintRandomnessTimeThreshold
      */
-    function setRandomnessLockedTimestamp(uint32 randomnessLockedTimestamp_) external;
+    function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external;
 
     // ================================
     // VIEW FUNCTIONS
@@ -153,9 +153,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /// @dev Returns the total amount of tokens minted in the contract
     function totalMinted() external view returns (uint256);
 
-    function randomnessLockedAfterMinted() external view returns (uint32);
+    function mintRandomnessTokenThreshold() external view returns (uint32);
 
-    function randomnessLockedTimestamp() external view returns (uint32);
+    function mintRandomnessTimeThreshold() external view returns (uint32);
 
     function mintRandomness() external view returns (bytes32);
 
