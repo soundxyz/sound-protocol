@@ -246,7 +246,7 @@ contract MintControllerBaseTests is TestConfig {
         _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), 1, true);
+        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, true);
 
         address affiliate = getFundedAccount(123456789);
 
