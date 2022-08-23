@@ -12,6 +12,8 @@ specifiers:
   '@pnpm/exportable-manifest': ^3.1.2
   '@pnpm/types': ^8.5.0
   '@typechain/ethers-v5': ^10.1.0
+  '@types/fs-extra': ^9.0.13
+  '@types/node': ^18.7.11
   bob-ts: ^4.0.0
   bob-tsm: ^1.1.1
   changesets-github-release: ^0.1.0
@@ -50,7 +52,9 @@ devDependencies:
   '@pnpm/exportable-manifest': 3.1.2
   '@pnpm/types': 8.5.0
   '@typechain/ethers-v5': 10.1.0_ekupgluir2cqbcg7cwnmbh3aca
-  bob-ts: 4.0.0_k2el7cp5jxvwn2itdedexlaiqy
+  '@types/fs-extra': 9.0.13
+  '@types/node': 18.7.11
+  bob-ts: 4.0.0_hcl46ctkavdod3dupsljel3654
   bob-tsm: 1.1.2_k2el7cp5jxvwn2itdedexlaiqy
   changesets-github-release: 0.1.0
   danger: 11.1.1
@@ -851,6 +855,12 @@ packages:
       typescript: 4.7.4
     dev: true
 
+  /@types/fs-extra/9.0.13:
+    resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
+    dependencies:
+      '@types/node': 18.7.11
+    dev: true
+
   /@types/is-ci/3.0.0:
     resolution: {integrity: sha512-Q0Op0hdWbYd1iahB+IFNQcWXFq4O0Q5MwQP7uN0souuQ4rPg1vEYcnIOfr1gY+M+6rc8FGoRaBO1mOOvL29sEQ==}
     dependencies:
@@ -863,6 +873,10 @@ packages:
 
   /@types/node/12.20.55:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
+    dev: true
+
+  /@types/node/18.7.11:
+    resolution: {integrity: sha512-KZhFpSLlmK/sdocfSAjqPETTMd0ug6HIMIAwkwUpU79olnZdQtMxpQP+G1wDzCH7na+FltSIhbaZuKdwZ8RDrw==}
     dev: true
 
   /@types/normalize-package-data/2.4.1:
@@ -1093,7 +1107,7 @@ packages:
       rollup: 2.78.1
     dev: true
 
-  /bob-ts/4.0.0_k2el7cp5jxvwn2itdedexlaiqy:
+  /bob-ts/4.0.0_hcl46ctkavdod3dupsljel3654:
     resolution: {integrity: sha512-+8wb4kt7Y0yY5FyrPVn/oviGes859eglOx6Tm1usYponuzdBpih3D90IW06nQbMp7AWzQfOsV/82SrguJBeUxQ==}
     engines: {node: '>=14.13.1'}
     hasBin: true
@@ -1107,6 +1121,7 @@ packages:
       typescript:
         optional: true
     dependencies:
+      '@types/node': 18.7.11
       bob-esbuild-plugin: 4.0.0_75tz4fz3hdw34ihj4xz6ux6bmq
       esbuild: 0.15.5
       rollup: 2.78.1
