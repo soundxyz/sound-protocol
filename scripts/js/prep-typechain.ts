@@ -14,15 +14,14 @@ const soundContracts = [
     "GoldenEggMetaData.sol",
     "MerkleDropMinter.sol",
     "FixedPriceSignatureMinter.sol",
-    "MintControllerBase.sol",
     "RangeEditionMinter.sol",
     "SoundCreatorV1.sol",
     "SoundEditionV1.sol",
+    "IMinterModule.sol",
     "IMetadataModule.sol",
     "IMerkleDropMinter.sol",
     "IFixedPriceSignatureMinter.sol",
     "IRangeEditionMinter.sol",
-    "ISoundCreatorV1.sol",
     "ISoundEditionV1.sol",
 ];
 

@@ -15,7 +15,7 @@
     "prep-typechain": "bob-tsm scripts/js/prep-typechain.ts",
     "typechain": "pnpm prep-typechain && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-sound/**/*[!metadata].json'",
     "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
-    "prepack": "pnpm build && pnpm typechain && bob-tsm build.ts",
+    "prepack": "rm -rf out && pnpm build && pnpm typechain && bob-tsm build.ts",
     "postpublish": "gh-release"
   },
   "repository": {
