@@ -1,5 +1,5 @@
 ---
-"@soundxyz/sound-protocol": minor
+"@soundxyz/sound-protocol": major
 ---
 
 - Adds typechain
