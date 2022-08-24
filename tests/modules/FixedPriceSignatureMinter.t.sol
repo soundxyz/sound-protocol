@@ -6,7 +6,7 @@ import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
 import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
+import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract FixedPriceSignatureMinterTests is TestConfig {

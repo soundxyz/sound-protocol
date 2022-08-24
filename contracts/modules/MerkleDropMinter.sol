@@ -8,7 +8,7 @@ import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
+import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
 import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
 
 /// @dev Airdrop using merkle tree logic.

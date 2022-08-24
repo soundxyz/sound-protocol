@@ -4,7 +4,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol";
-import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
+import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";

@@ -7,7 +7,7 @@ import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
+import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
