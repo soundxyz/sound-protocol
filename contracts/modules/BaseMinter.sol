@@ -213,7 +213,7 @@ abstract contract BaseMinter is IERC165, IMinterModule, Ownable {
     function totalPrice(
         address edition,
         uint256 mintId,
-        address,
+        address, /* minter */
         uint32 quantity,
         bool affiliated
     ) public view virtual override returns (uint256) {
