@@ -147,8 +147,8 @@ abstract contract BaseMinter is IERC165, IMinterModule, Ownable {
      */
     function withdrawForAffiliate(address affiliate) public override {
         uint256 accrued = _affiliateFeesAccrued[affiliate];
-        _affiliateFeesAccrued[affiliate] = 0;
         if (accrued != 0) {
+            _affiliateFeesAccrued[affiliate] = 0;
             SafeTransferLib.safeTransferETH(affiliate, accrued);
         }
     }
