@@ -4,7 +4,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
@@ -406,13 +406,13 @@ contract RangeEditionMinterTests is TestConfig {
             expectedMaxAllowedPerWallet
         );
 
-        IMinterModule.StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
+        StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
 
         assertEq(expectedStartTime, mintData.startTime);
         assertEq(expectedEndTime, mintData.endTime);
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
-        assertEq(expectedMaxAllowedPerWallet, mintData.maxAllowedPerWallet);
+        assertEq(expectedMaxAllowedPerWallet, mintData.maxMintablePerAccount);
         assertEq(MAX_MINTABLE_UPPER, mintData.maxMintable);
         assertEq(0, mintData.totalMinted);
 

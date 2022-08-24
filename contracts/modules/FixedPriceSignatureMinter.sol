@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
 
 /**
@@ -111,7 +112,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-        uint32 maxPerAccount = this.maxAllowedPerWallet(edition, mintId);
+        uint32 maxPerAccount = this.maxMintablePerAccount(edition, mintId);
 
         StandardMintData memory combinedMintData = StandardMintData(
             baseData.startTime,

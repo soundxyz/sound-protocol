@@ -6,6 +6,7 @@ import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
 import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract FixedPriceSignatureMinterMinterTests is TestConfig {
@@ -189,13 +190,13 @@ contract FixedPriceSignatureMinterMinterTests is TestConfig {
             expectedEndTime
         );
 
-        IMinterModule.StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
+        StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
 
         assertEq(expectedStartTime, mintData.startTime);
         assertEq(expectedEndTime, mintData.endTime);
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
-        assertEq(type(uint32).max, mintData.maxAllowedPerWallet);
+        assertEq(type(uint32).max, mintData.maxMintablePerAccount);
         assertEq(MAX_MINTABLE, mintData.maxMintable);
         assertEq(0, mintData.totalMinted);
     }
