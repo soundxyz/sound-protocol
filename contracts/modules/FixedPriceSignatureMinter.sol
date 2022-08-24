@@ -107,6 +107,25 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId].totalMinted;
     }
 
+    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        uint32 maxPerAccount = this.maxAllowedPerWallet(edition, mintId);
+
+        StandardMintData memory combinedMintData = StandardMintData(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            maxPerAccount,
+            mintData.totalMinted
+        );
+
+        return combinedMintData;
+    }
+
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;

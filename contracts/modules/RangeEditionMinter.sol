@@ -119,12 +119,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 _maxMintable;
-        if (block.timestamp < data.closingTime) {
-            _maxMintable = data.maxMintableUpper;
-        } else {
-            _maxMintable = data.maxMintableLower;
-        }
+        uint32 _maxMintable = _getMaxMintable(data);
+
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
         uint32 nextTotalMinted = data.totalMinted + quantity;
@@ -226,6 +222,25 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
+    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        uint32 _maxMintable = _getMaxMintable(mintData);
+
+        StandardMintData memory combinedMintData = StandardMintData(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            _maxMintable,
+            mintData.maxAllowedPerWallet,
+            mintData.totalMinted
+        );
+
+        return combinedMintData;
+    }
+
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
@@ -246,5 +261,18 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     ) internal view override {
         uint32 closingTime = _editionMintData[edition][mintId].closingTime;
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    }
+
+    /**
+     * @dev Gets the current maximum mintable quantity.
+     */
+    function _getMaxMintable(EditionMintData storage data) internal view returns (uint32) {
+        uint32 _maxMintable;
+        if (block.timestamp < data.closingTime) {
+            _maxMintable = data.maxMintableUpper;
+        } else {
+            _maxMintable = data.maxMintableLower;
+        }
+        return _maxMintable;
     }
 }

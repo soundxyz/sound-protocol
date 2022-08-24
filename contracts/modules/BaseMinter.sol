@@ -210,25 +210,6 @@ abstract contract BaseMinter is IERC165, IMinterModule {
         return _baseData[edition][mintId];
     }
 
-    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
-        BaseData memory baseData = _baseData[edition][mintId];
-        uint256 price = this.price(edition, mintId);
-        uint32 maxMintable = this.maxMintable(edition, mintId);
-        uint32 maxAllowedPerWallet = this.maxAllowedPerWallet(edition, mintId);
-        uint32 totalMinted = this.totalMinted(edition, mintId);
-
-        return
-            StandardMintData(
-                baseData.startTime,
-                baseData.endTime,
-                baseData.mintPaused,
-                price,
-                maxMintable,
-                maxAllowedPerWallet,
-                totalMinted
-            );
-    }
-
     // @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IMinterModule).interfaceId;

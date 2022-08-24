@@ -48,4 +48,8 @@ contract MockMinter is BaseMinter {
     ) external pure returns (uint32) {
         return type(uint32).max;
     }
+
+    function standardMintData(address, uint256) public pure returns (StandardMintData memory) {
+        return StandardMintData(0, 1, false, 1, 1, 1, 0);
+    }
 }
