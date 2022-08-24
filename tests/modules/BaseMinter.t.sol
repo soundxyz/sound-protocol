@@ -8,6 +8,7 @@ import { TestConfig } from "../TestConfig.sol";
 import { MockMinter } from "../mocks/MockMinter.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 contract MintControllerBaseTests is TestConfig {
     event MintConfigCreated(
@@ -466,5 +467,11 @@ contract MintControllerBaseTests is TestConfig {
         minter.setAffiliateDiscount(address(edition), mintId, affiliateDiscountBPS);
         assertEq(minter.baseMintData(address(edition), mintId).affiliateDiscountBPS, affiliateDiscountBPS);
         return true;
+    }
+
+    function test_supportsInterface() external {
+        assertTrue(minter.supportsInterface(type(IMinterModule).interfaceId));
+        assertTrue(minter.supportsInterface(type(IERC165).interfaceId));
+        assertFalse(minter.supportsInterface(bytes4(0)));
     }
 }
