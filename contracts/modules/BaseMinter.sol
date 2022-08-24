@@ -200,8 +200,8 @@ abstract contract BaseMinter is IERC165, IMinterModule, Ownable {
      * @inheritdoc IMinterModule
      */
     function isAffiliated(
-        address,
-        uint256,
+        address, /* edition */
+        uint256, /* mintId */
         address affiliate
     ) public view virtual override returns (bool) {
         return affiliate != address(0);
