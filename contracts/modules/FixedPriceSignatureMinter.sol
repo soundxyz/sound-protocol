@@ -96,6 +96,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId].price;
     }
 
+    // TODO: add getter for EditionMintData.signer
+
     function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }

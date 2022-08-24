@@ -143,6 +143,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
+    // TODO: add getter for merkleRootHash
+
     function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }

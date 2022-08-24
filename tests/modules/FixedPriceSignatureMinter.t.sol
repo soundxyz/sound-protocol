@@ -9,7 +9,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { StandardMintData } from "@core/interfaces/minter/IMinterModuleState.sol";
 import { TestConfig } from "../TestConfig.sol";
 
-contract FixedPriceSignatureMinterMinterTests is TestConfig {
+contract FixedPriceSignatureMinterTests is TestConfig {
     using ECDSA for bytes32;
 
     uint256 constant PRICE = 1;

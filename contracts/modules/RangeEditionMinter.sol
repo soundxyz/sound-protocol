@@ -194,6 +194,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return _editionMintData[edition][mintId].price;
     }
 
+    // TODO: add getter for closingTime
+
     function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
