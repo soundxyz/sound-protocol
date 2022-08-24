@@ -395,7 +395,7 @@ abstract contract BaseMinter is IERC165, IMinterModule, Ownable {
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
-        // Check if the mint is an affliated mint.
+        // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
 
         uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, affiliated);
