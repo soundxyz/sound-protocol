@@ -146,7 +146,7 @@ interface IMinterModule {
     /**
      * @dev Sets the platform fee.
      * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
+     * - The caller must be owner of the contract.
      */
     function setPlatformFee(uint16 bps) external;
 
