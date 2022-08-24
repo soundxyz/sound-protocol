@@ -203,13 +203,12 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         uint256 mintId,
         address, /* minter */
         uint32 quantity,
+        uint256 price_,
         bool affiliated
     ) public view virtual override returns (uint256) {
-        uint256 price = _price(edition, mintId);
+        if (price_ == 0) return 0;
 
-        if (price == 0) return 0;
-
-        uint256 total = quantity * price;
+        uint256 total = quantity * price_;
 
         if (!affiliated) return total;
 
@@ -276,11 +275,6 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
-
-    /**
-     * @dev Returns the unit price. Intended to be overridden by child contracts.
-     */
-    function _price(address edition, uint256 mintId) internal view virtual returns (uint256);
 
     /**
      * @dev Creates an edition mint configuration.
@@ -369,6 +363,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         address edition,
         uint256 mintId,
         uint32 quantity,
+        uint256 price_,
         address affiliate
     ) internal {
         BaseData storage baseData = _baseData[edition][mintId];
@@ -386,7 +381,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
 
-        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, affiliated);
+        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, price_, affiliated);
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);

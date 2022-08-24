@@ -8,6 +8,7 @@ import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
 
 /// @dev Airdrop using merkle tree logic.
@@ -108,7 +109,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        _mint(edition, mintId, requestedQuantity, affiliate);
+        _mint(edition, mintId, requestedQuantity, price(edition, mintId), affiliate);
 
         emit DropClaimed(msg.sender, requestedQuantity);
     }
@@ -151,19 +152,17 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId].maxMintablePerAccount;
     }
 
-    /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
-        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price;
     }
 
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
-
     /**
-     * @inheritdoc BaseMinter
+     * @inheritdoc IERC165
      */
-    function _price(address edition, uint256 mintId) internal view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
     }
 }

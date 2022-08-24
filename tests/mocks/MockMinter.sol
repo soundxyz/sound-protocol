@@ -20,7 +20,7 @@ contract MockMinter is BaseMinter {
         uint32 quantity,
         address affiliate
     ) external payable {
-        _mint(edition, mintId, quantity, affiliate);
+        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
     }
 
     function maxMintable(
@@ -37,14 +37,14 @@ contract MockMinter is BaseMinter {
         return type(uint32).max;
     }
 
-    function _price(
+    function price(
         address, /** edition */
         uint256 /** mintId */
-    ) internal view virtual override returns (uint256) {
+    ) public view virtual override returns (uint256) {
         return _currentPrice;
     }
 
-    function setPrice(uint256 price) external {
-        _currentPrice = price;
+    function setPrice(uint256 price_) external {
+        _currentPrice = price_;
     }
 }

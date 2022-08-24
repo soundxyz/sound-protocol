@@ -217,6 +217,7 @@ interface IMinterModule is IERC165 {
         uint256 mintId,
         address minter,
         uint32 quantity,
+        uint256 price_,
         bool affiliated
     ) external view returns (uint256);
 
@@ -241,4 +242,9 @@ interface IMinterModule is IERC165 {
      * @dev Returns the base mint data for (`edition`, `mintId`).
      */
     function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
+
+    /**
+     * @dev Returns the base unit price of a single token.
+     */
+    function price(address edition, uint256 mintId) external view returns (uint256);
 }

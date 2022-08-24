@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
 
 /**
@@ -77,7 +78,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        _mint(edition, mintId, quantity, affiliate);
+        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
     }
 
     // ================================
@@ -100,19 +101,17 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return type(uint32).max;
     }
 
-    /// @inheritdoc IERC165
+    /**
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
     }
 
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
-
     /**
-     * @inheritdoc BaseMinter
+     * @inheritdoc IMinterModule
      */
-    function _price(address edition, uint256 mintId) internal view virtual override returns (uint256) {
+    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }
 }

@@ -287,13 +287,14 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
-        minter.setPrice(1 ether);
+        uint256 price = 1 ether;
+        minter.setPrice(price);
 
         affiliateFeeBPS = affiliateFeeBPS % minter.MAX_BPS();
         _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, true);
+        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, price, true);
 
         address affiliate = getFundedAccount(123456789);
 
@@ -313,13 +314,14 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
-        minter.setPrice(1 ether);
+        uint256 price = 1 ether;
+        minter.setPrice(price);
 
         platformFeeBPS = platformFeeBPS % minter.MAX_BPS();
         _test_setPlatformFee(platformFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, true);
+        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, price, true);
 
         address affiliate = getFundedAccount(123456789);
 
@@ -367,7 +369,14 @@ contract MintControllerBaseTests is TestConfig {
         uint256 expectedAffiliateFees;
 
         bool affiliated = minter.isAffiliated(address(edition), mintId, affiliate);
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, affiliated);
+        uint256 requiredEtherValue = minter.totalPrice(
+            address(edition),
+            mintId,
+            address(this),
+            quantity,
+            price,
+            affiliated
+        );
 
         expectedPlatformFees = (requiredEtherValue * platformFeeBPS) / minter.MAX_BPS();
 

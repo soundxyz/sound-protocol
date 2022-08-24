@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IRangeEditionMinter } from "./interfaces/IRangeEditionMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 
 /*
@@ -139,7 +140,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, quantity, affiliate);
+        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
     }
 
     /*
@@ -219,7 +220,16 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    /// @inheritdoc IERC165
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
     }
@@ -227,13 +237,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
-
-    /**
-     * @inheritdoc BaseMinter
-     */
-    function _price(address edition, uint256 mintId) internal view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
 
     /**
      * @dev Optional validation function that gets called by _setTimeRange()
