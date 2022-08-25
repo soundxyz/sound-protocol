@@ -33,6 +33,17 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // Tracking claimed amounts per wallet
     mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
 
+    modifier validProof(
+        address edition,
+        uint256 mintId,
+        bytes32[] calldata merkleProof
+    ) {
+        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
+        bool valid = MerkleProof.verify(merkleProof, _editionMintData[edition][mintId].merkleRootHash, leaf);
+        if (!valid) revert InvalidMerkleProof();
+        _;
+    }
+
     // ================================
     // WRITE FUNCTIONS
     // ================================
@@ -81,71 +92,67 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId Id of the mint instance.
      * This is the maximum the user can claim.
-     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxMintablePerAccount`
+     * @param quantity Number of tokens to mint. This can be anything up to the `maxMintablePerAccount`
      * @param merkleProof Merkle proof for the claim.
      */
     function mint(
         address edition,
         uint256 mintId,
-        uint32 requestedQuantity,
+        uint32 quantity,
         bytes32[] calldata merkleProof,
         address affiliate
-    ) public payable {
+    ) public payable validProof(edition, mintId, merkleProof) {
         EditionMintData storage data = _editionMintData[edition][mintId];
+        totalMintedQuantityUpdates(data.totalMinted, data.maxMintable, quantity);
+        quantityAllowedPerWalletUpdates(edition, mintId, quantity);
+        uint256 totalPrice = totalPrice(edition, mintId, quantity);
+        _mint(edition, mintId, quantity, totalPrice, affiliate);
 
-        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
-        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
-        data.totalMinted = nextTotalMinted;
-
-        uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
-
-        // Revert if attempting to mint more than the max allowed per wallet.
-        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
-
-        // Update the claimed amount data
-        claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
-
-        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
-        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
-        if (!valid) revert InvalidMerkleProof();
-
-        _mint(edition, mintId, requestedQuantity, totalPrice(edition, mintId, requestedQuantity), affiliate);
-
-        emit DropClaimed(msg.sender, requestedQuantity);
+        emit DropClaimed(msg.sender, quantity);
     }
 
     function mint(
         address edition,
         uint256 mintId,
-        uint32 requestedQuantity,
+        uint32 quantity,
         bytes32[] calldata merkleProof
-    ) public payable {
+    ) public payable validProof(edition, mintId, merkleProof) {
         EditionMintData storage data = _editionMintData[edition][mintId];
+        totalMintedQuantityUpdates(data.totalMinted, data.maxMintable, quantity);
+        quantityAllowedPerWalletUpdates(edition, mintId, quantity);
 
-        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
-        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
-        data.totalMinted = nextTotalMinted;
+        uint256 totalPrice = totalPrice(edition, mintId, quantity);
+        _mint(edition, mintId, quantity, totalPrice);
 
-        uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
+        emit DropClaimed(msg.sender, quantity);
+    }
+
+    function totalMintedQuantityUpdates(
+        uint32 totalMinted,
+        uint32 maxMintable,
+        uint32 quantity
+    ) internal pure {
+        if (totalMinted + quantity > maxMintable) revert MaxMintableReached(maxMintable);
+        totalMinted += quantity;
+    }
+
+    function quantityAllowedPerWalletUpdates(
+        address edition,
+        uint256 mintId,
+        uint32 quantity
+    ) internal {
+        uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + quantity;
 
         // Revert if attempting to mint more than the max allowed per wallet.
         if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
-
-        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
-        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
-        if (!valid) revert InvalidMerkleProof();
-
-        _mint(edition, mintId, requestedQuantity, totalPrice(edition, mintId, requestedQuantity));
-
-        emit DropClaimed(msg.sender, requestedQuantity);
     }
 
     // ================================
     // VIEW FUNCTIONS
-    // ================================
+    // ==========================   ======
 
     /**
      * @dev Returns the amount of claimed tokens for `wallet` in `mintData`.
