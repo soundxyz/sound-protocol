@@ -198,26 +198,6 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     /**
      * @inheritdoc IMinterModule
      */
-    function totalPrice(
-        address edition,
-        uint256 mintId,
-        address, /* minter */
-        uint32 quantity,
-        uint256 price_,
-        bool affiliated
-    ) public view virtual override returns (uint256) {
-        if (price_ == 0) return 0;
-
-        uint256 total = quantity * price_;
-
-        if (!affiliated) return total;
-
-        return total - ((total * _baseData[edition][mintId].affiliateDiscountBPS) / _MAX_BPS);
-    }
-
-    /**
-     * @inheritdoc IMinterModule
-     */
     function nextMintId(address edition) public view returns (uint256) {
         return _nextMintIds[edition];
     }
@@ -372,7 +352,13 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
 
-        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, price_, affiliated);
+        uint256 requiredEtherValue;
+        uint256 total = quantity * price_;
+        if (!affiliated) {
+            requiredEtherValue = total;
+        } else {
+            requiredEtherValue = total - ((total * _baseData[edition][mintId].affiliateDiscountBPS) / _MAX_BPS);
+        }
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);

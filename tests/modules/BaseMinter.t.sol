@@ -283,7 +283,7 @@ contract MintControllerBaseTests is TestConfig {
         _test_setAffiliateDiscount(edition, mintId, affiliateDiscountBPS);
     }
 
-    function test_withdrawAffiliateFeesAccrued(uint16 affiliateFeeBPS) public {
+    function test_withdrawAffiliateFeesAccrued(uint16 affiliateFeeBPS, uint16 affiliateDiscountBPS) public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
@@ -294,7 +294,8 @@ contract MintControllerBaseTests is TestConfig {
         _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, price, true);
+        uint256 total = quantity * price;
+        uint256 requiredEtherValue = total - ((total * affiliateDiscountBPS) / minter.MAX_BPS());
 
         address affiliate = getFundedAccount(123456789);
 
@@ -307,10 +308,11 @@ contract MintControllerBaseTests is TestConfig {
 
     function test_withdrawAffiliateFeesAccrued() public {
         uint16 affiliateFeeBPS = 10;
-        test_withdrawAffiliateFeesAccrued(affiliateFeeBPS);
+        uint16 affiliateDiscountBPS = 10;
+        test_withdrawAffiliateFeesAccrued(affiliateFeeBPS, affiliateDiscountBPS);
     }
 
-    function test_withdrawPlatformFeesAccrued(uint16 platformFeeBPS) public {
+    function test_withdrawPlatformFeesAccrued(uint16 platformFeeBPS, uint16 affiliateDiscountBPS) public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
@@ -321,7 +323,8 @@ contract MintControllerBaseTests is TestConfig {
         _test_setPlatformFee(platformFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, price, true);
+        uint256 total = quantity * price;
+        uint256 requiredEtherValue = total - ((total * affiliateDiscountBPS) / minter.MAX_BPS());
 
         address affiliate = getFundedAccount(123456789);
 
@@ -334,7 +337,9 @@ contract MintControllerBaseTests is TestConfig {
 
     function test_withdrawPlatformFeesAccrued() public {
         uint16 platformFeeBPS = 10;
-        test_withdrawPlatformFeesAccrued(platformFeeBPS);
+        uint16 affiliateDiscountBPS = 10;
+
+        test_withdrawPlatformFeesAccrued(platformFeeBPS, affiliateDiscountBPS);
     }
 
     // This is an integration test to ensure that all the functions work together properly.
@@ -369,14 +374,8 @@ contract MintControllerBaseTests is TestConfig {
         uint256 expectedAffiliateFees;
 
         bool affiliated = minter.isAffiliated(address(edition), mintId, affiliate);
-        uint256 requiredEtherValue = minter.totalPrice(
-            address(edition),
-            mintId,
-            address(this),
-            quantity,
-            price,
-            affiliated
-        );
+        uint256 total = quantity * price;
+        uint256 requiredEtherValue = affiliated ? total : total - ((total * affiliateDiscountBPS) / minter.MAX_BPS());
 
         expectedPlatformFees = (requiredEtherValue * platformFeeBPS) / minter.MAX_BPS();
 

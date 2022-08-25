@@ -14,8 +14,8 @@ interface IMinterModule is IERC165 {
     struct BaseData {
         uint32 startTime;
         uint32 endTime;
-        uint32 affiliateFeeBPS;
-        uint32 affiliateDiscountBPS;
+        uint16 affiliateFeeBPS;
+        uint16 affiliateDiscountBPS;
         bool mintPaused;
     }
 
@@ -208,18 +208,6 @@ interface IMinterModule is IERC165 {
         uint256 mintId,
         address affiliate
     ) external view returns (bool);
-
-    /**
-     * @dev Returns the total price for `quantity` tokens for (`edition`, `mintId`).
-     */
-    function totalPrice(
-        address edition,
-        uint256 mintId,
-        address minter,
-        uint32 quantity,
-        uint256 price_,
-        bool affiliated
-    ) external view returns (uint256);
 
     /**
      * @dev Returns the next mint ID for `edition`.
