@@ -4,7 +4,6 @@ pragma solidity ^0.8.16;
 
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
-import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
@@ -17,15 +16,27 @@ import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerk
  * @author Sound.xyz
  */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
+
+    struct EditionMintData {
+        // Hash of the root node for the merkle tree drop
+        bytes32 merkleRootHash;
+        // The price at which each token will be sold, in ETH.
+        uint256 price;
+        // The maximum number of tokens that can can be minted for this sale.
+        uint32 maxMintable;
+        // The maximum number of tokens that a wallet can mint.
+        uint32 maxMintablePerAccount;
+        // The total number of tokens minted so far for this sale.
+        uint32 totalMinted;
+    }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev Tracks claimed amounts per account.
-     * edition => mintId => enumerable map (address => claimed balance)
+     * edition => mintId => wallet address => claimed balance
      */
-    mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) internal claimed;
 
     // ================================
     // WRITE FUNCTIONS
@@ -83,7 +94,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         if (updatedClaimedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
-        claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
+        claimed[edition][mintId][msg.sender] = updatedClaimedQuantity;
 
         bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
@@ -104,9 +115,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint256 mintId,
         address account
     ) public view returns (uint256) {
-        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(account);
-        claimedQuantity = success ? claimedQuantity : 0;
-        return claimedQuantity;
+        return claimed[edition][mintId][account];
     }
 
     /**
