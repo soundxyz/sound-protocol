@@ -67,7 +67,7 @@ contract GoldenEggMetadataTests is TestConfig {
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         vm.warp(START_TIME);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1);
         uint256 tokenId = 1;
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
@@ -83,7 +83,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
@@ -97,7 +97,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         vm.warp(RANDOMNESS_LOCKED_TIMESTAMP);
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
@@ -116,7 +116,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
@@ -130,7 +130,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         vm.expectRevert(ISoundEditionV1.InvalidRandomnessLock.selector);
         edition.setMintRandomnessLock(quantity - 1);
@@ -142,7 +142,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
@@ -164,7 +164,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
@@ -198,7 +198,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
@@ -222,7 +222,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity);
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated

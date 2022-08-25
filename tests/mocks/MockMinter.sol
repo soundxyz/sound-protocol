@@ -23,6 +23,14 @@ contract MockMinter is BaseMinter {
         _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
     }
 
+    function mint(
+        address edition,
+        uint256 mintId,
+        uint32 quantity
+    ) external payable {
+        _mint(edition, mintId, quantity, price(edition, mintId));
+    }
+
     function maxMintable(
         address, /** edition */
         uint256 /** mintId */

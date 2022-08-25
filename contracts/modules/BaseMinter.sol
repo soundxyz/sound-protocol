@@ -347,34 +347,35 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         address affiliate
     ) internal mintOpenAndNotPaused(edition, mintId) {
         BaseData storage baseData = _baseData[edition][mintId];
-        /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
+        require(affiliated, "Mint is not affiliated");
 
-        uint256 requiredEtherValue;
-        uint256 total = quantity * price_;
-        if (!affiliated) {
-            requiredEtherValue = total;
-        } else {
-            requiredEtherValue = total - ((total * baseData.affiliateDiscountBPS) / _MAX_BPS);
-        }
+        uint256 requiredEtherValue = quantity *
+            price_ -
+            ((quantity * price_ * baseData.affiliateDiscountBPS) / _MAX_BPS);
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
 
         uint256 remainingPayment = deductPlatformFee(requiredEtherValue);
+        remainingPayment = deductAffiliateFee(remainingPayment, affiliate, baseData.affiliateFeeBPS);
 
-        if (affiliated) {
-            // Compute the affiliate fee.
-            uint256 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
-            // Deduct the affiliate fee from the remaining payment.
-            remainingPayment -= affiliateFee;
-            // Increment the affiliate fees accrued
-            _affiliateFeesAccrued[affiliate] += affiliateFee;
-        }
+        ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
+    }
 
-        /* ------------------------- MINT --------------------------- */
+    function _mint(
+        address edition,
+        uint256 mintId,
+        uint32 quantity,
+        uint256 price_
+    ) internal mintOpenAndNotPaused(edition, mintId) {
+        uint256 requiredEtherValue = quantity * price_;
+        // Reverts if the payment is not exact.
+        if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
+
+        uint256 remainingPayment = deductPlatformFee(requiredEtherValue);
 
         ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
     }
@@ -393,6 +394,19 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         _platformFeesAccrued += platformFee;
         // Deduct the platform fee.
         remainingPayment = requiredEtherValue - platformFee;
+    }
+
+    function deductAffiliateFee(
+        uint256 requiredEtherValue,
+        address affiliate,
+        uint16 affiliateFeeBPS
+    ) internal returns (uint256 remainingPayment) {
+        // Compute the affiliate fee.
+        uint256 affiliateFee = (requiredEtherValue * affiliateFeeBPS) / _MAX_BPS;
+        // Deduct the affiliate fee from the remaining payment.
+        remainingPayment = requiredEtherValue - affiliateFee;
+        // Increment the affiliate fees accrued
+        _affiliateFeesAccrued[affiliate] += affiliateFee;
     }
 
     modifier mintOpenAndNotPaused(address edition, uint256 mintId) {

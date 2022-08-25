@@ -114,6 +114,35 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         emit DropClaimed(msg.sender, requestedQuantity);
     }
 
+    function mint(
+        address edition,
+        uint256 mintId,
+        uint32 requestedQuantity,
+        bytes32[] calldata merkleProof
+    ) public payable {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+
+        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
+        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
+        data.totalMinted = nextTotalMinted;
+
+        uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
+
+        // Revert if attempting to mint more than the max allowed per wallet.
+        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
+
+        // Update the claimed amount data
+        claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
+
+        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
+        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
+        if (!valid) revert InvalidMerkleProof();
+
+        _mint(edition, mintId, requestedQuantity, price(edition, mintId));
+
+        emit DropClaimed(msg.sender, requestedQuantity);
+    }
+
     // ================================
     // VIEW FUNCTIONS
     // ================================

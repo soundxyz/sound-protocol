@@ -143,6 +143,35 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
     }
 
+    function mint(
+        address edition,
+        uint256 mintId,
+        uint32 quantity
+    ) public payable {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+
+        uint32 _maxMintable;
+        if (block.timestamp < data.closingTime) {
+            _maxMintable = data.maxMintableUpper;
+        } else {
+            _maxMintable = data.maxMintableLower;
+        }
+        // Increase `totalMinted` by `quantity`.
+        // Require that the increased value does not exceed `maxMintable`.
+        uint32 nextTotalMinted = data.totalMinted + quantity;
+        _requireNotSoldOut(nextTotalMinted, _maxMintable);
+        data.totalMinted = nextTotalMinted;
+
+        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+        // If the maximum allowed per wallet is set (i.e. is different to 0)
+        // check the required additional quantity does not exceed the set maximum
+        if ((userMintedBalance + quantity) > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
+
+        mintedTallies[edition][mintId][msg.sender] += quantity;
+
+        _mint(edition, mintId, quantity, price(edition, mintId));
+    }
+
     /*
      * @dev Sets the time range.
      * @param edition Address of the song edition contract we are minting for.

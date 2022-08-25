@@ -80,10 +80,10 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
 
         vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintWithWrongEtherValueReverts() public {
@@ -94,7 +94,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.WrongEtherValue.selector, PRICE * 2, PRICE));
-        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintWhenSoldOutReverts() public {
@@ -105,14 +105,14 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE));
-        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig, address(0));
+        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig, address(0));
+        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig);
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE));
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
@@ -122,14 +122,14 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
 
         vm.prank(edition.owner());
         edition.revokeRole(edition.MINTER_ROLE(), address(minter));
 
         vm.prank(caller);
         vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig);
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
@@ -145,7 +145,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         assertEq(data.totalMinted, 0);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, sig, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, sig);
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
