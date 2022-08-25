@@ -343,7 +343,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        uint256 price_,
+        uint256 totalPrice,
         address affiliate
     ) internal mintOpenAndNotPaused(edition, mintId) {
         BaseData storage baseData = _baseData[edition][mintId];
@@ -352,9 +352,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         bool affiliated = isAffiliated(edition, mintId, affiliate);
         require(affiliated, "Mint is not affiliated");
 
-        uint256 requiredEtherValue = quantity *
-            price_ -
-            ((quantity * price_ * baseData.affiliateDiscountBPS) / _MAX_BPS);
+        uint256 requiredEtherValue = totalPrice - ((totalPrice * baseData.affiliateDiscountBPS) / _MAX_BPS);
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
@@ -369,13 +367,12 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        uint256 price_
+        uint256 totalPrice
     ) internal mintOpenAndNotPaused(edition, mintId) {
-        uint256 requiredEtherValue = quantity * price_;
         // Reverts if the payment is not exact.
-        if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
+        if (msg.value != totalPrice) revert WrongEtherValue(msg.value, totalPrice);
 
-        uint256 remainingPayment = deductPlatformFee(requiredEtherValue);
+        uint256 remainingPayment = deductPlatformFee(totalPrice);
 
         ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
     }

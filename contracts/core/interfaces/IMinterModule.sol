@@ -232,7 +232,12 @@ interface IMinterModule is IERC165 {
     function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
 
     /**
-     * @dev Returns the base unit price of a single token.
+     * @dev Returns the total price for `quantity` amount of tokens.
+     * This is normally price * quantity but may be overwritten for bulk discounts etc.
      */
-    function price(address edition, uint256 mintId) external view returns (uint256);
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        uint256 quantity
+    ) external view returns (uint256);
 }

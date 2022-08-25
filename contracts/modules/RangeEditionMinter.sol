@@ -140,7 +140,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
+        _mint(edition, mintId, quantity, totalPrice(edition, mintId, quantity), affiliate);
     }
 
     function mint(
@@ -169,7 +169,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, quantity, price(edition, mintId));
+        _mint(edition, mintId, quantity, totalPrice(edition, mintId, quantity));
     }
 
     /*
@@ -252,8 +252,12 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /**
      * @inheritdoc IMinterModule
      */
-    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        uint256 quantity
+    ) public view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 
     /**
