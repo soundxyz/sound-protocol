@@ -148,7 +148,7 @@ contract SoundEditionV1 is
     }
 
     /**
-     * @dev Mints `quantity` tokens to addrress `to`
+     * @dev Mints `quantity` tokens to address `to`
      * Each token will be assigned a token ID that is consecutively increasing.
      * The caller must have the `MINTERROLE`, which can be granted via
      * {grantRole}. Multiple minters, such as different minter contracts,
