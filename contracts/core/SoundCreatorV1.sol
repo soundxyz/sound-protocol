@@ -79,7 +79,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @param fundingRecipient The edition's funding recipient address.
      * @param royaltyBPS The secondary sales royalty in basis points.
      * @param editionMaxMintable The maximum number of tokens that can be minted.
-     * @param mintRandomnessTimeThreshold The token count after which `SoundEdition.mintRandomness` gets locked.
+     * @param mintRandomnessTokenThreshold The token count after which `SoundEdition.mintRandomness` gets locked.
      * @param mintRandomnessTimeThreshold The timestamp after which `SoundEdition.mintRandomness` gets locked.
      * @return soundEdition The address of the deployed edition proxy.
      */
