@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
 
 /**
@@ -65,7 +66,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        bytes calldata signature
+        bytes calldata signature,
+        address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
         uint32 nextTotalMinted = data.totalMinted + quantity;
@@ -76,7 +78,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        _mint(edition, mintId, msg.sender, quantity, data.price * quantity);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     // ================================
@@ -91,10 +93,6 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
     function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }
@@ -103,8 +101,23 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return type(uint32).max;
     }
 
-    /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }

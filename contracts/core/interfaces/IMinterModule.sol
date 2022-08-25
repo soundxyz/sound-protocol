@@ -1,10 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+
 /**
  * @title Interface for the base minter functionality, excluding the mint function.
  */
-interface IMinterModule {
+interface IMinterModule is IERC165 {
+    // ================================
+    // STRUCTS
+    // ================================
+
+    struct BaseData {
+        uint32 startTime;
+        uint32 endTime;
+        uint16 affiliateFeeBPS;
+        uint16 affiliateDiscountBPS;
+        bool mintPaused;
+    }
+
     // ================================
     // EVENTS
     // ================================
@@ -29,6 +43,21 @@ interface IMinterModule {
      * @notice Emitted when the `startTime` and `endTime` are updated.
      */
     event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
+
+    /**
+     * @notice Emitted when the `affiliateFeeBPS` is updated.
+     */
+    event AffiliateFeeSet(address indexed edition, uint256 indexed mintId, uint16 feeBPS);
+
+    /**
+     * @notice Emitted when the `affiliateDiscountBPS` is updated.
+     */
+    event AffiliateDiscountSet(address indexed edition, uint256 indexed mintId, uint16 discountBPS);
+
+    /**
+     * @notice Emitted when the `platformFeeBPS` is changed.
+     */
+    event PlatformFeeSet(uint16 feeBPS);
 
     // ================================
     // ERRORS
@@ -64,12 +93,27 @@ interface IMinterModule {
      */
     error Unauthorized();
 
+    /**
+     * The affiliate fee numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidAffiliateFeeBPS();
+
+    /**
+     * The affiliate discount numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidAffiliateDiscountBPS();
+
+    /**
+     * The platform fee numerator must not exceed `MAX_BPS`.
+     */
+    error InvalidPlatformFeeBPS();
+
     // ================================
     // WRITE FUNCTIONS
     // ================================
 
     /**
-     * @dev Sets the `paused` status for `edition`.
+     * @dev Sets the paused status for (`edition`, `mintId`).
      * Calling conditions:
      * - The caller must be the edition's owner or an admin.
      */
@@ -80,7 +124,7 @@ interface IMinterModule {
     ) external;
 
     /**
-     * @dev Sets the time range for an edition mint.
+     * @dev Sets the time range for (`edition`, `mintId`).
      * Calling conditions:
      * - The caller must be the edition's owner or an admin.
      */
@@ -91,13 +135,110 @@ interface IMinterModule {
         uint32 endTime
     ) external;
 
+    /**
+     * @dev Sets the affiliate fee for (`edition`, `mintId`).
+     * Calling conditions:
+     * - The caller must be the edition's owner or an admin.
+     */
+    function setAffiliateFee(
+        address edition,
+        uint256 mintId,
+        uint16 affiliateFeeBPS
+    ) external;
+
+    /**
+     * @dev Sets the affiliate discount for (`edition`, `mintId`).
+     * Calling conditions:
+     * - The caller must be the edition's owner or an admin.
+     */
+    function setAffiliateDiscount(
+        address edition,
+        uint256 mintId,
+        uint16 affiliateDiscountBPS
+    ) external;
+
+    /**
+     * @dev Sets the platform fee.
+     * Calling conditions:
+     * - The caller must be owner of the contract.
+     */
+    function setPlatformFee(uint16 bps) external;
+
+    /**
+     * @dev Withdraws all the accrued fees for `affiliate`.
+     */
+    function withdrawForAffiliate(address affiliate) external;
+
+    /**
+     * @dev Withdraws all the accrued fees for the platform.
+     * Calling conditions:
+     * - The caller must be the the owner of the contract.
+     */
+    function withdrawForPlatform(address to) external;
+
     // ================================
     // VIEW FUNCTIONS
     // ================================
 
-    function price(address edition, uint256 mintId) external view returns (uint256);
+    /**
+     * @dev Returns the maximum basis points (BPS).
+     */
+    function MAX_BPS() external pure returns (uint16);
 
+    /**
+     * @dev Returns the total fees accrued for `affiliate`.
+     */
+    function affiliateFeesAccrued(address affiliate) external view returns (uint256);
+
+    /**
+     * @dev Returns the total fees accrued for the platform.
+     */
+    function platformFeesAccrued() external view returns (uint256);
+
+    /**
+     * @dev Returns the number of basis points for the platform fees.
+     */
+    function platformFeeBPS() external view returns (uint16);
+
+    /**
+     * @dev Returns whether `affiliate` is affiliated for (`edition`, `mintId`).
+     */
+    function isAffiliated(
+        address edition,
+        uint256 mintId,
+        address affiliate
+    ) external view returns (bool);
+
+    /**
+     * @dev Returns the total price for `quantity` tokens for (`edition`, `mintId`).
+     */
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address minter,
+        uint32 quantity,
+        bool affiliated
+    ) external view returns (uint256);
+
+    /**
+     * @dev Returns the next mint ID for `edition`.
+     * A mint ID is assigned sequentially for each unique edition address,
+     * starting from (0, 1, 2, ...)
+     */
+    function nextMintId(address edition) external view returns (uint256);
+
+    /**
+     * @dev Returns the total number of tokens that can be minted for (`edition`, `mintId`).
+     */
     function maxMintable(address edition, uint256 mintId) external view returns (uint32);
 
+    /**
+     * @dev Returns the maximum tokens mintable per wallet for (`edition`, `mintId`).
+     */
     function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
+
+    /**
+     * @dev Returns the base mint data for (`edition`, `mintId`).
+     */
+    function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
 }
