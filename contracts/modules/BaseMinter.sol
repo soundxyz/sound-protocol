@@ -365,17 +365,8 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         uint32 quantity,
         uint256 price_,
         address affiliate
-    ) internal {
+    ) internal mintOpenAndNotPaused(edition, mintId) {
         BaseData storage baseData = _baseData[edition][mintId];
-
-        /* --------------------- GENERAL CHECKS --------------------- */
-
-        uint32 startTime = baseData.startTime;
-        uint32 endTime = baseData.endTime;
-        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-        if (baseData.mintPaused) revert MintPaused();
-
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
         // Check if the mint is an affiliated mint.
@@ -415,5 +406,15 @@ abstract contract BaseMinter is IMinterModule, Ownable {
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
+    }
+
+    modifier mintOpenAndNotPaused(address edition, uint256 mintId) {
+        BaseData storage baseData = _baseData[edition][mintId];
+        uint32 startTime = baseData.startTime;
+        uint32 endTime = baseData.endTime;
+        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (baseData.mintPaused) revert MintPaused();
+        _;
     }
 }
