@@ -78,7 +78,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     // ================================
@@ -108,10 +108,16 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
     }
 
-    /**
-     * @inheritdoc IMinterModule
-     */
-    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }

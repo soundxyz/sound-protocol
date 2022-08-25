@@ -294,7 +294,7 @@ contract MintControllerBaseTests is TestConfig {
         _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, price, true);
+        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, true);
 
         address affiliate = getFundedAccount(123456789);
 
@@ -321,7 +321,7 @@ contract MintControllerBaseTests is TestConfig {
         _test_setPlatformFee(platformFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, price, true);
+        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, true);
 
         address affiliate = getFundedAccount(123456789);
 
@@ -369,14 +369,7 @@ contract MintControllerBaseTests is TestConfig {
         uint256 expectedAffiliateFees;
 
         bool affiliated = minter.isAffiliated(address(edition), mintId, affiliate);
-        uint256 requiredEtherValue = minter.totalPrice(
-            address(edition),
-            mintId,
-            address(this),
-            quantity,
-            price,
-            affiliated
-        );
+        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity, affiliated);
 
         expectedPlatformFees = (requiredEtherValue * platformFeeBPS) / minter.MAX_BPS();
 

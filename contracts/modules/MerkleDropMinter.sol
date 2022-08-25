@@ -109,7 +109,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        _mint(edition, mintId, requestedQuantity, price(edition, mintId), affiliate);
+        _mint(edition, mintId, requestedQuantity, affiliate);
 
         emit DropClaimed(msg.sender, requestedQuantity);
     }
@@ -153,16 +153,22 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IMinterModule
-     */
-    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
-    /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }

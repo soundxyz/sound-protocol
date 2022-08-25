@@ -140,7 +140,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     /*
@@ -221,13 +221,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IMinterModule
-     */
-    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
-    /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
@@ -249,5 +242,14 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     ) internal view override {
         uint32 closingTime = _editionMintData[edition][mintId].closingTime;
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    }
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }
