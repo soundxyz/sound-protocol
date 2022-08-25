@@ -37,7 +37,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
      * edition => mintId => buyer => mintedTallies
      */
-    mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
     // ================================
     // MODIFIERS
