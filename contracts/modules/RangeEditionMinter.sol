@@ -5,6 +5,7 @@ pragma solidity ^0.8.16;
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IRangeEditionMinter } from "./interfaces/IRangeEditionMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 
 /*
@@ -25,7 +26,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         // The upper limit of the maximum number of tokens that can be minted.
         uint32 maxMintableUpper;
         // The maximum number of tokens that a wallet can mint.
-        uint32 maxAllowedPerWallet;
+        uint32 maxMintablePerAccount;
     }
 
     /**
@@ -34,7 +35,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
     /**
-     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxAllowedPerWallet.
+     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxMintablePerAccount.
      * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
      * edition => mintId => buyer => mintedTallies
      */
@@ -82,7 +83,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet_
+        uint32 maxMintablePerAccount_
     ) public returns (uint256 mintId) {
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
@@ -94,7 +95,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.closingTime = closingTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-        data.maxAllowedPerWallet = maxAllowedPerWallet_;
+        data.maxMintablePerAccount = maxMintablePerAccount_;
 
         // prettier-ignore
         emit RangeEditionMintCreated(
@@ -106,7 +107,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             endTime,
             maxMintableLower,
             maxMintableUpper,
-            maxAllowedPerWallet_
+            maxMintablePerAccount_
         );
     }
 
@@ -139,11 +140,11 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if ((userMintedBalance + quantity) > maxAllowedPerWallet(edition, mintId)) revert ExceedsMaxPerWallet();
+        if ((userMintedBalance + quantity) > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, quantity, affiliate);
+        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
     }
 
     /*
@@ -198,10 +199,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
-    function price(address edition, uint256 mintId) public view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
     function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -212,10 +209,10 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         }
     }
 
-    function maxAllowedPerWallet(address edition, uint256 mintId) public view returns (uint32) {
+    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
         return
-            _editionMintData[edition][mintId].maxAllowedPerWallet > 0
-                ? _editionMintData[edition][mintId].maxAllowedPerWallet
+            _editionMintData[edition][mintId].maxMintablePerAccount > 0
+                ? _editionMintData[edition][mintId].maxMintablePerAccount
                 : type(uint32).max;
     }
 
@@ -227,21 +224,23 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
     }
 
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
-
-    /**
-     * @inheritdoc BaseMinter
-     */
-    function _price(address edition, uint256 mintId) internal view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
 
     /**
      * @dev Optional validation function that gets called by _setTimeRange()

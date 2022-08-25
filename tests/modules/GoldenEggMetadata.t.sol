@@ -20,7 +20,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
     uint32 constant MINT_ID = 0;
 
-    uint32 constant MAX_ALLOWED_PER_WALLET_PUBLIC_SALE = 5;
+    uint32 constant MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE = 5;
 
     function _createEdition()
         internal
@@ -58,7 +58,7 @@ contract GoldenEggMetadataTests is TestConfig {
             END_TIME,
             0,
             MAX_MINTABLE,
-            MAX_ALLOWED_PER_WALLET_PUBLIC_SALE
+            MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE
         );
     }
 
@@ -91,7 +91,7 @@ contract GoldenEggMetadataTests is TestConfig {
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
     }
 
-    // Test if tokenURI returns goldenEgg uri, when randomnessLockedTimestamp is passed
+    // Test if tokenURI returns goldenEgg uri, when mintRandomnessTimeThreshold is passed
     function test_getTokenURIAfterRandomnessLockedTimestamp() external {
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
@@ -192,7 +192,7 @@ contract GoldenEggMetadataTests is TestConfig {
         edition.setRandomnessLockedTimestamp(START_TIME);
     }
 
-    // Test when owner lowering randomnessLockedTimestamp, it generates the golden egg
+    // Test when owner lowering mintRandomnessTimeThreshold, it generates the golden egg
     function test_setRandomnessLockedTimestampViaOwnerSuccess() external {
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
@@ -213,7 +213,7 @@ contract GoldenEggMetadataTests is TestConfig {
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
     }
 
-    // Test when admin lowering randomnessLockedTimestamp, it generates the golden egg
+    // Test when admin lowering mintRandomnessTimeThreshold, it generates the golden egg
     function test_setRandomnessLockedTimestampViaAdminSuccess() external {
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 

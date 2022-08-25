@@ -16,7 +16,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet
+        uint32 maxMintablePerAccount
     );
 
     event ClosingTimeSet(address indexed edition, uint256 indexed mintId, uint32 closingTime);
@@ -34,7 +34,7 @@ interface IRangeEditionMinter is IMinterModule {
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
     // The number of tokens minted has exceeded the number allowed for each wallet.
-    error ExceedsMaxPerWallet();
+    error ExceedsMaxPerAccount();
 
     /*
      * @dev Initializes the configuration for an edition mint.
@@ -56,7 +56,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 endTime,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxAllowedPerWallet_
+        uint32 maxMintablePerAccount_
     ) external returns (uint256 mintId);
 
     /*

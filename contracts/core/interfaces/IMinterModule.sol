@@ -1,10 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+
 /**
  * @title Interface for the base minter functionality, excluding the mint function.
  */
-interface IMinterModule {
+interface IMinterModule is IERC165 {
+    // ================================
+    // STRUCTS
+    // ================================
+
+    struct BaseData {
+        uint32 startTime;
+        uint32 endTime;
+        uint32 affiliateFeeBPS;
+        uint32 affiliateDiscountBPS;
+        bool mintPaused;
+    }
+
     // ================================
     // EVENTS
     // ================================
@@ -179,6 +193,7 @@ interface IMinterModule {
         uint256 mintId,
         address minter,
         uint32 quantity,
+        uint256 price_,
         bool affiliated
     ) external view returns (uint256);
 
@@ -197,5 +212,15 @@ interface IMinterModule {
     /**
      * @dev Returns the maximum tokens mintable per wallet for (`edition`, `mintId`).
      */
-    function maxAllowedPerWallet(address edition, uint256 mintId) external view returns (uint32);
+    function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
+
+    /**
+     * @dev Returns the base mint data for (`edition`, `mintId`).
+     */
+    function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
+
+    /**
+     * @dev Returns the base unit price of a single token.
+     */
+    function price(address edition, uint256 mintId) external view returns (uint256);
 }

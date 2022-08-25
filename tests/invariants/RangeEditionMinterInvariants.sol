@@ -29,7 +29,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
             END_TIME,
             MAX_MINTABLE_LOWER,
             MAX_MINTABLE_UPPER,
-            MAX_ALLOWED_PER_WALLET
+            MAX_MINTABLE_PER_ACCOUNT
         );
 
         minterUpdater = new RangeEditionMinterUpdater(edition, minter);
