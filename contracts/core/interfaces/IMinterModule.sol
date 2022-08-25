@@ -14,8 +14,8 @@ interface IMinterModule is IERC165 {
     struct BaseData {
         uint32 startTime;
         uint32 endTime;
-        uint32 affiliateFeeBPS;
-        uint32 affiliateDiscountBPS;
+        uint16 affiliateFeeBPS;
+        uint16 affiliateDiscountBPS;
         bool mintPaused;
     }
 
