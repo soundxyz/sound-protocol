@@ -4,6 +4,8 @@ pragma solidity ^0.8.16;
 import { BaseMinter } from "@modules/BaseMinter.sol";
 
 contract MockMinter is BaseMinter {
+    uint256 private _currentPrice;
+
     function createEditionMint(
         address edition,
         uint32 startTime,
@@ -16,16 +18,9 @@ contract MockMinter is BaseMinter {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        uint256 price_
+        address affiliate
     ) external payable {
-        _mint(edition, mintId, msg.sender, quantity, quantity * price_);
-    }
-
-    function price(
-        address, /** edition */
-        uint256 /** mintId */
-    ) external pure returns (uint256) {
-        return 0;
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     function maxMintable(
@@ -40,5 +35,22 @@ contract MockMinter is BaseMinter {
         uint256 /** mintId */
     ) external pure returns (uint32) {
         return type(uint32).max;
+    }
+
+    function setPrice(uint256 price_) external {
+        _currentPrice = price_;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    function _baseTotalPrice(
+        address, /* edition */
+        uint256, /* mintId */
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _currentPrice * quantity;
     }
 }

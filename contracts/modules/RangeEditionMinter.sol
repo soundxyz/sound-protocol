@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IRangeEditionMinter } from "./interfaces/IRangeEditionMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 
 /*
@@ -115,7 +116,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     function mint(
         address edition,
         uint256 mintId,
-        uint32 quantity
+        uint32 quantity,
+        address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -138,7 +140,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     /*
@@ -193,10 +195,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
-    function price(address edition, uint256 mintId) public view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
     function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -222,8 +220,10 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
     }
 
@@ -242,5 +242,14 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     ) internal view override {
         uint32 closingTime = _editionMintData[edition][mintId].closingTime;
         if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    }
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }
