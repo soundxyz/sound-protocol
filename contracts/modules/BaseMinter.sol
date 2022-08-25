@@ -440,7 +440,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
      * @dev Throws error if `totalMinted > maxMintable`.
      * @param totalMinted The current total number of minted tokens.
      * @param maxMintable The maximum number of mintable tokens.
-    */
+     */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
     }

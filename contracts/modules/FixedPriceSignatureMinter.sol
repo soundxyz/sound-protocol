@@ -95,7 +95,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    /// @inheritdoc IMinterModule
+    /// todo: remove
     function price(address edition, uint256 mintId) external view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }

@@ -129,7 +129,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    /// @inheritdoc IMinterModule
+    // todo: remove
     function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }

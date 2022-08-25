@@ -106,7 +106,7 @@ contract SoundEditionV1 is
     }
 
     /**
-     * @dev Ensures the royalty basis points is valid value.
+     * @dev Ensures the royalty basis points is a valid value.
      */
     modifier onlyValidRoyaltyBPS(uint16 royalty) {
         if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
