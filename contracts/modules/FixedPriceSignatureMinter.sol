@@ -80,29 +80,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
-    // TODO: add getter for EditionMintData.signer
-
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
-
-    function maxMintablePerAccount(address, uint256) external pure returns (uint32) {
-        return type(uint32).max;
-    }
-
-    function totalMinted(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].totalMinted;
-    }
-
     function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
-
-        uint32 maxPerAccount = this.maxMintablePerAccount(edition, mintId);
 
         MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
@@ -110,7 +90,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
             baseData.mintPaused,
             mintData.price,
             mintData.maxMintable,
-            maxPerAccount,
+            type(uint32).max, // maxMintablePerAccount
             mintData.totalMinted,
             mintData.signer
         );

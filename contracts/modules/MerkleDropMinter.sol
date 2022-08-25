@@ -84,8 +84,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
-        // Revert if attempting to mint more than the max allowed per wallet.
-        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
+        // Revert if attempting to mint more than the max allowed per account.
+        if (updatedClaimedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
@@ -127,24 +127,6 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
         return _editionMintData[edition][mintId];
-    }
-
-    // TODO: add getter for merkleRootHash
-
-    function price(address edition, uint256 mintId) public view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
-    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
-
-    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintablePerAccount;
-    }
-
-    function totalMinted(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].totalMinted;
     }
 
     function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {

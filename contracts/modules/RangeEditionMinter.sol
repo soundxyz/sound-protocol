@@ -113,7 +113,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
         // If the maximum allowed per wallet is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if ((userMintedBalance + quantity) > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
+        if ((userMintedBalance + quantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
@@ -171,33 +171,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // ================================
     // VIEW FUNCTIONS
     // ================================
-
-    function price(address edition, uint256 mintId) public view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
-
-    // TODO: add getter for closingTime
-
-    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
-        EditionMintData storage data = _editionMintData[edition][mintId];
-
-        if (block.timestamp < data.closingTime) {
-            return data.maxMintableUpper;
-        } else {
-            return data.maxMintableLower;
-        }
-    }
-
-    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
-        return
-            _editionMintData[edition][mintId].maxMintablePerAccount > 0
-                ? _editionMintData[edition][mintId].maxMintablePerAccount
-                : type(uint32).max;
-    }
-
-    function totalMinted(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].totalMinted;
-    }
 
     /**
      * @dev Returns the `EditionMintData` for `edition.

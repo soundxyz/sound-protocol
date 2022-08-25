@@ -90,16 +90,4 @@ interface IMinterModule {
         uint32 startTime,
         uint32 endTime
     ) external;
-
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
-
-    function price(address edition, uint256 mintId) external view returns (uint256);
-
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32);
-
-    function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
-
-    function totalMinted(address edition, uint256 mintId) external view returns (uint32);
 }
