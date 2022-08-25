@@ -2,7 +2,6 @@
 pragma solidity ^0.8.16;
 
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
 
 contract MockMinter is BaseMinter {
     function createEditionMint(
@@ -48,9 +47,5 @@ contract MockMinter is BaseMinter {
         uint256 /** mintId */
     ) external pure returns (uint32) {
         return type(uint32).max;
-    }
-
-    function standardMintData(address, uint256) public pure returns (StandardMintData memory) {
-        return StandardMintData(0, 1, false, 1, 1, 1, 0);
     }
 }

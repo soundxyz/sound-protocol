@@ -4,9 +4,8 @@ import { ECDSA } from "solady/utils/ECDSA.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
-import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
+import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract FixedPriceSignatureMinterTests is TestConfig {
@@ -144,7 +143,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        FixedPriceSignatureMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
@@ -170,7 +169,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         assertTrue(supportsIFixedPriceSignatureMinter);
     }
 
-    function test_standardMintData() public {
+    function test_mintInfo() public {
         SoundEditionV1 edition = createGenericEdition();
 
         FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
@@ -190,12 +189,13 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             expectedEndTime
         );
 
-        StandardMintData memory mintData = minter.standardMintData(address(edition), MINT_ID);
+        MintInfo memory mintData = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(expectedStartTime, mintData.startTime);
         assertEq(expectedEndTime, mintData.endTime);
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
+        assertEq(_signerAddress(), mintData.signer);
         assertEq(type(uint32).max, mintData.maxMintablePerAccount);
         assertEq(MAX_MINTABLE, mintData.maxMintable);
         assertEq(0, mintData.totalMinted);

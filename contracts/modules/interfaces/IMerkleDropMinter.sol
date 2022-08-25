@@ -4,8 +4,35 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Mint interface for the `MerkleDropMinter`.
+ * @dev Data unique to a merkle drop mint.
  */
+struct EditionMintData {
+    // Hash of the root node for the merkle tree drop
+    bytes32 merkleRootHash;
+    // The price at which each token will be sold, in ETH.
+    uint256 price;
+    // The maximum number of tokens that can can be minted for this sale.
+    uint32 maxMintable;
+    // The maximum number of tokens that a wallet can mint.
+    uint32 maxMintablePerAccount;
+    // The total number of tokens minted so far for this sale.
+    uint32 totalMinted;
+}
+
+/**
+ * @dev All the information about a merkle drop mint (combines EditionMintData with BaseData).
+ */
+struct MintInfo {
+    uint32 startTime;
+    uint32 endTime;
+    bool mintPaused;
+    uint256 price;
+    uint32 maxMintable;
+    uint32 maxMintablePerAccount;
+    uint32 totalMinted;
+    bytes32 merkleRootHash;
+}
+
 interface IMerkleDropMinter is IMinterModule {
     event MerkleDropMintCreated(
         address indexed edition,

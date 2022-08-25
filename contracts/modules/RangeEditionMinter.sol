@@ -3,31 +3,13 @@
 pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { IRangeEditionMinter } from "./interfaces/IRangeEditionMinter.sol";
-import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
+import { IRangeEditionMinter, EditionMintData, MintInfo } from "./interfaces/IRangeEditionMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 
 /*
  * @dev Minter class for range edition sales.
  */
 contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
-    struct EditionMintData {
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // The timestamp (in seconds since unix epoch) after which the
-        // max amount of tokens mintable will drop from
-        // `maxMintableUpper` to `maxMintableLower`.
-        uint32 closingTime;
-        // The total number of tokens minted. Includes permissioned mints.
-        uint32 totalMinted;
-        // The lower limit of the maximum number of tokens that can be minted.
-        uint32 maxMintableLower;
-        // The upper limit of the maximum number of tokens that can be minted.
-        uint32 maxMintableUpper;
-        // The maximum number of tokens that a wallet can mint.
-        uint32 maxMintablePerAccount;
-    }
-
     /**
      * @dev Edition mint data
      * edition => mintId => EditionMintData
@@ -225,20 +207,21 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
         uint32 _maxMintable = _getMaxMintable(mintData);
 
-        StandardMintData memory combinedMintData = StandardMintData(
+        MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
             baseData.endTime,
             baseData.mintPaused,
             mintData.price,
             _maxMintable,
             mintData.maxMintablePerAccount,
-            mintData.totalMinted
+            mintData.totalMinted,
+            mintData.closingTime
         );
 
         return combinedMintData;

@@ -4,6 +4,40 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
+ * @dev Data unique to a range edition mint.
+ */
+struct EditionMintData {
+    // The price at which each token will be sold, in ETH.
+    uint256 price;
+    // The timestamp (in seconds since unix epoch) after which the
+    // max amount of tokens mintable will drop from
+    // `maxMintableUpper` to `maxMintableLower`.
+    uint32 closingTime;
+    // The total number of tokens minted. Includes permissioned mints.
+    uint32 totalMinted;
+    // The lower limit of the maximum number of tokens that can be minted.
+    uint32 maxMintableLower;
+    // The upper limit of the maximum number of tokens that can be minted.
+    uint32 maxMintableUpper;
+    // The maximum number of tokens that a wallet can mint.
+    uint32 maxMintablePerAccount;
+}
+
+/**
+ * @dev All the information about a range edition mint (combines EditionMintData with BaseData).
+ */
+struct MintInfo {
+    uint32 startTime;
+    uint32 endTime;
+    bool mintPaused;
+    uint256 price;
+    uint32 maxMintable;
+    uint32 maxMintablePerAccount;
+    uint32 totalMinted;
+    uint32 closingTime;
+}
+
+/**
  * @title Interface for the standard mint function.
  */
 interface IRangeEditionMinter is IMinterModule {

@@ -8,25 +8,11 @@ import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
-import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
+import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
 
 /// @dev Airdrop using merkle tree logic.
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-
-    struct EditionMintData {
-        // Hash of the root node for the merkle tree drop
-        bytes32 merkleRootHash;
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
-        // The maximum number of tokens that a wallet can mint.
-        uint32 maxMintablePerAccount;
-        // The total number of tokens minted so far for this sale.
-        uint32 totalMinted;
-    }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
@@ -161,18 +147,19 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId].totalMinted;
     }
 
-    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-        StandardMintData memory combinedMintData = StandardMintData(
+        MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
             baseData.endTime,
             baseData.mintPaused,
             mintData.price,
             mintData.maxMintable,
             mintData.maxMintablePerAccount,
-            mintData.totalMinted
+            mintData.totalMinted,
+            mintData.merkleRootHash
         );
 
         return combinedMintData;

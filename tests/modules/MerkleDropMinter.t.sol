@@ -5,9 +5,8 @@ import { Merkle } from "murky/Merkle.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
-import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
+import { IMerkleDropMinter, MintInfo } from "@modules/interfaces/IMerkleDropMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
@@ -160,7 +159,7 @@ contract MerkleDropMinterTests is TestConfig {
         assertTrue(supportsIMerkleDropMint);
     }
 
-    function test_standardMintData() public {
+    function test_mintInfo() public {
         SoundEditionV1 edition = createGenericEdition();
 
         MerkleDropMinter minter = new MerkleDropMinter();
@@ -183,7 +182,7 @@ contract MerkleDropMinterTests is TestConfig {
             expectedMaxPerWallet
         );
 
-        StandardMintData memory mintData = minter.standardMintData(address(edition), mintId);
+        MintInfo memory mintData = minter.mintInfo(address(edition), mintId);
 
         assertEq(expectedStartTime, mintData.startTime);
         assertEq(expectedEndTime, mintData.endTime);
@@ -191,5 +190,6 @@ contract MerkleDropMinterTests is TestConfig {
         assertEq(expectedMaxMintable, mintData.maxMintable);
         assertEq(expectedMaxPerWallet, mintData.maxMintablePerAccount);
         assertEq(0, mintData.totalMinted);
+        assertEq(root, mintData.merkleRootHash);
     }
 }

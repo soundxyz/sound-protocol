@@ -4,8 +4,7 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { StandardMintData } from "@core/interfaces/IMinterModule.sol";
-import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
+import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
 
 /**
  * @title Fixed Price Permissioned Sale Minter
@@ -13,17 +12,6 @@ import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMin
  */
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
-
-    struct EditionMintData {
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // Whitelist signer address.
-        address signer;
-        // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
-        // The total number of tokens minted so far for this sale.
-        uint32 totalMinted;
-    }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
@@ -110,20 +98,21 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId].totalMinted;
     }
 
-    function standardMintData(address edition, uint256 mintId) public view returns (StandardMintData memory) {
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = super.baseMintData(edition, mintId);
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
         uint32 maxPerAccount = this.maxMintablePerAccount(edition, mintId);
 
-        StandardMintData memory combinedMintData = StandardMintData(
+        MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
             baseData.endTime,
             baseData.mintPaused,
             mintData.price,
             mintData.maxMintable,
             maxPerAccount,
-            mintData.totalMinted
+            mintData.totalMinted,
+            mintData.signer
         );
 
         return combinedMintData;
