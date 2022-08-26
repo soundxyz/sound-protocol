@@ -365,15 +365,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
 
-        uint256 remainingPayment = requiredEtherValue;
-
-        // Compute the platform fee.
-        uint256 platformFee = (remainingPayment * feeRegistry.platformFeeBPS()) / _MAX_BPS;
-        // Deduct the platform fee.
-        remainingPayment -= platformFee;
-
-        // Increment the platform fees accrued.
-        _platformFeesAccrued += platformFee;
+        uint256 remainingPayment = _deductPlatformFee(requiredEtherValue);
 
         if (affiliated) {
             // Compute the affiliate fee.
@@ -394,5 +386,14 @@ abstract contract BaseMinter is IMinterModule, Ownable {
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
+    }
+
+    function _deductPlatformFee(uint256 requiredEtherValue) internal returns (uint256 remainingPayment) {
+        // Compute the platform fee.
+        uint256 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / _MAX_BPS;
+        // Increment the platform fees accrued.
+        _platformFeesAccrued += platformFee;
+        // Deduct the platform fee.
+        remainingPayment = requiredEtherValue - platformFee;
     }
 }
