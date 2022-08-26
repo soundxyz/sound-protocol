@@ -27,7 +27,6 @@ pragma solidity ^0.8.16;
                ▓██████████████████████████████████████████████████████████
 */
 
-import { ERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import { Clones } from "openzeppelin/proxy/Clones.sol";
 import { OwnableUpgradeable } from "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import { UUPSUpgradeable } from "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
