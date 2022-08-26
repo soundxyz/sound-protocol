@@ -19,7 +19,7 @@ contract MerkleDropMinterTests is TestConfig {
     bytes32 public root;
     Merkle public m;
 
-    function setUpMerkleTree(address edition) public {
+    function setUpMerkleTree() public {
         // Initialize
         m = new Merkle();
 
@@ -45,7 +45,7 @@ contract MerkleDropMinterTests is TestConfig {
     {
         edition = createGenericEdition();
 
-        setUpMerkleTree(address(edition));
+        setUpMerkleTree();
 
         minter = new MerkleDropMinter(feeRegistry);
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
@@ -166,7 +166,7 @@ contract MerkleDropMinterTests is TestConfig {
         SoundEditionV1 edition = createGenericEdition();
 
         MerkleDropMinter minter = new MerkleDropMinter(feeRegistry);
-        setUpMerkleTree(address(edition));
+        setUpMerkleTree();
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 

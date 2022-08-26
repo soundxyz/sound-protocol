@@ -68,15 +68,15 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
-        if (!valid) revert InvalidMerkleProof();
-
         // Increase `totalMinted` by `requestedQuantity`.
         // Require that the increased value does not exceed `maxMintable`.
         uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
         _requireNotSoldOut(nextTotalMinted, data.maxMintable);
         data.totalMinted = nextTotalMinted;
+
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
+        if (!valid) revert InvalidMerkleProof();
 
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
         // check the additional requestedQuantity does not exceed the set maximum

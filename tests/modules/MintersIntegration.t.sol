@@ -43,10 +43,7 @@ contract MintersIntegration is TestConfig {
     SoundEditionV1 public edition;
 
     // Helper function to setup a MerkleTree construct
-    function setUpMerkleTree(address editionAddress, address[] memory accounts)
-        public
-        returns (Merkle, bytes32[] memory)
-    {
+    function setUpMerkleTree(address[] memory accounts) public returns (Merkle, bytes32[] memory) {
         Merkle m = new Merkle();
 
         bytes32[] memory leaves = new bytes32[](accounts.length);
@@ -95,10 +92,7 @@ contract MintersIntegration is TestConfig {
         accountsFreeMerkleDrop[1] = userAccounts[1];
 
         // Setup the Merkle tree
-        (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(
-            address(edition),
-            accountsFreeMerkleDrop
-        );
+        (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(accountsFreeMerkleDrop);
 
         MerkleDropMinter merkleDropMinter = new MerkleDropMinter(feeRegistry);
         edition.grantRoles(address(merkleDropMinter), edition.MINTER_ROLE());
@@ -121,7 +115,7 @@ contract MintersIntegration is TestConfig {
         accountsPresale[1] = userAccounts[3];
 
         // Setup the Merkle tree
-        (Merkle mPresale, bytes32[] memory leavesPresale) = setUpMerkleTree(address(edition), accountsPresale);
+        (Merkle mPresale, bytes32[] memory leavesPresale) = setUpMerkleTree(accountsPresale);
 
         root = mPresale.getRoot(leavesPresale);
         uint256 mintIdPresale = merkleDropMinter.createEditionMint(
