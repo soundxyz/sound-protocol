@@ -82,7 +82,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @dev Initializes merkle drop mint instance.
      * @param edition Address of the song edition contract we are minting for.
      * @param merkleRootHash bytes32 hash of the Merkle tree representing eligible mints.
-     * @param price_ Sale price in ETH for minting a single token in `edition`.
+     * @param price Sale price in ETH for minting a single token in `edition`.
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
@@ -92,7 +92,7 @@ interface IMerkleDropMinter is IMinterModule {
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
-        uint96 price_,
+        uint96 price,
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable_,

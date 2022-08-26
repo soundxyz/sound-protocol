@@ -65,7 +65,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     /**
      * @dev Initializes a fixed-price signature mint instance.
      * @param edition The edition address.
-     * @param price_ The price to mint a token.
+     * @param price The price to mint a token.
      * @param signer The address of the signer that authorizes mints.
      * @param maxMintable_ The maximum number of tokens that can be minted.
      * @param startTime The time minting can begin.
@@ -74,7 +74,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      */
     function createEditionMint(
         address edition,
-        uint96 price_,
+        uint96 price,
         address signer,
         uint32 maxMintable_,
         uint32 startTime,
