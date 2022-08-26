@@ -43,7 +43,7 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 /**
  * @title SoundEditionV1
- * @notice Mints non-fungible tokens of a Sound edition.
+ * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
 contract SoundEditionV1 is
     ISoundEditionV1,

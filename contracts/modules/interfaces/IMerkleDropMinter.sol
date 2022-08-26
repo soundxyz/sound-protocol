@@ -6,6 +6,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 /**
  * @title IMerkleDropMinter
  * @dev Interface for the `MerkleDropMinter` module.
+ * @author Sound.xyz
  */
 interface IMerkleDropMinter is IMinterModule {
     /**
@@ -44,7 +45,7 @@ interface IMerkleDropMinter is IMinterModule {
 
     /**
      * @dev The number of tokens minted has exceeded the number allowed for each account.
-     */ 
+     */
     error ExceedsMaxPerAccount();
 
     /**

@@ -9,7 +9,9 @@ import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /*
- * @dev Minter class for range edition sales.
+ * @title RangeEditionMinter
+ * @notice Module for range edition mints of Sound editions.
+ * @author Sound.xyz
  */
 contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     struct EditionMintData {
@@ -168,7 +170,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
-    /// todo: remove
     function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }

@@ -9,8 +9,9 @@ import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMin
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Fixed Price Permissioned Sale Minter
- * @dev Minter class for sales approved with signatures.
+ * @title IFixedPriceSignatureMinter
+ * @dev Module for fixed-price, signature-authorizd mints of Sound editions.
+ * @author Sound.xyz
  */
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
@@ -95,7 +96,6 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    /// todo: remove
     function price(address edition, uint256 mintId) external view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }

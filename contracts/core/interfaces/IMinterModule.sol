@@ -5,7 +5,7 @@ import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
  * @title IMinterModule
- * @notice The interface for Sound minter modules.
+ * @notice The interface for Sound protocol minter modules.
  */
 interface IMinterModule is IERC165 {
     // ================================
@@ -264,5 +264,4 @@ interface IMinterModule is IERC165 {
      * @dev Returns the base mint data for (`edition`, `mintId`).
      */
     function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
-
 }

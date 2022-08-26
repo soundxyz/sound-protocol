@@ -12,7 +12,11 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
-/// @dev Airdrop using merkle tree logic.
+/**
+ * @title MerkleDropMinter
+ * @dev Module for minting Sound editions using a merkle tree of approved accounts.
+ * @author Sound.xyz
+ */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -129,7 +133,6 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    // todo: remove
     function price(address edition, uint256 mintId) public view returns (uint256) {
         return _editionMintData[edition][mintId].price;
     }

@@ -6,6 +6,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 /**
  * @title IFixedPriceSignatureMinter
  * @dev Interface for the `FixedPriceSignatureMinter` module.
+ * @author Sound.xyz
  */
 interface IFixedPriceSignatureMinter is IMinterModule {
     /**

@@ -6,6 +6,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 /**
  * @title IRangeEditionMinter
  * @dev Interface for the `RangeEditionMinter` module.
+ * @author Sound.xyz
  */
 interface IRangeEditionMinter is IMinterModule {
     event RangeEditionMintCreated(
