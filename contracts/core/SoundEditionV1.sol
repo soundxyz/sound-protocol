@@ -152,6 +152,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
 
+        metadataModule = metadataModule_;
+        royaltyBPS = royaltyBPS_;
+
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
