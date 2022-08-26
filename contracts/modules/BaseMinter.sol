@@ -357,27 +357,11 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) {
-        _beforeSetTimeRange(edition, mintId, startTime, endTime);
-
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
 
         emit TimeRangeSet(edition, mintId, startTime, endTime);
     }
-
-    /**
-     * @dev Called at the start of _setTimeRange (for optional validation checks, etc).
-     * @param edition The edition address.
-     * @param mintId The ID for the mint instance.
-     * @param startTime The start time of the mint.
-     * @param endTime The end time of the mint.
-     */
-    function _beforeSetTimeRange(
-        address edition,
-        uint256 mintId,
-        uint32 startTime,
-        uint32 endTime
-    ) internal virtual {}
 
     /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
