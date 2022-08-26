@@ -3,13 +3,14 @@ pragma solidity ^0.8.16;
 
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
+import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockSoundCreatorV2 } from "../mocks/MockSoundCreatorV2.sol";
 
 contract SoundCreatorTests is TestConfig {
-    event SoundEditionCreated(address indexed soundEdition, address indexed creator);
+    event SoundEditionCreated(address indexed soundEdition, address indexed deployer);
     event SoundEditionImplementationSet(address newImplementation);
     event Upgraded(address indexed implementation);
 
@@ -74,14 +75,14 @@ contract SoundCreatorTests is TestConfig {
     function test_implementationAddressOfZeroReverts() public {
         SoundCreatorV1 soundCreator = new SoundCreatorV1();
 
-        vm.expectRevert(SoundCreatorV1.ImplementationAddressCantBeZero.selector);
+        vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
         soundCreator.initialize(address(0));
 
         SoundEditionV1 soundEdition = createGenericEdition();
         soundCreator = new SoundCreatorV1();
         soundCreator.initialize(address(soundEdition));
 
-        vm.expectRevert(SoundCreatorV1.ImplementationAddressCantBeZero.selector);
+        vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
         soundCreator.setEditionImplementation(address(0));
     }
 

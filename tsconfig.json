@@ -1,0 +1,18 @@
+{
+    "exclude": ["node_modules", "./dist", "/out", "./tests", "/cache"],
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "rootDir": ".",
+        "outDir": "dist",
+        "composite": true,
+        "skipLibCheck": true,
+        "noEmit": true,
+        "declarationMap": true,
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true
+    },
+    "include": ["build.ts", "package.json", "typechain"]
+}

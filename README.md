@@ -96,7 +96,7 @@ GOERLI_RPC_URL=...
 Then run:
 
 ```
-source .env && forge script scripts/Deploy.s.sol:Deploy --rpc-url $<NETWORK>_RPC_URL  --private-key $PRIVATE_KEY --broadcast
+source .env && forge script scripts/solidity/Deploy.s.sol:Deploy --rpc-url $<NETWORK>_RPC_URL  --private-key $PRIVATE_KEY --broadcast
 ```
 
 According to the foundry docs, we _should_ be able to verify on etherscan by appending this to the above command: ` --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv`, but that doesn't seem to work. Instead, we can verify each contract individually. Ex:

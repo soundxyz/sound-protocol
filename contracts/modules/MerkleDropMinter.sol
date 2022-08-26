@@ -9,29 +9,22 @@ import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
+import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
 
-/// @dev Airdrop using merkle tree logic.
+/**
+ * @title MerkleDropMinter
+ * @dev Module for minting Sound editions using a merkle tree of approved accounts.
+ * @author Sound.xyz
+ */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
-    struct EditionMintData {
-        // Hash of the root node for the merkle tree drop
-        bytes32 merkleRootHash;
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
-        // The maximum number of tokens that a wallet can mint.
-        uint32 maxMintablePerAccount;
-        // The total number of tokens minted so far for this sale.
-        uint32 totalMinted;
-    }
-
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
-    // Tracking claimed amounts per wallet
+    /**
+     * @dev Tracks claimed amounts per account.
+     * edition => mintId => enumerable map (address => claimed balance)
+     */
     mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
 
     // ================================
@@ -40,16 +33,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /**
-     * @dev Initializes the configuration for an edition merkle drop mint.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param merkleRootHash bytes32 hash of the Merkle tree representing eligible mints.
-     * @param price_ Sale price in ETH for minting a single token in `edition`.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
-     * @param maxMintablePerAccount_ The maximum number of tokens that a single wallet can mint.
-     */
+    /// @inheritdoc IMerkleDropMinter
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
@@ -79,15 +63,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         );
     }
 
-    /*
-     * @dev Mints tokens.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param mintId Id of the mint instance.
-     * This is the maximum the user can claim.
-     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxMintablePerAccount`
-     * @param merkleProof Merkle proof for the claim.
-     * @param affiliate The affiliate's address. Set to the zero address if none.
-     */
+    /// @inheritdoc IMerkleDropMinter
     function mint(
         address edition,
         uint256 mintId,
@@ -103,8 +79,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
-        // Revert if attempting to mint more than the max allowed per wallet.
-        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
+        // Revert if attempting to mint more than the max allowed per account.
+        if (updatedClaimedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
@@ -113,7 +89,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        _mint(edition, mintId, requestedQuantity, price(edition, mintId), affiliate);
+        _mint(edition, mintId, requestedQuantity, affiliate);
 
         emit DropClaimed(msg.sender, requestedQuantity);
     }
@@ -122,20 +98,13 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
-    /**
-     * @dev Returns the amount of claimed tokens for `wallet` in `mintData`.
-     * @param edition Address of the edition.
-     * @param mintId Mint identifier.
-     * @param wallet Address of the wallet.
-     * @return claimedQuantity is defaulted to 0 when the wallet address key is not found
-     * in the `claimed` map.
-     */
+    /// @inheritdoc IMerkleDropMinter
     function getClaimed(
         address edition,
         uint256 mintId,
-        address wallet
+        address account
     ) public view returns (uint256) {
-        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(wallet);
+        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(account);
         claimedQuantity = success ? claimedQuantity : 0;
         return claimedQuantity;
     }
@@ -148,19 +117,22 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintablePerAccount;
-    }
+        MintInfo memory combinedMintData = MintInfo(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            mintData.maxMintablePerAccount,
+            mintData.totalMinted,
+            mintData.merkleRootHash
+        );
 
-    /**
-     * @inheritdoc IMinterModule
-     */
-    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
+        return combinedMintData;
     }
 
     /**
@@ -168,5 +140,18 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }

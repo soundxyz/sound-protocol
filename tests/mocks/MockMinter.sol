@@ -23,31 +23,23 @@ contract MockMinter is BaseMinter {
         uint32 quantity,
         address affiliate
     ) external payable {
-        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
-    }
-
-    function maxMintable(
-        address, /** edition */
-        uint256 /** mintId */
-    ) external pure returns (uint32) {
-        return type(uint32).max;
-    }
-
-    function maxMintablePerAccount(
-        address, /** edition */
-        uint256 /** mintId */
-    ) external pure returns (uint32) {
-        return type(uint32).max;
-    }
-
-    function price(
-        address, /** edition */
-        uint256 /** mintId */
-    ) public view virtual override returns (uint256) {
-        return _currentPrice;
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     function setPrice(uint256 price_) external {
         _currentPrice = price_;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    function _baseTotalPrice(
+        address, /* edition */
+        uint256, /* mintId */
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _currentPrice * quantity;
     }
 }

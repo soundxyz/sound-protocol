@@ -4,27 +4,16 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
+import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 
 /**
- * @title Fixed Price Permissioned Sale Minter
- * @dev Minter class for sales approved with signatures.
+ * @title IFixedPriceSignatureMinter
+ * @dev Module for fixed-price, signature-authorizd mints of Sound editions.
+ * @author Sound.xyz
  */
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
-
-    struct EditionMintData {
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // Whitelist signer address.
-        address signer;
-        // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
-        // The total number of tokens minted so far for this sale.
-        uint32 totalMinted;
-    }
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
@@ -34,9 +23,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /**
-     * @dev Initializes the configuration for an edition mint.
-     */
+    /// @inheritdoc IFixedPriceSignatureMinter
     function createEditionMint(
         address edition,
         uint256 price_,
@@ -62,9 +49,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         );
     }
 
-    /**
-     * @dev Mints tokens for a given edition.
-     */
+    /// @inheritdoc IFixedPriceSignatureMinter
     function mint(
         address edition,
         uint256 mintId,
@@ -81,7 +66,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         hash = hash.toEthSignedMessageHash();
         if (hash.recover(signature) != data.signer) revert InvalidSignature();
 
-        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     // ================================
@@ -89,19 +74,30 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     // ================================
 
     /**
-     * @dev Returns the given edition's mint configuration.
-     * @param edition The edition to get the mint configuration for.
+     * @dev Returns the given edition's mint instance.
+     * @param edition The edition to get the mint instance for.
+     * @param mintId The ID of the mint instance.
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
         return _editionMintData[edition][mintId];
     }
 
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-    function maxMintablePerAccount(address, uint256) external pure returns (uint32) {
-        return type(uint32).max;
+        MintInfo memory combinedMintData = MintInfo(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            type(uint32).max, // maxMintablePerAccount
+            mintData.totalMinted,
+            mintData.signer
+        );
+
+        return combinedMintData;
     }
 
     /**
@@ -111,10 +107,16 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
     }
 
-    /**
-     * @inheritdoc IMinterModule
-     */
-    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }

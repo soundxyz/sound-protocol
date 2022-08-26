@@ -11,7 +11,7 @@ import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
 /**
  * @title Minter Base
- * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
+ * @dev The `BaseMinter` class maintains a central storage record of edition mint instances.
  */
 abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
@@ -36,7 +36,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     mapping(address => uint256) private _nextMintIds;
 
     /**
-     * @dev Maps an edition and the mint ID to a mint's configuration.
+     * @dev Maps an edition and the mint ID to a mint instance.
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
@@ -58,6 +58,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Restricts the function to be only callable by the owner or admin of `edition`.
+     * @param edition The edition address.
      */
     modifier onlyEditionOwnerOrAdmin(address edition) virtual {
         if (
@@ -76,9 +77,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         feeRegistry = feeRegistry_;
     }
 
-    /**
-     * @inheritdoc IMinterModule
-     */
+    /// @inheritdoc IMinterModule
     function setEditionMintPaused(
         address edition,
         uint256 mintId,
@@ -88,9 +87,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         emit MintPausedSet(edition, mintId, paused);
     }
 
-    /**
-     * @inheritdoc IMinterModule
-     */
+    /// @inheritdoc IMinterModule
     function setTimeRange(
         address edition,
         uint256 mintId,
@@ -151,7 +148,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
 
     /**
-     * @inheritdoc IMinterModule
+     * @dev Getter for the max basis points.
      */
     function MAX_BPS() external pure returns (uint16) {
         return _MAX_BPS;
@@ -188,14 +185,13 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     function totalPrice(
         address edition,
         uint256 mintId,
-        address, /* minter */
+        address minter,
         uint32 quantity,
-        uint256 price_,
         bool affiliated
     ) public view virtual override returns (uint256) {
-        if (price_ == 0) return 0;
+        uint256 total = _baseTotalPrice(edition, mintId, minter, quantity);
 
-        uint256 total = quantity * price_;
+        if (total == 0) return 0;
 
         if (!affiliated) return total;
 
@@ -229,6 +225,8 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Restricts the start time to be less than the end time.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     modifier onlyValidTimeRange(uint32 startTime, uint32 endTime) virtual {
         if (startTime >= endTime) revert InvalidTimeRange();
@@ -256,7 +254,22 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
 
     /**
-     * @dev Creates an edition mint configuration.
+     * @dev Returns the total price before any affiliate discount.
+     * This is a mandatory hook to override.
+     */
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address minter,
+        uint32 quantity
+    ) internal view virtual returns (uint256);
+
+    /**
+     * @dev Creates an edition mint instance.
+     * @param edition The edition address.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
+     * @return mintId The ID for the mint instance.
      * Calling conditions:
      * - Must be owner or admin of the edition.
      */
@@ -278,6 +291,8 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Returns whether the caller is the owner of `edition`.
+     * @param edition The edition address.
+     * @return result Whether the caller is the owner of `edition`.
      */
     function _callerIsEditionOwner(address edition) private returns (bool result) {
         // To avoid defining an interface just to call `owner()`.
@@ -310,6 +325,10 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     /**
      * @dev Sets the time range for an edition mint.
      * Note: If calling from a child contract, the child is responsible for access control.
+     * @param edition The edition address.
+     * @param mintId The ID for the mint instance.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     function _setTimeRange(
         address edition,
@@ -317,8 +336,6 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) {
-        _beforeSetTimeRange(edition, mintId, startTime, endTime);
-
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
 
@@ -326,23 +343,16 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     }
 
     /**
-     * @dev Called at the start of _setTimeRange (for optional validation checks, etc).
-     */
-    function _beforeSetTimeRange(
-        address edition,
-        uint256 mintId,
-        uint32 startTime,
-        uint32 endTime
-    ) internal virtual {}
-
-    /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     * @param edition The edition address.
+     * @param mintId The ID for the mint instance.
+     * @param quantity The quantity of tokens to mint.
+     * @param affiliate The affiliate (referral) address.
      */
     function _mint(
         address edition,
         uint256 mintId,
         uint32 quantity,
-        uint256 price_,
         address affiliate
     ) internal {
         BaseData storage baseData = _baseData[edition][mintId];
@@ -360,7 +370,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
 
-        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, price_, affiliated);
+        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, affiliated);
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
@@ -381,13 +391,6 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
     }
 
-    /**
-     * @dev Requires that `totalMinted <= maxMintable`.
-     */
-    function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
-        if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
-    }
-
     function _deductPlatformFee(uint256 requiredEtherValue) internal returns (uint256 remainingPayment) {
         // Compute the platform fee.
         uint256 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / _MAX_BPS;
@@ -395,5 +398,14 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         _platformFeesAccrued += platformFee;
         // Deduct the platform fee.
         remainingPayment = requiredEtherValue - platformFee;
+    }
+
+    /**
+     * @dev Throws error if `totalMinted > maxMintable`.
+     * @param totalMinted The current total number of minted tokens.
+     * @param maxMintable The maximum number of mintable tokens.
+     */
+    function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
+        if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
     }
 }

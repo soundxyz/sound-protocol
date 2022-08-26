@@ -4,42 +4,26 @@ pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { IRangeEditionMinter } from "./interfaces/IRangeEditionMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IRangeEditionMinter, EditionMintData, MintInfo } from "./interfaces/IRangeEditionMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /*
- * @dev Minter class for range edition sales.
+ * @title RangeEditionMinter
+ * @notice Module for range edition mints of Sound editions.
+ * @author Sound.xyz
  */
 contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
-    struct EditionMintData {
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // The timestamp (in seconds since unix epoch) after which the
-        // max amount of tokens mintable will drop from
-        // `maxMintableUpper` to `maxMintableLower`.
-        uint32 closingTime;
-        // The total number of tokens minted. Includes permissioned mints.
-        uint32 totalMinted;
-        // The lower limit of the maximum number of tokens that can be minted.
-        uint32 maxMintableLower;
-        // The upper limit of the maximum number of tokens that can be minted.
-        uint32 maxMintableUpper;
-        // The maximum number of tokens that a wallet can mint.
-        uint32 maxMintablePerAccount;
-    }
-
     /**
      * @dev Edition mint data
      * edition => mintId => EditionMintData
      */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
     /**
-     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxMintablePerAccount.
-     * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
+     * @dev Number of tokens minted by each buyer address
      * edition => mintId => buyer => mintedTallies
      */
-    mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
     // ================================
     // MODIFIERS
@@ -63,18 +47,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /*
-     * @dev Initializes the configuration for an edition mint.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param price Sale price in ETH for minting a single token in `edition`.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime The timestamp (in seconds since unix epoch) after which the
-     * max amount of tokens mintable will drop from
-     * `maxMintableUpper` to `maxMintableLower`.
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
-     */
+    /// @inheritdoc IRangeEditionMinter
     function createEditionMint(
         address edition,
         uint256 price_,
@@ -84,8 +57,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount_
-    ) public returns (uint256 mintId) {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMint(edition, startTime, endTime);
@@ -111,12 +83,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         );
     }
 
-    /*
-     * @dev Mints tokens for a given edition.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param quantity Token quantity to mint in song `edition`.
-     * @param affiliate The affiliate's address. Set to the zero address if none.
-     */
+    /// @inheritdoc IRangeEditionMinter
     function mint(
         address edition,
         uint256 mintId,
@@ -125,12 +92,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 _maxMintable;
-        if (block.timestamp < data.closingTime) {
-            _maxMintable = data.maxMintableUpper;
-        } else {
-            _maxMintable = data.maxMintableLower;
-        }
+        uint32 _maxMintable = _getMaxMintable(data);
+
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
         uint32 nextTotalMinted = data.totalMinted + quantity;
@@ -138,31 +101,23 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.totalMinted = nextTotalMinted;
 
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // If the maximum allowed per wallet is set (i.e. is different to 0)
+        // If the maximum allowed per account is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
-        if ((userMintedBalance + quantity) > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
+        if ((userMintedBalance + quantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
-        mintedTallies[edition][mintId][msg.sender] += quantity;
+        mintedTallies[edition][mintId][msg.sender] = userMintedBalance + quantity;
 
-        _mint(edition, mintId, quantity, price(edition, mintId), affiliate);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
-    /*
-     * @dev Sets the time range.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime The timestamp (in seconds since unix epoch) after which the
-     * max amount of tokens mintable will drop from
-     * `maxMintableUpper` to `maxMintableLower`.
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     */
+    /// @inheritdoc IRangeEditionMinter
     function setTimeRange(
         address edition,
         uint256 mintId,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionOwnerOrAdmin(edition) {
+    ) public onlyEditionOwnerOrAdmin(edition) onlyValidRangeTimes(startTime, closingTime, endTime) {
         // Set closingTime first, as its stored value gets validated later in the execution.
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
@@ -173,24 +128,31 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         emit ClosingTimeSet(edition, mintId, closingTime);
     }
 
-    /*
-     * @dev Sets the max mintable range.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
-     */
+    /// @inheritdoc BaseMinter
+    function setTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) public override(BaseMinter, IMinterModule) onlyEditionOwnerOrAdmin(edition) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+        if (!(startTime < data.closingTime && data.closingTime < endTime)) revert InvalidTimeRange();
+
+        _setTimeRange(edition, mintId, startTime, endTime);
+    }
+
+    /// @inheritdoc IRangeEditionMinter
     function setMaxMintableRange(
         address edition,
         uint256 mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) public onlyEditionOwnerOrAdmin(edition) {
+        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-
-        if (!(data.maxMintableLower < data.maxMintableUpper))
-            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
     }
@@ -198,23 +160,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // ================================
     // VIEW FUNCTIONS
     // ================================
-
-    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
-        EditionMintData storage data = _editionMintData[edition][mintId];
-
-        if (block.timestamp < data.closingTime) {
-            return data.maxMintableUpper;
-        } else {
-            return data.maxMintableLower;
-        }
-    }
-
-    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
-        return
-            _editionMintData[edition][mintId].maxMintablePerAccount > 0
-                ? _editionMintData[edition][mintId].maxMintablePerAccount
-                : type(uint32).max;
-    }
 
     /**
      * @dev Returns the `EditionMintData` for `edition.
@@ -224,16 +169,27 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    /**
-     * @inheritdoc IMinterModule
-     */
-    function price(address edition, uint256 mintId) public view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price;
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        uint32 _maxMintable = _getMaxMintable(mintData);
+
+        MintInfo memory combinedMintData = MintInfo(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            _maxMintable,
+            mintData.maxMintablePerAccount,
+            mintData.totalMinted,
+            mintData.closingTime
+        );
+
+        return combinedMintData;
     }
 
-    /**
-     * @inheritdoc IERC165
-     */
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
     }
@@ -243,15 +199,24 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // ================================
 
     /**
-     * @dev Optional validation function that gets called by _setTimeRange()
+     * @dev Gets the current maximum mintable quantity.
      */
-    function _beforeSetTimeRange(
+    function _getMaxMintable(EditionMintData storage data) internal view returns (uint32) {
+        uint32 _maxMintable;
+        if (block.timestamp < data.closingTime) {
+            _maxMintable = data.maxMintableUpper;
+        } else {
+            _maxMintable = data.maxMintableLower;
+        }
+        return _maxMintable;
+    }
+
+    function _baseTotalPrice(
         address edition,
         uint256 mintId,
-        uint32 startTime,
-        uint32 endTime
-    ) internal view override {
-        uint32 closingTime = _editionMintData[edition][mintId].closingTime;
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }

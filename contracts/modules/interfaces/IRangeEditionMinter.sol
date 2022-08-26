@@ -4,7 +4,43 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Interface for the standard mint function.
+ * @dev Data unique to a range edition mint.
+ */
+struct EditionMintData {
+    // The price at which each token will be sold, in ETH.
+    uint256 price;
+    // The timestamp (in seconds since unix epoch) after which the
+    // max amount of tokens mintable will drop from
+    // `maxMintableUpper` to `maxMintableLower`.
+    uint32 closingTime;
+    // The total number of tokens minted. Includes permissioned mints.
+    uint32 totalMinted;
+    // The lower limit of the maximum number of tokens that can be minted.
+    uint32 maxMintableLower;
+    // The upper limit of the maximum number of tokens that can be minted.
+    uint32 maxMintableUpper;
+    // The maximum number of tokens that a wallet can mint.
+    uint32 maxMintablePerAccount;
+}
+
+/**
+ * @dev All the information about a range edition mint (combines EditionMintData with BaseData).
+ */
+struct MintInfo {
+    uint32 startTime;
+    uint32 endTime;
+    bool mintPaused;
+    uint256 price;
+    uint32 maxMintable;
+    uint32 maxMintablePerAccount;
+    uint32 totalMinted;
+    uint32 closingTime;
+}
+
+/**
+ * @title IRangeEditionMinter
+ * @dev Interface for the `RangeEditionMinter` module.
+ * @author Sound.xyz
  */
 interface IRangeEditionMinter is IMinterModule {
     event RangeEditionMintCreated(
@@ -33,11 +69,11 @@ interface IRangeEditionMinter is IMinterModule {
      */
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
-    // The number of tokens minted has exceeded the number allowed for each wallet.
+    // The number of tokens minted has exceeded the number allowed for each account.
     error ExceedsMaxPerAccount();
 
     /*
-     * @dev Initializes the configuration for an edition mint.
+     * @dev Initializes a range mint instance
      * @param edition Address of the song edition contract we are minting for.
      * @param price Sale price in ETH for minting a single token in `edition`.
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
@@ -47,6 +83,7 @@ interface IRangeEditionMinter is IMinterModule {
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
      * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     * @return mintId The ID for the new mint instance.
      */
     function createEditionMint(
         address edition,
