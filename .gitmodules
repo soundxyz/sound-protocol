@@ -26,3 +26,6 @@
 	path = lib/murky
 	url = https://github.com/dmfxyz/murky
 	ignore = dirty
+[submodule "lib/clones-with-immutable-args"]
+	path = lib/clones-with-immutable-args
+	url = https://github.com/wighawag/clones-with-immutable-args
