@@ -17,10 +17,10 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
-     * @dev Tracks claimed amounts per account.
-     * edition => mintId => wallet address => claimed balance
+     * @dev Number of tokens minted by each buyer address
+     * edition => mintId => buyer => mintedTallies
      */
-    mapping(address => mapping(uint256 => mapping(address => uint256))) internal claimed;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
     // ================================
     // WRITE FUNCTIONS
@@ -68,21 +68,22 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
+        if (!valid) revert InvalidMerkleProof();
+
+        // Increase `totalMinted` by `requestedQuantity`.
+        // Require that the increased value does not exceed `maxMintable`.
         uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
         _requireNotSoldOut(nextTotalMinted, data.maxMintable);
         data.totalMinted = nextTotalMinted;
 
-        uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
-
-        // Revert if attempting to mint more than the max allowed per account.
-        if (updatedClaimedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
+        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+        // check the additional requestedQuantity does not exceed the set maximum
+        if ((userMintedBalance + requestedQuantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
-        claimed[edition][mintId][msg.sender] = updatedClaimedQuantity;
-
-        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
-        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
-        if (!valid) revert InvalidMerkleProof();
+        mintedTallies[edition][mintId][msg.sender] = userMintedBalance + requestedQuantity;
 
         _mint(edition, mintId, requestedQuantity, affiliate);
 
@@ -92,15 +93,6 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // ================================
     // VIEW FUNCTIONS
     // ================================
-
-    /// @inheritdoc IMerkleDropMinter
-    function getClaimed(
-        address edition,
-        uint256 mintId,
-        address account
-    ) public view returns (uint256) {
-        return claimed[edition][mintId][account];
-    }
 
     /**
      * @dev Returns the `EditionMintData` for `edition`.

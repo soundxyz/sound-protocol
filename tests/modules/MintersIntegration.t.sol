@@ -51,7 +51,7 @@ contract MintersIntegration is TestConfig {
 
         bytes32[] memory leaves = new bytes32[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
-            leaves[i] = keccak256(abi.encodePacked(editionAddress, accounts[i]));
+            leaves[i] = keccak256(abi.encodePacked(accounts[i]));
         }
 
         return (m, leaves);

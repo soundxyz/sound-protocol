@@ -25,7 +25,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         leaves = new bytes32[](accounts.length);
         for (uint256 i = 0; i < accounts.length; ++i) {
-            leaves[i] = keccak256(abi.encodePacked(edition, accounts[i]));
+            leaves[i] = keccak256(abi.encodePacked(accounts[i]));
         }
 
         root = m.getRoot(leaves);
@@ -148,7 +148,7 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 requestedQuantity = maxMintablePerAccount;
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
 
-        uint256 claimedAmount = minter.getClaimed(address(edition), mintId, accounts[0]);
+        uint256 claimedAmount = minter.mintedTallies(address(edition), mintId, accounts[0]);
         assertEq(claimedAmount, 1);
     }
 

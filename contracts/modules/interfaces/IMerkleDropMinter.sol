@@ -120,7 +120,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @return claimedQuantity is defaulted to 0 when the account address key is not found
      * in the `claimed` map.
      */
-    function getClaimed(
+    function mintedTallies(
         address edition,
         uint256 mintId,
         address account
