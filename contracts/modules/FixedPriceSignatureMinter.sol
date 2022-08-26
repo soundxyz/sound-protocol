@@ -6,10 +6,12 @@ import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Fixed Price Permissioned Sale Minter
- * @dev Minter class for sales approved with signatures.
+ * @title IFixedPriceSignatureMinter
+ * @dev Module for fixed-price, signature-authorizd mints of Sound editions.
+ * @author Sound.xyz
  */
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
@@ -25,15 +27,17 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 totalMinted;
     }
 
+    /**
+     * @dev Edition mint data
+     * edition => mintId => EditionMintData
+     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     // ================================
     // WRITE FUNCTIONS
     // ================================
 
-    /**
-     * @dev Initializes the configuration for an edition mint.
-     */
+    /// @inheritdoc IFixedPriceSignatureMinter
     function createEditionMint(
         address edition,
         uint256 price_,
@@ -59,9 +63,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         );
     }
 
-    /**
-     * @dev Mints tokens for a given edition.
-     */
+    /// @inheritdoc IFixedPriceSignatureMinter
     function mint(
         address edition,
         uint256 mintId,
@@ -86,17 +88,24 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     // ================================
 
     /**
-     * @dev Returns the given edition's mint configuration.
-     * @param edition The edition to get the mint configuration for.
+     * @dev Returns the given edition's mint instance.
+     * @param edition The edition to get the mint instance for.
+     * @param mintId The ID of the mint instance.
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
         return _editionMintData[edition][mintId];
     }
 
+    function price(address edition, uint256 mintId) external view returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
+
+    /// @inheritdoc IMinterModule
     function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
+    /// @inheritdoc IMinterModule
     function maxMintablePerAccount(address, uint256) external pure returns (uint32) {
         return type(uint32).max;
     }

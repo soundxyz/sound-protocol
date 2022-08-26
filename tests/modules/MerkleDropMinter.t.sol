@@ -81,7 +81,7 @@ contract MerkleDropMinterTests is TestConfig {
         user1Balance = edition.balanceOf(accounts[1]);
         assertEq(user1Balance, 1);
 
-        // Claim the second of the 2 max per wallet
+        // Claim the second of the 2 max per account
         vm.prank(accounts[1]);
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
         user1Balance = edition.balanceOf(accounts[1]);

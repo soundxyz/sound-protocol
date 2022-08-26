@@ -4,7 +4,8 @@ pragma solidity ^0.8.16;
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
- * @title Interface for the base minter functionality, excluding the mint function.
+ * @title IMinterModule
+ * @notice The interface for Sound protocol minter modules.
  */
 interface IMinterModule is IERC165 {
     // ================================
@@ -24,7 +25,11 @@ interface IMinterModule is IERC165 {
     // ================================
 
     /**
-     * @notice Emitted when the mint configuration for an `edition` is created.
+     * @dev Emitted when the mint instance for an `edition` is created.
+     * @param edition The edition address.
+     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     event MintConfigCreated(
         address indexed edition,
@@ -35,12 +40,19 @@ interface IMinterModule is IERC165 {
     );
 
     /**
-     * @notice Emitted when the `paused` status of `edition` is updated.
+     * @dev Emitted when the `paused` status of `edition` is updated.
+     * @param edition The edition address.
+     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param paused The new paused status.
      */
     event MintPausedSet(address indexed edition, uint256 mintId, bool paused);
 
     /**
-     * @notice Emitted when the `startTime` and `endTime` are updated.
+     * @dev Emitted when the `paused` status of `edition` is updated.
+     * @param edition The edition address.
+     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
 
@@ -64,32 +76,38 @@ interface IMinterModule is IERC165 {
     // ================================
 
     /**
-     * The Ether value paid is not the exact value required.
+     * @dev The Ether value paid is not the exact value required.
+     * @param paid The amount sent to the contract.
+     * @param required The amount required to mint.
      */
     error WrongEtherValue(uint256 paid, uint256 required);
 
     /**
-     * The number minted has exceeded the max mintable amount.
+     * @dev The number minted has exceeded the max mintable amount.
+     * @param maxMintable The total maximum mintable number of tokens.
      */
     error MaxMintableReached(uint32 maxMintable);
 
     /**
-     * The mint is not opened.
+     * @dev The mint is not opened.
+     * @param blockTimestamp The current block timestamp.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     error MintNotOpen(uint256 blockTimestamp, uint32 startTime, uint32 endTime);
 
     /**
-     * The mint is paused.
+     * @dev The mint is paused.
      */
     error MintPaused();
 
     /**
-     * The `startTime` is not less than the `endTime`.
+     * @dev The `startTime` is not less than the `endTime`.
      */
     error InvalidTimeRange();
 
     /**
-     * Unauthorized caller
+     * @dev Unauthorized caller
      */
     error Unauthorized();
 
@@ -124,7 +142,11 @@ interface IMinterModule is IERC165 {
     ) external;
 
     /**
-     * @dev Sets the time range for (`edition`, `mintId`).
+     * @dev Sets the time range for an edition mint.
+     * @param edition The edition address.
+     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      * Calling conditions:
      * - The caller must be the edition's owner or an admin.
      */
@@ -181,11 +203,6 @@ interface IMinterModule is IERC165 {
     // ================================
 
     /**
-     * @dev Returns the maximum basis points (BPS).
-     */
-    function MAX_BPS() external pure returns (uint16);
-
-    /**
      * @dev Returns the total fees accrued for `affiliate`.
      */
     function affiliateFeesAccrued(address affiliate) external view returns (uint256);
@@ -228,12 +245,18 @@ interface IMinterModule is IERC165 {
     function nextMintId(address edition) external view returns (uint256);
 
     /**
-     * @dev Returns the total number of tokens that can be minted for (`edition`, `mintId`).
+     * @dev Returns the maximum mintable number of tokens for a mint instance.
+     * @param edition The edition address.
+     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @return The total maximum mintable number of tokens.
      */
     function maxMintable(address edition, uint256 mintId) external view returns (uint32);
 
     /**
-     * @dev Returns the maximum tokens mintable per wallet for (`edition`, `mintId`).
+     * @dev Returns the maximum mintable number of tokens per account for a mint instance.
+     * @param edition The edition address.
+     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @return The maximum mintable number of tokens per account.
      */
     function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
 

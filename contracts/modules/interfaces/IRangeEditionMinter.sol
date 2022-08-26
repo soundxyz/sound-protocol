@@ -4,7 +4,9 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @title Interface for the standard mint function.
+ * @title IRangeEditionMinter
+ * @dev Interface for the `RangeEditionMinter` module.
+ * @author Sound.xyz
  */
 interface IRangeEditionMinter is IMinterModule {
     event RangeEditionMintCreated(
@@ -33,11 +35,11 @@ interface IRangeEditionMinter is IMinterModule {
      */
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
-    // The number of tokens minted has exceeded the number allowed for each wallet.
+    // The number of tokens minted has exceeded the number allowed for each account.
     error ExceedsMaxPerAccount();
 
     /*
-     * @dev Initializes the configuration for an edition mint.
+     * @dev Initializes a range mint instance
      * @param edition Address of the song edition contract we are minting for.
      * @param price Sale price in ETH for minting a single token in `edition`.
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
@@ -47,6 +49,7 @@ interface IRangeEditionMinter is IMinterModule {
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
      * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     * @return mintId The ID for the new mint instance.
      */
     function createEditionMint(
         address edition,

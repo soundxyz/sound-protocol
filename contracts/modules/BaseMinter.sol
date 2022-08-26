@@ -10,7 +10,7 @@ import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
 /**
  * @title Minter Base
- * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
+ * @dev The `BaseMinter` class maintains a central storage record of edition mint instances.
  */
 abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
@@ -35,7 +35,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     mapping(address => uint256) private _nextMintIds;
 
     /**
-     * @dev Maps an edition and the mint ID to a mint's configuration.
+     * @dev Maps an edition and the mint ID to a mint instance.
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
@@ -60,6 +60,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Restricts the function to be only callable by the owner or admin of `edition`.
+     * @param edition The edition address.
      */
     modifier onlyEditionOwnerOrAdmin(address edition) virtual {
         if (
@@ -74,9 +75,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     // WRITE FUNCTIONS
     // ================================
 
-    /**
-     * @inheritdoc IMinterModule
-     */
+    /// @inheritdoc IMinterModule
     function setEditionMintPaused(
         address edition,
         uint256 mintId,
@@ -86,9 +85,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         emit MintPausedSet(edition, mintId, paused);
     }
 
-    /**
-     * @inheritdoc IMinterModule
-     */
+    /// @inheritdoc IMinterModule
     function setTimeRange(
         address edition,
         uint256 mintId,
@@ -157,7 +154,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
 
     /**
-     * @inheritdoc IMinterModule
+     * @dev Getter for the max basis points.
      */
     function MAX_BPS() external pure returns (uint16) {
         return _MAX_BPS;
@@ -241,6 +238,8 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Restricts the start time to be less than the end time.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     modifier onlyValidTimeRange(uint32 startTime, uint32 endTime) virtual {
         if (startTime >= endTime) revert InvalidTimeRange();
@@ -287,7 +286,11 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     ) internal view virtual returns (uint256);
 
     /**
-     * @dev Creates an edition mint configuration.
+     * @dev Creates an edition mint instance.
+     * @param edition The edition address.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
+     * @return mintId The ID for the mint instance.
      * Calling conditions:
      * - Must be owner or admin of the edition.
      */
@@ -309,6 +312,8 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Returns whether the caller is the owner of `edition`.
+     * @param edition The edition address.
+     * @return result Whether the caller is the owner of `edition`.
      */
     function _callerIsEditionOwner(address edition) private returns (bool result) {
         // To avoid defining an interface just to call `owner()`.
@@ -341,6 +346,10 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     /**
      * @dev Sets the time range for an edition mint.
      * Note: If calling from a child contract, the child is responsible for access control.
+     * @param edition The edition address.
+     * @param mintId The ID for the mint instance.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     function _setTimeRange(
         address edition,
@@ -358,6 +367,10 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Called at the start of _setTimeRange (for optional validation checks, etc).
+     * @param edition The edition address.
+     * @param mintId The ID for the mint instance.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     function _beforeSetTimeRange(
         address edition,
@@ -368,6 +381,10 @@ abstract contract BaseMinter is IMinterModule, Ownable {
 
     /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     * @param edition The edition address.
+     * @param mintId The ID for the mint instance.
+     * @param quantity The quantity of tokens to mint.
+     * @param affiliate The affiliate (referral) address.
      */
     function _mint(
         address edition,
@@ -420,7 +437,9 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     }
 
     /**
-     * @dev Requires that `totalMinted <= maxMintable`.
+     * @dev Throws error if `totalMinted > maxMintable`.
+     * @param totalMinted The current total number of minted tokens.
+     * @param maxMintable The maximum number of mintable tokens.
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
