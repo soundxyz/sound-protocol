@@ -97,14 +97,14 @@ contract MintControllerBaseTests is TestConfig {
     function test_createEditionMintIncremenetsNextMintId() external {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        uint256 prevMintId = minter.nextMintId(address(edition));
+        uint256 prevMintId = minter.nextMintId();
         minter.createEditionMint(address(edition), START_TIME, END_TIME);
-        uint256 currentMintId = minter.nextMintId(address(edition));
+        uint256 currentMintId = minter.nextMintId();
         assertEq(currentMintId, prevMintId + 1);
 
         prevMintId = currentMintId;
         minter.createEditionMint(address(edition), START_TIME, END_TIME);
-        currentMintId = minter.nextMintId(address(edition));
+        currentMintId = minter.nextMintId();
         assertEq(currentMintId, prevMintId + 1);
     }
 
