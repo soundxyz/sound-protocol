@@ -69,11 +69,6 @@ contract SoundEditionV1 is
     // STORAGE
     // ================================
 
-    /**
-     * Getter for the previous block hash - stored on each mint unless `mintRandomnessTokenThreshold` or
-     * `mintRandomnessTimeThreshold` have been surpassed. Used for game mechanics like the Sound Golden Egg.
-     */
-    bytes32 public mintRandomness;
     // The metadata's base URI.
     string public baseURI;
     // The contract URI used by Opensea https://docs.opensea.io/docs/contract-level-metadata.
@@ -90,6 +85,11 @@ contract SoundEditionV1 is
 
     // Metadata module used for `tokenURI` if it is set.
     IMetadataModule public metadataModule;
+    /**
+     * Getter for the previous block hash - stored on each mint unless `mintRandomnessTokenThreshold` or
+     * `mintRandomnessTimeThreshold` have been surpassed. Used for game mechanics like the Sound Golden Egg.
+     */
+    bytes9 public mintRandomness;
     // The royalty fee in basis points.
     uint16 public royaltyBPS;
     // Indicates if the `baseURI` is mutable.
@@ -198,7 +198,7 @@ contract SoundEditionV1 is
         _mint(to, quantity);
         // Set randomness
         if (_totalMinted() <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
-            mintRandomness = blockhash(block.number - 1);
+            mintRandomness = bytes9(blockhash(block.number - 1));
         }
     }
 
