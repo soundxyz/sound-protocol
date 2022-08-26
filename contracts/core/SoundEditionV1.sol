@@ -33,7 +33,6 @@ import { ERC721AQueryableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/exte
 import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import { AccessControlUpgradeable } from "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
@@ -310,7 +309,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {
-        return ERC721AUpgradeable.supportsInterface(interfaceId) || interfaceId == _INTERFACE_ID_ERC2981;
+        return
+            interfaceId == type(ISoundEditionV1).interfaceId ||
+            ERC721AUpgradeable.supportsInterface(interfaceId) ||
+            interfaceId == _INTERFACE_ID_ERC2981;
     }
 
     /// @inheritdoc IERC2981Upgradeable
