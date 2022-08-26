@@ -2,6 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { EditionMintData } from "@modules/interfaces/IRangeEditionMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { RangeEditionMinterTests } from "../modules/RangeEditionMinter.t.sol";
@@ -38,12 +39,12 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
     }
 
     function invariant_maxMintableRange() public {
-        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
         assertTrue(data.maxMintableLower < data.maxMintableUpper);
     }
 
     function invariant_timeRange() public {
-        RangeEditionMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
         BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
 
         uint32 startTime = baseData.startTime;
