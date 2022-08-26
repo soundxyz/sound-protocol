@@ -19,8 +19,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
     /**
-     * @dev Number of tokens minted by each buyer address, used to mitigate buyers minting more than maxMintablePerAccount.
-     * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
+     * @dev Number of tokens minted by each buyer address
      * edition => mintId => buyer => mintedTallies
      */
     mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
@@ -55,8 +54,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount_
-    ) public returns (uint256 mintId) {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMint(edition, startTime, endTime);
@@ -104,7 +102,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         // check the required additional quantity does not exceed the set maximum
         if ((userMintedBalance + quantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
-        mintedTallies[edition][mintId][msg.sender] += quantity;
+        mintedTallies[edition][mintId][msg.sender] = userMintedBalance + quantity;
 
         _mint(edition, mintId, quantity, affiliate);
     }
@@ -134,12 +132,11 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) public onlyEditionOwnerOrAdmin(edition) {
+        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-
-        if (!(data.maxMintableLower < data.maxMintableUpper))
-            revert InvalidMaxMintableRange(data.maxMintableLower, data.maxMintableUpper);
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
     }
