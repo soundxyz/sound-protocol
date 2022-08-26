@@ -420,17 +420,17 @@ contract RangeEditionMinterTests is TestConfig {
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
         assertEq(expectedMaxAllowedPerWallet, mintData.maxMintablePerAccount);
-        assertEq(MAX_MINTABLE_UPPER, mintData.maxMintable);
+        assertEq(MAX_MINTABLE_UPPER, mintData.maxMintableUpper);
+        assertEq(MAX_MINTABLE_LOWER, mintData.maxMintableLower);
         assertEq(0, mintData.totalMinted);
         assertEq(CLOSING_TIME, mintData.closingTime);
 
-        // Warp to closing time & mint some tokens to test that maxMintable & totalMinted changed
-        vm.warp(CLOSING_TIME);
+        // Warp to start time & mint some tokens to test that totalMinted changed
+        vm.warp(expectedStartTime);
         minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, 4, address(0));
 
         mintData = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(MAX_MINTABLE_LOWER, mintData.maxMintable);
         assertEq(4, mintData.totalMinted);
     }
 }

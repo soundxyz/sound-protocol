@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
+import { MintInfo, EditionMintData } from "@modules/interfaces/IRangeEditionMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { RangeEditionMinterTests } from "../modules/RangeEditionMinter.t.sol";
