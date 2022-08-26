@@ -13,7 +13,7 @@ import { TestConfig } from "../TestConfig.sol";
 contract FixedPriceSignatureMinterTests is TestConfig {
     using ECDSA for bytes32;
 
-    uint256 constant PRICE = 1;
+    uint96 constant PRICE = 1;
     uint32 constant MAX_MINTABLE = 5;
     uint256 constant SIGNER_PRIVATE_KEY = 1;
     uint256 constant MINT_ID = 0;
@@ -24,7 +24,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     event FixedPriceSignatureMintCreated(
         address indexed edition,
         uint256 indexed mintId,
-        uint256 price,
+        uint96 price,
         address signer,
         uint32 maxMintable
     );

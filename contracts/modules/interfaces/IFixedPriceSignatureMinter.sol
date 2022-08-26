@@ -8,7 +8,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  */
 struct EditionMintData {
     // The price at which each token will be sold, in ETH.
-    uint256 price;
+    uint96 price;
     // Whitelist signer address.
     address signer;
     // The maximum number of tokens that can can be minted for this sale.
@@ -24,7 +24,7 @@ struct MintInfo {
     uint32 startTime;
     uint32 endTime;
     bool mintPaused;
-    uint256 price;
+    uint96 price;
     uint32 maxMintable;
     uint32 maxMintablePerAccount;
     uint32 totalMinted;
@@ -47,7 +47,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     event FixedPriceSignatureMintCreated(
         address indexed edition,
         uint256 indexed mintId,
-        uint256 price,
+        uint96 price,
         address signer,
         uint32 maxMintable
     );
@@ -74,7 +74,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      */
     function createEditionMint(
         address edition,
-        uint256 price_,
+        uint96 price_,
         address signer,
         uint32 maxMintable_,
         uint32 startTime,

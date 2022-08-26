@@ -50,7 +50,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /// @inheritdoc IRangeEditionMinter
     function createEditionMint(
         address edition,
-        uint256 price_,
+        uint96 price_,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
@@ -162,7 +162,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // ================================
 
     /**
-     * @dev Returns the `EditionMintData` for `edition.
+     * @dev Returns the `EditionMintData` for `edition`.
      * @param edition Address of the song edition contract we are minting for.
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {

@@ -37,7 +37,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
-        uint256 price_,
+        uint96 price_,
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable_,
@@ -110,7 +110,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     }
 
     /**
-     * @dev Returns the `EditionMintData` for `edition.
+     * @dev Returns the `EditionMintData` for `edition`.
      * @param edition Address of the song edition contract we are minting for.
      */
     function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {

@@ -26,7 +26,7 @@ contract MockMinter is BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
-    function setPrice(uint256 price_) external {
+    function setPrice(uint96 price_) external {
         _currentPrice = price_;
     }
 

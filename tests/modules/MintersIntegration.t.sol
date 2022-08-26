@@ -16,17 +16,17 @@ contract MintersIntegration is TestConfig {
     uint32 public constant END_TIME_PUBLIC_SALE = START_TIME_PUBLIC_SALE + 1 days;
 
     // Free drop constant properties
-    uint256 PRICE_FREE_DROP = 0;
+    uint96 PRICE_FREE_DROP = 0;
     uint32 MINTER_MAX_MINTABLE_FREE_DROP = 100;
     uint32 MAX_MINTABLE_PER_ACCOUNT = 3;
 
     // Presale constant properties
-    uint256 PRICE_PRESALE = 50000000 gwei; // Price is 0.05 ETH
+    uint96 PRICE_PRESALE = 50000000 gwei; // Price is 0.05 ETH
     uint32 MINTER_MAX_MINTABLE_PRESALE = 45;
     uint32 MAX_MINTABLE_PER_ACCOUNT_PRESALE = 25; // There is a 25 tokens per account limit set on the presale.
 
     // Public sale constant properties
-    uint256 PRICE_PUBLIC_SALE = 100000000000000000; // Price is 0.1 ETH
+    uint96 PRICE_PUBLIC_SALE = 100000000000000000; // Price is 0.1 ETH
     uint32 MINTER_MAX_MINTABLE_PUBLIC_SALE = 700;
     uint32 MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE = 50;
 
