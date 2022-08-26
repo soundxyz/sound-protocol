@@ -23,7 +23,7 @@ contract MintersIntegration is TestConfig {
     // Presale constant properties
     uint256 PRICE_PRESALE = 50000000 gwei; // Price is 0.05 ETH
     uint32 MINTER_MAX_MINTABLE_PRESALE = 45;
-    uint32 MAX_MINTABLE_PER_ACCOUNT_PRESALE = 25; // There is a 25 tokens per wallet limit set on the presale.
+    uint32 MAX_MINTABLE_PER_ACCOUNT_PRESALE = 25; // There is a 25 tokens per account limit set on the presale.
 
     // Public sale constant properties
     uint256 PRICE_PUBLIC_SALE = 100000000000000000; // Price is 0.1 ETH
@@ -61,7 +61,7 @@ contract MintersIntegration is TestConfig {
       - Free Drop - 0.00 ETH
       - Presale - 0.05 ETH
       - Public Sale - 0.1 ETH
-      - Restrictions per wallet - 25 mint max during presale, 50 mint max during public sale.
+      - Restrictions per account - 25 mint max during presale, 50 mint max during public sale.
 
       Executed as sequential sales
       - Free mint: executed as 1 day long free drop
@@ -174,13 +174,13 @@ contract MintersIntegration is TestConfig {
         bytes32[] memory proof1 = merkleFreeDrop.getProof(leavesFreeMerkleDrop, 1);
         uint256 user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
         assertEq(user1Balance, 0);
-        // Claim 3 tokens (max per wallet)
+        // Claim 3 tokens (max per account)
         vm.prank(accountsFreeMerkleDrop[1]);
         merkleDropMinter.mint(address(edition), mintId, 3, proof1, address(0));
         user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
         assertEq(user1Balance, 3);
 
-        // First user comes back to claim 2 more tokens, bringing balance to 3 (max per wallet)
+        // First user comes back to claim 2 more tokens, bringing balance to 3 (max per account)
         vm.prank(accountsFreeMerkleDrop[0]);
         merkleDropMinter.mint(address(edition), mintId, 2, proof0, address(0));
         user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);

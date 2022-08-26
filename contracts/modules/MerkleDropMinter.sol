@@ -10,8 +10,13 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
-/// @dev Airdrop using merkle tree logic.
+/**
+ * @title MerkleDropMinter
+ * @dev Module for minting Sound editions using a merkle tree of approved accounts.
+ * @author Sound.xyz
+ */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -22,31 +27,29 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint256 price;
         // The maximum number of tokens that can can be minted for this sale.
         uint32 maxMintable;
-        // The maximum number of tokens that a wallet can mint.
+        // The maximum number of tokens that an account can mint.
         uint32 maxMintablePerAccount;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
     }
 
+    /**
+     * @dev Edition mint data
+     * edition => mintId => EditionMintData
+     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
-    // Tracking claimed amounts per wallet
+    /**
+     * @dev Tracks claimed amounts per account.
+     * edition => mintId => enumerable map (address => claimed balance)
+     */
     mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
 
     // ================================
     // WRITE FUNCTIONS
     // ================================
 
-    /**
-     * @dev Initializes the configuration for an edition merkle drop mint.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param merkleRootHash bytes32 hash of the Merkle tree representing eligible mints.
-     * @param price_ Sale price in ETH for minting a single token in `edition`.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
-     * @param maxMintablePerAccount_ The maximum number of tokens that a single wallet can mint.
-     */
+    /// @inheritdoc IMerkleDropMinter
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
@@ -76,14 +79,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         );
     }
 
-    /*
-     * @dev Mints tokens.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param mintId Id of the mint instance.
-     * This is the maximum the user can claim.
-     * @param requestedQuantity Number of tokens to actually mint. This can be anything up to the `maxMintablePerAccount`
-     * @param merkleProof Merkle proof for the claim.
-     */
+    /// @inheritdoc IMerkleDropMinter
     function mint(
         address edition,
         uint256 mintId,
@@ -99,7 +95,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
-        // Revert if attempting to mint more than the max allowed per wallet.
+        // Revert if attempting to mint more than the max allowed per account.
         if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
@@ -118,20 +114,13 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
-    /**
-     * @dev Returns the amount of claimed tokens for `wallet` in `mintData`.
-     * @param edition Address of the edition.
-     * @param mintId Mint identifier.
-     * @param wallet Address of the wallet.
-     * @return claimedQuantity is defaulted to 0 when the wallet address key is not found
-     * in the `claimed` map.
-     */
+    /// @inheritdoc IMerkleDropMinter
     function getClaimed(
         address edition,
         uint256 mintId,
-        address wallet
+        address account
     ) public view returns (uint256) {
-        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(wallet);
+        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(account);
         claimedQuantity = success ? claimedQuantity : 0;
         return claimedQuantity;
     }
@@ -144,10 +133,16 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
+    function price(address edition, uint256 mintId) public view returns (uint256) {
+        return _editionMintData[edition][mintId].price;
+    }
+
+    /// @inheritdoc IMinterModule
     function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintable;
     }
 
+    /// @inheritdoc IMinterModule
     function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
         return _editionMintData[edition][mintId].maxMintablePerAccount;
     }
