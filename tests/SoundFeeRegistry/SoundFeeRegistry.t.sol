@@ -9,13 +9,13 @@ contract SoundFeeRegistryTests is TestConfig {
     event PlatformFeeSet(uint16 platformFeeBPS);
 
     function test_deployFeeRegistry(address soundFeeAddress, uint16 platformFeeBPS) public {
-        if (platformFeeBPS > MAX_BPS) {
-            vm.expectRevert(SoundFeeRegistry.InvalidPlatformFeeBPS.selector);
+        if (soundFeeAddress == address(0)) {
+            vm.expectRevert(SoundFeeRegistry.InvalidSoundFeeAddress.selector);
             new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
             return;
         }
-        if (soundFeeAddress == address(0)) {
-            vm.expectRevert(SoundFeeRegistry.InvalidSoundFeeAddress.selector);
+        if (platformFeeBPS > MAX_BPS) {
+            vm.expectRevert(SoundFeeRegistry.InvalidPlatformFeeBPS.selector);
             new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
             return;
         }
