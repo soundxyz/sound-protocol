@@ -6,14 +6,13 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { Ownable } from "openzeppelin/access/Ownable.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
 /**
  * @title Minter Base
  * @dev The `BaseMinter` class maintains a central storage record of edition mint instances.
  */
-abstract contract BaseMinter is IMinterModule, Ownable {
+abstract contract BaseMinter is IMinterModule {
     // ================================
     // CONSTANTS
     // ================================
