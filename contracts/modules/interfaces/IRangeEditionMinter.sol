@@ -87,7 +87,7 @@ interface IRangeEditionMinter is IMinterModule {
      */
     function createEditionMint(
         address edition,
-        uint96 price_,
+        uint96 price,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,

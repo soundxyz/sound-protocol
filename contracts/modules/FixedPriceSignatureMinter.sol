@@ -23,7 +23,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     /// @inheritdoc IFixedPriceSignatureMinter
     function createEditionMint(
         address edition,
-        uint96 price_,
+        uint96 price,
         address signer,
         uint32 maxMintable_,
         uint32 startTime,
@@ -33,14 +33,14 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         if (signer == address(0)) revert SignerIsZeroAddress();
 
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.price = price_;
+        data.price = price;
         data.signer = signer;
         data.maxMintable = maxMintable_;
         // prettier-ignore
         emit FixedPriceSignatureMintCreated(
             edition,
             mintId,
-            price_,
+            price,
             signer,
             maxMintable_
         );
