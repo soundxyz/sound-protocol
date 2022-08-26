@@ -14,6 +14,11 @@ contract SoundFeeRegistryTests is TestConfig {
             new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
             return;
         }
+        if (soundFeeAddress == address(0)) {
+            vm.expectRevert(SoundFeeRegistry.InvalidSoundFeeAddress.selector);
+            new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
+            return;
+        }
 
         SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
 
@@ -34,6 +39,12 @@ contract SoundFeeRegistryTests is TestConfig {
     }
 
     function test_setSoundFeeAddress(address newSoundFeeAddress) external {
+        if (newSoundFeeAddress == address(0)) {
+            vm.expectRevert(SoundFeeRegistry.InvalidSoundFeeAddress.selector);
+            feeRegistry.setSoundFeeAddress(newSoundFeeAddress);
+            return;
+        }
+
         vm.expectEmit(false, false, false, true);
         emit SoundFeeAddressSet(newSoundFeeAddress);
         feeRegistry.setSoundFeeAddress(newSoundFeeAddress);

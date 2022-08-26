@@ -48,6 +48,11 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     event PlatformFeeSet(uint16 platformFeeBPS);
 
     /**
+     * The sound fee address must not be address(0).
+     */
+    error InvalidSoundFeeAddress();
+
+    /**
      * The platform fee numerator must not exceed `MAX_BPS`.
      */
     error InvalidPlatformFeeBPS();
@@ -56,7 +61,10 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
     // ================================
 
-    constructor(address soundFeeAddress_, uint16 platformFeeBPS_) onlyValidPlatformFeeBPS(platformFeeBPS_) {
+    constructor(address soundFeeAddress_, uint16 platformFeeBPS_)
+        onlyValidSoundFeeAddress(soundFeeAddress_)
+        onlyValidPlatformFeeBPS(platformFeeBPS_)
+    {
         soundFeeAddress = soundFeeAddress_;
 
         platformFeeBPS = platformFeeBPS_;
@@ -67,7 +75,11 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
      * Calling conditions:
      * - The caller must be the owner of the contract.
      */
-    function setSoundFeeAddress(address soundFeeAddress_) external onlyOwner {
+    function setSoundFeeAddress(address soundFeeAddress_)
+        external
+        onlyOwner
+        onlyValidSoundFeeAddress(soundFeeAddress_)
+    {
         soundFeeAddress = soundFeeAddress_;
         emit SoundFeeAddressSet(soundFeeAddress_);
     }
@@ -85,6 +97,14 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     // ================================
     // MODIFIERS
     // ================================
+
+    /**
+     * @dev Restricts the sound fee address to be address(0).
+     */
+    modifier onlyValidSoundFeeAddress(address soundFeeAddress_) {
+        if (soundFeeAddress_ == address(0)) revert InvalidSoundFeeAddress();
+        _;
+    }
 
     /**
      * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
