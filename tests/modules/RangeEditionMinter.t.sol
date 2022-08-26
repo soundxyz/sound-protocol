@@ -192,8 +192,8 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2, address(0));
     }
 
-    function test_mintWhenAllowedPerWalletIsSetAndSatisfied() public {
-        // Set max allowed per wallet to 2
+    function test_mintWhenMintablePerAccountIsSetAndSatisfied() public {
+        // Set max allowed per account to 2
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(2);
 
         // Ensure we can mint the max allowed of 2 tokens

@@ -43,7 +43,7 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 /**
  * @title SoundEditionV1
- * @author Sound.xyz
+ * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
 contract SoundEditionV1 is
     ISoundEditionV1,
@@ -55,35 +55,59 @@ contract SoundEditionV1 is
     // ================================
     // CONSTANTS
     // ================================
+
+    // A role every minter module must have in order to mint new tokens.
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    // A role the owner can grant for performing admin actions.
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    // Basis points denominator used in fee calculations.
     uint16 internal constant MAX_BPS = 10_000;
+    // The interface ID for EIP-2981 (royaltyInfo)
     bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
     // ================================
     // STORAGE
     // ================================
 
+    // Metadata module used for `tokenURI` if it is set.
     IMetadataModule public metadataModule;
+    // The metadata's base URI.
     string public baseURI;
+    // The contract URI used by Opensea https://docs.opensea.io/docs/contract-level-metadata.
     string public contractURI;
+    // Indicates if the `baseURI` is mutable.
     bool public isMetadataFrozen;
+    // The destination for ETH withdrawals.
     address public fundingRecipient;
+    // The royalty fee in basis points.
     uint16 public royaltyBPS;
+    // The max mintable quantity for the edition.
     uint32 public editionMaxMintable;
+    // The token count after which `mintRandomness` gets locked.
     uint32 public mintRandomnessTokenThreshold;
+    // The timestamp after which `mintRandomness` gets locked.
     uint32 public mintRandomnessTimeThreshold;
+    /**
+     * Getter for the previous block hash - stored on each mint unless `mintRandomnessTokenThreshold` or
+     * `mintRandomnessTimeThreshold` have been surpassed. Used for game mechanics like the Sound Golden Egg.
+     */
     bytes32 public mintRandomness;
 
     // ================================
     // MODIFIERS
     // ================================
 
+    /**
+     * @dev Guards a function against any calls made by an address that isn't the owner or an admin.
+     */
     modifier onlyOwnerOrAdmin() {
         if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
         _;
     }
 
+    /**
+     * @dev Ensures the royalty basis points is a valid value.
+     */
     modifier onlyValidRoyaltyBPS(uint16 royalty) {
         if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
         _;
@@ -175,26 +199,19 @@ contract SoundEditionV1 is
         }
     }
 
-    /**
-     * @dev Withdraws collected ETH royalties to the fundingRecipient
-     */
+    /// @inheritdoc ISoundEditionV1
     function withdrawETH() external {
         SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
     }
 
-    /**
-     * @dev Withdraws collected ERC20 royalties to the fundingRecipient
-     * @param tokens array of ERC20 tokens to withdraw
-     */
+    /// @inheritdoc ISoundEditionV1
     function withdrawERC20(address[] calldata tokens) external {
         for (uint256 i; i < tokens.length; ++i) {
             SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
         }
     }
 
-    /**
-     *  @dev Sets metadata module
-     */
+    /// @inheritdoc ISoundEditionV1
     function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
@@ -202,9 +219,7 @@ contract SoundEditionV1 is
         emit MetadataModuleSet(metadataModule_);
     }
 
-    /**
-     *  @dev Sets global base URI
-     */
+    /// @inheritdoc ISoundEditionV1
     function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
@@ -212,9 +227,7 @@ contract SoundEditionV1 is
         emit BaseURISet(baseURI_);
     }
 
-    /**
-     *   @dev Sets contract URI
-     */
+    /// @inheritdoc ISoundEditionV1
     function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
@@ -222,9 +235,7 @@ contract SoundEditionV1 is
         emit ContractURISet(contractURI_);
     }
 
-    /**
-     *   @dev Freezes metadata by preventing any more changes to base URI
-     */
+    /// @inheritdoc ISoundEditionV1
     function freezeMetadata() external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
@@ -232,26 +243,20 @@ contract SoundEditionV1 is
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
-    /**
-     * @dev Sets funding recipient address
-     */
+    /// @inheritdoc ISoundEditionV1
     function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
 
-    /**
-     * @dev Sets royalty amount in bps (basis points)
-     */
+    /// @inheritdoc ISoundEditionV1
     function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
 
-    /**
-     *   @dev Reduces the maximum mintable quantity.
-     */
+    /// @inheritdoc ISoundEditionV1
     function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
         if (_totalMinted() == editionMaxMintable) {
             revert MaximumHasAlreadyBeenReached();
@@ -273,18 +278,14 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /**
-     * @dev sets mintRandomnessTokenThreshold in case of insufficient sales, to finalize goldenEgg
-     */
+    /// @inheritdoc ISoundEditionV1
     function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold_) external onlyOwnerOrAdmin {
         if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
 
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
     }
 
-    /**
-     * @dev sets mintRandomnessTimeThreshold
-     */
+    /// @inheritdoc ISoundEditionV1
     function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external onlyOwnerOrAdmin {
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
     }
@@ -293,7 +294,7 @@ contract SoundEditionV1 is
     // VIEW FUNCTIONS
     // ================================
 
-    /// @dev Returns the total amount of tokens minted in the contract
+    /// @inheritdoc ISoundEditionV1
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
     }
@@ -337,6 +338,7 @@ contract SoundEditionV1 is
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
 
+    /// @inheritdoc ISoundEditionV1
     function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
         uint256 count = getRoleMemberCount(role);
 

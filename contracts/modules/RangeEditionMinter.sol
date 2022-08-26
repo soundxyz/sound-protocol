@@ -5,9 +5,12 @@ pragma solidity ^0.8.16;
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IRangeEditionMinter, EditionMintData, MintInfo } from "./interfaces/IRangeEditionMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /*
- * @dev Minter class for range edition sales.
+ * @title RangeEditionMinter
+ * @notice Module for range edition mints of Sound editions.
+ * @author Sound.xyz
  */
 contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /**
@@ -42,18 +45,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // WRITE FUNCTIONS
     // ================================
 
-    /*
-     * @dev Initializes the configuration for an edition mint.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param price Sale price in ETH for minting a single token in `edition`.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime The timestamp (in seconds since unix epoch) after which the
-     * max amount of tokens mintable will drop from
-     * `maxMintableUpper` to `maxMintableLower`.
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
-     */
+    /// @inheritdoc IRangeEditionMinter
     function createEditionMint(
         address edition,
         uint256 price_,
@@ -90,11 +82,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         );
     }
 
-    /*
-     * @dev Mints tokens for a given edition.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param quantity Token quantity to mint in song `edition`.
-     */
+    /// @inheritdoc IRangeEditionMinter
     function mint(
         address edition,
         uint256 mintId,
@@ -112,7 +100,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.totalMinted = nextTotalMinted;
 
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // If the maximum allowed per wallet is set (i.e. is different to 0)
+        // If the maximum allowed per account is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
         if ((userMintedBalance + quantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
@@ -121,15 +109,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
-    /*
-     * @dev Sets the time range.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime The timestamp (in seconds since unix epoch) after which the
-     * max amount of tokens mintable will drop from
-     * `maxMintableUpper` to `maxMintableLower`.
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     */
+    /// @inheritdoc IRangeEditionMinter
     function setTimeRange(
         address edition,
         uint256 mintId,
@@ -147,12 +127,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         emit ClosingTimeSet(edition, mintId, closingTime);
     }
 
-    /*
-     * @dev Sets the max mintable range.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
-     */
+    /// @inheritdoc IRangeEditionMinter
     function setMaxMintableRange(
         address edition,
         uint256 mintId,
@@ -210,9 +185,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // INTERNAL FUNCTIONS
     // ================================
 
-    /**
-     * @dev Optional validation function that gets called by _setTimeRange()
-     */
+    /// @inheritdoc BaseMinter
     function _beforeSetTimeRange(
         address edition,
         uint256 mintId,
