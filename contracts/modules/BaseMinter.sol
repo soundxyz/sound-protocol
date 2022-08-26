@@ -30,9 +30,9 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
 
     /**
-     * @dev Maps an edition to the its next mint ID.
+     * @dev The next mint ID. Shared amongst all editions connected.
      */
-    mapping(address => uint256) private _nextMintIds;
+    uint256 private _nextMintId;
 
     /**
      * @dev Maps an edition and the mint ID to a mint instance.
@@ -214,8 +214,8 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     /**
      * @inheritdoc IMinterModule
      */
-    function nextMintId(address edition) public view returns (uint256) {
-        return _nextMintIds[edition];
+    function nextMintId() public view returns (uint256) {
+        return _nextMintId;
     }
 
     /**
@@ -299,13 +299,13 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) onlyEditionOwnerOrAdmin(edition) returns (uint256 mintId) {
-        mintId = _nextMintIds[edition];
+        mintId = _nextMintId;
 
         BaseData storage data = _baseData[edition][mintId];
         data.startTime = startTime;
         data.endTime = endTime;
 
-        _nextMintIds[edition] += 1;
+        _nextMintId = mintId + 1;
 
         emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime);
     }

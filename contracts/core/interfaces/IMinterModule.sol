@@ -238,11 +238,11 @@ interface IMinterModule is IERC165 {
     ) external view returns (uint256);
 
     /**
-     * @dev Returns the next mint ID for `edition`.
-     * A mint ID is assigned sequentially for each unique edition address,
-     * starting from (0, 1, 2, ...)
+     * @dev Returns the next mint ID.
+     * A mint ID is assigned sequentially starting from (0, 1, 2, ...),
+     * and is shared amonsgt all editions connected to the minter contract.
      */
-    function nextMintId(address edition) external view returns (uint256);
+    function nextMintId() external view returns (uint256);
 
     /**
      * @dev Returns the base mint data for (`edition`, `mintId`).
