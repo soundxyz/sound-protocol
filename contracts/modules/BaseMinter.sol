@@ -1,38 +1,66 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IAccessControlUpgradeable } from "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { Ownable } from "openzeppelin/access/Ownable.sol";
+import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
 /**
  * @title Minter Base
- * @dev The `BaseMinter` class maintains a central storage record of edition mint configurations.
+ * @dev The `BaseMinter` class maintains a central storage record of edition mint instances.
  */
-abstract contract BaseMinter is IERC165, IMinterModule {
-    struct BaseData {
-        uint32 startTime;
-        uint32 endTime;
-        bool mintPaused;
-    }
+abstract contract BaseMinter is IMinterModule, Ownable {
+    // ================================
+    // CONSTANTS
+    // ================================
 
     /**
-     * @dev Maps an edition to the its next mint ID.
+     * @dev This is the denominator, in basis points (BPS), for:
+     * - platform fees
+     * - affiliate fees
+     * - affiliate discount
      */
-    mapping(address => uint256) private _nextMintIds;
+    uint16 private constant _MAX_BPS = 10_000;
+
+    // ================================
+    // STORAGE
+    // ================================
 
     /**
-     * @dev Maps an edition and the mint ID to a mint's configuration.
+     * @dev The next mint ID. Shared amongst all editions connected.
+     */
+    uint256 private _nextMintId;
+
+    /**
+     * @dev Maps an edition and the mint ID to a mint instance.
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
 
+    /**
+     * @dev Maps an address to how much affiliate fees have they accrued.
+     */
+    mapping(address => uint256) private _affiliateFeesAccrued;
+
+    /**
+     * @dev How much platform fees have been accrued.
+     */
+    uint256 private _platformFeesAccrued;
+
+    /**
+     * @dev The numerator of the platform fee.
+     */
+    uint16 private _platformFeeBPS;
+
     // ================================
-    // MODIFIERS
+    // ACCESS MODIFIERS
     // ================================
 
     /**
      * @dev Restricts the function to be only callable by the owner or admin of `edition`.
+     * @param edition The edition address.
      */
     modifier onlyEditionOwnerOrAdmin(address edition) virtual {
         if (
@@ -47,11 +75,7 @@ abstract contract BaseMinter is IERC165, IMinterModule {
     // WRITE FUNCTIONS
     // ================================
 
-    /**
-     * @dev Sets the `paused` status for `edition`.
-     * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
-     */
+    /// @inheritdoc IMinterModule
     function setEditionMintPaused(
         address edition,
         uint256 mintId,
@@ -61,11 +85,7 @@ abstract contract BaseMinter is IERC165, IMinterModule {
         emit MintPausedSet(edition, mintId, paused);
     }
 
-    /**
-     * @dev Sets the time range for an edition mint.
-     * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
-     */
+    /// @inheritdoc IMinterModule
     function setTimeRange(
         address edition,
         uint256 mintId,
@@ -75,12 +95,151 @@ abstract contract BaseMinter is IERC165, IMinterModule {
         _setTimeRange(edition, mintId, startTime, endTime);
     }
 
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function setAffiliateFee(
+        address edition,
+        uint256 mintId,
+        uint16 feeBPS
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(feeBPS) {
+        _baseData[edition][mintId].affiliateFeeBPS = feeBPS;
+        emit AffiliateFeeSet(edition, mintId, feeBPS);
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function setAffiliateDiscount(
+        address edition,
+        uint256 mintId,
+        uint16 discountBPS
+    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(discountBPS) {
+        _baseData[edition][mintId].affiliateDiscountBPS = discountBPS;
+        emit AffiliateDiscountSet(edition, mintId, discountBPS);
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function setPlatformFee(uint16 feeBPS) public virtual override onlyOwner onlyValidPlatformFeeBPS(feeBPS) {
+        _platformFeeBPS = feeBPS;
+        emit PlatformFeeSet(feeBPS);
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function withdrawForAffiliate(address affiliate) public override {
+        uint256 accrued = _affiliateFeesAccrued[affiliate];
+        if (accrued != 0) {
+            _affiliateFeesAccrued[affiliate] = 0;
+            SafeTransferLib.safeTransferETH(affiliate, accrued);
+        }
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function withdrawForPlatform(address to) public override onlyOwner {
+        uint256 accrued = _platformFeesAccrued;
+        if (accrued != 0) {
+            _platformFeesAccrued = 0;
+            SafeTransferLib.safeTransferETH(to, accrued);
+        }
+    }
+
     // ================================
-    // INTERNAL FUNCTIONS
+    // VIEW FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Getter for the max basis points.
+     */
+    function MAX_BPS() external pure returns (uint16) {
+        return _MAX_BPS;
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function affiliateFeesAccrued(address affiliate) external view returns (uint256) {
+        return _affiliateFeesAccrued[affiliate];
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function platformFeesAccrued() external view returns (uint256) {
+        return _platformFeesAccrued;
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function platformFeeBPS() external view returns (uint16) {
+        return _platformFeeBPS;
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function isAffiliated(
+        address, /* edition */
+        uint256, /* mintId */
+        address affiliate
+    ) public view virtual override returns (bool) {
+        return affiliate != address(0);
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address minter,
+        uint32 quantity,
+        bool affiliated
+    ) public view virtual override returns (uint256) {
+        uint256 total = _baseTotalPrice(edition, mintId, minter, quantity);
+
+        if (total == 0) return 0;
+
+        if (!affiliated) return total;
+
+        return total - ((total * _baseData[edition][mintId].affiliateDiscountBPS) / _MAX_BPS);
+    }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function nextMintId() public view returns (uint256) {
+        return _nextMintId;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        return interfaceId == type(IMinterModule).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
+    /**
+     * @dev Returns the base mint data.
+     */
+    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
+        return _baseData[edition][mintId];
+    }
+
+    // ================================
+    // VALIDATION MODIFIERS
     // ================================
 
     /**
      * @dev Restricts the start time to be less than the end time.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     modifier onlyValidTimeRange(uint32 startTime, uint32 endTime) virtual {
         if (startTime >= endTime) revert InvalidTimeRange();
@@ -88,7 +247,50 @@ abstract contract BaseMinter is IERC165, IMinterModule {
     }
 
     /**
-     * @dev Creates an edition mint configuration.
+     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidAffiliateFeeBPS(uint16 affiliateFeeBPS) virtual {
+        if (affiliateFeeBPS > _MAX_BPS) revert InvalidAffiliateFeeBPS();
+        _;
+    }
+
+    /**
+     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidAffiliateDiscountBPS(uint16 affiliateDiscountBPS) virtual {
+        if (affiliateDiscountBPS > _MAX_BPS) revert InvalidAffiliateDiscountBPS();
+        _;
+    }
+
+    /**
+     * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
+     */
+    modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) virtual {
+        if (platformFeeBPS_ > _MAX_BPS) revert InvalidPlatformFeeBPS();
+        _;
+    }
+
+    // ================================
+    // INTERNAL FUNCTIONS
+    // ================================
+
+    /**
+     * @dev Returns the total price before any affiliate discount.
+     * This is a mandatory hook to override.
+     */
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address minter,
+        uint32 quantity
+    ) internal view virtual returns (uint256);
+
+    /**
+     * @dev Creates an edition mint instance.
+     * @param edition The edition address.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
+     * @return mintId The ID for the mint instance.
      * Calling conditions:
      * - Must be owner or admin of the edition.
      */
@@ -97,19 +299,21 @@ abstract contract BaseMinter is IERC165, IMinterModule {
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) onlyEditionOwnerOrAdmin(edition) returns (uint256 mintId) {
-        mintId = _nextMintIds[edition];
+        mintId = _nextMintId;
 
         BaseData storage data = _baseData[edition][mintId];
         data.startTime = startTime;
         data.endTime = endTime;
 
-        _nextMintIds[edition] += 1;
+        _nextMintId = mintId + 1;
 
         emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime);
     }
 
     /**
      * @dev Returns whether the caller is the owner of `edition`.
+     * @param edition The edition address.
+     * @return result Whether the caller is the owner of `edition`.
      */
     function _callerIsEditionOwner(address edition) private returns (bool result) {
         // To avoid defining an interface just to call `owner()`.
@@ -142,6 +346,10 @@ abstract contract BaseMinter is IERC165, IMinterModule {
     /**
      * @dev Sets the time range for an edition mint.
      * Note: If calling from a child contract, the child is responsible for access control.
+     * @param edition The edition address.
+     * @param mintId The ID for the mint instance.
+     * @param startTime The start time of the mint.
+     * @param endTime The end time of the mint.
      */
     function _setTimeRange(
         address edition,
@@ -149,69 +357,75 @@ abstract contract BaseMinter is IERC165, IMinterModule {
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) {
-        _beforeSetTimeRange(edition, mintId, startTime, endTime);
-
         _baseData[edition][mintId].startTime = startTime;
         _baseData[edition][mintId].endTime = endTime;
+
+        emit TimeRangeSet(edition, mintId, startTime, endTime);
     }
 
     /**
-     * @dev Called at the start of _setTimeRange (for optional validation checks, etc).
-     */
-    function _beforeSetTimeRange(
-        address edition,
-        uint256 mintId,
-        uint32 startTime,
-        uint32 endTime
-    ) internal virtual {}
-
-    /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     * @param edition The edition address.
+     * @param mintId The ID for the mint instance.
+     * @param quantity The quantity of tokens to mint.
+     * @param affiliate The affiliate (referral) address.
      */
     function _mint(
         address edition,
         uint256 mintId,
-        address to,
         uint32 quantity,
-        uint256 requiredEtherValue
+        address affiliate
     ) internal {
-        uint32 startTime = _baseData[edition][mintId].startTime;
-        uint32 endTime = _baseData[edition][mintId].endTime;
+        BaseData storage baseData = _baseData[edition][mintId];
+
+        /* --------------------- GENERAL CHECKS --------------------- */
+
+        uint32 startTime = baseData.startTime;
+        uint32 endTime = baseData.endTime;
         if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
         if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+        if (baseData.mintPaused) revert MintPaused();
 
+        /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
+
+        // Check if the mint is an affiliated mint.
+        bool affiliated = isAffiliated(edition, mintId, affiliate);
+
+        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, affiliated);
+
+        // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
-        if (_baseData[edition][mintId].mintPaused) revert MintPaused();
-        ISoundEditionV1(edition).mint{ value: msg.value }(to, quantity);
+
+        uint256 remainingPayment = requiredEtherValue;
+
+        // Compute the platform fee.
+        uint256 platformFee = (remainingPayment * _platformFeeBPS) / _MAX_BPS;
+        // Deduct the platform fee.
+        remainingPayment -= platformFee;
+
+        // Increment the platform fees accrued.
+        _platformFeesAccrued += platformFee;
+
+        if (affiliated) {
+            // Compute the affiliate fee.
+            uint256 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
+            // Deduct the affiliate fee from the remaining payment.
+            remainingPayment -= affiliateFee;
+            // Increment the affiliate fees accrued
+            _affiliateFeesAccrued[affiliate] += affiliateFee;
+        }
+
+        /* ------------------------- MINT --------------------------- */
+
+        ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
     }
 
     /**
-     * @dev Requires that `totalMinted <= maxMintable`.
+     * @dev Throws error if `totalMinted > maxMintable`.
+     * @param totalMinted The current total number of minted tokens.
+     * @param maxMintable The maximum number of mintable tokens.
      */
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
-    }
-
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
-
-    /**
-     * @dev Returns the next mint ID for `edition`.
-     */
-    function nextMintId(address edition) public view returns (uint256) {
-        return _nextMintIds[edition];
-    }
-
-    /**
-     * @dev Returns the configuration data for an edition mint.
-     */
-    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
-        return _baseData[edition][mintId];
-    }
-
-    // @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IMinterModule).interfaceId;
     }
 }
