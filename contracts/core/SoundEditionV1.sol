@@ -28,7 +28,7 @@ pragma solidity ^0.8.16;
 */
 
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { ERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import { ERC721AUpgradeable, ERC721AStorage } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import { ERC721AQueryableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
@@ -128,9 +128,16 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         uint32 editionMaxMintable_,
         uint32 mintRandomnessTokenThreshold_,
         uint32 mintRandomnessTimeThreshold_
-    ) public initializerERC721A onlyValidRoyaltyBPS(royaltyBPS_) {
-        __ERC721A_init(name, symbol);
-        __ERC721AQueryable_init();
+    ) public onlyValidRoyaltyBPS(royaltyBPS_) {
+        // Prevent double initialization.
+        // We can "cheat" here and avoid the initializer modifer to save a SSTORE,
+        // since the `_nextTokenId()` is defined to always return 1.
+        if (_nextTokenId() != 0) revert Unauthorized();
+
+        ERC721AStorage.layout()._name = name;
+        ERC721AStorage.layout()._symbol = symbol;
+        ERC721AStorage.layout()._currentIndex = _startTokenId();
+
         _initializeOwner(owner);
 
         metadataModule = metadataModule_;
