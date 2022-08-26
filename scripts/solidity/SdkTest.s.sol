@@ -13,12 +13,6 @@ import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.so
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 
-/**
- To run:
- forge script scripts/solidity/SdkTest.s.sol:SdkTest --fork-url http://localhost:8545 \                                                          ─╯
---private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast
- */
-
 contract SdkTest is Script {
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
     uint96 constant PRICE = 100000000 gwei; // 0.1 ETH
