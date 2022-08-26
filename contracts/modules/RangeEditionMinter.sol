@@ -47,7 +47,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /// @inheritdoc IRangeEditionMinter
     function createEditionMint(
         address edition,
-        uint96 price_,
+        uint96 price,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
@@ -60,7 +60,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         mintId = _createEditionMint(edition, startTime, endTime);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.price = price_;
+        data.price = price;
         data.closingTime = closingTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
@@ -70,7 +70,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         emit RangeEditionMintCreated(
             edition,
             mintId,
-            price_,
+            price,
             startTime,
             closingTime,
             endTime,

@@ -34,7 +34,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
-        uint96 price_,
+        uint96 price,
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable_,
@@ -44,7 +44,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
-        data.price = price_;
+        data.price = price;
         data.maxMintable = maxMintable_;
         data.maxMintablePerAccount = maxMintablePerAccount_;
         // prettier-ignore
@@ -52,7 +52,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
             edition,
             mintId,
             merkleRootHash,
-            price_,
+            price,
             startTime,
             endTime,
             maxMintable_,
