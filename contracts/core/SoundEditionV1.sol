@@ -310,7 +310,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {
-        return ERC721AUpgradeable.supportsInterface(interfaceId) || interfaceId == _INTERFACE_ID_ERC2981;
+        return
+            interfaceId == type(ISoundEditionV1).interfaceId ||
+            ERC721AUpgradeable.supportsInterface(interfaceId) ||
+            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
+            interfaceId == _INTERFACE_ID_ERC2981;
     }
 
     /// @inheritdoc IERC2981Upgradeable
