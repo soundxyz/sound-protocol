@@ -113,7 +113,7 @@ contract MintControllerBaseTests is TestConfig {
 
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
-        uint256 price = 1;
+        uint128 price = 1;
         minter.setPrice(price);
 
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.WrongEtherValue.selector, price * 2 - 1, price * 2));
@@ -129,7 +129,7 @@ contract MintControllerBaseTests is TestConfig {
 
         minter.setEditionMintPaused(address(edition), mintId, true);
 
-        uint256 price = 1;
+        uint128 price = 1;
         minter.setPrice(price);
 
         vm.expectRevert(IMinterModule.MintPaused.selector);
@@ -231,7 +231,7 @@ contract MintControllerBaseTests is TestConfig {
         uint16 affiliateDiscountBPS = 10;
         uint16 affiliateFeeBPS = 10;
         uint16 platformFeeBPS = 10;
-        uint256 price = 1 ether;
+        uint128 price = 1 ether;
         uint32 quantity = 2;
 
         test_mintAndWithdrawlWithAffiliateAndPlatformFee(
@@ -287,7 +287,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
-        uint256 price = 1 ether;
+        uint128 price = 1 ether;
         minter.setPrice(price);
 
         affiliateFeeBPS = affiliateFeeBPS % minter.MAX_BPS();
@@ -314,7 +314,7 @@ contract MintControllerBaseTests is TestConfig {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
-        uint256 price = 1 ether;
+        uint128 price = 1 ether;
         minter.setPrice(price);
 
         platformFeeBPS = platformFeeBPS % minter.MAX_BPS();
@@ -344,7 +344,7 @@ contract MintControllerBaseTests is TestConfig {
         uint16 affiliateDiscountBPS,
         uint16 affiliateFeeBPS,
         uint16 platformFeeBPS,
-        uint256 price,
+        uint128 price,
         uint32 quantity
     ) public {
         price = price % 1e19;

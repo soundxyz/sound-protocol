@@ -10,7 +10,7 @@ struct EditionMintData {
     // Hash of the root node for the merkle tree drop
     bytes32 merkleRootHash;
     // The price at which each token will be sold, in ETH.
-    uint256 price;
+    uint128 price;
     // The maximum number of tokens that can can be minted for this sale.
     uint32 maxMintable;
     // The maximum number of tokens that a wallet can mint.
@@ -26,7 +26,7 @@ struct MintInfo {
     uint32 startTime;
     uint32 endTime;
     bool mintPaused;
-    uint256 price;
+    uint128 price;
     uint32 maxMintable;
     uint32 maxMintablePerAccount;
     uint32 totalMinted;
@@ -54,7 +54,7 @@ interface IMerkleDropMinter is IMinterModule {
         address indexed edition,
         uint256 indexed mintId,
         bytes32 merkleRootHash,
-        uint256 price,
+        uint128 price,
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable,
@@ -92,7 +92,7 @@ interface IMerkleDropMinter is IMinterModule {
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
-        uint256 price_,
+        uint128 price_,
         uint32 startTime,
         uint32 endTime,
         uint32 maxMintable_,

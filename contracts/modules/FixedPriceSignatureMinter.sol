@@ -23,7 +23,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     /// @inheritdoc IFixedPriceSignatureMinter
     function createEditionMint(
         address edition,
-        uint256 price_,
+        uint128 price_,
         address signer,
         uint32 maxMintable_,
         uint32 startTime,

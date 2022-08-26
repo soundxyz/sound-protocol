@@ -10,7 +10,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract GoldenEggMetadataTests is TestConfig {
-    uint256 constant PRICE = 1 ether;
+    uint128 constant PRICE = 1 ether;
 
     uint32 constant START_TIME = 100;
 
