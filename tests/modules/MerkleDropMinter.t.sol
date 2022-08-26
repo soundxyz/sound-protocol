@@ -133,7 +133,7 @@ contract MerkleDropMinterTests is TestConfig {
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
-    function test_canGetClaimedAmountForWallet() public {
+    function test_canGetMintedTallyForAccount() public {
         uint32 maxMintablePerAccount = 1;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
             0,
@@ -148,8 +148,8 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 requestedQuantity = maxMintablePerAccount;
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
 
-        uint256 claimedAmount = minter.mintedTallies(address(edition), mintId, accounts[0]);
-        assertEq(claimedAmount, 1);
+        uint256 mintedTally = minter.mintedTallies(address(edition), mintId, accounts[0]);
+        assertEq(mintedTally, 1);
     }
 
     function test_supportsInterface() public {

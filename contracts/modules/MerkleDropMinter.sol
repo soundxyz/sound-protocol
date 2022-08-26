@@ -82,7 +82,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         // check the additional requestedQuantity does not exceed the set maximum
         if ((userMintedBalance + requestedQuantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
-        // Update the claimed amount data
+        // Update the minted tally for this account
         mintedTallies[edition][mintId][msg.sender] = userMintedBalance + requestedQuantity;
 
         _mint(edition, mintId, requestedQuantity, affiliate);
