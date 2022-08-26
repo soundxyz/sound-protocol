@@ -79,8 +79,8 @@ contract SoundEditionV1 is
     // The contract URI used by Opensea https://docs.opensea.io/docs/contract-level-metadata.
     string public contractURI;
 
-    // Metadata module used for `tokenURI` if it is set.
-    IMetadataModule public metadataModule;
+    // The destination for ETH withdrawals.
+    address public fundingRecipient;
     // The max mintable quantity for the edition.
     uint32 public editionMaxMintable;
     // The token count after which `mintRandomness` gets locked.
@@ -88,8 +88,8 @@ contract SoundEditionV1 is
     // The timestamp after which `mintRandomness` gets locked.
     uint32 public mintRandomnessTimeThreshold;
 
-    // The destination for ETH withdrawals.
-    address public fundingRecipient;
+    // Metadata module used for `tokenURI` if it is set.
+    IMetadataModule public metadataModule;
     // The royalty fee in basis points.
     uint16 public royaltyBPS;
     // Indicates if the `baseURI` is mutable.
@@ -146,21 +146,22 @@ contract SoundEditionV1 is
         uint32 mintRandomnessTokenThreshold_,
         uint32 mintRandomnessTimeThreshold_
     ) public initializerERC721A initializer onlyValidRoyaltyBPS(royaltyBPS_) {
+        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
+
         __ERC721A_init(name, symbol);
         __ERC721AQueryable_init();
         __Ownable_init();
 
-        metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
 
-        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
-
-        royaltyBPS = royaltyBPS_;
         editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
+
+        metadataModule = metadataModule_;
+        royaltyBPS = royaltyBPS_;
 
         __AccessControl_init();
 
