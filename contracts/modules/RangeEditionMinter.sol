@@ -27,7 +27,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableLower;
         // The upper limit of the maximum number of tokens that can be minted.
         uint32 maxMintableUpper;
-        // The maximum number of tokens that a wallet can mint.
+        // The maximum number of tokens that an account can mint.
         uint32 maxMintablePerAccount;
     }
 
@@ -122,7 +122,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.totalMinted = nextTotalMinted;
 
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // If the maximum allowed per wallet is set (i.e. is different to 0)
+        // If the maximum allowed per account is set (i.e. is different to 0)
         // check the required additional quantity does not exceed the set maximum
         if ((userMintedBalance + quantity) > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
 

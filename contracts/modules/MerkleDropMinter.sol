@@ -27,7 +27,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint256 price;
         // The maximum number of tokens that can can be minted for this sale.
         uint32 maxMintable;
-        // The maximum number of tokens that a wallet can mint.
+        // The maximum number of tokens that an account can mint.
         uint32 maxMintablePerAccount;
         // The total number of tokens minted so far for this sale.
         uint32 totalMinted;
@@ -95,7 +95,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
-        // Revert if attempting to mint more than the max allowed per wallet.
+        // Revert if attempting to mint more than the max allowed per account.
         if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
@@ -118,9 +118,9 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     function getClaimed(
         address edition,
         uint256 mintId,
-        address wallet
+        address account
     ) public view returns (uint256) {
-        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(wallet);
+        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(account);
         claimedQuantity = success ? claimedQuantity : 0;
         return claimedQuantity;
     }

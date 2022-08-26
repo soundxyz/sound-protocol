@@ -18,7 +18,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @param startTime The time minting can begin.
      * @param endTime The time minting will end.
      * @param maxMintable The maximum number of tokens that can be minted.
-     * @param maxMintablePerAccount The maximum number of tokens that a wallet can mint.
+     * @param maxMintablePerAccount The maximum number of tokens that an account can mint.
      */
     event MerkleDropMintCreated(
         address indexed edition,
@@ -56,7 +56,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
      * @param endTime End timestamp of sale (in seconds since unix epoch).
      * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
-     * @param maxMintablePerAccount_ The maximum number of tokens that a single wallet can mint.
+     * @param maxMintablePerAccount_ The maximum number of tokens that a single account can mint.
      * @return mintId The ID of the new mint instance.
      */
     function createEditionMint(
@@ -83,16 +83,16 @@ interface IMerkleDropMinter is IMinterModule {
     ) external payable;
 
     /**
-     * @dev Returns the amount of claimed tokens for `wallet` in `mintData`.
+     * @dev Returns the amount of claimed tokens for `account` in `mintData`.
      * @param edition Address of the edition.
      * @param mintId Mint identifier.
-     * @param wallet Address of the wallet.
-     * @return claimedQuantity is defaulted to 0 when the wallet address key is not found
+     * @param account Address of the account.
+     * @return claimedQuantity is defaulted to 0 when the account address key is not found
      * in the `claimed` map.
      */
     function getClaimed(
         address edition,
         uint256 mintId,
-        address wallet
+        address account
     ) external view returns (uint256);
 }
