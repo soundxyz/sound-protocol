@@ -107,7 +107,7 @@ interface IMinterModule is IERC165 {
     error Unauthorized();
 
     /**
-     * The affiliate fee numerator must not exceed `MAX_BPS`.
+     * @dev The affiliate fee numerator must not exceed `MAX_BPS`.
      */
     error InvalidAffiliateFeeBPS();
 
@@ -115,6 +115,11 @@ interface IMinterModule is IERC165 {
      * The affiliate discount numerator must not exceed `MAX_BPS`.
      */
     error InvalidAffiliateDiscountBPS();
+
+    /**
+     * @dev Fee registry cannot be the zero address.
+     */
+    error FeeRegistryIsZeroAddress();
 
     // ================================
     // WRITE FUNCTIONS

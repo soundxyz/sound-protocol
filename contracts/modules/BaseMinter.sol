@@ -73,6 +73,7 @@ abstract contract BaseMinter is IMinterModule {
     // ================================
 
     constructor(ISoundFeeRegistry feeRegistry_) {
+        if (address(feeRegistry_) == address(0)) revert FeeRegistryIsZeroAddress();
         feeRegistry = feeRegistry_;
     }
 

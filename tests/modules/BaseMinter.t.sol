@@ -8,6 +8,7 @@ import { TestConfig } from "../TestConfig.sol";
 import { MockMinter } from "../mocks/MockMinter.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 contract MintControllerBaseTests is TestConfig {
@@ -372,6 +373,11 @@ contract MintControllerBaseTests is TestConfig {
 
         _test_withdrawAffiliateFeesAccrued(affiliate, expectedAffiliateFees);
         _test_withdrawPlatformFeesAccrued(expectedPlatformFees);
+    }
+
+    function test_revertsIfFeeRegistryIsZero() external {
+        vm.expectRevert(IMinterModule.FeeRegistryIsZeroAddress.selector);
+        new MockMinter(ISoundFeeRegistry(address(0)));
     }
 
     // Test helper for withdrawing the affiliate fees and testing the expected effects.
