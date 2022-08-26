@@ -131,6 +131,7 @@ interface IRangeEditionMinter is IMinterModule {
     function mint(
         address edition,
         uint256 mintId,
-        uint32 quantity
+        uint32 quantity,
+        address affiliate
     ) external payable;
 }

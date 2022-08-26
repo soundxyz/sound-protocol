@@ -2,4 +2,4 @@
 "sound-protocol": minor
 ---
 
-Cleanup minters
+Add platform and referral fees

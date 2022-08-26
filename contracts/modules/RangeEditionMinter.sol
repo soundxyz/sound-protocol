@@ -20,7 +20,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      * This is a weak mitigation since buyers can still buy from multiple addresses, but creates more friction than balanceOf.
      * edition => mintId => buyer => mintedTallies
      */
-    mapping(address => mapping(uint256 => mapping(address => uint256))) mintedTallies;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
     // ================================
     // MODIFIERS
@@ -98,7 +98,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     function mint(
         address edition,
         uint256 mintId,
-        uint32 quantity
+        uint32 quantity,
+        address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -117,7 +118,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         mintedTallies[edition][mintId][msg.sender] += quantity;
 
-        _mint(edition, mintId, msg.sender, quantity, quantity * data.price);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     /*
@@ -201,7 +202,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public view override(BaseMinter) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
     }
 
@@ -233,5 +234,14 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             _maxMintable = data.maxMintableLower;
         }
         return _maxMintable;
+    }
+
+    function _baseTotalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) internal view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
     }
 }

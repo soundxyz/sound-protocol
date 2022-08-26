@@ -62,6 +62,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         address edition,
         uint256 mintId,
         uint32 quantity,
-        bytes calldata signature
+        bytes calldata signature,
+        address affiliate
     ) external payable;
 }
