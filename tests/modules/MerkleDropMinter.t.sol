@@ -7,6 +7,7 @@ import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { IMerkleDropMinter, MintInfo } from "@modules/interfaces/IMerkleDropMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
@@ -47,7 +48,7 @@ contract MerkleDropMinterTests is TestConfig {
         setUpMerkleTree(address(edition));
 
         minter = new MerkleDropMinter();
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
         mintId = minter.createEditionMint(
             address(edition),
             root,
@@ -166,7 +167,7 @@ contract MerkleDropMinterTests is TestConfig {
         MerkleDropMinter minter = new MerkleDropMinter();
         setUpMerkleTree(address(edition));
 
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;

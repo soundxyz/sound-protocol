@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { IAccessControlUpgradeable } from "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
@@ -65,7 +65,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     modifier onlyEditionOwnerOrAdmin(address edition) virtual {
         if (
             !_callerIsEditionOwner(edition) &&
-            !IAccessControlUpgradeable(edition).hasRole(ISoundEditionV1(edition).ADMIN_ROLE(), msg.sender)
+            !OwnableRoles(edition).hasAnyRole(msg.sender, ISoundEditionV1(edition).ADMIN_ROLE())
         ) revert Unauthorized();
 
         _;

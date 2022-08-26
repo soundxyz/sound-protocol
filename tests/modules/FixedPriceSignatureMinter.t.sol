@@ -8,6 +8,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
 import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract FixedPriceSignatureMinterTests is TestConfig {
@@ -44,7 +45,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         minter = new FixedPriceSignatureMinter();
 
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
         minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, START_TIME, END_TIME);
     }
@@ -123,10 +124,10 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
 
         vm.prank(edition.owner());
-        edition.revokeRole(edition.MINTER_ROLE(), address(minter));
+        edition.revokeRoles(address(minter), edition.MINTER_ROLE());
 
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
     }
 
@@ -169,7 +170,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
 
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;

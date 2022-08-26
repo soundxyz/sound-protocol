@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import { Strings } from "openzeppelin/utils/Strings.sol";
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
@@ -107,7 +107,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         soundEdition.setBaseURI(newBaseURI);
     }
 
@@ -143,7 +143,7 @@ contract SoundEdition_metadata is TestConfig {
          */
         MockSoundEditionV1 soundEdition2 = _createEdition();
 
-        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+        soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
         soundEdition2.mint(2);
 
         vm.prank(ARTIST_ADMIN);
@@ -173,7 +173,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         soundEdition.setContractURI(newContractURI);
     }
 
@@ -206,7 +206,7 @@ contract SoundEdition_metadata is TestConfig {
          */
         MockSoundEditionV1 soundEdition2 = _createEdition();
 
-        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+        soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
 
         vm.prank(ARTIST_ADMIN);
         soundEdition2.setContractURI(newContractURI);
@@ -235,7 +235,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         soundEdition.setMetadataModule(newMetadataModule);
     }
 
@@ -273,7 +273,7 @@ contract SoundEdition_metadata is TestConfig {
          */
         MockSoundEditionV1 soundEdition2 = _createEdition();
 
-        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+        soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
 
         soundEdition2.mint(2);
 
@@ -302,7 +302,7 @@ contract SoundEdition_metadata is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         soundEdition.freezeMetadata();
     }
 
@@ -329,7 +329,7 @@ contract SoundEdition_metadata is TestConfig {
          */
         MockSoundEditionV1 soundEdition2 = _createEdition();
 
-        soundEdition2.grantRole(soundEdition2.ADMIN_ROLE(), ARTIST_ADMIN);
+        soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
 
         vm.prank(ARTIST_ADMIN);
         soundEdition2.freezeMetadata();

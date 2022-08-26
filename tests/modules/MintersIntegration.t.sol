@@ -7,6 +7,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract MintersIntegration is TestConfig {
@@ -99,7 +100,7 @@ contract MintersIntegration is TestConfig {
         );
 
         MerkleDropMinter merkleDropMinter = new MerkleDropMinter();
-        edition.grantRole(edition.MINTER_ROLE(), address(merkleDropMinter));
+        edition.grantRoles(address(merkleDropMinter), edition.MINTER_ROLE());
 
         bytes32 root = merkleFreeDrop.getRoot(leavesFreeMerkleDrop);
         uint256 mintIdFreeMint = merkleDropMinter.createEditionMint(
@@ -134,7 +135,7 @@ contract MintersIntegration is TestConfig {
 
         // SETUP PUBLIC SALE
         RangeEditionMinter publicSaleMinter = new RangeEditionMinter();
-        edition.grantRole(edition.MINTER_ROLE(), address(publicSaleMinter));
+        edition.grantRoles(address(publicSaleMinter), edition.MINTER_ROLE());
         uint256 mintIdPublicSale = publicSaleMinter.createEditionMint(
             address(edition),
             PRICE_PUBLIC_SALE,

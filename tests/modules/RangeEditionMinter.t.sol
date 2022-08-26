@@ -55,7 +55,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         minter = new RangeEditionMinter();
 
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
         minter.createEditionMint(
             address(edition),
@@ -397,7 +397,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         RangeEditionMinter minter = new RangeEditionMinter();
 
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;

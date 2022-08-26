@@ -7,6 +7,7 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract GoldenEggMetadataTests is TestConfig {
@@ -48,7 +49,7 @@ contract GoldenEggMetadataTests is TestConfig {
             )
         );
 
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
         minter.createEditionMint(
             address(edition),
@@ -120,7 +121,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         edition.setMintRandomnessLock(quantity);
     }
 
@@ -160,7 +161,7 @@ contract GoldenEggMetadataTests is TestConfig {
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         address admin = address(789);
-        edition.grantRole(edition.ADMIN_ROLE(), admin);
+        edition.grantRoles(admin, edition.ADMIN_ROLE());
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
@@ -188,7 +189,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         edition.setRandomnessLockedTimestamp(START_TIME);
     }
 
@@ -218,7 +219,7 @@ contract GoldenEggMetadataTests is TestConfig {
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
 
         address admin = address(789);
-        edition.grantRole(edition.ADMIN_ROLE(), admin);
+        edition.grantRoles(admin, edition.ADMIN_ROLE());
 
         vm.warp(START_TIME);
         uint32 quantity = MAX_MINTABLE - 1;
