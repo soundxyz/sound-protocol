@@ -28,7 +28,7 @@ pragma solidity ^0.8.16;
 */
 
 import { ERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
-import { Clones } from "openzeppelin/proxy/Clones.sol";
+import { ClonesWithImmutableArgs } from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import { OwnableUpgradeable } from "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import { UUPSUpgradeable } from "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
@@ -42,6 +42,8 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
  * @dev The proxies are OpenZeppelin's Clones implementation of https://eips.ethereum.org/EIPS/eip-1167
  */
 contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable {
+    using ClonesWithImmutableArgs for address;
+
     // The implementation contract delegated to by Sound edition proxies.
     address public soundEditionImplementation;
 
@@ -84,8 +86,8 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @return soundEdition The address of the deployed edition proxy.
      */
     function createSound(
-        string memory name,
-        string memory symbol,
+        bytes32 name,
+        bytes32 symbol,
         IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
@@ -95,14 +97,13 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         uint32 mintRandomnessTokenThreshold,
         uint32 mintRandomnessTimeThreshold
     ) external returns (address payable soundEdition) {
+        // Immutable args
+        bytes memory data = abi.encodePacked(name, symbol, metadataModule);
         // Create Sound Edition proxy
-        soundEdition = payable(Clones.clone(soundEditionImplementation));
+        soundEdition = address(soundEditionImplementation).clone(data);
         // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
             msg.sender,
-            name,
-            symbol,
-            metadataModule,
             baseURI,
             contractURI,
             fundingRecipient,

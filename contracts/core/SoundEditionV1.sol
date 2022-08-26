@@ -28,7 +28,7 @@ pragma solidity ^0.8.16;
 */
 
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { ERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import { ERC721AUpgradeable, ERC721AStorage } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import { ERC721AQueryableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
@@ -37,6 +37,7 @@ import { OwnableUpgradeable } from "openzeppelin-upgradeable/access/OwnableUpgra
 import { AccessControlUpgradeable } from "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import { AccessControlEnumerableUpgradeable } from "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
+import { Clone } from "clones-with-immutable-args/Clone.sol";
 
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
@@ -47,6 +48,7 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
  */
 contract SoundEditionV1 is
     ISoundEditionV1,
+    Clone,
     ERC721AQueryableUpgradeable,
     ERC721ABurnableUpgradeable,
     OwnableUpgradeable,
@@ -69,8 +71,6 @@ contract SoundEditionV1 is
     // STORAGE
     // ================================
 
-    // Metadata module used for `tokenURI` if it is set.
-    IMetadataModule public metadataModule;
     // The metadata's base URI.
     string public baseURI;
     // The contract URI used by Opensea https://docs.opensea.io/docs/contract-level-metadata.
@@ -114,28 +114,28 @@ contract SoundEditionV1 is
     }
 
     // ================================
+    // IMMUTABLE ARG FUNCTIONS
+    // ================================
+
+    function name() public pure override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
+        return string(abi.encodePacked(_getArgUint256(0)));
+    }
+
+    function symbol() public pure override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
+        return string(abi.encodePacked(_getArgUint256(0x20)));
+    }
+
+    function metadataModule() public pure returns (IMetadataModule) {
+        return IMetadataModule(_getArgAddress(0x40));
+    }
+
+    // ================================
     // WRITE FUNCTIONS
     // ================================
 
-    /**
-     * @dev Initializes the contract
-     * @param owner Owner of contract (artist)
-     * @param name Name of the token
-     * @param symbol Symbol of the token
-     * @param metadataModule_ Address of metadata module, address(0x00) if not used
-     * @param baseURI_ Base URI
-     * @param contractURI_ Contract URI for OpenSea storefront
-     * @param fundingRecipient_ Address that receives primary and secondary royalties
-     * @param royaltyBPS_ Royalty amount in bps (basis points)
-     * @param editionMaxMintable_ The maximum amount of tokens that can be minted for this edition.
-     * @param mintRandomnessTokenThreshold_ Token supply after which randomness gets locked
-     * @param mintRandomnessTimeThreshold_ Timestamp after which randomness gets locked
-     */
+    /// @inheritdoc ISoundEditionV1
     function initialize(
         address owner,
-        string memory name,
-        string memory symbol,
-        IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
         address fundingRecipient_,
@@ -144,11 +144,10 @@ contract SoundEditionV1 is
         uint32 mintRandomnessTokenThreshold_,
         uint32 mintRandomnessTimeThreshold_
     ) public initializerERC721A initializer onlyValidRoyaltyBPS(royaltyBPS_) {
-        __ERC721A_init(name, symbol);
+        ERC721AStorage.layout()._currentIndex = 1;
         __ERC721AQueryable_init();
         __Ownable_init();
 
-        metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
 
@@ -171,15 +170,7 @@ contract SoundEditionV1 is
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /**
-     * @dev Mints `quantity` tokens to addrress `to`
-     * Each token will be assigned a token ID that is consecutively increasing.
-     * The caller must have the `MINTERROLE`, which can be granted via
-     * {grantRole}. Multiple minters, such as different minter contracts,
-     * can be authorized simultaneously.
-     * @param to Address to mint to
-     * @param quantity Number of tokens to mint
-     */
+    /// @inheritdoc ISoundEditionV1
     function mint(address to, uint256 quantity) public payable {
         address caller = _msgSender();
         // Only allow calls if caller has minter role, admin role, or is the owner.
@@ -212,14 +203,6 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
-        if (isMetadataFrozen) revert MetadataIsFrozen();
-        metadataModule = metadataModule_;
-
-        emit MetadataModuleSet(metadataModule_);
-    }
-
-    /// @inheritdoc ISoundEditionV1
     function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
@@ -240,7 +223,7 @@ contract SoundEditionV1 is
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
         isMetadataFrozen = true;
-        emit MetadataFrozen(metadataModule, baseURI, contractURI);
+        emit MetadataFrozen(metadataModule(), baseURI, contractURI);
     }
 
     /// @inheritdoc ISoundEditionV1
@@ -308,8 +291,8 @@ contract SoundEditionV1 is
     {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
-        if (address(metadataModule) != address(0)) {
-            return metadataModule.tokenURI(tokenId);
+        if (address(metadataModule()) != address(0)) {
+            return metadataModule().tokenURI(tokenId);
         }
 
         string memory baseURI_ = baseURI;

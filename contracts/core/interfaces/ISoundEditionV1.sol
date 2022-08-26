@@ -17,12 +17,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // ================================
 
     /**
-     * @dev Emitted when the metadata module is set.
-     * @param metadataModule the address of the metadata module.
-     */
-    event MetadataModuleSet(IMetadataModule metadataModule);
-
-    /**
      * @dev Emitted when the `baseURI` is set.
      * @param baseURI the base URI of the edition.
      */
@@ -111,9 +105,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /**
      * @dev Initializes the contract
      * @param owner Owner of contract (artist).
-     * @param name Name of the token.
-     * @param symbol Symbol of the token.
-     * @param metadataModule Address of metadata module, address(0x00) if not used.
      * @param baseURI Base URI.
      * @param contractURI Contract URI for OpenSea storefront.
      * @param fundingRecipient Address that receives primary and secondary royalties.
@@ -124,9 +115,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     function initialize(
         address owner,
-        string memory name,
-        string memory symbol,
-        IMetadataModule metadataModule,
         string memory baseURI,
         string memory contractURI,
         address fundingRecipient,
@@ -157,12 +145,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param tokens array of ERC20 tokens to withdraw
      */
     function withdrawERC20(address[] calldata tokens) external;
-
-    /**
-     * @dev Sets metadata module.
-     * @param metadataModule Address of metadata module.
-     */
-    function setMetadataModule(IMetadataModule metadataModule) external;
 
     /**
      * @dev Sets global base URI.

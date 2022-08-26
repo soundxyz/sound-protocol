@@ -40,8 +40,8 @@ contract SoundCreatorTests is TestConfig {
         SoundEditionV1 soundEdition = createGenericEdition();
 
         assert(address(soundEdition) != address(0));
-        assertEq(soundEdition.name(), SONG_NAME);
-        assertEq(soundEdition.symbol(), SONG_SYMBOL);
+        assertEq(soundEdition.name(), string(abi.encodePacked(SONG_NAME)));
+        assertEq(soundEdition.symbol(), string(abi.encodePacked(SONG_SYMBOL)));
     }
 
     function test_ownership(address attacker) public {

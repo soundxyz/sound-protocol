@@ -11,8 +11,8 @@ import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {
     // Artist contract creation vars
-    string constant SONG_NAME = "Never Gonna Give You Up";
-    string constant SONG_SYMBOL = "NEVER";
+    bytes32 constant SONG_NAME = "Never Gonna Give You Up";
+    bytes32 constant SONG_SYMBOL = "NEVER";
     IMetadataModule constant METADATA_MODULE = IMetadataModule(address(390720730));
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
