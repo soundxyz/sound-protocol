@@ -114,7 +114,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
-    ) public onlyEditionOwnerOrAdmin(edition) {
+    ) public onlyEditionOwnerOrAdmin(edition) onlyValidRangeTimes(startTime, closingTime, endTime) {
         // Set closingTime first, as its stored value gets validated later in the execution.
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
@@ -123,6 +123,19 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         _setTimeRange(edition, mintId, startTime, endTime);
 
         emit ClosingTimeSet(edition, mintId, closingTime);
+    }
+
+    /// @inheritdoc BaseMinter
+    function setTimeRange(
+        address edition,
+        uint256 mintId,
+        uint32 startTime,
+        uint32 endTime
+    ) public override(BaseMinter, IMinterModule) onlyEditionOwnerOrAdmin(edition) {
+        EditionMintData storage data = _editionMintData[edition][mintId];
+        if (!(startTime < data.closingTime && data.closingTime < endTime)) revert InvalidTimeRange();
+
+        _setTimeRange(edition, mintId, startTime, endTime);
     }
 
     /// @inheritdoc IRangeEditionMinter
@@ -181,17 +194,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
-
-    /// @inheritdoc BaseMinter
-    function _beforeSetTimeRange(
-        address edition,
-        uint256 mintId,
-        uint32 startTime,
-        uint32 endTime
-    ) internal view override {
-        uint32 closingTime = _editionMintData[edition][mintId].closingTime;
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-    }
 
     /**
      * @dev Gets the current maximum mintable quantity.
