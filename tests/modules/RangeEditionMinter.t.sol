@@ -9,7 +9,7 @@ import { BaseMinter } from "@modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract RangeEditionMinterTests is TestConfig {
-    uint256 constant PRICE = 1;
+    uint96 constant PRICE = 1;
 
     uint32 constant START_TIME = 100;
 
@@ -29,7 +29,7 @@ contract RangeEditionMinterTests is TestConfig {
     event RangeEditionMintCreated(
         address indexed edition,
         uint256 indexed mintId,
-        uint256 price,
+        uint96 price,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
@@ -70,7 +70,7 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_createEditionMint(
-        uint256 price,
+        uint96 price,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
