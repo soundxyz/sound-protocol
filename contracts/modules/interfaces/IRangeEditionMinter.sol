@@ -8,7 +8,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  */
 struct EditionMintData {
     // The price at which each token will be sold, in ETH.
-    uint256 price;
+    uint96 price;
     // The timestamp (in seconds since unix epoch) after which the
     // max amount of tokens mintable will drop from
     // `maxMintableUpper` to `maxMintableLower`.
@@ -30,7 +30,7 @@ struct MintInfo {
     uint32 startTime;
     uint32 endTime;
     bool mintPaused;
-    uint256 price;
+    uint96 price;
     uint32 maxMintable;
     uint32 maxMintablePerAccount;
     uint32 totalMinted;
@@ -46,7 +46,7 @@ interface IRangeEditionMinter is IMinterModule {
     event RangeEditionMintCreated(
         address indexed edition,
         uint256 indexed mintId,
-        uint256 price,
+        uint96 price,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
@@ -87,7 +87,7 @@ interface IRangeEditionMinter is IMinterModule {
      */
     function createEditionMint(
         address edition,
-        uint256 price_,
+        uint96 price_,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
