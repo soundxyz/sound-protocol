@@ -17,6 +17,7 @@ specifiers:
   bob-ts: ^4.0.0
   bob-tsm: ^1.1.1
   changesets-github-release: ^0.1.0
+  concurrently: ^7.3.0
   danger: ^11.1.1
   esbuild: ^0.15.5
   eslint: ^5.16.0
@@ -57,6 +58,7 @@ devDependencies:
   bob-ts: 4.0.0_hcl46ctkavdod3dupsljel3654
   bob-tsm: 1.1.2_k2el7cp5jxvwn2itdedexlaiqy
   changesets-github-release: 0.1.0
+  concurrently: 7.3.0
   danger: 11.1.1
   esbuild: 0.15.5
   eslint: 5.16.0
@@ -1377,6 +1379,22 @@ packages:
     resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
     dev: true
 
+  /concurrently/7.3.0:
+    resolution: {integrity: sha512-IiDwm+8DOcFEInca494A8V402tNTQlJaYq78RF2rijOrKEk/AOHTxhN4U1cp7GYKYX5Q6Ymh1dLTBlzIMN0ikA==}
+    engines: {node: ^12.20.0 || ^14.13.0 || >=16.0.0}
+    hasBin: true
+    dependencies:
+      chalk: 4.1.2
+      date-fns: 2.29.2
+      lodash: 4.17.21
+      rxjs: 7.5.6
+      shell-quote: 1.7.3
+      spawn-command: 0.0.2-1
+      supports-color: 8.1.1
+      tree-kill: 1.2.2
+      yargs: 17.5.1
+    dev: true
+
   /core-js/3.23.5:
     resolution: {integrity: sha512-7Vh11tujtAZy82da4duVreQysIoO2EvVrur7y6IzZkH1IHPSekuDi8Vuw1+YKjkbfWLRD7Nc9ICQ/sIUDutcyg==}
     requiresBuild: true
@@ -1487,6 +1505,11 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    dev: true
+
+  /date-fns/2.29.2:
+    resolution: {integrity: sha512-0VNbwmWJDS/G3ySwFSJA3ayhbURMTJLtwM2DTxf9CWondCnh6DTNlO9JgRSq6ibf4eD0lfMJNBxUdEAHHix+bA==}
+    engines: {node: '>=0.11'}
     dev: true
 
   /debug/3.1.0:
@@ -3837,6 +3860,10 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
+  /shell-quote/1.7.3:
+    resolution: {integrity: sha512-Vpfqwm4EnqGdlsBFNmHhxhElJYrdfcxPThu+ryKS5J8L/fhAwLazFZtq+S+TWZ9ANj2piSQLGj6NQg+lKPmxrw==}
+    dev: true
+
   /side-channel/1.0.4:
     resolution: {integrity: sha512-q5XPytqFEIKHkGdiMIrY10mvLRvnQh42/+GoBlFW3b2LXLE2xxJpZFdm94we0BaoV3RwJyGqg5wS7epxTv0Zvw==}
     dependencies:
@@ -3946,6 +3973,10 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       is-plain-obj: 2.1.0
+    dev: true
+
+  /spawn-command/0.0.2-1:
+    resolution: {integrity: sha512-n98l9E2RMSJ9ON1AKisHzz7V42VDiBQGY6PB1BwRglz99wpVsSuGzQ+jOi6lFXBGVTCrRpltvjm+/XA+tpeJrg==}
     dev: true
 
   /spawndamnit/2.0.0:
@@ -4126,6 +4157,13 @@ packages:
       has-flag: 4.0.0
     dev: true
 
+  /supports-color/8.1.1:
+    resolution: {integrity: sha512-MpUEN2OodtUzxvKQl72cUF7RQ5EiHsGvSsVG0ia9c5RbWGL2CI4C7EpPS8UTBIplnlzZiNuV56w+FuNxy3ty2Q==}
+    engines: {node: '>=10'}
+    dependencies:
+      has-flag: 4.0.0
+    dev: true
+
   /supports-hyperlinks/1.0.1:
     resolution: {integrity: sha512-HHi5kVSefKaJkGYXbDuKbUGRVxqnWGn3J2e39CYcNJEfWciGq2zYtOhXLTlvrOZW1QU7VX67w7fMmWafHX9Pfw==}
     engines: {node: '>=4'}
@@ -4194,6 +4232,11 @@ packages:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
     dependencies:
       punycode: 2.1.1
+    dev: true
+
+  /tree-kill/1.2.2:
+    resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
+    hasBin: true
     dev: true
 
   /trim-newlines/3.0.1:

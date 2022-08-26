@@ -16,7 +16,8 @@
     "typechain": "pnpm prep-typechain && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-sound/**/*[!metadata].json'",
     "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
     "prepack": "rm -rf out && pnpm build && pnpm typechain && bob-tsm build.ts",
-    "postpublish": "gh-release"
+    "postpublish": "gh-release",
+    "test:sdk": "concurrently \"anvil\" \"forge script scripts/solidity/SdkTest.s.sol:SdkTest --fork-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast\""
   },
   "repository": {
     "type": "git",
@@ -47,6 +48,7 @@
     "bob-ts": "^4.0.0",
     "bob-tsm": "^1.1.1",
     "changesets-github-release": "^0.1.0",
+    "concurrently": "^7.3.0",
     "danger": "^11.1.1",
     "esbuild": "^0.15.5",
     "eslint": "^5.16.0",
