@@ -14,20 +14,6 @@ import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerk
  * @author Sound.xyz
  */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
-
-    struct EditionMintData {
-        // Hash of the root node for the merkle tree drop
-        bytes32 merkleRootHash;
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
-        // The maximum number of tokens that a wallet can mint.
-        uint32 maxMintablePerAccount;
-        // The total number of tokens minted so far for this sale.
-        uint32 totalMinted;
-    }
-
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
