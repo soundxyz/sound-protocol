@@ -83,7 +83,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     }
 
     function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
-        BaseData memory baseData = super.baseMintData(edition, mintId);
+        BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
         MintInfo memory combinedMintData = MintInfo(

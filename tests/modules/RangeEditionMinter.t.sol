@@ -138,16 +138,15 @@ contract RangeEditionMinterTests is TestConfig {
         );
 
         if (!hasRevert) {
-            EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
-            assertEq(data.price, price);
-            assertEq(baseData.startTime, startTime);
-            assertEq(data.closingTime, closingTime);
-            assertEq(baseData.endTime, endTime);
-            assertEq(data.totalMinted, uint32(0));
-            assertEq(data.maxMintableLower, maxMintableLower);
-            assertEq(data.maxMintableUpper, maxMintableUpper);
+            assertEq(mintInfo.price, price);
+            assertEq(mintInfo.startTime, startTime);
+            assertEq(mintInfo.closingTime, closingTime);
+            assertEq(mintInfo.endTime, endTime);
+            assertEq(mintInfo.totalMinted, uint32(0));
+            assertEq(mintInfo.maxMintableLower, maxMintableLower);
+            assertEq(mintInfo.maxMintableUpper, maxMintableUpper);
         }
     }
 
@@ -345,12 +344,11 @@ contract RangeEditionMinterTests is TestConfig {
         minter.setTimeRange(address(edition), MINT_ID, startTime, closingTime, endTime);
 
         if (!hasRevert) {
-            EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
-            assertEq(baseData.startTime, startTime);
-            assertEq(data.closingTime, closingTime);
-            assertEq(baseData.endTime, endTime);
+            assertEq(mintInfo.startTime, startTime);
+            assertEq(mintInfo.closingTime, closingTime);
+            assertEq(mintInfo.endTime, endTime);
         }
     }
 
@@ -422,17 +420,17 @@ contract RangeEditionMinterTests is TestConfig {
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
         assertEq(expectedMaxAllowedPerWallet, mintData.maxMintablePerAccount);
-        assertEq(MAX_MINTABLE_UPPER, mintData.maxMintable);
+        assertEq(MAX_MINTABLE_UPPER, mintData.maxMintableUpper);
+        assertEq(MAX_MINTABLE_LOWER, mintData.maxMintableLower);
         assertEq(0, mintData.totalMinted);
         assertEq(CLOSING_TIME, mintData.closingTime);
 
-        // Warp to closing time & mint some tokens to test that maxMintable & totalMinted changed
-        vm.warp(CLOSING_TIME);
+        // Warp to start time & mint some tokens to test that totalMinted changed
+        vm.warp(expectedStartTime);
         minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, 4, address(0));
 
         mintData = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(MAX_MINTABLE_LOWER, mintData.maxMintable);
         assertEq(4, mintData.totalMinted);
     }
 }

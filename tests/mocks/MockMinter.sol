@@ -4,6 +4,14 @@ pragma solidity ^0.8.16;
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 
+struct MintInfo {
+    uint32 startTime;
+    uint32 endTime;
+    uint16 affiliateFeeBPS;
+    uint16 affiliateDiscountBPS;
+    bool mintPaused;
+}
+
 contract MockMinter is BaseMinter {
     uint256 private _currentPrice;
 
@@ -41,5 +49,19 @@ contract MockMinter is BaseMinter {
         uint32 quantity
     ) internal view virtual override returns (uint256) {
         return _currentPrice * quantity;
+    }
+
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+        BaseData memory baseData = _baseData[edition][mintId];
+
+        MintInfo memory combinedMintData = MintInfo(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.affiliateFeeBPS,
+            baseData.affiliateDiscountBPS,
+            baseData.mintPaused
+        );
+
+        return combinedMintData;
     }
 }
