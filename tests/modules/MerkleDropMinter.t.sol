@@ -2,12 +2,10 @@ pragma solidity ^0.8.16;
 
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 import { Merkle } from "murky/Merkle.sol";
-
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
-import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
+import { IMerkleDropMinter, MintInfo } from "@modules/interfaces/IMerkleDropMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { TestConfig } from "../TestConfig.sol";
 
@@ -156,9 +154,43 @@ contract MerkleDropMinterTests is TestConfig {
         (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 0);
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
-        bool supportsIMerkleDropMinter = minter.supportsInterface(type(IMerkleDropMinter).interfaceId);
+        bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMinter).interfaceId);
 
         assertTrue(supportsIMinterModule);
-        assertTrue(supportsIMerkleDropMinter);
+        assertTrue(supportsIMerkleDropMint);
+    }
+
+    function test_mintInfo() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        MerkleDropMinter minter = new MerkleDropMinter();
+        setUpMerkleTree(address(edition));
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedMaxMintable = 39730302;
+        uint32 expectedMaxPerWallet = 397;
+
+        uint256 mintId = minter.createEditionMint(
+            address(edition),
+            root,
+            0,
+            expectedStartTime,
+            expectedEndTime,
+            expectedMaxMintable,
+            expectedMaxPerWallet
+        );
+
+        MintInfo memory mintData = minter.mintInfo(address(edition), mintId);
+
+        assertEq(expectedStartTime, mintData.startTime);
+        assertEq(expectedEndTime, mintData.endTime);
+        assertEq(false, mintData.mintPaused);
+        assertEq(expectedMaxMintable, mintData.maxMintable);
+        assertEq(expectedMaxPerWallet, mintData.maxMintablePerAccount);
+        assertEq(0, mintData.totalMinted);
+        assertEq(root, mintData.merkleRootHash);
     }
 }

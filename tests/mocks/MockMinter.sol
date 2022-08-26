@@ -23,20 +23,6 @@ contract MockMinter is BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
-    function maxMintable(
-        address, /** edition */
-        uint256 /** mintId */
-    ) external pure returns (uint32) {
-        return type(uint32).max;
-    }
-
-    function maxMintablePerAccount(
-        address, /** edition */
-        uint256 /** mintId */
-    ) external pure returns (uint32) {
-        return type(uint32).max;
-    }
-
     function setPrice(uint256 price_) external {
         _currentPrice = price_;
     }

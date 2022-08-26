@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
 import { ECDSA } from "solady/utils/ECDSA.sol";
@@ -8,8 +7,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
-import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract FixedPriceSignatureMinterTests is TestConfig {
@@ -140,7 +138,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        FixedPriceSignatureMinter.EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
@@ -164,5 +162,37 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         assertTrue(supportsIMinterModule);
         assertTrue(supportsIFixedPriceSignatureMinter);
+    }
+
+    function test_mintInfo() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
+
+        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+
+        uint32 expectedStartTime = 123;
+        uint32 expectedEndTime = 502370;
+        uint32 expectedPrice = 1234071;
+
+        minter.createEditionMint(
+            address(edition),
+            expectedPrice,
+            _signerAddress(),
+            MAX_MINTABLE,
+            expectedStartTime,
+            expectedEndTime
+        );
+
+        MintInfo memory mintData = minter.mintInfo(address(edition), MINT_ID);
+
+        assertEq(expectedStartTime, mintData.startTime);
+        assertEq(expectedEndTime, mintData.endTime);
+        assertEq(false, mintData.mintPaused);
+        assertEq(expectedPrice, mintData.price);
+        assertEq(_signerAddress(), mintData.signer);
+        assertEq(type(uint32).max, mintData.maxMintablePerAccount);
+        assertEq(MAX_MINTABLE, mintData.maxMintable);
+        assertEq(0, mintData.totalMinted);
     }
 }

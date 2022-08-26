@@ -245,22 +245,6 @@ interface IMinterModule is IERC165 {
     function nextMintId(address edition) external view returns (uint256);
 
     /**
-     * @dev Returns the maximum mintable number of tokens for a mint instance.
-     * @param edition The edition address.
-     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
-     * @return The total maximum mintable number of tokens.
-     */
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32);
-
-    /**
-     * @dev Returns the maximum mintable number of tokens per account for a mint instance.
-     * @param edition The edition address.
-     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
-     * @return The maximum mintable number of tokens per account.
-     */
-    function maxMintablePerAccount(address edition, uint256 mintId) external view returns (uint32);
-
-    /**
      * @dev Returns the base mint data for (`edition`, `mintId`).
      */
     function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
