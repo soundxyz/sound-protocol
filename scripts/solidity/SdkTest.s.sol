@@ -14,7 +14,6 @@ import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 
 contract SdkTest is Script {
-    bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
     uint96 constant PRICE = 100000000 gwei; // 0.1 ETH
     uint32 constant MAX_MINTABLE_LOWER = 3;
     uint32 constant MAX_MINTABLE_UPPER = 5;
@@ -66,9 +65,10 @@ contract SdkTest is Script {
         SoundEditionV1 edition = SoundEditionV1(payable(editionAddress));
 
         // grant minter roles
-        edition.grantRole(MINTER_ROLE, address(fixedPriceMinter));
-        edition.grantRole(MINTER_ROLE, address(merkleMinter));
-        edition.grantRole(MINTER_ROLE, address(rangeMinter));
+        uint256 minterRole = edition.MINTER_ROLE();
+        edition.grantRoles(address(fixedPriceMinter), minterRole);
+        edition.grantRoles(address(merkleMinter), minterRole);
+        edition.grantRoles(address(rangeMinter), minterRole);
 
         _createRangeMint(editionAddress, rangeMinter);
 
@@ -91,7 +91,7 @@ contract SdkTest is Script {
         uint32 MINT2_END_TIME = MINT2_CLOSING_TIME + 10;
 
         // Create mints
-        uint256 mintId1 = rangeMinter.createEditionMint(
+        rangeMinter.createEditionMint(
             editionAddress,
             PRICE,
             MINT1_START_TIME,
@@ -102,7 +102,7 @@ contract SdkTest is Script {
             MAX_PER_ACCOUNT
         );
 
-        uint256 mintId2 = rangeMinter.createEditionMint(
+        rangeMinter.createEditionMint(
             editionAddress,
             PRICE,
             MINT2_START_TIME,
