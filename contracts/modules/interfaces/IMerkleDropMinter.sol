@@ -113,14 +113,13 @@ interface IMerkleDropMinter is IMinterModule {
     ) external payable;
 
     /**
-     * @dev Returns the amount of claimed tokens for `account` in `mintData`.
+     * @dev Returns the amount of minted tokens for `account` in `mintData`.
      * @param edition Address of the edition.
      * @param mintId Mint identifier.
      * @param account Address of the account.
-     * @return claimedQuantity is defaulted to 0 when the account address key is not found
-     * in the `claimed` map.
+     * @return tally The number of minted tokens for the account.
      */
-    function getClaimed(
+    function mintedTallies(
         address edition,
         uint256 mintId,
         address account

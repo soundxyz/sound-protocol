@@ -2,11 +2,8 @@
 
 pragma solidity ^0.8.16;
 
-import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
-import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
@@ -17,15 +14,13 @@ import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerk
  * @author Sound.xyz
  */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
-
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
-     * @dev Tracks claimed amounts per account.
-     * edition => mintId => enumerable map (address => claimed balance)
+     * @dev Number of tokens minted by each buyer address
+     * edition => mintId => buyer => mintedTallies
      */
-    mapping(address => mapping(uint256 => EnumerableMap.AddressToUintMap)) claimed;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
     // ================================
     // WRITE FUNCTIONS
@@ -73,21 +68,22 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
+        // Increase `totalMinted` by `requestedQuantity`.
+        // Require that the increased value does not exceed `maxMintable`.
         uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
         _requireNotSoldOut(nextTotalMinted, data.maxMintable);
         data.totalMinted = nextTotalMinted;
 
-        uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
-
-        // Revert if attempting to mint more than the max allowed per account.
-        if (updatedClaimedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
-
-        // Update the claimed amount data
-        claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
-
-        bytes32 leaf = keccak256(abi.encodePacked(edition, msg.sender));
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
+
+        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+        // check the additional requestedQuantity does not exceed the set maximum
+        if ((userMintedBalance + requestedQuantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
+
+        // Update the minted tally for this account
+        mintedTallies[edition][mintId][msg.sender] = userMintedBalance + requestedQuantity;
 
         _mint(edition, mintId, requestedQuantity, affiliate);
 
@@ -97,17 +93,6 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // ================================
     // VIEW FUNCTIONS
     // ================================
-
-    /// @inheritdoc IMerkleDropMinter
-    function getClaimed(
-        address edition,
-        uint256 mintId,
-        address account
-    ) public view returns (uint256) {
-        (bool success, uint256 claimedQuantity) = claimed[edition][mintId].tryGet(account);
-        claimedQuantity = success ? claimedQuantity : 0;
-        return claimedQuantity;
-    }
 
     /**
      * @dev Returns the `EditionMintData` for `edition`.

@@ -101,8 +101,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.totalMinted = nextTotalMinted;
 
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // If the maximum allowed per account is set (i.e. is different to 0)
-        // check the required additional quantity does not exceed the set maximum
+        // check the additional quantity does not exceed the set maximum
         if ((userMintedBalance + quantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
         mintedTallies[edition][mintId][msg.sender] = userMintedBalance + quantity;
