@@ -8,9 +8,7 @@ import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { IMerkleDropMinter } from "./interfaces/IMerkleDropMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
 
 /**
  * @title MerkleDropMinter
@@ -20,23 +18,6 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
-    struct EditionMintData {
-        // Hash of the root node for the merkle tree drop
-        bytes32 merkleRootHash;
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
-        // The maximum number of tokens that an account can mint.
-        uint32 maxMintablePerAccount;
-        // The total number of tokens minted so far for this sale.
-        uint32 totalMinted;
-    }
-
-    /**
-     * @dev Edition mint data
-     * edition => mintId => EditionMintData
-     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
@@ -96,7 +77,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint256 updatedClaimedQuantity = getClaimed(edition, mintId, msg.sender) + requestedQuantity;
 
         // Revert if attempting to mint more than the max allowed per account.
-        if (updatedClaimedQuantity > maxMintablePerAccount(edition, mintId)) revert ExceedsMaxPerAccount();
+        if (updatedClaimedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
 
         // Update the claimed amount data
         claimed[edition][mintId].set(msg.sender, updatedClaimedQuantity);
@@ -133,18 +114,22 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) public view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-    /// @inheritdoc IMinterModule
-    function maxMintable(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
+        MintInfo memory combinedMintData = MintInfo(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            mintData.maxMintablePerAccount,
+            mintData.totalMinted,
+            mintData.merkleRootHash
+        );
 
-    /// @inheritdoc IMinterModule
-    function maxMintablePerAccount(address edition, uint256 mintId) public view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintablePerAccount;
+        return combinedMintData;
     }
 
     /**

@@ -4,6 +4,34 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
+ * @dev Data unique to a fixed-price signature mint.
+ */
+struct EditionMintData {
+    // The price at which each token will be sold, in ETH.
+    uint256 price;
+    // Whitelist signer address.
+    address signer;
+    // The maximum number of tokens that can can be minted for this sale.
+    uint32 maxMintable;
+    // The total number of tokens minted so far for this sale.
+    uint32 totalMinted;
+}
+
+/**
+ * @dev All the information about a fixed-price signature mint (combines EditionMintData with BaseData).
+ */
+struct MintInfo {
+    uint32 startTime;
+    uint32 endTime;
+    bool mintPaused;
+    uint256 price;
+    uint32 maxMintable;
+    uint32 maxMintablePerAccount;
+    uint32 totalMinted;
+    address signer;
+}
+
+/**
  * @title IFixedPriceSignatureMinter
  * @dev Interface for the `FixedPriceSignatureMinter` module.
  * @author Sound.xyz

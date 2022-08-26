@@ -4,9 +4,7 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { IFixedPriceSignatureMinter } from "./interfaces/IFixedPriceSignatureMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
 
 /**
  * @title IFixedPriceSignatureMinter
@@ -16,21 +14,6 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
 
-    struct EditionMintData {
-        // The price at which each token will be sold, in ETH.
-        uint256 price;
-        // Whitelist signer address.
-        address signer;
-        // The maximum number of tokens that can can be minted for this sale.
-        uint32 maxMintable;
-        // The total number of tokens minted so far for this sale.
-        uint32 totalMinted;
-    }
-
-    /**
-     * @dev Edition mint data
-     * edition => mintId => EditionMintData
-     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     // ================================
@@ -96,18 +79,22 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return _editionMintData[edition][mintId];
     }
 
-    function price(address edition, uint256 mintId) external view returns (uint256) {
-        return _editionMintData[edition][mintId].price;
-    }
+    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+        BaseData memory baseData = super.baseMintData(edition, mintId);
+        EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-    /// @inheritdoc IMinterModule
-    function maxMintable(address edition, uint256 mintId) external view returns (uint32) {
-        return _editionMintData[edition][mintId].maxMintable;
-    }
+        MintInfo memory combinedMintData = MintInfo(
+            baseData.startTime,
+            baseData.endTime,
+            baseData.mintPaused,
+            mintData.price,
+            mintData.maxMintable,
+            type(uint32).max, // maxMintablePerAccount
+            mintData.totalMinted,
+            mintData.signer
+        );
 
-    /// @inheritdoc IMinterModule
-    function maxMintablePerAccount(address, uint256) external pure returns (uint32) {
-        return type(uint32).max;
+        return combinedMintData;
     }
 
     /**
