@@ -30,7 +30,7 @@ contract GoldenEggMetadataTests is TestConfig {
             GoldenEggMetadata goldenEggModule
         )
     {
-        minter = new RangeEditionMinter();
+        minter = new RangeEditionMinter(feeRegistry);
         goldenEggModule = new GoldenEggMetadata();
 
         edition = SoundEditionV1(
