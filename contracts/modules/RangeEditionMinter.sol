@@ -169,17 +169,16 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     }
 
     function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
-        BaseData memory baseData = super.baseMintData(edition, mintId);
+        BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
-
-        uint32 _maxMintable = _getMaxMintable(mintData);
 
         MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
             baseData.endTime,
             baseData.mintPaused,
             mintData.price,
-            _maxMintable,
+            mintData.maxMintableUpper,
+            mintData.maxMintableLower,
             mintData.maxMintablePerAccount,
             mintData.totalMinted,
             mintData.closingTime
