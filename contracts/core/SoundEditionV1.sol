@@ -62,29 +62,31 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     // STORAGE
     // ================================
 
-    // Metadata module used for `tokenURI` if it is set.
-    IMetadataModule public metadataModule;
     // The metadata's base URI.
     string public baseURI;
     // The contract URI used by Opensea https://docs.opensea.io/docs/contract-level-metadata.
     string public contractURI;
-    // Indicates if the `baseURI` is mutable.
-    bool public isMetadataFrozen;
+
     // The destination for ETH withdrawals.
     address public fundingRecipient;
-    // The royalty fee in basis points.
-    uint16 public royaltyBPS;
     // The max mintable quantity for the edition.
     uint32 public editionMaxMintable;
     // The token count after which `mintRandomness` gets locked.
     uint32 public mintRandomnessTokenThreshold;
     // The timestamp after which `mintRandomness` gets locked.
     uint32 public mintRandomnessTimeThreshold;
+
+    // Metadata module used for `tokenURI` if it is set.
+    IMetadataModule public metadataModule;
     /**
      * Getter for the previous block hash - stored on each mint unless `mintRandomnessTokenThreshold` or
      * `mintRandomnessTimeThreshold` have been surpassed. Used for game mechanics like the Sound Golden Egg.
      */
-    bytes32 public mintRandomness;
+    bytes9 public mintRandomness;
+    // The royalty fee in basis points.
+    uint16 public royaltyBPS;
+    // Indicates if the `baseURI` is mutable.
+    bool public isMetadataFrozen;
 
     // ================================
     // MODIFIERS
@@ -134,20 +136,18 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         // since the `_nextTokenId()` is defined to always return 1.
         if (_nextTokenId() != 0) revert Unauthorized();
 
+        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
+
         ERC721AStorage.layout()._name = name;
         ERC721AStorage.layout()._symbol = symbol;
         ERC721AStorage.layout()._currentIndex = _startTokenId();
 
         _initializeOwner(owner);
 
-        metadataModule = metadataModule_;
         baseURI = baseURI_;
         contractURI = contractURI_;
 
-        if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
-
-        royaltyBPS = royaltyBPS_;
         editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
@@ -179,7 +179,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         _mint(to, quantity);
         // Set randomness
         if (_totalMinted() <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
-            mintRandomness = blockhash(block.number - 1);
+            mintRandomness = bytes9(blockhash(block.number - 1));
         }
     }
 

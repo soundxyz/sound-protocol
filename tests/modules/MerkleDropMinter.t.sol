@@ -47,8 +47,9 @@ contract MerkleDropMinterTests is TestConfig {
 
         setUpMerkleTree(address(edition));
 
-        minter = new MerkleDropMinter();
+        minter = new MerkleDropMinter(feeRegistry);
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
+
         mintId = minter.createEditionMint(
             address(edition),
             root,
@@ -164,7 +165,7 @@ contract MerkleDropMinterTests is TestConfig {
     function test_mintInfo() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        MerkleDropMinter minter = new MerkleDropMinter();
+        MerkleDropMinter minter = new MerkleDropMinter(feeRegistry);
         setUpMerkleTree(address(edition));
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());

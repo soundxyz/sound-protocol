@@ -43,7 +43,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPriceSignatureMinter minter) {
         edition = createGenericEdition();
 
-        minter = new FixedPriceSignatureMinter();
+        minter = new FixedPriceSignatureMinter(feeRegistry);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
@@ -53,7 +53,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
 
         vm.expectEmit(false, false, false, true);
 
@@ -65,7 +65,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
 
         vm.expectRevert(IFixedPriceSignatureMinter.SignerIsZeroAddress.selector);
 
@@ -168,7 +168,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_mintInfo() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter();
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 

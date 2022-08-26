@@ -250,7 +250,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * or `randomnessLockedTimestamp` have been surpassed. Used for game mechanics like the Sound Golden Egg.
      * @return The latest block hash.
      */
-    function mintRandomness() external view returns (bytes32);
+    function mintRandomness() external view returns (bytes9);
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.

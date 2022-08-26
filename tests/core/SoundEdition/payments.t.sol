@@ -8,8 +8,6 @@ import { MockERC20 } from "../../mocks/MockERC20.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
 contract SoundEdition_payments is TestConfig {
-    uint256 constant MAX_BPS = 10_000;
-
     event FundingRecipientSet(address fundingRecipient);
     event RoyaltySet(uint16 royaltyBPS);
 

@@ -86,6 +86,7 @@ contract MintersIntegration is TestConfig {
                 RANDOMNESS_LOCKED_TIMESTAMP
             )
         );
+        feeRegistry.setPlatformFeeBPS(0);
 
         // Setup the FREE MINT
         // Setup the free mint for 2 accounts able to claim 100 tokens in total.
@@ -99,7 +100,7 @@ contract MintersIntegration is TestConfig {
             accountsFreeMerkleDrop
         );
 
-        MerkleDropMinter merkleDropMinter = new MerkleDropMinter();
+        MerkleDropMinter merkleDropMinter = new MerkleDropMinter(feeRegistry);
         edition.grantRoles(address(merkleDropMinter), edition.MINTER_ROLE());
 
         bytes32 root = merkleFreeDrop.getRoot(leavesFreeMerkleDrop);
@@ -134,8 +135,9 @@ contract MintersIntegration is TestConfig {
         );
 
         // SETUP PUBLIC SALE
-        RangeEditionMinter publicSaleMinter = new RangeEditionMinter();
+        RangeEditionMinter publicSaleMinter = new RangeEditionMinter(feeRegistry);
         edition.grantRoles(address(publicSaleMinter), edition.MINTER_ROLE());
+
         uint256 mintIdPublicSale = publicSaleMinter.createEditionMint(
             address(edition),
             PRICE_PUBLIC_SALE,

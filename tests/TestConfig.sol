@@ -6,6 +6,7 @@ import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
 
@@ -21,11 +22,17 @@ contract TestConfig is Test {
     address public constant ARTIST_ADMIN = address(8888888888);
     uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
+    address constant SOUND_FEE_ADDRESS = address(2222222222);
+    uint16 constant PLATFORM_FEE_BPS = 200;
+    uint256 constant MAX_BPS = 10_000;
 
     SoundCreatorV1 soundCreator;
+    SoundFeeRegistry feeRegistry;
 
     // Set up called before each test
     function setUp() public virtual {
+        feeRegistry = new SoundFeeRegistry(SOUND_FEE_ADDRESS, PLATFORM_FEE_BPS);
+
         // Deploy implementations
         SoundCreatorV1 soundCreatorImp = new SoundCreatorV1();
         MockSoundEditionV1 editionImplementation = new MockSoundEditionV1();

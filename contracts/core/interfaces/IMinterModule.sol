@@ -66,11 +66,6 @@ interface IMinterModule is IERC165 {
      */
     event AffiliateDiscountSet(address indexed edition, uint256 indexed mintId, uint16 discountBPS);
 
-    /**
-     * @notice Emitted when the `platformFeeBPS` is changed.
-     */
-    event PlatformFeeSet(uint16 feeBPS);
-
     // ================================
     // ERRORS
     // ================================
@@ -112,7 +107,7 @@ interface IMinterModule is IERC165 {
     error Unauthorized();
 
     /**
-     * The affiliate fee numerator must not exceed `MAX_BPS`.
+     * @dev The affiliate fee numerator must not exceed `MAX_BPS`.
      */
     error InvalidAffiliateFeeBPS();
 
@@ -122,9 +117,9 @@ interface IMinterModule is IERC165 {
     error InvalidAffiliateDiscountBPS();
 
     /**
-     * The platform fee numerator must not exceed `MAX_BPS`.
+     * @dev Fee registry cannot be the zero address.
      */
-    error InvalidPlatformFeeBPS();
+    error FeeRegistryIsZeroAddress();
 
     // ================================
     // WRITE FUNCTIONS
@@ -180,23 +175,14 @@ interface IMinterModule is IERC165 {
     ) external;
 
     /**
-     * @dev Sets the platform fee.
-     * Calling conditions:
-     * - The caller must be owner of the contract.
-     */
-    function setPlatformFee(uint16 bps) external;
-
-    /**
      * @dev Withdraws all the accrued fees for `affiliate`.
      */
     function withdrawForAffiliate(address affiliate) external;
 
     /**
      * @dev Withdraws all the accrued fees for the platform.
-     * Calling conditions:
-     * - The caller must be the the owner of the contract.
      */
-    function withdrawForPlatform(address to) external;
+    function withdrawForPlatform() external;
 
     // ================================
     // VIEW FUNCTIONS
@@ -211,11 +197,6 @@ interface IMinterModule is IERC165 {
      * @dev Returns the total fees accrued for the platform.
      */
     function platformFeesAccrued() external view returns (uint256);
-
-    /**
-     * @dev Returns the number of basis points for the platform fees.
-     */
-    function platformFeeBPS() external view returns (uint16);
 
     /**
      * @dev Returns whether `affiliate` is affiliated for (`edition`, `mintId`).

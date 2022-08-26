@@ -5,6 +5,7 @@ import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
+import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 
 /**
  * @title IFixedPriceSignatureMinter
@@ -19,6 +20,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     // ================================
     // WRITE FUNCTIONS
     // ================================
+
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
     /// @inheritdoc IFixedPriceSignatureMinter
     function createEditionMint(

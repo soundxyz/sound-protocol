@@ -4,15 +4,15 @@ pragma solidity ^0.8.16;
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { Ownable } from "openzeppelin/access/Ownable.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
 /**
  * @title Minter Base
  * @dev The `BaseMinter` class maintains a central storage record of edition mint instances.
  */
-abstract contract BaseMinter is IMinterModule, Ownable {
+abstract contract BaseMinter is IMinterModule {
     // ================================
     // CONSTANTS
     // ================================
@@ -49,10 +49,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
      */
     uint256 private _platformFeesAccrued;
 
-    /**
-     * @dev The numerator of the platform fee.
-     */
-    uint16 private _platformFeeBPS;
+    ISoundFeeRegistry public immutable feeRegistry;
 
     // ================================
     // ACCESS MODIFIERS
@@ -74,6 +71,11 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     // ================================
     // WRITE FUNCTIONS
     // ================================
+
+    constructor(ISoundFeeRegistry feeRegistry_) {
+        if (address(feeRegistry_) == address(0)) revert FeeRegistryIsZeroAddress();
+        feeRegistry = feeRegistry_;
+    }
 
     /// @inheritdoc IMinterModule
     function setEditionMintPaused(
@@ -122,14 +124,6 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     /**
      * @inheritdoc IMinterModule
      */
-    function setPlatformFee(uint16 feeBPS) public virtual override onlyOwner onlyValidPlatformFeeBPS(feeBPS) {
-        _platformFeeBPS = feeBPS;
-        emit PlatformFeeSet(feeBPS);
-    }
-
-    /**
-     * @inheritdoc IMinterModule
-     */
     function withdrawForAffiliate(address affiliate) public override {
         uint256 accrued = _affiliateFeesAccrued[affiliate];
         if (accrued != 0) {
@@ -141,11 +135,11 @@ abstract contract BaseMinter is IMinterModule, Ownable {
     /**
      * @inheritdoc IMinterModule
      */
-    function withdrawForPlatform(address to) public override onlyOwner {
+    function withdrawForPlatform() public override {
         uint256 accrued = _platformFeesAccrued;
         if (accrued != 0) {
             _platformFeesAccrued = 0;
-            SafeTransferLib.safeTransferETH(to, accrued);
+            SafeTransferLib.safeTransferETH(feeRegistry.soundFeeAddress(), accrued);
         }
     }
 
@@ -172,13 +166,6 @@ abstract contract BaseMinter is IMinterModule, Ownable {
      */
     function platformFeesAccrued() external view returns (uint256) {
         return _platformFeesAccrued;
-    }
-
-    /**
-     * @inheritdoc IMinterModule
-     */
-    function platformFeeBPS() external view returns (uint16) {
-        return _platformFeeBPS;
     }
 
     /**
@@ -259,14 +246,6 @@ abstract contract BaseMinter is IMinterModule, Ownable {
      */
     modifier onlyValidAffiliateDiscountBPS(uint16 affiliateDiscountBPS) virtual {
         if (affiliateDiscountBPS > _MAX_BPS) revert InvalidAffiliateDiscountBPS();
-        _;
-    }
-
-    /**
-     * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
-     */
-    modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) virtual {
-        if (platformFeeBPS_ > _MAX_BPS) revert InvalidPlatformFeeBPS();
         _;
     }
 
@@ -363,15 +342,7 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
 
-        uint256 remainingPayment = requiredEtherValue;
-
-        // Compute the platform fee.
-        uint256 platformFee = (remainingPayment * _platformFeeBPS) / _MAX_BPS;
-        // Deduct the platform fee.
-        remainingPayment -= platformFee;
-
-        // Increment the platform fees accrued.
-        _platformFeesAccrued += platformFee;
+        uint256 remainingPayment = _deductPlatformFee(requiredEtherValue);
 
         if (affiliated) {
             // Compute the affiliate fee.
@@ -385,6 +356,15 @@ abstract contract BaseMinter is IMinterModule, Ownable {
         /* ------------------------- MINT --------------------------- */
 
         ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
+    }
+
+    function _deductPlatformFee(uint256 requiredEtherValue) internal returns (uint256 remainingPayment) {
+        // Compute the platform fee.
+        uint256 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / _MAX_BPS;
+        // Increment the platform fees accrued.
+        _platformFeesAccrued += platformFee;
+        // Deduct the platform fee.
+        remainingPayment = requiredEtherValue - platformFee;
     }
 
     /**
