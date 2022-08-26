@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { MockERC20 } from "../../mocks/MockERC20.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
@@ -112,7 +113,7 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         edition.setFundingRecipient(getFundedAccount(2));
     }
 
@@ -151,7 +152,7 @@ contract SoundEdition_payments is TestConfig {
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         edition.setRoyalty(500);
     }
 

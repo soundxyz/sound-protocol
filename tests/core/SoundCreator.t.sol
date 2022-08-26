@@ -6,6 +6,7 @@ import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockSoundCreatorV2 } from "../mocks/MockSoundCreatorV2.sol";
 
@@ -42,6 +43,24 @@ contract SoundCreatorTests is TestConfig {
         assert(address(soundEdition) != address(0));
         assertEq(soundEdition.name(), SONG_NAME);
         assertEq(soundEdition.symbol(), SONG_SYMBOL);
+    }
+
+    function test_createSoundRevertsOnDoubleInitialization() public {
+        SoundEditionV1 soundEdition = createGenericEdition();
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        soundEdition.initialize(
+            address(this),
+            SONG_NAME,
+            SONG_SYMBOL,
+            METADATA_MODULE,
+            BASE_URI,
+            CONTRACT_URI,
+            FUNDING_RECIPIENT,
+            ROYALTY_BPS,
+            EDITION_MAX_MINTABLE,
+            EDITION_MAX_MINTABLE,
+            RANDOMNESS_LOCKED_TIMESTAMP
+        );
     }
 
     function test_ownership(address attacker) public {

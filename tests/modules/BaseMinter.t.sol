@@ -55,7 +55,7 @@ contract MintControllerBaseTests is TestConfig {
             )
         );
 
-        edition.grantRole(edition.MINTER_ROLE(), address(minter));
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
     }
 
     function test_createEditionMintRevertsIfCallerNotEditionOwnerOrAdmin() external {
@@ -86,7 +86,7 @@ contract MintControllerBaseTests is TestConfig {
         uint256 mintId = 0;
         address admin = address(1037037);
 
-        edition.grantRole(edition.ADMIN_ROLE(), admin);
+        edition.grantRoles(admin, edition.ADMIN_ROLE());
 
         vm.expectEmit(false, false, false, true);
         emit MintConfigCreated(address(edition), admin, mintId, START_TIME, END_TIME);

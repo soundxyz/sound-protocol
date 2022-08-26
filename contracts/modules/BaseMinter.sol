@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { IAccessControlUpgradeable } from "openzeppelin-upgradeable/access/IAccessControlUpgradeable.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
@@ -61,8 +61,8 @@ abstract contract BaseMinter is IMinterModule {
      */
     modifier onlyEditionOwnerOrAdmin(address edition) virtual {
         if (
-            !_callerIsEditionOwner(edition) &&
-            !IAccessControlUpgradeable(edition).hasRole(ISoundEditionV1(edition).ADMIN_ROLE(), msg.sender)
+            msg.sender != OwnableRoles(edition).owner() &&
+            !OwnableRoles(edition).hasAnyRole(msg.sender, ISoundEditionV1(edition).ADMIN_ROLE())
         ) revert Unauthorized();
 
         _;
@@ -287,39 +287,6 @@ abstract contract BaseMinter is IMinterModule {
         _nextMintId = mintId + 1;
 
         emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime);
-    }
-
-    /**
-     * @dev Returns whether the caller is the owner of `edition`.
-     * @param edition The edition address.
-     * @return result Whether the caller is the owner of `edition`.
-     */
-    function _callerIsEditionOwner(address edition) private returns (bool result) {
-        // To avoid defining an interface just to call `owner()`.
-        // And Solidity does not have try catch for plain old `call`.
-        assembly {
-            // Store the 4-byte function selector of `owner()` into scratch space.
-            mstore(0x00, 0x8da5cb5b)
-            // The `call` must be placed as the last argument of `and`,
-            // as the arguments are evaluated right to left.
-            result := and(
-                and(
-                    // Whether the returned address equals `msg.sender`.
-                    eq(mload(0x00), caller()),
-                    // Whether at least a word has been returned.
-                    gt(returndatasize(), 31)
-                ),
-                call(
-                    gas(), // Remaining gas.
-                    edition, // The `edition` address.
-                    0, // Send 0 Ether.
-                    0x1c, // Offset of the selector in the memory.
-                    0x04, // Size of the selector (4 bytes).
-                    0x00, // Offset of the return data.
-                    0x20 // Size of the return data (1 32-byte word).
-                )
-            )
-        }
     }
 
     /**
