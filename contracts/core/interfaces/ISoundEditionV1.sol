@@ -80,11 +80,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     error InvalidRandomnessLock();
 
     /**
-     * @dev The caller is unauthorized to call this function.
-     */
-    error Unauthorized();
-
-    /**
      * @dev The requested quantity exceeds the edition's remaining mintable token quantity.
      */
     error ExceedsEditionAvailableSupply(uint32 available);
@@ -216,16 +211,16 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // ================================
 
     /**
-     * @dev Getter for minter role hash.
-     * @return The minter role hash.
+     * @dev Getter for minter role flag.
+     * @return The minter role flag.
      */
-    function MINTER_ROLE() external view returns (bytes32);
+    function MINTER_ROLE() external view returns (uint256);
 
     /**
-     * @dev Getter for admin role hash.
-     * @return The admin role hash.
+     * @dev Getter for admin role flag.
+     * @return The admin role flag.
      */
-    function ADMIN_ROLE() external view returns (bytes32);
+    function ADMIN_ROLE() external view returns (uint256);
 
     /**
      * @dev Getter for the base token URI for the collection
@@ -256,13 +251,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The latest block hash.
      */
     function mintRandomness() external view returns (bytes9);
-
-    /**
-     * @dev Returns all of the addresses of a given role.
-     * @param role The role to get the addresses of.
-     * @return The addresses of the given role.
-     */
-    function getMembersOfRole(bytes32 role) external view returns (address[] memory);
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.

@@ -28,15 +28,14 @@ pragma solidity ^0.8.16;
 */
 
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { ERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
+import { ERC721AUpgradeable, ERC721AStorage } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import { ERC721AQueryableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import { OwnableUpgradeable } from "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
 import { AccessControlUpgradeable } from "openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
-import { AccessControlEnumerableUpgradeable } from "openzeppelin-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
@@ -45,21 +44,15 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
  * @title SoundEditionV1
  * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
-contract SoundEditionV1 is
-    ISoundEditionV1,
-    ERC721AQueryableUpgradeable,
-    ERC721ABurnableUpgradeable,
-    OwnableUpgradeable,
-    AccessControlEnumerableUpgradeable
-{
+contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
     // ================================
     // CONSTANTS
     // ================================
 
     // A role every minter module must have in order to mint new tokens.
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    uint256 public constant MINTER_ROLE = _ROLE_1;
     // A role the owner can grant for performing admin actions.
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    uint256 public constant ADMIN_ROLE = _ROLE_0;
     // Basis points denominator used in fee calculations.
     uint16 internal constant MAX_BPS = 10_000;
     // The interface ID for EIP-2981 (royaltyInfo)
@@ -100,14 +93,6 @@ contract SoundEditionV1 is
     // ================================
 
     /**
-     * @dev Guards a function against any calls made by an address that isn't the owner or an admin.
-     */
-    modifier onlyOwnerOrAdmin() {
-        if (_msgSender() != owner() && !hasRole(ADMIN_ROLE, _msgSender())) revert Unauthorized();
-        _;
-    }
-
-    /**
      * @dev Ensures the royalty basis points is a valid value.
      */
     modifier onlyValidRoyaltyBPS(uint16 royalty) {
@@ -145,12 +130,19 @@ contract SoundEditionV1 is
         uint32 editionMaxMintable_,
         uint32 mintRandomnessTokenThreshold_,
         uint32 mintRandomnessTimeThreshold_
-    ) public initializerERC721A initializer onlyValidRoyaltyBPS(royaltyBPS_) {
+    ) public onlyValidRoyaltyBPS(royaltyBPS_) {
+        // Prevent double initialization.
+        // We can "cheat" here and avoid the initializer modifer to save a SSTORE,
+        // since the `_nextTokenId()` is defined to always return 1.
+        if (_nextTokenId() != 0) revert Unauthorized();
+
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
 
-        __ERC721A_init(name, symbol);
-        __ERC721AQueryable_init();
-        __Ownable_init();
+        ERC721AStorage.layout()._name = name;
+        ERC721AStorage.layout()._symbol = symbol;
+        ERC721AStorage.layout()._currentIndex = _startTokenId();
+
+        _initializeOwner(owner);
 
         baseURI = baseURI_;
         contractURI = contractURI_;
@@ -162,14 +154,6 @@ contract SoundEditionV1 is
 
         metadataModule = metadataModule_;
         royaltyBPS = royaltyBPS_;
-
-        __AccessControl_init();
-
-        // Set ownership to owner
-        transferOwnership(owner);
-
-        // Give owner the DEFAULT_ADMIN_ROLE
-        _grantRole(DEFAULT_ADMIN_ROLE, owner);
 
         emit EditionMaxMintableSet(editionMaxMintable);
     }
@@ -184,9 +168,9 @@ contract SoundEditionV1 is
      * @param quantity Number of tokens to mint
      */
     function mint(address to, uint256 quantity) public payable {
-        address caller = _msgSender();
+        address caller = msg.sender;
         // Only allow calls if caller has minter role, admin role, or is the owner.
-        if (!hasRole(MINTER_ROLE, caller) && !hasRole(ADMIN_ROLE, caller) && caller != owner()) {
+        if (!hasAnyRole(caller, MINTER_ROLE | ADMIN_ROLE) && caller != owner()) {
             revert Unauthorized();
         }
         // Check if there are enough tokens to mint.
@@ -215,7 +199,7 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMetadataModule(IMetadataModule metadataModule_) external onlyOwnerOrAdmin {
+    function setMetadataModule(IMetadataModule metadataModule_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
 
@@ -223,7 +207,7 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setBaseURI(string memory baseURI_) external onlyOwnerOrAdmin {
+    function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
 
@@ -231,7 +215,7 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setContractURI(string memory contractURI_) external onlyOwnerOrAdmin {
+    function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
 
@@ -239,7 +223,7 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function freezeMetadata() external onlyOwnerOrAdmin {
+    function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
         isMetadataFrozen = true;
@@ -247,20 +231,20 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setFundingRecipient(address fundingRecipient_) external onlyOwnerOrAdmin {
+    function setFundingRecipient(address fundingRecipient_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRoyalty(uint16 royaltyBPS_) external onlyOwnerOrAdmin onlyValidRoyaltyBPS(royaltyBPS_) {
+    function setRoyalty(uint16 royaltyBPS_) external onlyRolesOrOwner(ADMIN_ROLE) onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
 
     /// @inheritdoc ISoundEditionV1
-    function reduceEditionMaxMintable(uint32 newMax) external onlyOwnerOrAdmin {
+    function reduceEditionMaxMintable(uint32 newMax) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (_totalMinted() == editionMaxMintable) {
             revert MaximumHasAlreadyBeenReached();
         }
@@ -282,14 +266,14 @@ contract SoundEditionV1 is
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold_) external onlyOwnerOrAdmin {
+    function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
 
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external onlyOwnerOrAdmin {
+    function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external onlyRolesOrOwner(ADMIN_ROLE) {
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
     }
 
@@ -323,13 +307,10 @@ contract SoundEditionV1 is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable, AccessControlEnumerableUpgradeable)
+        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {
-        return
-            ERC721AUpgradeable.supportsInterface(interfaceId) ||
-            AccessControlEnumerableUpgradeable.supportsInterface(interfaceId) ||
-            interfaceId == _INTERFACE_ID_ERC2981;
+        return ERC721AUpgradeable.supportsInterface(interfaceId) || interfaceId == _INTERFACE_ID_ERC2981;
     }
 
     /// @inheritdoc IERC2981Upgradeable
@@ -339,17 +320,6 @@ contract SoundEditionV1 is
     ) external view override(IERC2981Upgradeable) returns (address fundingRecipient_, uint256 royaltyAmount) {
         fundingRecipient_ = fundingRecipient;
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
-    }
-
-    /// @inheritdoc ISoundEditionV1
-    function getMembersOfRole(bytes32 role) external view returns (address[] memory members) {
-        uint256 count = getRoleMemberCount(role);
-
-        members = new address[](count);
-
-        for (uint256 i = 0; i < count; i++) {
-            members[i] = getRoleMember(role, i);
-        }
     }
 
     // ================================

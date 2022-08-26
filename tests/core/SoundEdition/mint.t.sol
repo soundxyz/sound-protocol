@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
 /**
@@ -18,7 +19,7 @@ contract SoundEdition_mint is TestConfig {
 
         SoundEditionV1 edition = createGenericEdition();
 
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
 
         vm.prank(nonAdminOrOwner);
         edition.mint(nonAdminOrOwner, 1);
@@ -74,7 +75,9 @@ contract SoundEdition_mint is TestConfig {
         // Test an admin can mint to own address
         address admin = address(54321);
 
-        edition.grantRole(edition.ADMIN_ROLE(), admin);
+        vm.startPrank(owner);
+        edition.grantRoles(admin, edition.ADMIN_ROLE());
+        vm.stopPrank();
 
         vm.prank(admin);
         edition.mint(admin, 420);
@@ -178,7 +181,7 @@ contract SoundEdition_mint is TestConfig {
         );
 
         address admin = address(1203701);
-        edition.grantRole(edition.ADMIN_ROLE(), admin);
+        edition.grantRoles(admin, edition.ADMIN_ROLE());
 
         // Mint a token
         edition.mint(address(this), 1);
@@ -202,7 +205,7 @@ contract SoundEdition_mint is TestConfig {
         SoundEditionV1 edition = createGenericEdition();
         vm.assume(attacker != address(this));
 
-        vm.expectRevert(ISoundEditionV1.Unauthorized.selector);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         vm.prank(attacker);
         edition.reduceEditionMaxMintable(1);
     }
