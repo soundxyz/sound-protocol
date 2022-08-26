@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 
 contract MockMinter is BaseMinter {
     uint256 private _currentPrice;
+
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
     function createEditionMint(
         address edition,

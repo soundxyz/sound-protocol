@@ -7,6 +7,7 @@ import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
 
@@ -29,6 +30,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // ================================
     // WRITE FUNCTIONS
     // ================================
+
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
     /// @inheritdoc IMerkleDropMinter
     function createEditionMint(
