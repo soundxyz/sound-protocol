@@ -138,16 +138,15 @@ contract RangeEditionMinterTests is TestConfig {
         );
 
         if (!hasRevert) {
-            EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
-            assertEq(data.price, price);
-            assertEq(baseData.startTime, startTime);
-            assertEq(data.closingTime, closingTime);
-            assertEq(baseData.endTime, endTime);
-            assertEq(data.totalMinted, uint32(0));
-            assertEq(data.maxMintableLower, maxMintableLower);
-            assertEq(data.maxMintableUpper, maxMintableUpper);
+            assertEq(mintInfo.price, price);
+            assertEq(mintInfo.startTime, startTime);
+            assertEq(mintInfo.closingTime, closingTime);
+            assertEq(mintInfo.endTime, endTime);
+            assertEq(mintInfo.totalMinted, uint32(0));
+            assertEq(mintInfo.maxMintableLower, maxMintableLower);
+            assertEq(mintInfo.maxMintableUpper, maxMintableUpper);
         }
     }
 
@@ -345,12 +344,11 @@ contract RangeEditionMinterTests is TestConfig {
         minter.setTimeRange(address(edition), MINT_ID, startTime, closingTime, endTime);
 
         if (!hasRevert) {
-            EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
-            BaseMinter.BaseData memory baseData = minter.baseMintData(address(edition), MINT_ID);
+            MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
-            assertEq(baseData.startTime, startTime);
-            assertEq(data.closingTime, closingTime);
-            assertEq(baseData.endTime, endTime);
+            assertEq(mintInfo.startTime, startTime);
+            assertEq(mintInfo.closingTime, closingTime);
+            assertEq(mintInfo.endTime, endTime);
         }
     }
 

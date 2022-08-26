@@ -224,9 +224,4 @@ interface IMinterModule is IERC165 {
      * and is shared amonsgt all editions connected to the minter contract.
      */
     function nextMintId() external view returns (uint256);
-
-    /**
-     * @dev Returns the base mint data for (`edition`, `mintId`).
-     */
-    function baseMintData(address edition, uint256 mintId) external view returns (BaseData memory);
 }

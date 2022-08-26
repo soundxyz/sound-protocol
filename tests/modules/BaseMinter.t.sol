@@ -5,7 +5,7 @@ import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgr
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { TestConfig } from "../TestConfig.sol";
-import { MockMinter } from "../mocks/MockMinter.sol";
+import { MockMinter, MintInfo } from "../mocks/MockMinter.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
@@ -189,22 +189,22 @@ contract MintControllerBaseTests is TestConfig {
 
         uint256 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME);
 
-        MockMinter.BaseData memory baseData = minter.baseMintData(address(edition), mintId);
+        MintInfo memory mintInfo = minter.mintInfo(address(edition), mintId);
 
         // Check initial values are correct
-        assertEq(baseData.startTime, 0);
-        assertEq(baseData.endTime, type(uint32).max);
+        assertEq(mintInfo.startTime, 0);
+        assertEq(mintInfo.endTime, type(uint32).max);
 
         // Set new values
         vm.expectEmit(true, true, true, true);
         emit TimeRangeSet(address(edition), mintId, 123, 456);
         minter.setTimeRange(address(edition), mintId, 123, 456);
 
-        baseData = minter.baseMintData(address(edition), mintId);
+        mintInfo = minter.mintInfo(address(edition), mintId);
 
         // Check new values
-        assertEq(baseData.startTime, 123);
-        assertEq(baseData.endTime, 456);
+        assertEq(mintInfo.startTime, 123);
+        assertEq(mintInfo.endTime, 456);
 
         // Ensure only controller can set time range
         vm.prank(nonController);
@@ -427,7 +427,7 @@ contract MintControllerBaseTests is TestConfig {
         vm.expectEmit(true, true, true, true);
         emit AffiliateFeeSet(address(edition), mintId, affiliateFeeBPS);
         minter.setAffiliateFee(address(edition), mintId, affiliateFeeBPS);
-        assertEq(minter.baseMintData(address(edition), mintId).affiliateFeeBPS, affiliateFeeBPS);
+        assertEq(minter.mintInfo(address(edition), mintId).affiliateFeeBPS, affiliateFeeBPS);
         return true;
     }
 
@@ -446,7 +446,7 @@ contract MintControllerBaseTests is TestConfig {
         vm.expectEmit(true, true, true, true);
         emit AffiliateDiscountSet(address(edition), mintId, affiliateDiscountBPS);
         minter.setAffiliateDiscount(address(edition), mintId, affiliateDiscountBPS);
-        assertEq(minter.baseMintData(address(edition), mintId).affiliateDiscountBPS, affiliateDiscountBPS);
+        assertEq(minter.mintInfo(address(edition), mintId).affiliateDiscountBPS, affiliateDiscountBPS);
         return true;
     }
 

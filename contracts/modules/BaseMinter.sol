@@ -37,7 +37,7 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @dev Maps an edition and the mint ID to a mint instance.
      */
-    mapping(address => mapping(uint256 => BaseData)) private _baseData;
+    mapping(address => mapping(uint256 => BaseData)) internal _baseData;
 
     /**
      * @dev Maps an address to how much affiliate fees have they accrued.
@@ -210,13 +210,6 @@ abstract contract BaseMinter is IMinterModule {
      */
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return interfaceId == type(IMinterModule).interfaceId || interfaceId == type(IERC165).interfaceId;
-    }
-
-    /**
-     * @dev Returns the base mint data.
-     */
-    function baseMintData(address edition, uint256 mintId) public view returns (BaseData memory) {
-        return _baseData[edition][mintId];
     }
 
     // ================================
