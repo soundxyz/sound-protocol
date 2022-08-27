@@ -64,4 +64,8 @@ contract MockMinter is BaseMinter {
 
         return combinedMintData;
     }
+
+    function moduleInterfaceId() public pure returns (bytes4) {
+        return bytes4("");
+    }
 }

@@ -7,6 +7,7 @@ import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
  * @title MerkleDropMinter
@@ -125,6 +126,11 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
+    }
+
+    /// @inheritdoc IMinterModule
+    function moduleInterfaceId() public pure returns (bytes4) {
+        return type(IMerkleDropMinter).interfaceId;
     }
 
     // ================================
