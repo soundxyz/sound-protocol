@@ -17,7 +17,7 @@ const soundContracts = [
     "RangeEditionMinter.sol",
     "SoundCreatorV1.sol",
     "SoundEditionV1.sol",
-    // "IMinterModule.sol",
+    "IMinterModule.sol",
     "IMetadataModule.sol",
     "IMerkleDropMinter.sol",
     "IFixedPriceSignatureMinter.sol",
