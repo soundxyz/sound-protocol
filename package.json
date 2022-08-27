@@ -17,7 +17,7 @@
     "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
     "prepack": "bob-tsm build.ts",
     "postpublish": "gh-release",
-    "test:sdk": "concurrently \"anvil\" \"forge script scripts/solidity/SdkTest.s.sol:SdkTest --fork-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --ffi --broadcast\""
+    "test:sdk": "concurrently \"anvil\" \"forge script scripts/solidity/SdkTest.s.sol:SdkTest --fork-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast\""
   },
   "repository": {
     "type": "git",
