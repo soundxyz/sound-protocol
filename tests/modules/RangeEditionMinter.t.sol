@@ -47,6 +47,8 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintableUpper
     );
 
+    event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
+
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
         returns (SoundEditionV1 edition, RangeEditionMinter minter)
@@ -321,6 +323,42 @@ contract RangeEditionMinterTests is TestConfig {
         vm.warp(CLOSING_TIME);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, maxMintableLower));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
+    }
+
+    function test_canSetTimeRangeBaseMinter(address nonController) public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+
+        vm.assume(nonController != address(this));
+
+        // Set new values
+        vm.expectEmit(true, true, true, true);
+        emit TimeRangeSet(address(edition), MINT_ID, 123, 456);
+        minter.setTimeRange(address(edition), MINT_ID, 123, 456);
+
+        MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
+
+        // Check new values
+        assertEq(mintInfo.startTime, 123);
+        assertEq(mintInfo.endTime, 456);
+
+        // Ensure only controller can set time range
+        vm.prank(nonController);
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
+        minter.setTimeRange(address(edition), MINT_ID, 456, 789);
+    }
+
+    function test_cannotSetInvalidTimeRangeBaseMinter(uint32 startTime, uint32 endTime) public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+
+        // Ensure startTime cannot be after closing time
+        vm.assume(startTime > CLOSING_TIME);
+        vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
+        minter.setTimeRange(address(edition), MINT_ID, startTime, endTime);
+
+        // Ensure endTime cannot be before closing time
+        vm.assume(endTime < CLOSING_TIME);
+        vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
+        minter.setTimeRange(address(edition), MINT_ID, startTime, endTime);
     }
 
     function test_setTimeRange(
