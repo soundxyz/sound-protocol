@@ -390,6 +390,12 @@ contract RangeEditionMinterTests is TestConfig {
         assertTrue(supportsIMinterModule);
     }
 
+    function test_minterInterfaceId() public {
+        (, RangeEditionMinter minter) = _createEditionAndMinter(0);
+
+        assertTrue(type(IRangeEditionMinter).interfaceId == minter.minterInterfaceId());
+    }
+
     function test_mintInfo() public {
         SoundEditionV1 edition = createGenericEdition();
 

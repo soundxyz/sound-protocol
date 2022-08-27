@@ -6,6 +6,7 @@ import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
+import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
  * @title IFixedPriceSignatureMinter
@@ -105,6 +106,11 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
+    }
+
+    /// @inheritdoc IMinterModule
+    function minterInterfaceId() public pure returns (bytes4) {
+        return type(IFixedPriceSignatureMinter).interfaceId;
     }
 
     // ================================
