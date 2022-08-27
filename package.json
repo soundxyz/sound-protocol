@@ -13,7 +13,7 @@
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol",
     "prep-typechain": "bob-tsm scripts/js/prep-typechain.ts",
-    "typechain": "pnpm prep-typechain && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-sound/**/*[!metadata].json'",
+    "typechain": "pnpm prep-typechain && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-sound/**/*.json'",
     "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
     "prepack": "rm -rf out && pnpm build && pnpm typechain && bob-tsm build.ts",
     "postpublish": "gh-release",
