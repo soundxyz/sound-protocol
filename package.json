@@ -7,6 +7,7 @@
     "build": "forge build",
     "test": "forge test",
     "test:gas": "forge test --gas-report",
+    "test:coverage": "forge coverage --contracts contracts --report lcov && genhtml lcov.info --branch-coverage --output-directory coverage --legend",
     "solhint": "solhint -f table contracts/**/*.sol",
     "slither": "slither . --config-file slither.config.json",
     "prepare": "husky install",
