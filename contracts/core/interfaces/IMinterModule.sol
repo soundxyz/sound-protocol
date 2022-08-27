@@ -229,5 +229,5 @@ interface IMinterModule is IERC165 {
      * Returns child minter interface ID
      * @return interfaceId The child minter interface ID.
      */
-    function minterInterfaceId() external view returns (bytes4);
+    function moduleInterfaceId() external view returns (bytes4);
 }

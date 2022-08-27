@@ -129,7 +129,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     }
 
     /// @inheritdoc IMinterModule
-    function minterInterfaceId() public pure returns (bytes4) {
+    function moduleInterfaceId() public pure returns (bytes4) {
         return type(IMerkleDropMinter).interfaceId;
     }
 

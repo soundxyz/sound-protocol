@@ -162,10 +162,10 @@ contract MerkleDropMinterTests is TestConfig {
         assertTrue(supportsIMerkleDropMint);
     }
 
-    function test_minterInterfaceId() public {
+    function test_moduleInterfaceId() public {
         (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 0);
 
-        assertTrue(type(IMerkleDropMinter).interfaceId == minter.minterInterfaceId());
+        assertTrue(type(IMerkleDropMinter).interfaceId == minter.moduleInterfaceId());
     }
 
     function test_mintInfo() public {

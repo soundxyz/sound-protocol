@@ -390,10 +390,10 @@ contract RangeEditionMinterTests is TestConfig {
         assertTrue(supportsIMinterModule);
     }
 
-    function test_minterInterfaceId() public {
+    function test_moduleInterfaceId() public {
         (, RangeEditionMinter minter) = _createEditionAndMinter(0);
 
-        assertTrue(type(IRangeEditionMinter).interfaceId == minter.minterInterfaceId());
+        assertTrue(type(IRangeEditionMinter).interfaceId == minter.moduleInterfaceId());
     }
 
     function test_mintInfo() public {
