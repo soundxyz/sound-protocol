@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { IRangeEditionMinter, EditionMintData, MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
+import { IRangeEditionMinter, MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
@@ -203,7 +203,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         assertEq(edition.balanceOf(caller), 2);
 
-        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
         assertEq(data.totalMinted, 2);
     }
 
@@ -216,7 +216,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
@@ -225,7 +225,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
-        data = minter.editionMintData(address(edition), MINT_ID);
+        data = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
     }
@@ -376,7 +376,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
 
         if (!hasRevert) {
-            EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+            MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
             assertEq(data.maxMintableLower, maxMintableLower);
             assertEq(data.maxMintableUpper, maxMintableUpper);
         }

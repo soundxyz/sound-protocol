@@ -138,4 +138,11 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 quantity,
         address affiliate
     ) external payable;
+
+    /**
+     * @dev Returns IRangeEditionMinter.MintInfo instance containing the full minter parameter set.
+     * @param edition The edition to get the mint instance for.
+     * @param mintId The ID of the mint instance.
+     */
+    function mintInfo(address edition, uint256 mintId) external view returns (MintInfo memory);
 }

@@ -7,7 +7,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
-import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
+import { IFixedPriceSignatureMinter, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
@@ -139,7 +139,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
@@ -148,7 +148,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
-        data = minter.editionMintData(address(edition), MINT_ID);
+        data = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
     }
