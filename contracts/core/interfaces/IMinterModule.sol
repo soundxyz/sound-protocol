@@ -224,4 +224,10 @@ interface IMinterModule is IERC165 {
      * and is shared amonsgt all editions connected to the minter contract.
      */
     function nextMintId() external view returns (uint256);
+
+    /**
+     * Returns child minter interface ID
+     * @return interfaceId The child minter interface ID.
+     */
+    function moduleInterfaceId() external view returns (bytes4);
 }

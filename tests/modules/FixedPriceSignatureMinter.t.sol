@@ -165,6 +165,12 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         assertTrue(supportsIFixedPriceSignatureMinter);
     }
 
+    function test_moduleInterfaceId() public {
+        (, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        assertTrue(type(IFixedPriceSignatureMinter).interfaceId == minter.moduleInterfaceId());
+    }
+
     function test_mintInfo() public {
         SoundEditionV1 edition = createGenericEdition();
 

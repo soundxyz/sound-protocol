@@ -192,6 +192,11 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
     }
 
+    // @inheritdoc IMinterModule
+    function moduleInterfaceId() public pure returns (bytes4) {
+        return type(IRangeEditionMinter).interfaceId;
+    }
+
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
