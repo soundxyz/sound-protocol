@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.16;
 
-import { Script } from "forge-std/Script.sol";
 import "forge-std/console.sol";
+import { Script } from "forge-std/Script.sol";
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
@@ -13,11 +13,54 @@ import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.so
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 
+import { ParseJson } from "./ParseJson.sol";
+
 contract SdkTest is Script {
-    uint96 constant PRICE = 100000000 gwei; // 0.1 ETH
-    uint32 constant MAX_MINTABLE_LOWER = 3;
-    uint32 constant MAX_MINTABLE_UPPER = 5;
-    uint32 constant MAX_PER_ACCOUNT = 1;
+    address private constant VM_ADDRESS = address(bytes20(uint160(uint256(keccak256("hevm cheat code")))));
+    ParseJson public constant pj = ParseJson(VM_ADDRESS);
+
+    uint32 constant ONE_HOUR = 3600;
+
+    uint96 immutable PRICE;
+    uint32 immutable MAX_MINTABLE_LOWER;
+    uint32 immutable MAX_MINTABLE_UPPER;
+    uint32 immutable MAX_PER_ACCOUNT;
+    uint32 immutable MINT1_START_TIME;
+    uint32 immutable MINT1_CLOSING_TIME;
+    uint32 immutable MINT1_END_TIME;
+    uint32 immutable MINT2_START_TIME;
+    uint32 immutable MINT2_CLOSING_TIME;
+    uint32 immutable MINT2_END_TIME;
+
+    string configJson;
+
+    constructor() {
+        /******************************* 
+                    LOAD CONFIG
+        *******************************/
+
+        string memory path = "scripts/solidity/testConfig.json";
+        configJson = vm.readFile(path);
+
+        bytes memory data = pj.parseJson(configJson, ".PRICE");
+        PRICE = uint96(abi.decode(data, (uint256)));
+        data = pj.parseJson(configJson, ".MAX_MINTABLE_LOWER");
+        MAX_MINTABLE_LOWER = uint32(abi.decode(data, (uint256)));
+        data = pj.parseJson(configJson, ".MAX_MINTABLE_UPPER");
+        MAX_MINTABLE_UPPER = uint32(abi.decode(data, (uint256)));
+        data = pj.parseJson(configJson, ".MAX_PER_ACCOUNT");
+        MAX_PER_ACCOUNT = uint32(abi.decode(data, (uint256)));
+
+        MINT1_START_TIME = uint32(block.timestamp);
+        MINT1_CLOSING_TIME = MINT1_START_TIME + ONE_HOUR;
+        MINT1_END_TIME = MINT1_CLOSING_TIME + ONE_HOUR;
+
+        // 2nd mint starts halfway through 1st mint
+        MINT2_START_TIME = MINT1_CLOSING_TIME;
+        // ...but its closing time is 10 seconds after the end time of the 1st mint
+        MINT2_CLOSING_TIME = MINT1_END_TIME + ONE_HOUR;
+        MINT2_END_TIME = MINT2_CLOSING_TIME + ONE_HOUR;
+    }
 
     function run() external {
         vm.startBroadcast();
@@ -78,20 +121,8 @@ contract SdkTest is Script {
     }
 
     function _createRangeMint(address editionAddress, RangeEditionMinter rangeMinter) internal {
-        // TODO: import these values from a shared file so the SDK tests are referencing the same source of truth.
-
-        uint32 MINT1_START_TIME = 0;
-        uint32 MINT1_CLOSING_TIME = MINT1_START_TIME + 10;
-        uint32 MINT1_END_TIME = MINT1_CLOSING_TIME + 10;
-
-        // 2nd mint starts halfway through 1st mint
-        uint32 MINT2_START_TIME = MINT1_CLOSING_TIME;
-        // ...but its closing time is 10 seconds after the end time of the 1st mint
-        uint32 MINT2_CLOSING_TIME = MINT1_END_TIME + 10;
-        uint32 MINT2_END_TIME = MINT2_CLOSING_TIME + 10;
-
         // Create mints
-        rangeMinter.createEditionMint(
+        uint256 mintId1 = rangeMinter.createEditionMint(
             editionAddress,
             PRICE,
             MINT1_START_TIME,
@@ -102,7 +133,7 @@ contract SdkTest is Script {
             MAX_PER_ACCOUNT
         );
 
-        rangeMinter.createEditionMint(
+        uint256 mintId2 = rangeMinter.createEditionMint(
             editionAddress,
             PRICE,
             MINT2_START_TIME,
@@ -112,5 +143,8 @@ contract SdkTest is Script {
             MAX_MINTABLE_UPPER,
             MAX_PER_ACCOUNT
         );
+
+        // Buy a token from first mint instance
+        rangeMinter.mint{ value: PRICE }(editionAddress, mintId1, 1, address(0));
     }
 }
