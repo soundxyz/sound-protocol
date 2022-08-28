@@ -16,7 +16,6 @@ interface IMinterModule is IERC165 {
         uint32 startTime;
         uint32 endTime;
         uint16 affiliateFeeBPS;
-        uint16 affiliateDiscountBPS;
         bool mintPaused;
     }
 
@@ -60,11 +59,6 @@ interface IMinterModule is IERC165 {
      * @notice Emitted when the `affiliateFeeBPS` is updated.
      */
     event AffiliateFeeSet(address indexed edition, uint256 indexed mintId, uint16 feeBPS);
-
-    /**
-     * @notice Emitted when the `affiliateDiscountBPS` is updated.
-     */
-    event AffiliateDiscountSet(address indexed edition, uint256 indexed mintId, uint16 discountBPS);
 
     // ================================
     // ERRORS
@@ -110,11 +104,6 @@ interface IMinterModule is IERC165 {
      * @dev The affiliate fee numerator must not exceed `MAX_BPS`.
      */
     error InvalidAffiliateFeeBPS();
-
-    /**
-     * The affiliate discount numerator must not exceed `MAX_BPS`.
-     */
-    error InvalidAffiliateDiscountBPS();
 
     /**
      * @dev Fee registry cannot be the zero address.
@@ -164,17 +153,6 @@ interface IMinterModule is IERC165 {
     ) external;
 
     /**
-     * @dev Sets the affiliate discount for (`edition`, `mintId`).
-     * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
-     */
-    function setAffiliateDiscount(
-        address edition,
-        uint256 mintId,
-        uint16 affiliateDiscountBPS
-    ) external;
-
-    /**
      * @dev Withdraws all the accrued fees for `affiliate`.
      */
     function withdrawForAffiliate(address affiliate) external;
@@ -214,8 +192,7 @@ interface IMinterModule is IERC165 {
         address edition,
         uint256 mintId,
         address minter,
-        uint32 quantity,
-        bool affiliated
+        uint32 quantity
     ) external view returns (uint256);
 
     /**

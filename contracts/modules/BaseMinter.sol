@@ -21,7 +21,6 @@ abstract contract BaseMinter is IMinterModule {
      * @dev This is the denominator, in basis points (BPS), for:
      * - platform fees
      * - affiliate fees
-     * - affiliate discount
      */
     uint16 private constant _MAX_BPS = 10_000;
 
@@ -112,18 +111,6 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @inheritdoc IMinterModule
      */
-    function setAffiliateDiscount(
-        address edition,
-        uint256 mintId,
-        uint16 discountBPS
-    ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateDiscountBPS(discountBPS) {
-        _baseData[edition][mintId].affiliateDiscountBPS = discountBPS;
-        emit AffiliateDiscountSet(edition, mintId, discountBPS);
-    }
-
-    /**
-     * @inheritdoc IMinterModule
-     */
     function withdrawForAffiliate(address affiliate) public override {
         uint256 accrued = _affiliateFeesAccrued[affiliate];
         if (accrued != 0) {
@@ -182,25 +169,6 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @inheritdoc IMinterModule
      */
-    function totalPrice(
-        address edition,
-        uint256 mintId,
-        address minter,
-        uint32 quantity,
-        bool affiliated
-    ) public view virtual override returns (uint256) {
-        uint256 total = _baseTotalPrice(edition, mintId, minter, quantity);
-
-        if (total == 0) return 0;
-
-        if (!affiliated) return total;
-
-        return total - ((total * _baseData[edition][mintId].affiliateDiscountBPS) / _MAX_BPS);
-    }
-
-    /**
-     * @inheritdoc IMinterModule
-     */
     function nextMintId() public view returns (uint256) {
         return _nextMintId;
     }
@@ -234,28 +202,9 @@ abstract contract BaseMinter is IMinterModule {
         _;
     }
 
-    /**
-     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
-     */
-    modifier onlyValidAffiliateDiscountBPS(uint16 affiliateDiscountBPS) virtual {
-        if (affiliateDiscountBPS > _MAX_BPS) revert InvalidAffiliateDiscountBPS();
-        _;
-    }
-
     // ================================
     // INTERNAL FUNCTIONS
     // ================================
-
-    /**
-     * @dev Returns the total price before any affiliate discount.
-     * This is a mandatory hook to override.
-     */
-    function _baseTotalPrice(
-        address edition,
-        uint256 mintId,
-        address minter,
-        uint32 quantity
-    ) internal view virtual returns (uint256);
 
     /**
      * @dev Creates an edition mint instance.
@@ -327,16 +276,15 @@ abstract contract BaseMinter is IMinterModule {
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
-        // Check if the mint is an affiliated mint.
-        bool affiliated = isAffiliated(edition, mintId, affiliate);
-
-        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity, affiliated);
+        uint256 requiredEtherValue = this.totalPrice(edition, mintId, msg.sender, quantity);
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
 
         uint256 remainingPayment = _deductPlatformFee(requiredEtherValue);
 
+        // Check if the mint is an affiliated mint.
+        bool affiliated = isAffiliated(edition, mintId, affiliate);
         if (affiliated) {
             // Compute the affiliate fee.
             uint256 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;

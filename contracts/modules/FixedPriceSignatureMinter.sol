@@ -74,6 +74,15 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) public view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
+    }
+
     /**
      * @dev Returns the given edition's mint instance.
      * @param edition The edition to get the mint instance for.
@@ -111,18 +120,5 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     /// @inheritdoc IMinterModule
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IFixedPriceSignatureMinter).interfaceId;
-    }
-
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
-
-    function _baseTotalPrice(
-        address edition,
-        uint256 mintId,
-        address, /* minter */
-        uint32 quantity
-    ) internal view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price * quantity;
     }
 }

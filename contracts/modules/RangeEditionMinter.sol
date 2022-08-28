@@ -160,6 +160,15 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) public view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
+    }
+
     /**
      * @dev Returns the `EditionMintData` for `edition`.
      * @param edition Address of the song edition contract we are minting for.
@@ -212,14 +221,5 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             _maxMintable = data.maxMintableLower;
         }
         return _maxMintable;
-    }
-
-    function _baseTotalPrice(
-        address edition,
-        uint256 mintId,
-        address, /* minter */
-        uint32 quantity
-    ) internal view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price * quantity;
     }
 }
