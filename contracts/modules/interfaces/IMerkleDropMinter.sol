@@ -54,7 +54,7 @@ interface IMerkleDropMinter is IMinterModule {
      */
     event MerkleDropMintCreated(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         bytes32 merkleRootHash,
         uint96 price,
         uint32 startTime,
@@ -102,7 +102,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint16 affiliateFeeBPS,
         uint32 maxMintable_,
         uint32 maxMintablePerAccount_
-    ) external returns (uint256 mintId);
+    ) external returns (uint128 mintId);
 
     /**
      * @dev Mints a token for a particular mint instance.
@@ -111,7 +111,7 @@ interface IMerkleDropMinter is IMinterModule {
      */
     function mint(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 requestedQuantity,
         bytes32[] calldata merkleProof,
         address affiliate
@@ -126,7 +126,7 @@ interface IMerkleDropMinter is IMinterModule {
      */
     function mintedTallies(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         address account
     ) external view returns (uint256);
 
@@ -135,5 +135,5 @@ interface IMerkleDropMinter is IMinterModule {
      * @param edition The edition to get the mint instance for.
      * @param mintId The ID of the mint instance.
      */
-    function mintInfo(address edition, uint256 mintId) external view returns (MintInfo memory);
+    function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 }

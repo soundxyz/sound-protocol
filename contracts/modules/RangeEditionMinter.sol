@@ -58,7 +58,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount_
-    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint256 mintId) {
+    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint128 mintId) {
         if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
@@ -88,7 +88,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /// @inheritdoc IRangeEditionMinter
     function mint(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 quantity,
         address affiliate
     ) public payable {
@@ -114,7 +114,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /// @inheritdoc IRangeEditionMinter
     function setTimeRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
@@ -132,7 +132,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /// @inheritdoc BaseMinter
     function setTimeRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 startTime,
         uint32 endTime
     ) public override(BaseMinter, IMinterModule) onlyEditionOwnerOrAdmin(edition) {
@@ -145,7 +145,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     /// @inheritdoc IRangeEditionMinter
     function setMaxMintableRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) public onlyEditionOwnerOrAdmin(edition) {
@@ -164,17 +164,17 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
     function totalPrice(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         address, /* minter */
         uint32 quantity
-    ) public view virtual override(BaseMinter, IMinterModule) returns (uint256) {
+    ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         return _editionMintData[edition][mintId].price * quantity;
     }
 
     /**
      * @inheritdoc IRangeEditionMinter
      */
-    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+    function mintInfo(address edition, uint128 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 

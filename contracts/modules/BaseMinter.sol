@@ -31,7 +31,12 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @dev The next mint ID. Shared amongst all editions connected.
      */
-    uint256 private _nextMintId;
+    uint128 private _nextMintId;
+
+    /**
+     * @dev How much platform fees have been accrued.
+     */
+    uint128 private _platformFeesAccrued;
 
     /**
      * @dev Maps an edition and the mint ID to a mint instance.
@@ -41,12 +46,7 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @dev Maps an address to how much affiliate fees have they accrued.
      */
-    mapping(address => uint256) private _affiliateFeesAccrued;
-
-    /**
-     * @dev How much platform fees have been accrued.
-     */
-    uint256 private _platformFeesAccrued;
+    mapping(address => uint128) private _affiliateFeesAccrued;
 
     ISoundFeeRegistry public immutable feeRegistry;
 
@@ -79,7 +79,7 @@ abstract contract BaseMinter is IMinterModule {
     /// @inheritdoc IMinterModule
     function setEditionMintPaused(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         bool paused
     ) public virtual onlyEditionOwnerOrAdmin(edition) {
         _baseData[edition][mintId].mintPaused = paused;
@@ -89,7 +89,7 @@ abstract contract BaseMinter is IMinterModule {
     /// @inheritdoc IMinterModule
     function setTimeRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 startTime,
         uint32 endTime
     ) public virtual onlyEditionOwnerOrAdmin(edition) {
@@ -101,7 +101,7 @@ abstract contract BaseMinter is IMinterModule {
      */
     function setAffiliateFee(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint16 feeBPS
     ) public virtual override onlyEditionOwnerOrAdmin(edition) onlyValidAffiliateFeeBPS(feeBPS) {
         _baseData[edition][mintId].affiliateFeeBPS = feeBPS;
@@ -144,14 +144,14 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @inheritdoc IMinterModule
      */
-    function affiliateFeesAccrued(address affiliate) external view returns (uint256) {
+    function affiliateFeesAccrued(address affiliate) external view returns (uint128) {
         return _affiliateFeesAccrued[affiliate];
     }
 
     /**
      * @inheritdoc IMinterModule
      */
-    function platformFeesAccrued() external view returns (uint256) {
+    function platformFeesAccrued() external view returns (uint128) {
         return _platformFeesAccrued;
     }
 
@@ -160,7 +160,7 @@ abstract contract BaseMinter is IMinterModule {
      */
     function isAffiliated(
         address, /* edition */
-        uint256, /* mintId */
+        uint128, /* mintId */
         address affiliate
     ) public view virtual override returns (bool) {
         return affiliate != address(0);
@@ -169,7 +169,7 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @inheritdoc IMinterModule
      */
-    function nextMintId() public view returns (uint256) {
+    function nextMintId() public view returns (uint128) {
         return _nextMintId;
     }
 
@@ -226,7 +226,7 @@ abstract contract BaseMinter is IMinterModule {
         onlyEditionOwnerOrAdmin(edition)
         onlyValidTimeRange(startTime, endTime)
         onlyValidAffiliateFeeBPS(affiliateFeeBPS)
-        returns (uint256 mintId)
+        returns (uint128 mintId)
     {
         mintId = _nextMintId;
 
@@ -250,7 +250,7 @@ abstract contract BaseMinter is IMinterModule {
      */
     function _setTimeRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 startTime,
         uint32 endTime
     ) internal onlyValidTimeRange(startTime, endTime) {
@@ -269,7 +269,7 @@ abstract contract BaseMinter is IMinterModule {
      */
     function _mint(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 quantity,
         address affiliate
     ) internal {
@@ -285,18 +285,18 @@ abstract contract BaseMinter is IMinterModule {
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
-        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity);
+        uint128 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity);
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
 
-        uint256 remainingPayment = _deductPlatformFee(requiredEtherValue);
+        uint128 remainingPayment = _deductPlatformFee(requiredEtherValue);
 
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
         if (affiliated) {
             // Compute the affiliate fee.
-            uint256 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
+            uint128 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
             // Deduct the affiliate fee from the remaining payment.
             remainingPayment -= affiliateFee;
             // Increment the affiliate fees accrued
@@ -308,9 +308,9 @@ abstract contract BaseMinter is IMinterModule {
         ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
     }
 
-    function _deductPlatformFee(uint256 requiredEtherValue) internal returns (uint256 remainingPayment) {
+    function _deductPlatformFee(uint128 requiredEtherValue) internal returns (uint128 remainingPayment) {
         // Compute the platform fee.
-        uint256 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / _MAX_BPS;
+        uint128 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / _MAX_BPS;
         // Increment the platform fees accrued.
         _platformFeesAccrued += platformFee;
         // Deduct the platform fee.
@@ -331,8 +331,8 @@ abstract contract BaseMinter is IMinterModule {
      */
     function totalPrice(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         address minter,
         uint32 quantity
-    ) public view virtual override returns (uint256);
+    ) public view virtual override returns (uint128);
 }

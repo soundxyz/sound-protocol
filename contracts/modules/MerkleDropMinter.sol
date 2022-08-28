@@ -21,7 +21,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      * @dev Number of tokens minted by each buyer address
      * edition => mintId => buyer => mintedTallies
      */
-    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
+    mapping(address => mapping(uint128 => mapping(address => uint256))) public mintedTallies;
 
     // ================================
     // WRITE FUNCTIONS
@@ -39,7 +39,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint16 affiliateFeeBPS,
         uint32 maxMintable_,
         uint32 maxMintablePerAccount_
-    ) public returns (uint256 mintId) {
+    ) public returns (uint128 mintId) {
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -64,7 +64,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     /// @inheritdoc IMerkleDropMinter
     function mint(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 requestedQuantity,
         bytes32[] calldata merkleProof,
         address affiliate
@@ -99,17 +99,17 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
     function totalPrice(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         address, /* minter */
         uint32 quantity
-    ) public view virtual override(BaseMinter, IMinterModule) returns (uint256) {
+    ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         return _editionMintData[edition][mintId].price * quantity;
     }
 
     /**
      * @inheritdoc IMerkleDropMinter
      */
-    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+    function mintInfo(address edition, uint128 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 

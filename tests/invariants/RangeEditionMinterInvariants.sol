@@ -55,7 +55,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
 }
 
 contract RangeEditionMinterUpdater {
-    uint256 constant MINT_ID = 0;
+    uint128 constant MINT_ID = 0;
 
     SoundEditionV1 edition;
     RangeEditionMinter minter;
