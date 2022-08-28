@@ -59,7 +59,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount_
     ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint128 mintId) {
-        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+        if (!(maxMintableLower <= maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
@@ -149,7 +149,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) public onlyEditionOwnerOrAdmin(edition) {
-        if (!(maxMintableLower < maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+        if (!(maxMintableLower <= maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
