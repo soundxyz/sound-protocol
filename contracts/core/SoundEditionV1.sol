@@ -361,17 +361,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * packing them into a single word if possible.
      */
     function _initializeNameAndSymbol(string memory name_, string memory symbol_) internal {
-        uint256 nameLength = bytes(name_).length;
-        uint256 symbolLength = bytes(symbol_).length;
-        uint256 totalLength = nameLength + symbolLength;
+        // Overflow impossible since max block gas limit bounds the length of the strings.
+        unchecked {
+            uint256 nameLength = bytes(name_).length;
+            uint256 symbolLength = bytes(symbol_).length;
+            uint256 totalLength = nameLength + symbolLength;
 
-        if (totalLength > 30) {
-            ERC721AStorage.layout()._name = name_;
-            ERC721AStorage.layout()._symbol = symbol_;
-            return;
+            if (totalLength > 30) {
+                ERC721AStorage.layout()._name = name_;
+                ERC721AStorage.layout()._symbol = symbol_;
+                return;
+            }
+
+            _shortNameAndSymbol = bytes32(abi.encodePacked(uint8(nameLength), name_, uint8(symbolLength), symbol_));
         }
-
-        _shortNameAndSymbol = bytes32(abi.encodePacked(uint8(nameLength), name_, uint8(symbolLength), symbol_));
     }
 
     /**
@@ -379,7 +382,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * unpacking them from a single word in storage if previously packed.
      */
     function _loadNameAndSymbol() internal view returns (string memory name_, string memory symbol_) {
-        // Overflow impossible since all bytes are small.
+        // Overflow impossible since max block gas limit bounds the length of the strings.
         unchecked {
             bytes32 packed = _shortNameAndSymbol;
             if (packed != bytes32(0)) {
