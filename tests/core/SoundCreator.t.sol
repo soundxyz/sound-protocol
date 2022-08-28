@@ -45,6 +45,26 @@ contract SoundCreatorTests is TestConfig {
         assertEq(soundEdition.symbol(), SONG_SYMBOL);
     }
 
+    function test_createSoundSetsNameAndSymbolCorrectly(string memory name, string memory symbol) public {
+        SoundEditionV1 soundEdition = SoundEditionV1(
+            soundCreator.createSound(
+                name,
+                symbol,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
+
+        assertEq(soundEdition.name(), name);
+        assertEq(soundEdition.symbol(), symbol);
+    }
+
     function test_createSoundRevertsOnDoubleInitialization() public {
         SoundEditionV1 soundEdition = createGenericEdition();
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
