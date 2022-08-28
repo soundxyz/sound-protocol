@@ -28,6 +28,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
             START_TIME,
             CLOSING_TIME,
             END_TIME,
+            AFFILIATE_FEE_BPS,
             MAX_MINTABLE_LOWER,
             MAX_MINTABLE_UPPER,
             MAX_MINTABLE_PER_ACCOUNT

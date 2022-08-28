@@ -36,10 +36,11 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint96 price,
         uint32 startTime,
         uint32 endTime,
+        uint16 affiliateFeeBPS,
         uint32 maxMintable_,
         uint32 maxMintablePerAccount_
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMint(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
@@ -54,6 +55,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
             price,
             startTime,
             endTime,
+            affiliateFeeBPS,
             maxMintable_,
             maxMintablePerAccount_
         );
@@ -114,6 +116,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
             baseData.endTime,
+            baseData.affiliateFeeBPS,
             baseData.mintPaused,
             mintData.price,
             mintData.maxMintable,

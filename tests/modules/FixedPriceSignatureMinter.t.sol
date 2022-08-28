@@ -20,6 +20,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     uint256 constant MINT_ID = 0;
     uint32 constant START_TIME = 0;
     uint32 constant END_TIME = type(uint32).max;
+    uint16 constant AFFILIATE_FEE_BPS = 0;
 
     // prettier-ignore
     event FixedPriceSignatureMintCreated(
@@ -27,7 +28,10 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         uint256 indexed mintId,
         uint96 price,
         address signer,
-        uint32 maxMintable
+        uint32 maxMintable,
+        uint32 startTime,
+        uint32 endTime,
+        uint16 affiliateFeeBps
     );
 
     function _signerAddress() internal returns (address) {
@@ -47,7 +51,15 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, START_TIME, END_TIME);
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            _signerAddress(),
+            MAX_MINTABLE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS
+        );
     }
 
     function test_createEditionMintEmitsEvent() public {
@@ -57,9 +69,26 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         vm.expectEmit(false, false, false, true);
 
-        emit FixedPriceSignatureMintCreated(address(edition), MINT_ID, PRICE, _signerAddress(), MAX_MINTABLE);
+        emit FixedPriceSignatureMintCreated(
+            address(edition),
+            MINT_ID,
+            PRICE,
+            _signerAddress(),
+            MAX_MINTABLE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS
+        );
 
-        minter.createEditionMint(address(edition), PRICE, _signerAddress(), MAX_MINTABLE, START_TIME, END_TIME);
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            _signerAddress(),
+            MAX_MINTABLE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS
+        );
     }
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
@@ -69,7 +98,15 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         vm.expectRevert(IFixedPriceSignatureMinter.SignerIsZeroAddress.selector);
 
-        minter.createEditionMint(address(edition), PRICE, address(0), MAX_MINTABLE, START_TIME, END_TIME);
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            address(0),
+            MAX_MINTABLE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS
+        );
     }
 
     function test_mintWithoutCorrectSignatureReverts() public {
@@ -188,13 +225,15 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             _signerAddress(),
             MAX_MINTABLE,
             expectedStartTime,
-            expectedEndTime
+            expectedEndTime,
+            AFFILIATE_FEE_BPS
         );
 
         MintInfo memory mintData = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(expectedStartTime, mintData.startTime);
         assertEq(expectedEndTime, mintData.endTime);
+        assertEq(0, mintData.affiliateFeeBPS);
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
         assertEq(_signerAddress(), mintData.signer);

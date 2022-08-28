@@ -15,6 +15,7 @@ contract MintersIntegration is TestConfig {
     uint32 public constant START_TIME_PRESALE = START_TIME_FREE_DROP + 1 days;
     uint32 public constant START_TIME_PUBLIC_SALE = START_TIME_PRESALE + 1 days;
     uint32 public constant END_TIME_PUBLIC_SALE = START_TIME_PUBLIC_SALE + 1 days;
+    uint16 public constant AFFILIATE_FEE_BPS = 0;
 
     // Free drop constant properties
     uint96 PRICE_FREE_DROP = 0;
@@ -104,6 +105,7 @@ contract MintersIntegration is TestConfig {
             PRICE_FREE_DROP,
             START_TIME_FREE_DROP,
             START_TIME_PRESALE,
+            AFFILIATE_FEE_BPS,
             MINTER_MAX_MINTABLE_FREE_DROP,
             MAX_MINTABLE_PER_ACCOUNT
         );
@@ -124,6 +126,7 @@ contract MintersIntegration is TestConfig {
             PRICE_PRESALE,
             START_TIME_PRESALE,
             START_TIME_PUBLIC_SALE,
+            AFFILIATE_FEE_BPS,
             MINTER_MAX_MINTABLE_PRESALE,
             MAX_MINTABLE_PER_ACCOUNT_PRESALE
         );
@@ -138,6 +141,7 @@ contract MintersIntegration is TestConfig {
             START_TIME_PUBLIC_SALE,
             END_TIME_PUBLIC_SALE - 1,
             END_TIME_PUBLIC_SALE,
+            AFFILIATE_FEE_BPS,
             0,
             MINTER_MAX_MINTABLE_PUBLIC_SALE,
             MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE
