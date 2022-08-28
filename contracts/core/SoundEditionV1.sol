@@ -326,11 +326,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
 
+    /// @inheritdoc IERC721AUpgradeable
     function name() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         (string memory name_, ) = _loadNameAndSymbol();
         return name_;
     }
 
+    /// @inheritdoc IERC721AUpgradeable
     function symbol() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         (, string memory symbol_) = _loadNameAndSymbol();
         return symbol_;
@@ -354,6 +356,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         return 1;
     }
 
+    /**
+     * @dev Helper function for initializing the name and symbol,
+     * packing them into a single word if possible.
+     */
     function _initializeNameAndSymbol(string memory name_, string memory symbol_) internal {
         uint256 nameLength = bytes(name_).length;
         uint256 symbolLength = bytes(symbol_).length;
@@ -368,6 +374,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         _shortNameAndSymbol = bytes32(abi.encodePacked(uint8(nameLength), name_, uint8(symbolLength), symbol_));
     }
 
+    /**
+     * @dev Helper function for retrieving the name and symbol,
+     * unpacking them from a single word in storage if previously packed.
+     */
     function _loadNameAndSymbol() internal view returns (string memory name_, string memory symbol_) {
         bytes32 packed = _shortNameAndSymbol;
         if (packed != bytes32(0)) {
@@ -375,32 +385,33 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 // Load the free memory pointer.
                 let m := mload(0x40)
                 // Allocate 4 words:
-                // - 1 word for `name_`'s length
-                // - 1 word for `name_`'s bytes
-                // - 1 word for `symbol_`'s length
-                // - 1 word for `symbol_`'s bytes
+                // - 1 word for `name_`'s length.
+                // - 1 word for `name_`'s bytes.
+                // - 1 word for `symbol_`'s length.
+                // - 1 word for `symbol_`'s bytes.
                 mstore(0x40, add(m, 0x80))
 
                 // Point `_name` to the memory  allocated for it.
                 name_ := m
+                // Point `_name` to the memory allocated for it.
+                symbol_ := add(m, 0x40)
+
                 // Retrieve the length of `name_`.
                 let nameLength := byte(0, packed)
                 // Store the length of `name_`.
                 mstore(add(m, 0x00), nameLength)
                 // Store the bytes of `name_`.
                 mstore(add(m, 0x20), shl(8, packed))
-                // Zeroize the word after `name_`
+                // Zeroize the word after `name_`.
                 mstore(add(add(m, 0x20), nameLength), 0)
 
-                // Point `_name` to the memory allocated for it.
-                symbol_ := add(m, 0x40)
                 // Retrieve the length of `symbol_`.
                 let symbolLength := byte(add(1, nameLength), packed)
                 // Store the length of `symbol_`.
                 mstore(add(m, 0x40), symbolLength)
                 // Store the bytes of `symbol_`.
                 mstore(add(m, 0x60), shl(mul(8, add(2, nameLength)), packed))
-                // Zeroize the word after `symbol_`
+                // Zeroize the word after `symbol_`.
                 mstore(add(add(m, 0x60), symbolLength), 0)
             }
         } else {
