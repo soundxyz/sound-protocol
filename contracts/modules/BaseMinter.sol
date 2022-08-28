@@ -276,7 +276,7 @@ abstract contract BaseMinter is IMinterModule {
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
-        uint256 requiredEtherValue = this.totalPrice(edition, mintId, msg.sender, quantity);
+        uint256 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity);
 
         // Reverts if the payment is not exact.
         if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
@@ -316,4 +316,14 @@ abstract contract BaseMinter is IMinterModule {
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
     }
+
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address minter,
+        uint32 quantity
+    ) public view virtual override returns (uint256);
 }

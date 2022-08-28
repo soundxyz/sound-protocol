@@ -100,7 +100,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint256 mintId,
         address, /* minter */
         uint32 quantity
-    ) public view virtual override returns (uint256) {
+    ) public view virtual override(BaseMinter, IMinterModule) returns (uint256) {
         return _editionMintData[edition][mintId].price * quantity;
     }
 
