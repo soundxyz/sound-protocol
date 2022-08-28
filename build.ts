@@ -57,7 +57,7 @@ await buildCode({
     clean: false,
     entryPoints: ["typechain/**/*.ts"],
     format: "interop",
-    outDir: "dist",
+    outDir: "dist/typechain",
     target: "node14",
     sourcemap: false,
     rollup: {
