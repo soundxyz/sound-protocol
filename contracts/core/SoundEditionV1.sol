@@ -393,7 +393,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
                 // Point `_name` to the memory  allocated for it.
                 name_ := m
-                // Point `_name` to the memory allocated for it.
+                // Point `symbol_` to the memory allocated for it.
                 symbol_ := add(m, 0x40)
 
                 // Retrieve the length of `name_`.
