@@ -105,13 +105,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     }
 
     /**
-     * @dev Returns the `EditionMintData` for `edition`.
-     * @param edition Address of the song edition contract we are minting for.
+     * @inheritdoc IMerkleDropMinter
      */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
-    }
-
     function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
