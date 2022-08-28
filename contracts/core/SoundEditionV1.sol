@@ -174,15 +174,18 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (!hasAnyRole(caller, MINTER_ROLE | ADMIN_ROLE) && caller != owner()) {
             revert Unauthorized();
         }
+
+        uint256 totalMintedQty = _totalMinted();
+
         // Check if there are enough tokens to mint.
-        if (_totalMinted() + quantity > editionMaxMintable) {
-            uint256 available = editionMaxMintable - _totalMinted();
+        if (totalMintedQty + quantity > editionMaxMintable) {
+            uint256 available = editionMaxMintable - totalMintedQty;
             revert ExceedsEditionAvailableSupply(uint32(available));
         }
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
-        if (_totalMinted() <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
+        if (totalMintedQty <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
             mintRandomness = bytes9(blockhash(block.number - 1));
         }
     }
