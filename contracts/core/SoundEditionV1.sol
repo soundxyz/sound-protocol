@@ -56,6 +56,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint16 internal constant MAX_BPS = 10_000;
     // The interface ID for EIP-2981 (royaltyInfo)
     bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
+    // The slot for the `name()` and `symbol()` if their combined
+    // length is (32 - 2) bytes. We need 2 bytes for their lengths.
+    // The value is given by `keccak256("_SHORT_NAME_AND_SYMBOL_SLOT")`.
+    bytes32 private constant _SHORT_NAME_AND_SYMBOL_SLOT =
+        0x1322e8a1b9790f049b3c4b7d7f9aab92b7b7084b96f494d4a9c7eddf2cd319ec;
 
     // ================================
     // STORAGE
@@ -106,8 +111,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @dev Initializes the contract
      * @param owner Owner of contract (artist)
-     * @param name Name of the token
-     * @param symbol Symbol of the token
+     * @param name_ Name of the token
+     * @param symbol_ Symbol of the token
      * @param metadataModule_ Address of metadata module, address(0x00) if not used
      * @param baseURI_ Base URI
      * @param contractURI_ Contract URI for OpenSea storefront
@@ -119,8 +124,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     function initialize(
         address owner,
-        string memory name,
-        string memory symbol,
+        string memory name_,
+        string memory symbol_,
         IMetadataModule metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
@@ -137,8 +142,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
 
-        ERC721AStorage.layout()._name = name;
-        ERC721AStorage.layout()._symbol = symbol;
+        _initializeNameAndSymbol(name_, symbol_);
         ERC721AStorage.layout()._currentIndex = _startTokenId();
 
         _initializeOwner(owner);
@@ -324,6 +328,16 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
     }
 
+    function name() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
+        (string memory name_, ) = _loadNameAndSymbol();
+        return name_;
+    }
+
+    function symbol() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
+        (, string memory symbol_) = _loadNameAndSymbol();
+        return symbol_;
+    }
+
     // ================================
     // FALLBACK FUNCTIONS
     // ================================
@@ -340,5 +354,81 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /// @inheritdoc ERC721AUpgradeable
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
+    }
+
+    function _initializeNameAndSymbol(string memory name_, string memory symbol_) internal {
+        uint256 nameLength;
+        uint256 symbolLength;
+        uint256 totalLength;
+        assembly {
+            nameLength := mload(name_)
+            symbolLength := mload(symbol_)
+            // Overflow not possible due to max gas limit.
+            totalLength := add(nameLength, symbolLength)
+        }
+
+        if (totalLength > 30) {
+            ERC721AStorage.layout()._name = name_;
+            ERC721AStorage.layout()._symbol = symbol_;
+            return;
+        }
+
+        assembly {
+            mstore8(0x00, nameLength)
+            mstore(0x01, mload(add(name_, 0x20)))
+            mstore8(add(0x01, nameLength), symbolLength)
+            mstore(add(0x02, nameLength), mload(add(symbol_, 0x20)))
+            sstore(_SHORT_NAME_AND_SYMBOL_SLOT, mload(0x00))
+        }
+    }
+
+    function _loadNameAndSymbol() internal view returns (string memory name_, string memory symbol_) {
+        bool isShort;
+        assembly {
+            let packed := sload(_SHORT_NAME_AND_SYMBOL_SLOT)
+            if packed {
+                let m := mload(0x40)
+                // Allocate 4 words:
+                // - 1 word for `name_`'s length, 1 word for `name_`'s bytes.
+                // - 1 word for `symbol_`'s length, 1 word for `symbol_`'s bytes.
+                mstore(0x40, add(m, 0x80))
+
+                let o := 1
+
+                // Point `_name` to the memory  allocated for it.
+                name_ := m
+                // Retrieve the length of `name_`.
+                let nameLength := byte(sub(o, 1), packed)
+                // Store the length of `name_`.
+                mstore(add(m, 0x00), nameLength)
+                // Store the bytes of `name_`.
+                mstore(add(m, 0x20), 0) // Set the slot to zero first.
+                // prettier-ignore
+                for { let i := 0 } lt(i, nameLength) { i := add(i, 1) } {
+                    mstore8(add(add(m, 0x20), i), byte(add(o, i), packed))    
+                }
+
+                o := add(2, nameLength)
+
+                // Point `_name` to the memory allocated for it.
+                symbol_ := add(m, 0x40)
+                // Retrieve the length of `symbol_`.
+                let symbolLength := byte(sub(o, 1), packed)
+                // Store the length of `symbol_`.
+                mstore(add(m, 0x40), symbolLength)
+                // Store the bytes of `symbol_`.
+                mstore(add(m, 0x60), 0) // Set the slot to zero first.
+                // prettier-ignore
+                for { let i := 0 } lt(i, symbolLength) { i := add(i, 1) } {
+                    mstore8(add(add(m, 0x60), i), byte(add(o, i), packed))    
+                }
+
+                isShort := 1
+            }
+        }
+        if (!isShort) {
+            name_ = ERC721AStorage.layout()._name;
+            symbol_ = ERC721AStorage.layout()._symbol;
+        }
     }
 }
