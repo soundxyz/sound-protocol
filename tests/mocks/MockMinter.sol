@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { BaseMinter } from "@modules/BaseMinter.sol";
+import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
+import { BaseMinter } from "contracts/modules/BaseMinter.sol";
 
 struct MintInfo {
     uint32 startTime;

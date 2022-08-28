@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
-import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { BaseMinter } from "@modules/BaseMinter.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { MintInfo } from "contracts/modules/interfaces/IRangeEditionMinter.sol";
+import { RangeEditionMinter } from "contracts/modules/RangeEditionMinter.sol";
+import { BaseMinter } from "contracts/modules/BaseMinter.sol";
 import { RangeEditionMinterTests } from "../modules/RangeEditionMinter.t.sol";
 import { InvariantTest } from "./InvariantTest.sol";
 

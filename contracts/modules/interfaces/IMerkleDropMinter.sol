@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
 
 /**
  * @dev Data unique to a merkle drop mint.

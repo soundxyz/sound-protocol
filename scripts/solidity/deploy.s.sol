@@ -4,13 +4,13 @@ pragma solidity ^0.8.16;
 import { Script } from "forge-std/Script.sol";
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
-import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
-import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
-import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
+import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
+import { GoldenEggMetadata } from "contracts/modules/GoldenEggMetadata.sol";
+import { FixedPriceSignatureMinter } from "contracts/modules/FixedPriceSignatureMinter.sol";
+import { MerkleDropMinter } from "contracts/modules/MerkleDropMinter.sol";
+import { RangeEditionMinter } from "contracts/modules/RangeEditionMinter.sol";
 
 contract Deploy is Script {
     function run() external {

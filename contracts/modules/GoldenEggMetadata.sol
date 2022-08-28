@@ -2,8 +2,8 @@
 pragma solidity ^0.8.16;
 
 import { LibString } from "solady/utils/LibString.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
-import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
+import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";
+import { IMetadataModule } from "contracts/core/interfaces/IMetadataModule.sol";
 
 contract GoldenEggMetadata is IMetadataModule {
     /**

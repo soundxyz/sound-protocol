@@ -4,10 +4,10 @@ pragma solidity ^0.8.16;
 import { Test } from "forge-std/Test.sol";
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
-import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
+import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { SoundFeeRegistry } from "contracts/core/SoundFeeRegistry.sol";
+import { IMetadataModule } from "contracts/core/interfaces/IMetadataModule.sol";
 import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {

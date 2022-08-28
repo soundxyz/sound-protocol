@@ -1,11 +1,11 @@
 pragma solidity ^0.8.16;
 
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { IRangeEditionMinter, MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { BaseMinter } from "@modules/BaseMinter.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
+import { RangeEditionMinter } from "contracts/modules/RangeEditionMinter.sol";
+import { IRangeEditionMinter, MintInfo } from "contracts/modules/interfaces/IRangeEditionMinter.sol";
+import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
+import { BaseMinter } from "contracts/modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract RangeEditionMinterTests is TestConfig {

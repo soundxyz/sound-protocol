@@ -2,9 +2,9 @@
 pragma solidity ^0.8.16;
 
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
+import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";
+import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
+import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 

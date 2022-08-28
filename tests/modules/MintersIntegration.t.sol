@@ -3,10 +3,10 @@ pragma solidity ^0.8.16;
 import { Merkle } from "murky/Merkle.sol";
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
-import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
+import { MerkleDropMinter } from "contracts/modules/MerkleDropMinter.sol";
+import { RangeEditionMinter } from "contracts/modules/RangeEditionMinter.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 

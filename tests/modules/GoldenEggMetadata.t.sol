@@ -3,10 +3,10 @@ pragma solidity ^0.8.16;
 
 import { Strings } from "openzeppelin/utils/Strings.sol";
 
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { RangeEditionMinter } from "contracts/modules/RangeEditionMinter.sol";
+import { GoldenEggMetadata } from "contracts/modules/GoldenEggMetadata.sol";
+import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 

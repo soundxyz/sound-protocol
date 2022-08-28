@@ -4,10 +4,10 @@ pragma solidity ^0.8.16;
 
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { BaseMinter } from "@modules/BaseMinter.sol";
+import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
+import { BaseMinter } from "contracts/modules/BaseMinter.sol";
 import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
 
 /**
  * @title MerkleDropMinter

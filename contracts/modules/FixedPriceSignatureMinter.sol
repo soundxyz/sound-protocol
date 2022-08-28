@@ -3,10 +3,10 @@ pragma solidity ^0.8.16;
 
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { BaseMinter } from "@modules/BaseMinter.sol";
+import { BaseMinter } from "contracts/modules/BaseMinter.sol";
 import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
-import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
+import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
 
 /**
  * @title IFixedPriceSignatureMinter

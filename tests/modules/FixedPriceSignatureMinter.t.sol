@@ -2,12 +2,12 @@ pragma solidity ^0.8.16;
 
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
-import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
-import { IFixedPriceSignatureMinter, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
+import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
+import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
+import { FixedPriceSignatureMinter } from "contracts/modules/FixedPriceSignatureMinter.sol";
+import { IFixedPriceSignatureMinter, MintInfo } from "contracts/modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 

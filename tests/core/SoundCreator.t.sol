@@ -3,9 +3,9 @@ pragma solidity ^0.8.16;
 
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { ISoundCreatorV1 } from "contracts/core/interfaces/ISoundCreatorV1.sol";
+import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
+import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockSoundCreatorV2 } from "../mocks/MockSoundCreatorV2.sol";
