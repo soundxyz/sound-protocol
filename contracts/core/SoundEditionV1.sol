@@ -386,18 +386,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         unchecked {
             bytes32 packed = _shortNameAndSymbol;
             if (packed != bytes32(0)) {
-                // Get the lengths.
-                uint256 nameLength = uint256(uint8(packed[0]));
-                uint256 symbolLength = uint256(uint8(packed[1 + nameLength]));
                 // Allocate the bytes.
-                bytes memory nameBytes = new bytes(nameLength);
-                bytes memory symbolBytes = new bytes(symbolLength);
+                bytes memory nameBytes = new bytes(uint8(packed[0]));
+                bytes memory symbolBytes = new bytes(uint8(packed[1 + nameBytes.length]));
                 // Copy the bytes.
-                for (uint256 i; i < nameLength; ++i) {
+                for (uint256 i; i < nameBytes.length; ++i) {
                     nameBytes[i] = bytes1(packed[1 + i]);
                 }
-                for (uint256 i; i < symbolLength; ++i) {
-                    symbolBytes[i] = bytes1(packed[2 + nameLength + i]);
+                for (uint256 i; i < symbolBytes.length; ++i) {
+                    symbolBytes[i] = bytes1(packed[2 + nameBytes.length + i]);
                 }
                 // Cast the bytes.
                 name_ = string(nameBytes);
