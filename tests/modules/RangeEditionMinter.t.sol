@@ -114,6 +114,9 @@ contract RangeEditionMinterTests is TestConfig {
                 )
             );
             hasRevert = true;
+        } else if (affiliateFeeBPS > minter.MAX_BPS()) {
+            vm.expectRevert(IMinterModule.InvalidAffiliateFeeBPS.selector);
+            hasRevert = true;
         }
 
         if (!hasRevert) {
@@ -433,6 +436,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         assertEq(expectedStartTime, mintData.startTime);
         assertEq(expectedEndTime, mintData.endTime);
+        assertEq(0, mintData.affiliateFeeBPS);
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
         assertEq(expectedMaxAllowedPerWallet, mintData.maxMintablePerAccount);

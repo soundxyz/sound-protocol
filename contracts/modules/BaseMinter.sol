@@ -221,7 +221,13 @@ abstract contract BaseMinter is IMinterModule {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
-    ) internal onlyValidTimeRange(startTime, endTime) onlyEditionOwnerOrAdmin(edition) returns (uint256 mintId) {
+    )
+        internal
+        onlyEditionOwnerOrAdmin(edition)
+        onlyValidTimeRange(startTime, endTime)
+        onlyValidAffiliateFeeBPS(affiliateFeeBPS)
+        returns (uint256 mintId)
+    {
         mintId = _nextMintId;
 
         BaseData storage data = _baseData[edition][mintId];

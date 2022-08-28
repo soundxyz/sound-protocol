@@ -121,6 +121,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
             baseData.endTime,
+            baseData.affiliateFeeBPS,
             baseData.mintPaused,
             mintData.price,
             mintData.maxMintable,

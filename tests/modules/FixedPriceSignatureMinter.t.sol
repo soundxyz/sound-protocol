@@ -233,6 +233,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         assertEq(expectedStartTime, mintData.startTime);
         assertEq(expectedEndTime, mintData.endTime);
+        assertEq(0, mintData.affiliateFeeBPS);
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
         assertEq(_signerAddress(), mintData.signer);

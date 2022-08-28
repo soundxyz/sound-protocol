@@ -67,6 +67,14 @@ contract MintControllerBaseTests is TestConfig {
         minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
     }
 
+    function test_createEditionMintRevertsIfAffiliateFeeBPSTooHigh() external {
+        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        uint16 affiliateFeeBPS = minter.MAX_BPS() + 1;
+
+        vm.expectRevert(IMinterModule.InvalidAffiliateFeeBPS.selector);
+        minter.createEditionMint(address(edition), START_TIME, END_TIME, affiliateFeeBPS);
+    }
+
     function test_createEditionMintViaOwner() external {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 

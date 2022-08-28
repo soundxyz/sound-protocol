@@ -29,6 +29,7 @@ struct EditionMintData {
 struct MintInfo {
     uint32 startTime;
     uint32 endTime;
+    uint16 affiliateFeeBPS;
     bool mintPaused;
     uint96 price;
     uint32 maxMintableUpper;

@@ -186,6 +186,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
             baseData.endTime,
+            baseData.affiliateFeeBPS,
             baseData.mintPaused,
             mintData.price,
             mintData.maxMintableUpper,
