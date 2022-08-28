@@ -29,13 +29,15 @@ interface IMinterModule is IERC165 {
      * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
      * @param startTime The start time of the mint.
      * @param endTime The end time of the mint.
+     * @param affiliateFeeBPS The affiliate fee in basis points.
      */
     event MintConfigCreated(
         address indexed edition,
         address indexed creator,
         uint256 mintId,
         uint32 startTime,
-        uint32 endTime
+        uint32 endTime,
+        uint16 affiliateFeeBPS
     );
 
     /**

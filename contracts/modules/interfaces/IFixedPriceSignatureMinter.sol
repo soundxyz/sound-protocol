@@ -23,6 +23,7 @@ struct EditionMintData {
 struct MintInfo {
     uint32 startTime;
     uint32 endTime;
+    uint16 affiliateFeeBPS;
     bool mintPaused;
     uint96 price;
     uint32 maxMintable;
@@ -43,13 +44,19 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @param mintId The mint ID.
      * @param signer The address of the signer that authorizes mints.
      * @param maxMintable The maximum number of tokens that can be minted.
+     * @param startTime The time minting can begin.
+     * @param endTime The time minting will end.
+     * @param affiliateFeeBPS The affiliate fee in basis points.
      */
     event FixedPriceSignatureMintCreated(
         address indexed edition,
         uint256 indexed mintId,
         uint96 price,
         address signer,
-        uint32 maxMintable
+        uint32 maxMintable,
+        uint32 startTime,
+        uint32 endTime,
+        uint16 affiliateFeeBPS
     );
 
     /**
@@ -70,6 +77,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @param maxMintable_ The maximum number of tokens that can be minted.
      * @param startTime The time minting can begin.
      * @param endTime The time minting will end.
+     * @param affiliateFeeBPS The affiliate fee in basis points.
      * @return mintId The ID of the new mint instance.
      */
     function createEditionMint(
@@ -78,7 +86,8 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         address signer,
         uint32 maxMintable_,
         uint32 startTime,
-        uint32 endTime
+        uint32 endTime,
+        uint16 affiliateFeeBPS
     ) external returns (uint256 mintId);
 
     /**

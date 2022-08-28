@@ -211,6 +211,7 @@ abstract contract BaseMinter is IMinterModule {
      * @param edition The edition address.
      * @param startTime The start time of the mint.
      * @param endTime The end time of the mint.
+     * @param affiliateFeeBPS The affiliate fee in basis points.
      * @return mintId The ID for the mint instance.
      * Calling conditions:
      * - Must be owner or admin of the edition.
@@ -218,17 +219,25 @@ abstract contract BaseMinter is IMinterModule {
     function _createEditionMint(
         address edition,
         uint32 startTime,
-        uint32 endTime
-    ) internal onlyValidTimeRange(startTime, endTime) onlyEditionOwnerOrAdmin(edition) returns (uint256 mintId) {
+        uint32 endTime,
+        uint16 affiliateFeeBPS
+    )
+        internal
+        onlyEditionOwnerOrAdmin(edition)
+        onlyValidTimeRange(startTime, endTime)
+        onlyValidAffiliateFeeBPS(affiliateFeeBPS)
+        returns (uint256 mintId)
+    {
         mintId = _nextMintId;
 
         BaseData storage data = _baseData[edition][mintId];
         data.startTime = startTime;
         data.endTime = endTime;
+        data.affiliateFeeBPS = affiliateFeeBPS;
 
         _nextMintId = mintId + 1;
 
-        emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime);
+        emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime, affiliateFeeBPS);
     }
 
     /**

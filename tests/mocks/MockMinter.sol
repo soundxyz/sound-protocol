@@ -19,9 +19,10 @@ contract MockMinter is BaseMinter {
     function createEditionMint(
         address edition,
         uint32 startTime,
-        uint32 endTime
+        uint32 endTime,
+        uint16 affiliateFeeBPS
     ) external returns (uint256 mintId) {
-        mintId = _createEditionMint(edition, startTime, endTime);
+        mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
     }
 
     function mint(

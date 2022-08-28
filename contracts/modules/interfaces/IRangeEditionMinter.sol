@@ -29,6 +29,7 @@ struct EditionMintData {
 struct MintInfo {
     uint32 startTime;
     uint32 endTime;
+    uint16 affiliateFeeBPS;
     bool mintPaused;
     uint96 price;
     uint32 maxMintableUpper;
@@ -51,6 +52,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
+        uint16 affiliateFeeBPS,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount
@@ -82,6 +84,7 @@ interface IRangeEditionMinter is IMinterModule {
      * max amount of tokens mintable will drop from
      * `maxMintableUpper` to `maxMintableLower`.
      * @param endTime End timestamp of sale (in seconds since unix epoch).
+     * @param affiliateFeeBPS The affiliate fee in basis points.
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
      * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
      * @return mintId The ID for the new mint instance.
@@ -92,6 +95,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
+        uint16 affiliateFeeBPS,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount_
