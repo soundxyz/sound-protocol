@@ -31,10 +31,11 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address signer,
         uint32 maxMintable_,
         uint32 startTime,
-        uint32 endTime
+        uint32 endTime,
+        uint16 affiliateFeeBPS
     ) public returns (uint256 mintId) {
-        mintId = _createEditionMint(edition, startTime, endTime);
         if (signer == address(0)) revert SignerIsZeroAddress();
+        mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
@@ -46,7 +47,10 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
             mintId,
             price,
             signer,
-            maxMintable_
+            maxMintable_,
+            startTime,
+            endTime,
+            affiliateFeeBPS
         );
     }
 

@@ -17,6 +17,8 @@ contract GoldenEggMetadataTests is TestConfig {
 
     uint32 constant END_TIME = 200;
 
+    uint16 constant AFFILIATE_FEE_BPS = 0;
+
     uint32 constant MAX_MINTABLE = 5;
 
     uint32 constant MINT_ID = 0;
@@ -58,6 +60,7 @@ contract GoldenEggMetadataTests is TestConfig {
             END_TIME - 1,
             END_TIME,
             0,
+            AFFILIATE_FEE_BPS,
             MAX_MINTABLE,
             MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE
         );

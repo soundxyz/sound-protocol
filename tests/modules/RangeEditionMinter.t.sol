@@ -17,6 +17,8 @@ contract RangeEditionMinterTests is TestConfig {
 
     uint32 constant END_TIME = 300;
 
+    uint16 constant AFFILIATE_FEE_BPS = 0;
+
     uint32 constant MAX_MINTABLE_LOWER = 5;
 
     uint32 constant MAX_MINTABLE_UPPER = 10;
@@ -33,6 +35,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
+        uint16 affiliateFeeBps,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount
@@ -63,6 +66,7 @@ contract RangeEditionMinterTests is TestConfig {
             START_TIME,
             CLOSING_TIME,
             END_TIME,
+            AFFILIATE_FEE_BPS,
             MAX_MINTABLE_LOWER,
             MAX_MINTABLE_UPPER,
             _maxMintablePerAccount
@@ -74,6 +78,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime,
+        uint16 affiliateFeeBPS,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount
@@ -120,6 +125,7 @@ contract RangeEditionMinterTests is TestConfig {
                 startTime,
                 closingTime,
                 endTime,
+                affiliateFeeBPS,
                 maxMintableLower,
                 maxMintableUpper,
                 maxMintablePerAccount
@@ -132,6 +138,7 @@ contract RangeEditionMinterTests is TestConfig {
             startTime,
             closingTime,
             endTime,
+            affiliateFeeBPS,
             maxMintableLower,
             maxMintableUpper,
             maxMintablePerAccount
@@ -164,6 +171,7 @@ contract RangeEditionMinterTests is TestConfig {
             START_TIME,
             CLOSING_TIME,
             END_TIME,
+            AFFILIATE_FEE_BPS,
             MAX_MINTABLE_UPPER,
             EDITION_MAX_MINTABLE,
             0
@@ -175,6 +183,7 @@ contract RangeEditionMinterTests is TestConfig {
             START_TIME,
             CLOSING_TIME,
             END_TIME,
+            AFFILIATE_FEE_BPS,
             MAX_MINTABLE_UPPER,
             EDITION_MAX_MINTABLE,
             0
@@ -414,6 +423,7 @@ contract RangeEditionMinterTests is TestConfig {
             expectedStartTime,
             CLOSING_TIME,
             expectedEndTime,
+            AFFILIATE_FEE_BPS,
             MAX_MINTABLE_LOWER,
             MAX_MINTABLE_UPPER,
             expectedMaxAllowedPerWallet

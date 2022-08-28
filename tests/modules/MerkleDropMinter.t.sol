@@ -13,6 +13,7 @@ import { TestConfig } from "../TestConfig.sol";
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
     uint32 public constant END_TIME = 200;
+    uint16 public constant AFFILIATE_FEE_BPS = 0;
 
     address[] accounts = [getFundedAccount(1), getFundedAccount(2), getFundedAccount(3)];
     bytes32[] leaves;
@@ -56,6 +57,7 @@ contract MerkleDropMinterTests is TestConfig {
             _price,
             START_TIME,
             END_TIME,
+            AFFILIATE_FEE_BPS,
             _maxMintable,
             _maxMintablePerAccount
         );
@@ -187,6 +189,7 @@ contract MerkleDropMinterTests is TestConfig {
             0,
             expectedStartTime,
             expectedEndTime,
+            AFFILIATE_FEE_BPS,
             expectedMaxMintable,
             expectedMaxPerWallet
         );

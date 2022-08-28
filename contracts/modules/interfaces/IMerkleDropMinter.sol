@@ -47,6 +47,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @param price The price at which each token will be sold, in ETH.
      * @param startTime The time minting can begin.
      * @param endTime The time minting will end.
+     * @param affiliateFeeBPS The affiliate fee in basis points.
      * @param maxMintable The maximum number of tokens that can be minted.
      * @param maxMintablePerAccount The maximum number of tokens that an account can mint.
      */
@@ -57,6 +58,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint96 price,
         uint32 startTime,
         uint32 endTime,
+        uint16 affiliateFeeBPS,
         uint32 maxMintable,
         uint32 maxMintablePerAccount
     );
@@ -85,6 +87,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @param price Sale price in ETH for minting a single token in `edition`.
      * @param startTime Start timestamp of sale (in seconds since unix epoch).
      * @param endTime End timestamp of sale (in seconds since unix epoch).
+     * @param affiliateFeeBPS The affiliate fee in basis points.
      * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
      * @param maxMintablePerAccount_ The maximum number of tokens that a single account can mint.
      * @return mintId The ID of the new mint instance.
@@ -95,6 +98,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint96 price,
         uint32 startTime,
         uint32 endTime,
+        uint16 affiliateFeeBPS,
         uint32 maxMintable_,
         uint32 maxMintablePerAccount_
     ) external returns (uint256 mintId);
