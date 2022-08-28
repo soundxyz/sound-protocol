@@ -379,44 +379,30 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * unpacking them from a single word in storage if previously packed.
      */
     function _loadNameAndSymbol() internal view returns (string memory name_, string memory symbol_) {
-        bytes32 packed = _shortNameAndSymbol;
-        if (packed != bytes32(0)) {
-            assembly {
-                // Load the free memory pointer.
-                let m := mload(0x40)
-                // Allocate 4 words:
-                // - 1 word for `name_`'s length.
-                // - 1 word for `name_`'s bytes.
-                // - 1 word for `symbol_`'s length.
-                // - 1 word for `symbol_`'s bytes.
-                mstore(0x40, add(m, 0x80))
-
-                // Point `_name` to the memory  allocated for it.
-                name_ := m
-                // Point `symbol_` to the memory allocated for it.
-                symbol_ := add(m, 0x40)
-
-                // Retrieve the length of `name_`.
-                let nameLength := byte(0, packed)
-                // Store the length of `name_` in memory.
-                mstore(add(m, 0x00), nameLength)
-                // Store the bytes of `name_` in memory.
-                mstore(add(m, 0x20), shl(8, packed))
-                // Zeroize the word after `name_` in memory.
-                mstore(add(add(m, 0x20), nameLength), 0)
-
-                // Retrieve the length of `symbol_`.
-                let symbolLength := byte(add(1, nameLength), packed)
-                // Store the length of `symbol_` in memory.
-                mstore(add(m, 0x40), symbolLength)
-                // Store the bytes of `symbol_` in memory.
-                mstore(add(m, 0x60), shl(mul(8, add(2, nameLength)), packed))
-                // Zeroize the word after `symbol_` in memory.
-                mstore(add(add(m, 0x60), symbolLength), 0)
+        // Overflow impossible since all bytes are small.
+        unchecked {
+            bytes32 packed = _shortNameAndSymbol;
+            if (packed != bytes32(0)) {
+                // Get the lengths.
+                uint256 nameLength = uint256(uint8(packed[0]));
+                uint256 symbolLength = uint256(uint8(packed[1 + nameLength]));
+                // Allocate the bytes.
+                bytes memory nameBytes = new bytes(nameLength);
+                bytes memory symbolBytes = new bytes(symbolLength);
+                // Copy the bytes.
+                for (uint256 i; i < nameLength; ++i) {
+                    nameBytes[i] = bytes1(packed[1 + i]);
+                }
+                for (uint256 i; i < symbolLength; ++i) {
+                    symbolBytes[i] = bytes1(packed[2 + nameLength + i]);
+                }
+                // Cast the bytes.
+                name_ = string(nameBytes);
+                symbol_ = string(symbolBytes);
+            } else {
+                name_ = ERC721AStorage.layout()._name;
+                symbol_ = ERC721AStorage.layout()._symbol;
             }
-        } else {
-            name_ = ERC721AStorage.layout()._name;
-            symbol_ = ERC721AStorage.layout()._symbol;
         }
     }
 }
