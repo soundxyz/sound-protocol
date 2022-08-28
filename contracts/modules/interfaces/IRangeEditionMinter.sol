@@ -47,7 +47,7 @@ struct MintInfo {
 interface IRangeEditionMinter is IMinterModule {
     event RangeEditionMintCreated(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint96 price,
         uint32 startTime,
         uint32 closingTime,
@@ -58,11 +58,11 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintablePerAccount
     );
 
-    event ClosingTimeSet(address indexed edition, uint256 indexed mintId, uint32 closingTime);
+    event ClosingTimeSet(address indexed edition, uint128 indexed mintId, uint32 closingTime);
 
     event MaxMintableRangeSet(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     );
@@ -99,7 +99,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount_
-    ) external returns (uint256 mintId);
+    ) external returns (uint128 mintId);
 
     /*
      * @dev Sets the time range.
@@ -112,7 +112,7 @@ interface IRangeEditionMinter is IMinterModule {
      */
     function setTimeRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 startTime,
         uint32 closingTime,
         uint32 endTime
@@ -126,7 +126,7 @@ interface IRangeEditionMinter is IMinterModule {
      */
     function setMaxMintableRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) external;
@@ -138,7 +138,7 @@ interface IRangeEditionMinter is IMinterModule {
      */
     function mint(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 quantity,
         address affiliate
     ) external payable;
@@ -148,5 +148,5 @@ interface IRangeEditionMinter is IMinterModule {
      * @param edition The edition to get the mint instance for.
      * @param mintId The ID of the mint instance.
      */
-    function mintInfo(address edition, uint256 mintId) external view returns (MintInfo memory);
+    function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 }

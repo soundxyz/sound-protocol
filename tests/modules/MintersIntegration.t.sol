@@ -99,7 +99,7 @@ contract MintersIntegration is TestConfig {
         edition.grantRoles(address(merkleDropMinter), edition.MINTER_ROLE());
 
         bytes32 root = merkleFreeDrop.getRoot(leavesFreeMerkleDrop);
-        uint256 mintIdFreeMint = merkleDropMinter.createEditionMint(
+        uint128 mintIdFreeMint = merkleDropMinter.createEditionMint(
             address(edition),
             root,
             PRICE_FREE_DROP,
@@ -120,7 +120,7 @@ contract MintersIntegration is TestConfig {
         (Merkle mPresale, bytes32[] memory leavesPresale) = setUpMerkleTree(accountsPresale);
 
         root = mPresale.getRoot(leavesPresale);
-        uint256 mintIdPresale = merkleDropMinter.createEditionMint(
+        uint128 mintIdPresale = merkleDropMinter.createEditionMint(
             address(edition),
             root,
             PRICE_PRESALE,
@@ -135,7 +135,7 @@ contract MintersIntegration is TestConfig {
         RangeEditionMinter publicSaleMinter = new RangeEditionMinter(feeRegistry);
         edition.grantRoles(address(publicSaleMinter), edition.MINTER_ROLE());
 
-        uint256 mintIdPublicSale = publicSaleMinter.createEditionMint(
+        uint128 mintIdPublicSale = publicSaleMinter.createEditionMint(
             address(edition),
             PRICE_PUBLIC_SALE,
             START_TIME_PUBLIC_SALE,
@@ -157,7 +157,7 @@ contract MintersIntegration is TestConfig {
         bytes32[] memory leavesFreeMerkleDrop,
         MerkleDropMinter merkleDropMinter,
         Merkle merkleFreeDrop,
-        uint256 mintId
+        uint128 mintId
     ) public {
         // START THE FREE DROP
         vm.warp(START_TIME_FREE_DROP);
@@ -196,7 +196,7 @@ contract MintersIntegration is TestConfig {
         bytes32[] memory leavesPresale,
         MerkleDropMinter merkleDropMinter,
         Merkle mPresale,
-        uint256 mintId
+        uint128 mintId
     ) public {
         // Check user 0 has no tokens
         uint256 user0Balance = edition.balanceOf(accountsPresale[0]);
@@ -222,7 +222,7 @@ contract MintersIntegration is TestConfig {
         vm.warp(START_TIME_PUBLIC_SALE);
     }
 
-    function run_PublicSale(RangeEditionMinter publicSaleMinter, uint256 mintId) public {
+    function run_PublicSale(RangeEditionMinter publicSaleMinter, uint128 mintId) public {
         // Check user 5 has no tokens
         uint256 user5Balance = edition.balanceOf(userAccounts[4]);
         assertEq(user5Balance, 0);

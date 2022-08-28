@@ -33,7 +33,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
-    ) public returns (uint256 mintId) {
+    ) public returns (uint128 mintId) {
         if (signer == address(0)) revert SignerIsZeroAddress();
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
@@ -57,7 +57,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     /// @inheritdoc IFixedPriceSignatureMinter
     function mint(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 quantity,
         bytes calldata signature,
         address affiliate
@@ -80,17 +80,17 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
     function totalPrice(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         address, /* minter */
         uint32 quantity
-    ) public view virtual override(BaseMinter, IMinterModule) returns (uint256) {
+    ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         return _editionMintData[edition][mintId].price * quantity;
     }
 
     /**
      * @inheritdoc IFixedPriceSignatureMinter
      */
-    function mintInfo(address edition, uint256 mintId) public view override returns (MintInfo memory) {
+    function mintInfo(address edition, uint128 mintId) public view override returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 

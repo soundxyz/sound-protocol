@@ -23,14 +23,14 @@ contract RangeEditionMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE_UPPER = 10;
 
-    uint256 constant MINT_ID = 0;
+    uint128 constant MINT_ID = 0;
 
     uint32 constant MAX_MINTABLE_PER_ACCOUNT = 0;
 
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint96 price,
         uint32 startTime,
         uint32 closingTime,
@@ -41,16 +41,16 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintablePerAccount
     );
 
-    event ClosingTimeSet(address indexed edition, uint256 indexed mintId, uint32 closingTime);
+    event ClosingTimeSet(address indexed edition, uint128 indexed mintId, uint32 closingTime);
 
     event MaxMintableRangeSet(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     );
 
-    event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
+    event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
