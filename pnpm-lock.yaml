@@ -48,7 +48,7 @@ specifiers:
   prettier-linter-helpers: ^1.0.0
   prettier-plugin-solidity: 1.0.0-dev.23
   semver: ^7.3.7
-  solady: ^0.0.17
+  solady: ^0.0.18
   solhint: 3.3.7
   solhint-plugin-prettier: 0.0.5
   solidity-coverage: ^0.7.21
@@ -64,7 +64,7 @@ dependencies:
   '@openzeppelin/contracts-upgradeable': 4.7.3
   erc721a-upgradeable: 4.2.2
   ethers: 5.7.0
-  solady: 0.0.17
+  solady: 0.0.18
 
 devDependencies:
   '@changesets/apply-release-plan': 6.0.4
@@ -7271,8 +7271,8 @@ packages:
       yargs: 15.4.1
     dev: true
 
-  /solady/0.0.17:
-    resolution: {integrity: sha512-coOoljvwtIal4V0gR1GLGsiaF5L4yCaT4Ia0v+g3cwtHiFR6vyy4AHL8EMLd3T79MPFHMWTLSTyy/J10gvBkLg==}
+  /solady/0.0.18:
+    resolution: {integrity: sha512-Bcdzme+rr9Y0A4pt1j271j1VRrByFgqFZWY53B4VAKlDb2+GQ9RmtudV8Gb7YEnxu2dmmBkg/ZkBlZTdp+fUng==}
     dev: false
 
   /solc/0.7.3_debug@4.3.4:
