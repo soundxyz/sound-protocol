@@ -398,20 +398,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
                 // Retrieve the length of `name_`.
                 let nameLength := byte(0, packed)
-                // Store the length of `name_`.
+                // Store the length of `name_` in memory.
                 mstore(add(m, 0x00), nameLength)
-                // Store the bytes of `name_`.
+                // Store the bytes of `name_` in memory.
                 mstore(add(m, 0x20), shl(8, packed))
-                // Zeroize the word after `name_`.
+                // Zeroize the word after `name_` in memory.
                 mstore(add(add(m, 0x20), nameLength), 0)
 
                 // Retrieve the length of `symbol_`.
                 let symbolLength := byte(add(1, nameLength), packed)
-                // Store the length of `symbol_`.
+                // Store the length of `symbol_` in memory.
                 mstore(add(m, 0x40), symbolLength)
-                // Store the bytes of `symbol_`.
+                // Store the bytes of `symbol_` in memory.
                 mstore(add(m, 0x60), shl(mul(8, add(2, nameLength)), packed))
-                // Zeroize the word after `symbol_`.
+                // Zeroize the word after `symbol_` in memory.
                 mstore(add(add(m, 0x60), symbolLength), 0)
             }
         } else {
