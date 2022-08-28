@@ -6,7 +6,7 @@
         "declaration": true,
         "emitDeclarationOnly": true,
         "outDir": "dist",
-        "rootDir": "typechain",
+        "rootDir": ".",
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
         "skipLibCheck": true

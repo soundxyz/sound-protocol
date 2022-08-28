@@ -5,6 +5,7 @@
   "homepage": "https://github.com/soundxyz/sound-protocol#readme",
   "scripts": {
     "build": "forge build",
+    "compile": "hardhat compile --force",
     "test": "forge test",
     "test:gas": "forge test --gas-report",
     "test:coverage": "forge coverage --contracts contracts --report lcov && genhtml lcov.info --branch-coverage --output-directory coverage --legend",
@@ -13,10 +14,8 @@
     "prepare": "husky install",
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol scripts/**/*.sol",
-    "prep-typechain": "bob-tsm scripts/js/prep-typechain.ts",
-    "typechain": "pnpm prep-typechain && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-sound/**/*[!metadata].json'",
     "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
-    "prepack": "rm -rf out && pnpm build && pnpm typechain && bob-tsm build.ts",
+    "prepack": "pnpm compile && bob-tsm build.ts",
     "postpublish": "gh-release"
   },
     "repository": {
