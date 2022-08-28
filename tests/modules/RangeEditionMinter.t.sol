@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { IRangeEditionMinter, EditionMintData, MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
+import { IRangeEditionMinter, MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
@@ -46,6 +46,8 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     );
+
+    event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
@@ -203,7 +205,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         assertEq(edition.balanceOf(caller), 2);
 
-        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
         assertEq(data.totalMinted, 2);
     }
 
@@ -216,7 +218,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         uint32 quantity = 2;
 
-        EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+        MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, 0);
 
@@ -225,7 +227,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
-        data = minter.editionMintData(address(edition), MINT_ID);
+        data = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
     }
@@ -323,6 +325,42 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
     }
 
+    function test_canSetTimeRangeBaseMinter(address nonController) public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+
+        vm.assume(nonController != address(this));
+
+        // Set new values
+        vm.expectEmit(true, true, true, true);
+        emit TimeRangeSet(address(edition), MINT_ID, 123, 456);
+        minter.setTimeRange(address(edition), MINT_ID, 123, 456);
+
+        MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
+
+        // Check new values
+        assertEq(mintInfo.startTime, 123);
+        assertEq(mintInfo.endTime, 456);
+
+        // Ensure only controller can set time range
+        vm.prank(nonController);
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
+        minter.setTimeRange(address(edition), MINT_ID, 456, 789);
+    }
+
+    function test_cannotSetInvalidTimeRangeBaseMinter(uint32 startTime, uint32 endTime) public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
+
+        // Ensure startTime cannot be after closing time
+        vm.assume(startTime > CLOSING_TIME);
+        vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
+        minter.setTimeRange(address(edition), MINT_ID, startTime, endTime);
+
+        // Ensure endTime cannot be before closing time
+        vm.assume(endTime < CLOSING_TIME);
+        vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
+        minter.setTimeRange(address(edition), MINT_ID, startTime, endTime);
+    }
+
     function test_setTimeRange(
         uint32 startTime,
         uint32 closingTime,
@@ -376,7 +414,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
 
         if (!hasRevert) {
-            EditionMintData memory data = minter.editionMintData(address(edition), MINT_ID);
+            MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
             assertEq(data.maxMintableLower, maxMintableLower);
             assertEq(data.maxMintableUpper, maxMintableUpper);
         }

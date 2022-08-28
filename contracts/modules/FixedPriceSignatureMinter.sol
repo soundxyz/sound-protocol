@@ -84,15 +84,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     }
 
     /**
-     * @dev Returns the given edition's mint instance.
-     * @param edition The edition to get the mint instance for.
-     * @param mintId The ID of the mint instance.
+     * @inheritdoc IFixedPriceSignatureMinter
      */
-    function editionMintData(address edition, uint256 mintId) public view returns (EditionMintData memory) {
-        return _editionMintData[edition][mintId];
-    }
-
-    function mintInfo(address edition, uint256 mintId) public view returns (MintInfo memory) {
+    function mintInfo(address edition, uint256 mintId) public view override returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 

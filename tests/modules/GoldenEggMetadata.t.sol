@@ -100,8 +100,12 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 quantity = MAX_MINTABLE - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
-        vm.warp(RANDOMNESS_LOCKED_TIMESTAMP);
+        // check golden egg has not been generated after minting one less than the max
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        assertEq(goldenEggTokenId, 0);
+
+        vm.warp(RANDOMNESS_LOCKED_TIMESTAMP);
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
 
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
