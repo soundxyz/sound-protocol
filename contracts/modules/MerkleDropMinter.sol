@@ -95,6 +95,15 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // VIEW FUNCTIONS
     // ================================
 
+    function totalPrice(
+        address edition,
+        uint256 mintId,
+        address, /* minter */
+        uint32 quantity
+    ) public view virtual override returns (uint256) {
+        return _editionMintData[edition][mintId].price * quantity;
+    }
+
     /**
      * @dev Returns the `EditionMintData` for `edition`.
      * @param edition Address of the song edition contract we are minting for.
@@ -131,18 +140,5 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     /// @inheritdoc IMinterModule
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IMerkleDropMinter).interfaceId;
-    }
-
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
-
-    function _baseTotalPrice(
-        address edition,
-        uint256 mintId,
-        address, /* minter */
-        uint32 quantity
-    ) internal view virtual override returns (uint256) {
-        return _editionMintData[edition][mintId].price * quantity;
     }
 }

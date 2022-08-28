@@ -8,7 +8,6 @@ struct MintInfo {
     uint32 startTime;
     uint32 endTime;
     uint16 affiliateFeeBPS;
-    uint16 affiliateDiscountBPS;
     bool mintPaused;
 }
 
@@ -38,16 +37,12 @@ contract MockMinter is BaseMinter {
         _currentPrice = price;
     }
 
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
-
-    function _baseTotalPrice(
+    function totalPrice(
         address, /* edition */
         uint256, /* mintId */
         address, /* minter */
         uint32 quantity
-    ) internal view virtual override returns (uint256) {
+    ) public view virtual override returns (uint256) {
         return _currentPrice * quantity;
     }
 
@@ -58,7 +53,6 @@ contract MockMinter is BaseMinter {
             baseData.startTime,
             baseData.endTime,
             baseData.affiliateFeeBPS,
-            baseData.affiliateDiscountBPS,
             baseData.mintPaused
         );
 
