@@ -34,7 +34,7 @@ interface IMinterModule is IERC165 {
     event MintConfigCreated(
         address indexed edition,
         address indexed creator,
-        uint256 mintId,
+        uint128 mintId,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
@@ -46,7 +46,7 @@ interface IMinterModule is IERC165 {
      * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
      * @param paused The new paused status.
      */
-    event MintPausedSet(address indexed edition, uint256 mintId, bool paused);
+    event MintPausedSet(address indexed edition, uint128 mintId, bool paused);
 
     /**
      * @dev Emitted when the `paused` status of `edition` is updated.
@@ -55,12 +55,12 @@ interface IMinterModule is IERC165 {
      * @param startTime The start time of the mint.
      * @param endTime The end time of the mint.
      */
-    event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
+    event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
     /**
      * @notice Emitted when the `affiliateFeeBPS` is updated.
      */
-    event AffiliateFeeSet(address indexed edition, uint256 indexed mintId, uint16 feeBPS);
+    event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 feeBPS);
 
     // ================================
     // ERRORS
@@ -123,7 +123,7 @@ interface IMinterModule is IERC165 {
      */
     function setEditionMintPaused(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         bool paused
     ) external;
 
@@ -138,7 +138,7 @@ interface IMinterModule is IERC165 {
      */
     function setTimeRange(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 startTime,
         uint32 endTime
     ) external;
@@ -150,7 +150,7 @@ interface IMinterModule is IERC165 {
      */
     function setAffiliateFee(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint16 affiliateFeeBPS
     ) external;
 
@@ -171,19 +171,19 @@ interface IMinterModule is IERC165 {
     /**
      * @dev Returns the total fees accrued for `affiliate`.
      */
-    function affiliateFeesAccrued(address affiliate) external view returns (uint256);
+    function affiliateFeesAccrued(address affiliate) external view returns (uint128);
 
     /**
      * @dev Returns the total fees accrued for the platform.
      */
-    function platformFeesAccrued() external view returns (uint256);
+    function platformFeesAccrued() external view returns (uint128);
 
     /**
      * @dev Returns whether `affiliate` is affiliated for (`edition`, `mintId`).
      */
     function isAffiliated(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         address affiliate
     ) external view returns (bool);
 
@@ -192,17 +192,17 @@ interface IMinterModule is IERC165 {
      */
     function totalPrice(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         address minter,
         uint32 quantity
-    ) external view returns (uint256);
+    ) external view returns (uint128);
 
     /**
      * @dev Returns the next mint ID.
      * A mint ID is assigned sequentially starting from (0, 1, 2, ...),
      * and is shared amonsgt all editions connected to the minter contract.
      */
-    function nextMintId() external view returns (uint256);
+    function nextMintId() external view returns (uint128);
 
     /**
      * Returns child minter interface ID

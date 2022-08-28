@@ -17,7 +17,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     uint96 constant PRICE = 1;
     uint32 constant MAX_MINTABLE = 5;
     uint256 constant SIGNER_PRIVATE_KEY = 1;
-    uint256 constant MINT_ID = 0;
+    uint128 constant MINT_ID = 0;
     uint32 constant START_TIME = 0;
     uint32 constant END_TIME = type(uint32).max;
     uint16 constant AFFILIATE_FEE_BPS = 0;
@@ -25,7 +25,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     // prettier-ignore
     event FixedPriceSignatureMintCreated(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint96 price,
         address signer,
         uint32 maxMintable,

@@ -41,7 +41,7 @@ contract MerkleDropMinterTests is TestConfig {
         returns (
             SoundEditionV1 edition,
             MerkleDropMinter minter,
-            uint256 mintId
+            uint128 mintId
         )
     {
         edition = createGenericEdition();
@@ -65,7 +65,7 @@ contract MerkleDropMinterTests is TestConfig {
 
     function test_canMintMultipleTimesLessThanMaxMintablePerAccount() public {
         uint32 maxPerAccount = 2;
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
             maxPerAccount
@@ -93,7 +93,7 @@ contract MerkleDropMinterTests is TestConfig {
     function test_cannotClaimMoreThanMaxMintablePerAccount() public {
         uint32 maxPerAccount = 1;
         uint32 requestedQuantity = 2;
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
             maxPerAccount
@@ -111,7 +111,7 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 maxPerAccount = 3;
         uint32 requestedQuantity = 3;
 
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
             2,
             maxPerAccount
@@ -125,7 +125,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimWithInvalidProof() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(0, 1, 1);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 1, 1);
         bytes32[] memory proof = m.getProof(leaves, 1);
 
         vm.warp(START_TIME);
@@ -137,7 +137,7 @@ contract MerkleDropMinterTests is TestConfig {
 
     function test_canGetMintedTallyForAccount() public {
         uint32 maxMintablePerAccount = 1;
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint256 mintId) = _createEditionAndMinter(
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
             maxMintablePerAccount
@@ -183,7 +183,7 @@ contract MerkleDropMinterTests is TestConfig {
         uint32 expectedMaxMintable = 39730302;
         uint32 expectedMaxPerWallet = 397;
 
-        uint256 mintId = minter.createEditionMint(
+        uint128 mintId = minter.createEditionMint(
             address(edition),
             root,
             0,

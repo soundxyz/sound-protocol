@@ -50,7 +50,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      */
     event FixedPriceSignatureMintCreated(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint96 price,
         address signer,
         uint32 maxMintable,
@@ -88,7 +88,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
-    ) external returns (uint256 mintId);
+    ) external returns (uint128 mintId);
 
     /**
      * @dev Mints a token for a particular mint instance.
@@ -98,7 +98,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      */
     function mint(
         address edition,
-        uint256 mintId,
+        uint128 mintId,
         uint32 quantity,
         bytes calldata signature,
         address affiliate
@@ -109,5 +109,5 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @param edition The edition to get the mint instance for.
      * @param mintId The ID of the mint instance.
      */
-    function mintInfo(address edition, uint256 mintId) external view returns (MintInfo memory);
+    function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 }
