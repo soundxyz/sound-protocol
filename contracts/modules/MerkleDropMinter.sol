@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.16;
 
-import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
-import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "contracts/modules/BaseMinter.sol";
 import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";

@@ -1,6 +1,7 @@
 pragma solidity ^0.8.16;
 
-import { ECDSA } from "solady/utils/ECDSA.sol";
+import { OwnableRoles } from "solady/src/auth/OwnableRoles.sol";
+import { ECDSA } from "solady/src/utils/ECDSA.sol";
 
 import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
 import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";
@@ -8,7 +9,7 @@ import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "contracts/modules/FixedPriceSignatureMinter.sol";
 import { IFixedPriceSignatureMinter, MintInfo } from "contracts/modules/interfaces/IFixedPriceSignatureMinter.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { OwnableRoles } from "solady/src/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract FixedPriceSignatureMinterTests is TestConfig {

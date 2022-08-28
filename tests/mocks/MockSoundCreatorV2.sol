@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.16;
 
-import "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract MockSoundCreatorV2 is UUPSUpgradeable {
     function success() external pure returns (string memory) {

@@ -31,7 +31,11 @@
   "dependencies": {
     "@ethersproject/abi": "^5.6.4",
     "@ethersproject/providers": "^5.6.8",
-    "ethers": "^5.6.9"
+    "@openzeppelin/contracts": "^4.7.3",
+    "@openzeppelin/contracts-upgradeable": "^4.7.3",
+    "erc721a-upgradeable": "^4.2.2",
+    "ethers": "^5.6.9",
+    "solady": "^0.0.17"
   },
   "devDependencies": {
     "@changesets/apply-release-plan": "^6.0.4",

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.16;
 
-import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
 import { IRangeEditionMinter, EditionMintData, MintInfo } from "./interfaces/IRangeEditionMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";

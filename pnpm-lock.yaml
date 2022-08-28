@@ -15,6 +15,8 @@ specifiers:
   '@nomicfoundation/hardhat-toolbox': ^1.0.2
   '@nomiclabs/hardhat-ethers': ^2.1.1
   '@nomiclabs/hardhat-etherscan': ^3.1.0
+  '@openzeppelin/contracts': ^4.7.3
+  '@openzeppelin/contracts-upgradeable': ^4.7.3
   '@pnpm/exportable-manifest': ^3.1.2
   '@pnpm/types': ^8.5.0
   '@typechain/ethers-v5': ^10.1.0
@@ -29,6 +31,7 @@ specifiers:
   changesets-github-release: ^0.1.0
   concurrently: ^7.3.0
   danger: ^11.1.1
+  erc721a-upgradeable: ^4.2.2
   esbuild: ^0.15.5
   eslint: ^5.16.0
   eslint-scope: ^4.0.3
@@ -45,6 +48,7 @@ specifiers:
   prettier-linter-helpers: ^1.0.0
   prettier-plugin-solidity: 1.0.0-dev.23
   semver: ^7.3.7
+  solady: ^0.0.17
   solhint: 3.3.7
   solhint-plugin-prettier: 0.0.5
   solidity-coverage: ^0.7.21
@@ -56,7 +60,11 @@ specifiers:
 dependencies:
   '@ethersproject/abi': 5.7.0
   '@ethersproject/providers': 5.7.0
+  '@openzeppelin/contracts': 4.7.3
+  '@openzeppelin/contracts-upgradeable': 4.7.3
+  erc721a-upgradeable: 4.2.2
   ethers: 5.7.0
+  solady: 0.0.17
 
 devDependencies:
   '@changesets/apply-release-plan': 6.0.4
@@ -999,6 +1007,14 @@ packages:
     dependencies:
       '@octokit/openapi-types': 12.10.1
     dev: true
+
+  /@openzeppelin/contracts-upgradeable/4.7.3:
+    resolution: {integrity: sha512-+wuegAMaLcZnLCJIvrVUDzA9z/Wp93f0Dla/4jJvIhijRrPabjQbZe6fWiECLaJyfn5ci9fqf9vTw3xpQOad2A==}
+    dev: false
+
+  /@openzeppelin/contracts/4.7.3:
+    resolution: {integrity: sha512-dGRS0agJzu8ybo44pCIf3xBaPQN/65AIXNgK8+4gzKd5kbvlqyxryUYVLJv7fK98Seyd2hDZzVEHSWAh0Bt1Yw==}
+    dev: false
 
   /@pnpm/constants/6.1.0:
     resolution: {integrity: sha512-L6AiU3OXv9kjKGTJN9j8n1TeJGDcLX9atQlZvAkthlvbXjvKc5SKNWESc/eXhr5nEfuMWhQhiKHDJCpYejmeCQ==}
@@ -3000,6 +3016,10 @@ packages:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
     engines: {node: '>=6'}
     dev: true
+
+  /erc721a-upgradeable/4.2.2:
+    resolution: {integrity: sha512-STEkDBS3aVUXTog+044rvh8BqNfIbytkzgp8k11cXvK0WVbT1ssi56aFmOv2FKm25pHVlHZYBLKq6nE+HklB9g==}
+    dev: false
 
   /errno/0.1.8:
     resolution: {integrity: sha512-dJ6oBr5SQ1VSd9qkk7ByRgb/1SH4JZjCHSW/mr63/QcXO9zLVxvJ6Oy13nio03rxpSnVDDjFor75SjVeZWPW/A==}
@@ -7250,6 +7270,10 @@ packages:
       wcwidth: 1.0.1
       yargs: 15.4.1
     dev: true
+
+  /solady/0.0.17:
+    resolution: {integrity: sha512-coOoljvwtIal4V0gR1GLGsiaF5L4yCaT4Ia0v+g3cwtHiFR6vyy4AHL8EMLd3T79MPFHMWTLSTyy/J10gvBkLg==}
+    dev: false
 
   /solc/0.7.3_debug@4.3.4:
     resolution: {integrity: sha512-GAsWNAjGzIDg7VxzP6mPjdurby3IkGCjQcM8GFYZT6RyaoUZKmMU6Y7YwG+tFGhv7dwZ8rmR4iwFDrrD99JwqA==}

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.16;
 
-import { Ownable } from "openzeppelin/access/Ownable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
 
 /**

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { Script } from "forge-std/Script.sol";
-import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
 import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";

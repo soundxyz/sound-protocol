@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { ISoundCreatorV1 } from "contracts/core/interfaces/ISoundCreatorV1.sol";
 import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { OwnableRoles } from "solady/src/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockSoundCreatorV2 } from "../mocks/MockSoundCreatorV2.sol";
 

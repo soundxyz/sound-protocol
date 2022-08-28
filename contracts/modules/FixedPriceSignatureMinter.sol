@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { ECDSA } from "solady/utils/ECDSA.sol";
-import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { ECDSA } from "solady/src/utils/ECDSA.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { BaseMinter } from "contracts/modules/BaseMinter.sol";
 import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
 import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";

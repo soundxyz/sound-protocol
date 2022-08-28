@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { Strings } from "openzeppelin/utils/Strings.sol";
-import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { IERC721AUpgradeable } from "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
+import { OwnableRoles } from "solady/src/auth/OwnableRoles.sol";
 import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
 import { IMetadataModule } from "contracts/core/interfaces/IMetadataModule.sol";
 import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";

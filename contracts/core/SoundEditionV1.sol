@@ -27,14 +27,14 @@ pragma solidity ^0.8.16;
                ▓██████████████████████████████████████████████████████████
 */
 
-import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { ERC721AUpgradeable, ERC721AStorage } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
-import { ERC721AQueryableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
-import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
-import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
-import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { IERC721AUpgradeable } from "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
+import { ERC721AUpgradeable, ERC721AStorage } from "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
+import { ERC721AQueryableUpgradeable } from "erc721a-upgradeable/contracts/extensions/ERC721AQueryableUpgradeable.sol";
+import { ERC721ABurnableUpgradeable } from "erc721a-upgradeable/contracts/extensions/ERC721ABurnableUpgradeable.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC2981Upgradeable } from "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+import { SafeTransferLib } from "solady/src/utils/SafeTransferLib.sol";
+import { OwnableRoles } from "solady/src/auth/OwnableRoles.sol";
 
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";

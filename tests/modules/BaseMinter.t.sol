@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
+import { IERC721AUpgradeable } from "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import { SoundEditionV1 } from "contracts/core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "contracts/core/SoundCreatorV1.sol";
 import { TestConfig } from "../TestConfig.sol";
@@ -9,7 +9,7 @@ import { MockMinter, MintInfo } from "../mocks/MockMinter.sol";
 import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "contracts/core/interfaces/IMinterModule.sol";
 import { ISoundFeeRegistry } from "contracts/core/interfaces/ISoundFeeRegistry.sol";
-import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract MintControllerBaseTests is TestConfig {
     event MintConfigCreated(

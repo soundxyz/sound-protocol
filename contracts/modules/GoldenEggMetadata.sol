@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import { LibString } from "solady/utils/LibString.sol";
+import { LibString } from "solady/src/utils/LibString.sol";
 import { ISoundEditionV1 } from "contracts/core/interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "contracts/core/interfaces/IMetadataModule.sol";
 
