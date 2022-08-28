@@ -21,6 +21,7 @@ await ensureDir("dist");
 
 await Promise.all([
     copy("LICENSE", "dist/LICENSE"),
+    copy("contracts", "dist/contracts"),
     writeFile(
         "dist/package.json",
         JSON.stringify(

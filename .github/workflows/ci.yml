@@ -10,29 +10,40 @@ jobs:
     name: Forge tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Clone repo
+        uses: actions/checkout@v3
         with:
           submodules: recursive
-
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.0.1
+        with:
+          version: latest
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-      - name: Run Forge build
+      - name: Setup Node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          cache: 'pnpm'
+      - name: Add NPM_TOKEN
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Install dependencies
+        run: pnpm install
+      - name: Compile contracts
         run: |
-          forge --version
-          forge build --sizes
-        id: build
-
+          pnpm compile
+        id: compile
       - name: Run Forge tests
         run: |
           forge test -vvv --gas-report
         id: test
-
       - name: Code coverage
         run: |
           forge coverage --report lcov
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
