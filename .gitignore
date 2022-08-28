@@ -2,7 +2,10 @@
 cache
 out*
 typechain
+typechain-types
 dist
+cache
+artifacts
 
 # Ignores development broadcast logs
 /broadcast/*
@@ -19,14 +22,7 @@ node_modules
 # Code coverage artifacts
 lcov.info
 /coverage/*
-node_modules
-.env
 coverage
 coverage.json
-typechain
-typechain-types
 
-#Hardhat files
-cache
-artifacts
 
