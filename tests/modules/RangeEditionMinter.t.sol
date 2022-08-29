@@ -244,7 +244,7 @@ contract RangeEditionMinterTests is TestConfig {
         assertEq(data.totalMinted, quantity);
     }
 
-    function test_mintRevertForWrongEtherValue() public {
+    function test_mintRevertForUnderpaid() public {
         uint32 quantity = 2;
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(quantity);
 
@@ -253,7 +253,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint256 requiredPayment = quantity * PRICE;
 
         bytes memory expectedRevert = abi.encodeWithSelector(
-            IMinterModule.WrongEtherValue.selector,
+            IMinterModule.Underpaid.selector,
             requiredPayment - 1,
             requiredPayment
         );
