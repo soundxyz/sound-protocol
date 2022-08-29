@@ -41,7 +41,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
 
     function invariant_maxMintableRange() public {
         MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
-        assertTrue(data.maxMintableLower < data.maxMintableUpper);
+        assertTrue(data.maxMintableLower <= data.maxMintableUpper);
     }
 
     function invariant_timeRange() public {
