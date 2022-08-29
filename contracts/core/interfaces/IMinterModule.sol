@@ -67,7 +67,7 @@ interface IMinterModule is IERC165 {
     // ================================
 
     /**
-     * @dev The Ether value paid is below the exact value required.
+     * @dev The Ether value paid is below the value required.
      * @param paid The amount sent to the contract.
      * @param required The amount required to mint.
      */
