@@ -342,15 +342,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     // ================================
-    // FALLBACK FUNCTIONS
-    // ================================
-
-    /**
-     * @dev receive secondary royalties
-     */
-    receive() external payable {}
-
-    // ================================
     // INTERNAL FUNCTIONS
     // ================================
 

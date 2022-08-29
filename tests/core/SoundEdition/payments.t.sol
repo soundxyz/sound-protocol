@@ -52,12 +52,7 @@ contract SoundEdition_payments is TestConfig {
         uint256 primaryETHSales = 10 ether;
         edition.mint{ value: primaryETHSales }(address(this), 1);
 
-        // secondary ETH royalty
-        uint256 secondaryETHSales = 2 ether;
-        (bool success, ) = address(edition).call{ value: secondaryETHSales }("");
-        require(success);
-
-        uint256 totalETHSales = primaryETHSales + secondaryETHSales;
+        uint256 totalETHSales = primaryETHSales;
 
         // withdraw
         uint256 preFundingRecipitentETHBal = FUNDING_RECIPIENT.balance;
