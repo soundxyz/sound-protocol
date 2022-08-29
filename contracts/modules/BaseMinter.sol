@@ -262,6 +262,9 @@ abstract contract BaseMinter is IMinterModule {
 
     /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
+     * Note: this function should be called at the end of a function due to it refunding any
+     * excess ether paid, to adhere to the checks-effects-interactions pattern.
+     * Otherwise, a reentrancy guard must be used.
      * @param edition The edition address.
      * @param mintId The ID for the mint instance.
      * @param quantity The quantity of tokens to mint.
@@ -288,7 +291,7 @@ abstract contract BaseMinter is IMinterModule {
         uint128 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity);
 
         // Reverts if the payment is not exact.
-        if (msg.value != requiredEtherValue) revert WrongEtherValue(msg.value, requiredEtherValue);
+        if (msg.value < requiredEtherValue) revert Underpaid(msg.value, requiredEtherValue);
 
         uint128 remainingPayment = _deductPlatformFee(requiredEtherValue);
 
@@ -306,6 +309,16 @@ abstract contract BaseMinter is IMinterModule {
         /* ------------------------- MINT --------------------------- */
 
         ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
+
+        /* ------------------------- REFUND ------------------------- */
+
+        unchecked {
+            // Note: We do this at the end to avoid creating a reentrancy vector.
+            // Refund the user any ETH they spent over the current total price of the NFTs.
+            if (msg.value > requiredEtherValue) {
+                SafeTransferLib.safeTransferETH(msg.sender, msg.value - requiredEtherValue);
+            }
+        }
     }
 
     function _deductPlatformFee(uint128 requiredEtherValue) internal returns (uint128 remainingPayment) {
