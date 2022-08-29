@@ -122,15 +122,17 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
     }
 
-    function test_mintWithWrongEtherValueReverts() public {
+    function test_mintWithUnderpaidReverts() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
+        uint32 quantity = 2;
+
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.WrongEtherValue.selector, PRICE * 2, PRICE));
-        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig, address(0));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.Underpaid.selector, PRICE * quantity - 1, PRICE * 2));
+        minter.mint{ value: PRICE * quantity - 1 }(address(edition), MINT_ID, quantity, sig, address(0));
     }
 
     function test_mintWhenSoldOutReverts() public {

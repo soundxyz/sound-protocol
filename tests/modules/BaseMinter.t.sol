@@ -117,7 +117,7 @@ contract MintControllerBaseTests is TestConfig {
         assertEq(currentMintId, prevMintId + 1);
     }
 
-    function test_mintRevertsForWrongEtherValue() public {
+    function test_mintRevertsForUnderpaid() public {
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
@@ -125,10 +125,54 @@ contract MintControllerBaseTests is TestConfig {
         uint96 price = 1;
         minter.setPrice(price);
 
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.WrongEtherValue.selector, price * 2 - 1, price * 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.Underpaid.selector, price * 2 - 1, price * 2));
         minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, address(0));
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, address(0));
+    }
+
+    function test_mintRefundsForOverpaid() public {
+        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+
+        uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
+
+        uint96 price = 1;
+        minter.setPrice(price);
+
+        uint32 quantity = 2;
+
+        address buyer = getFundedAccount(123456789);
+
+        uint256 balanceBefore = buyer.balance;
+
+        vm.prank(buyer);
+        minter.mint{ value: price * (quantity + 1) }(address(edition), mintId, quantity, address(0));
+
+        uint256 balanceAfter = buyer.balance;
+
+        assertEq(balanceBefore - balanceAfter, price * quantity);
+    }
+
+    function test_mintAcceptsExactPayment() public {
+        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+
+        uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
+
+        uint96 price = 1;
+        minter.setPrice(price);
+
+        uint32 quantity = 2;
+
+        address buyer = getFundedAccount(123456789);
+
+        uint256 balanceBefore = buyer.balance;
+
+        vm.prank(buyer);
+        minter.mint{ value: price * quantity }(address(edition), mintId, quantity, address(0));
+
+        uint256 balanceAfter = buyer.balance;
+
+        assertEq(balanceBefore - balanceAfter, price * quantity);
     }
 
     function test_mintRevertsWhenPaused() public {

@@ -67,11 +67,11 @@ interface IMinterModule is IERC165 {
     // ================================
 
     /**
-     * @dev The Ether value paid is not the exact value required.
+     * @dev The Ether value paid is below the value required.
      * @param paid The amount sent to the contract.
      * @param required The amount required to mint.
      */
-    error WrongEtherValue(uint256 paid, uint256 required);
+    error Underpaid(uint256 paid, uint256 required);
 
     /**
      * @dev The number minted has exceeded the max mintable amount.
