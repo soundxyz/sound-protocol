@@ -23,7 +23,7 @@ contract GoldenEggMetadata is IMetadataModule {
     }
 
     /**
-     * @dev Returns token ID for the golden egg after randomness is locked, else returns 0.
+     * @dev Returns token ID for the golden egg after the edition is sold out or the `mintRandomness` is locked, else returns 0.
      * @param edition The edition address.
      * @return tokenId The token ID for the golden egg.
      */
