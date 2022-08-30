@@ -10,8 +10,6 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
-import "forge-std/console.sol";
-
 contract GoldenEggMetadataTests is TestConfig {
     uint96 constant PRICE = 1 ether;
 
