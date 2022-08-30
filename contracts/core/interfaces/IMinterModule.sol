@@ -200,7 +200,7 @@ interface IMinterModule is IERC165 {
     /**
      * @dev Returns the next mint ID.
      * A mint ID is assigned sequentially starting from (0, 1, 2, ...),
-     * and is shared amonsgt all editions connected to the minter contract.
+     * and is shared amongst all editions connected to the minter contract.
      */
     function nextMintId() external view returns (uint128);
 
