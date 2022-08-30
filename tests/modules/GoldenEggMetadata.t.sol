@@ -66,7 +66,12 @@ contract GoldenEggMetadataTests is TestConfig {
         );
     }
 
-    function test_getGoldenEggTokenId(uint32 maxMintable) external {
+    function test_getGoldenEggTokenId(
+        uint32 maxMintable,
+        uint32 mintRandomnessTimeThreshold,
+        uint32 mintRandomnessTokenThreshold,
+        uint32 purchaseQuantity
+    ) external {
         vm.assume(maxMintable > 0 && maxMintable < 5000);
 
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
@@ -81,11 +86,26 @@ contract GoldenEggMetadataTests is TestConfig {
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
                 maxMintable,
-                maxMintable,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                mintRandomnessTimeThreshold,
+                mintRandomnessTokenThreshold
             )
         );
 
+        _createMintInstanceAndMint(edition, maxMintable, purchaseQuantity);
+
+        uint32 upperBoundForGoldenEgg = purchaseQuantity == edition.editionMaxMintable()
+            ? purchaseQuantity
+            : mintRandomnessTokenThreshold;
+        uint256 expectedGoldenEggId = (uint256(uint72(edition.mintRandomness())) % maxMintable) + 1;
+
+        assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
+    }
+
+    function _createMintInstanceAndMint(
+        SoundEditionV1 edition,
+        uint32 maxMintable,
+        uint32 purchaseQuantity
+    ) public {
         RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
@@ -96,17 +116,13 @@ contract GoldenEggMetadataTests is TestConfig {
             0,
             END_TIME - 1,
             END_TIME,
-            0,
             AFFILIATE_FEE_BPS,
-            maxMintable,
-            maxMintable
+            0, // max mintable lower
+            maxMintable, // max mintable upper
+            maxMintable // max mintable per account
         );
 
-        minter.mint{ value: PRICE * maxMintable }(address(edition), MINT_ID, maxMintable, address(0));
-
-        uint256 expectedGoldenEggId = (uint256(uint72(edition.mintRandomness())) % maxMintable) + 1;
-
-        assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
+        minter.mint{ value: PRICE * purchaseQuantity }(address(edition), MINT_ID, purchaseQuantity, address(0));
     }
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active

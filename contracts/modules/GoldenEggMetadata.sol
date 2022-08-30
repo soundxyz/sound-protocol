@@ -38,7 +38,7 @@ contract GoldenEggMetadata is IMetadataModule {
             totalMinted >= mintRandomnessTokenThreshold ||
             block.timestamp >= edition.mintRandomnessTimeThreshold()
         ) {
-            uint32 upperBound = isSoldOut > totalMinted ? totalMinted : mintRandomnessTokenThreshold;
+            uint32 upperBound = isSoldOut ? totalMinted : mintRandomnessTokenThreshold;
 
             // calculate number between 1 and upper bound (mintRandomness corresponds to the blockhash)
             tokenId = (uint256(uint72(edition.mintRandomness())) % upperBound) + 1;
