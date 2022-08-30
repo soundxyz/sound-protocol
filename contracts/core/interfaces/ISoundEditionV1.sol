@@ -234,6 +234,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function totalMinted() external view returns (uint256);
 
     /**
+     * @dev Getter for the total maximum mintable quantity for the edition.
+     * @return The maximum mintable quantity.
+     */
+    function editionMaxMintable() external view returns (uint32);
+
+    /**
      * @dev Getter for the token count after which randomness gets locked.
      * @return The token count after which randomness gets locked.
      */

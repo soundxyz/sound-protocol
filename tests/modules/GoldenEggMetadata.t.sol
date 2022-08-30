@@ -10,6 +10,8 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
+import "forge-std/console.sol";
+
 contract GoldenEggMetadataTests is TestConfig {
     uint96 constant PRICE = 1 ether;
 
@@ -64,6 +66,49 @@ contract GoldenEggMetadataTests is TestConfig {
             MAX_MINTABLE,
             MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE
         );
+    }
+
+    function test_getGoldenEggTokenId(uint32 maxMintable) external {
+        vm.assume(maxMintable > 0 && maxMintable < 5000);
+
+        GoldenEggMetadata eggModule = new GoldenEggMetadata();
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                eggModule,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                maxMintable,
+                maxMintable,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            )
+        );
+
+        RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
+
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
+
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            0,
+            END_TIME - 1,
+            END_TIME,
+            0,
+            AFFILIATE_FEE_BPS,
+            maxMintable,
+            maxMintable
+        );
+
+        minter.mint{ value: PRICE * maxMintable }(address(edition), MINT_ID, maxMintable, address(0));
+
+        uint256 expectedGoldenEggId = (uint256(uint72(edition.mintRandomness())) % maxMintable) + 1;
+
+        assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
     }
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
