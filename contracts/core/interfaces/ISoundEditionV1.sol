@@ -50,9 +50,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Emitted when the `royaltyBPS` is set.
-     * @param royaltyBPS The new royalty, measured in basis points.
+     * @param bps The new royalty, measured in basis points.
      */
-    event RoyaltySet(uint16 royaltyBPS);
+    event RoyaltySet(uint16 bps);
 
     /**
      * @dev Emitted when the edition's maximum mintable token quantity is set.
@@ -81,6 +81,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev The requested quantity exceeds the edition's remaining mintable token quantity.
+     * @param available The number of tokens remaining available for mint.
      */
     error ExceedsEditionAvailableSupply(uint32 available);
 
@@ -211,9 +212,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * Calling conditions:
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
-     * @param royaltyBPS The new royalty to be set.
+     * @param bps The new royalty basis points to be set.
      */
-    function setRoyalty(uint16 royaltyBPS) external;
+    function setRoyalty(uint16 bps) external;
 
     /**
      * @dev Reduces the maximum mintable quantity for the edition.
@@ -268,10 +269,23 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function baseURI() external view returns (string memory);
 
     /**
-     * @dev Returns the total amount of tokens minted.
-     * @return The latest value.
+     * @dev Returns the contract URI to be used by Opensea.
+     *      See: https://docs.opensea.io/docs/contract-level-metadata
+     * @return The configured value.
      */
-    function totalMinted() external view returns (uint256);
+    function contractURI() external view returns (string memory);
+
+    /**
+     * @dev Returns the address of the funding recipient.
+     * @return The configured value.
+     */
+    function fundingRecipient() external view returns (address);
+
+    /**
+     * @dev Returns the maximum amount of tokens mintable for this edition.
+     * @return The configured value.
+     */
+    function editionMaxMintable() external view returns (uint32);
 
     /**
      * @dev Returns the token count after which randomness gets locked.
@@ -286,6 +300,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mintRandomnessTimeThreshold() external view returns (uint32);
 
     /**
+     * @dev Returns the address of the metadata module.
+     * @return The configured value.
+     */
+    function metadataModule() external view returns (IMetadataModule);
+
+    /**
      * @dev Returns the randomness based on latest block hash, which is stored upon each mint
      *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp`
      *      have been surpassed.
@@ -293,6 +313,24 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The latest value.
      */
     function mintRandomness() external view returns (bytes9);
+
+    /**
+     * @dev Returns the royalty basis points.
+     * @return The configured value.
+     */
+    function royaltyBPS() external view returns (uint16);
+
+    /**
+     * @dev Returns whether the metadata module is frozen.
+     * @return The configured value.
+     */
+    function isMetadataFrozen() external view returns (bool);
+
+    /**
+     * @dev Returns the total amount of tokens minted.
+     * @return The latest value.
+     */
+    function totalMinted() external view returns (uint256);
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.
