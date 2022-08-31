@@ -310,18 +310,13 @@ abstract contract BaseMinter is IMinterModule {
 
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
-        unchecked {
-            if (affiliated) {
-                // Compute the affiliate fee.
-                // Won't overflow, as `remainingPayment` is 128 bits, and `affiliateFeeBPS` is 16 bits.
-                uint128 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
-                // Deduct the affiliate fee from the remaining payment.
-                // Won't underflow as `affiliateFee <= remainingPayment`.
-                remainingPayment -= affiliateFee;
-                // Increment the affiliate fees accrued.
-                // Overflow is incredibly unrealistic.
-                _affiliateFeesAccrued[affiliate] += affiliateFee;
-            }
+        if (affiliated) {
+            // Compute the affiliate fee.
+            uint128 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
+            // Deduct the affiliate fee from the remaining payment.
+            remainingPayment -= affiliateFee;
+            // Increment the affiliate fees accrued.
+            _affiliateFeesAccrued[affiliate] += affiliateFee;
         }
 
         /* ------------------------- MINT --------------------------- */
@@ -345,16 +340,12 @@ abstract contract BaseMinter is IMinterModule {
      * @return remainingPayment The remaining payment Ether amount.
      */
     function _deductPlatformFee(uint128 requiredEtherValue) internal returns (uint128 remainingPayment) {
-        unchecked {
-            // Compute the platform fee.
-            uint128 platformFee = feeRegistry.platformFee(requiredEtherValue);
-            // Increment the platform fees accrued.
-            // Overflow is incredibly unrealistic.
-            _platformFeesAccrued += platformFee;
-            // Deduct the platform fee.
-            // Won't underflow as `platformFee <= requiredEtherValue`;
-            remainingPayment = requiredEtherValue - platformFee;
-        }
+        // Compute the platform fee.
+        uint128 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / _MAX_BPS;
+        // Increment the platform fees accrued.
+        _platformFeesAccrued += platformFee;
+        // Deduct the platform fee.
+        remainingPayment = requiredEtherValue - platformFee;
     }
 
     /**
