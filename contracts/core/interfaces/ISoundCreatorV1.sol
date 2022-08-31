@@ -19,12 +19,6 @@ interface ISoundCreatorV1 {
      */
     event SoundEditionCreated(address indexed soundEdition, address indexed deployer);
 
-    /**
-     * @dev Emitted when the edition implementation address is set.
-     * @param newImplementation The new implementation address to be set.
-     */
-    event SoundEditionImplementationSet(address newImplementation);
-
     // =============================================================
     //                            ERRORS
     // =============================================================
@@ -66,16 +60,6 @@ interface ISoundCreatorV1 {
         uint32 mintRandomnessTokenThreshold,
         uint32 mintRandomnessTimeThreshold
     ) external returns (address payable soundEdition);
-
-    /**
-     * @dev Changes the SoundEdition implementation contract address.
-     *
-     * Calling conditions:
-     * - The caller must be the owner of the contract.
-     *
-     * @param newImplementation The new implementation address to be set.
-     */
-    function setEditionImplementation(address newImplementation) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS

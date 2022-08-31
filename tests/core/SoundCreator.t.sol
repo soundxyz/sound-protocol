@@ -12,8 +12,6 @@ import { MockSoundCreatorV2 } from "../mocks/MockSoundCreatorV2.sol";
 
 contract SoundCreatorTests is TestConfig {
     event SoundEditionCreated(address indexed soundEdition, address indexed deployer);
-    event SoundEditionImplementationSet(address newImplementation);
-    event Upgraded(address indexed implementation);
 
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
@@ -78,44 +76,5 @@ contract SoundCreatorTests is TestConfig {
             EDITION_MAX_MINTABLE,
             RANDOMNESS_LOCKED_TIMESTAMP
         );
-    }
-
-    function test_ownership(address attacker) public {
-        vm.assume(attacker != address(this));
-
-        assertEq(address(soundCreator.owner()), address(this));
-
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(attacker);
-        soundCreator.transferOwnership(attacker);
-    }
-
-    function test_ownerCanSetNewImplementation(address newImplementation) public {
-        vm.assume(newImplementation != address(0));
-
-        vm.expectEmit(false, false, false, true);
-        emit SoundEditionImplementationSet(newImplementation);
-
-        soundCreator.setEditionImplementation(newImplementation);
-        assertEq(address(soundCreator.soundEditionImplementation()), newImplementation);
-    }
-
-    function test_attackerCantSetNewImplementation(address attacker) public {
-        vm.assume(attacker != address(this));
-
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(attacker);
-        soundCreator.setEditionImplementation(address(0));
-    }
-
-    function test_implementationAddressOfZeroReverts() public {
-        vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(0));
-
-        SoundEditionV1 soundEdition = createGenericEdition();
-        soundCreator = new SoundCreatorV1(address(soundEdition));
-
-        vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
-        soundCreator.setEditionImplementation(address(0));
     }
 }
