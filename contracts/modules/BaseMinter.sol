@@ -310,25 +310,29 @@ abstract contract BaseMinter is IMinterModule {
 
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
+        uint128 affiliateFee;
         unchecked {
             if (affiliated) {
                 // Compute the affiliate fee.
                 // Won't overflow, as `remainingPayment` is 128 bits, and `affiliateFeeBPS` is 16 bits.
-                uint128 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
+                affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
                 // Deduct the affiliate fee from the remaining payment.
                 // Won't underflow as `affiliateFee <= remainingPayment`.
                 remainingPayment -= affiliateFee;
                 // Increment the affiliate fees accrued.
                 // Overflow is incredibly unrealistic.
                 _affiliateFeesAccrued[affiliate] += affiliateFee;
-                // Emit the event.
-                emit MintedWithAffiliate(edition, mintId, quantity, affiliateFee, affiliate);
             }
         }
 
         /* ------------------------- MINT --------------------------- */
 
-        ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity);
+        uint32 fromTokenId = uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity));
+
+        if (affiliated) {
+            // Emit the event.
+            emit MintedWithAffiliate(edition, mintId, fromTokenId, quantity, affiliateFee, affiliate);
+        }
 
         /* ------------------------- REFUND ------------------------- */
 

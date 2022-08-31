@@ -144,8 +144,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *
      * @param to       Address to mint to.
      * @param quantity Number of tokens to mint.
+     * @return fromTokenId The first token ID minted.
      */
-    function mint(address to, uint256 quantity) external payable;
+    function mint(address to, uint256 quantity) external payable returns (uint256 fromTokenId);
 
     /**
      * @dev Withdraws collected ETH royalties to the fundingRecipient
@@ -325,6 +326,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The configured value.
      */
     function isMetadataFrozen() external view returns (bool);
+
+    /**
+     * @dev Returns the next token ID to be minted.
+     * @return The latest value.
+     */
+    function nextTokenId() external view returns (uint256);
 
     /**
      * @dev Returns the total amount of tokens minted.

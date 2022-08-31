@@ -180,7 +180,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function mint(address to, uint256 quantity) public payable {
+    function mint(address to, uint256 quantity) public payable returns (uint256 fromTokenId) {
         address caller = msg.sender;
         // Only allow calls if caller has minter role, admin role, or is the owner.
         if (!hasAnyRole(caller, MINTER_ROLE | ADMIN_ROLE) && caller != owner()) {
@@ -188,6 +188,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         }
 
         uint256 totalMintedQty = _totalMinted();
+        fromTokenId = totalMintedQty + _startTokenId();
 
         unchecked {
             // Check if there are enough tokens to mint.
@@ -326,6 +327,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function nextTokenId() external view returns (uint256) {
+        return _nextTokenId();
+    }
 
     /**
      * @inheritdoc ISoundEditionV1
