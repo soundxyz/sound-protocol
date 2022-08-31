@@ -21,6 +21,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     uint32 constant START_TIME = 0;
     uint32 constant END_TIME = type(uint32).max;
     uint16 constant AFFILIATE_FEE_BPS = 0;
+    address constant NULL_AFFILIATE = address(0);
+    uint32 constant CLAIM_TICKET_0 = 0;
 
     // prettier-ignore
     event FixedPriceSignatureMintCreated(
@@ -115,11 +117,13 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
+        // This mint succeeds since it comes from authorized caller
         vm.prank(caller);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, NULL_AFFILIATE, sig, CLAIM_TICKET_0);
 
+        // This mint fails since it comes from address(this)
         vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, NULL_AFFILIATE, sig, CLAIM_TICKET_0);
     }
 
     function test_mintWithUnderpaidReverts() public {
@@ -132,7 +136,14 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.Underpaid.selector, PRICE * quantity - 1, PRICE * 2));
-        minter.mint{ value: PRICE * quantity - 1 }(address(edition), MINT_ID, quantity, sig, address(0));
+        minter.mint{ value: PRICE * quantity - 1 }(
+            address(edition),
+            MINT_ID,
+            quantity,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
     }
 
     function test_mintWhenSoldOutReverts() public {
@@ -143,14 +154,28 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, MAX_MINTABLE));
-        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig, address(0));
+        minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(
+            address(edition),
+            MINT_ID,
+            MAX_MINTABLE + 1,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig, address(0));
+        minter.mint{ value: PRICE * MAX_MINTABLE }(
+            address(edition),
+            MINT_ID,
+            MAX_MINTABLE,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
 
         vm.prank(caller);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, 0));
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, NULL_AFFILIATE, sig, CLAIM_TICKET_0);
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
@@ -160,14 +185,14 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, NULL_AFFILIATE, sig, CLAIM_TICKET_0);
 
         vm.prank(edition.owner());
         edition.revokeRoles(address(minter), edition.MINTER_ROLE());
 
         vm.prank(caller);
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, NULL_AFFILIATE, sig, CLAIM_TICKET_0);
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
@@ -183,7 +208,14 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         assertEq(data.totalMinted, 0);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, sig, address(0));
+        minter.mint{ value: PRICE * quantity }(
+            address(edition),
+            MINT_ID,
+            quantity,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 

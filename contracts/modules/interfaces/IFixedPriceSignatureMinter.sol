@@ -44,12 +44,12 @@ interface IFixedPriceSignatureMinter is IMinterModule {
 
     /**
      * @dev Emitted when a new fixed price signature mint is created.
-     * @param edition The edition address.
-     * @param mintId The mint ID.
-     * @param signer The address of the signer that authorizes mints.
-     * @param maxMintable The maximum number of tokens that can be minted.
-     * @param startTime The time minting can begin.
-     * @param endTime The time minting will end.
+     * @param edition         The edition address.
+     * @param mintId          The mint ID.
+     * @param signer          The address of the signer that authorizes mints.
+     * @param maxMintable     The maximum number of tokens that can be minted.
+     * @param startTime       The time minting can begin.
+     * @param endTime         The time minting will end.
      * @param affiliateFeeBPS The affiliate fee in basis points.
      */
     event FixedPriceSignatureMintCreated(
@@ -90,7 +90,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @param startTime       The time minting can begin.
      * @param endTime         The time minting will end.
      * @param affiliateFeeBPS The affiliate fee in basis points.
-     * @return mintId The ID of the new mint instance.
+     * @return mintId         The ID of the new mint instance.
      */
     function createEditionMint(
         address edition,
@@ -106,24 +106,49 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @dev Mints a token for a particular mint instance.
      * @param mintId    The mint ID.
      * @param quantity  The quantity of tokens to mint.
+     * @param affiliate The affiliate address.
      * @param signature The signed message to authorize the mint.
+     * @param claimTicket The ticket number to enforce single-use of the signature.
      */
     function mint(
         address edition,
         uint128 mintId,
         uint32 quantity,
+        address affiliate,
         bytes calldata signature,
-        address affiliate
+        uint32 claimTicket
     ) external payable;
+
+    /**
+     * @dev Validates the signed message required to mint.
+     * @param signature      The signed message to authorize the mint.
+     * @param expectedSigner The address of the signer that authorizes mints.
+     * @param claimTicket    The ticket number to enforce single-use of the signature.
+     * @param edition        The edition address.
+     * @param mintId         The mint instance ID.
+     * @param quantity       The quantity of tokens to mint.
+     * @param affiliate      The affiliate address.
+     * @return
+     */
+    function isValidSignature(
+        bytes calldata signature,
+        address expectedSigner,
+        uint32 claimTicket,
+        address edition,
+        uint128 mintId,
+        uint32 quantity,
+        address affiliate
+    ) external returns (bool);
 
     // =============================================================
     //               PUBLIC / EXTERNAL READ FUNCTIONS
     // =============================================================
 
     /**
-     * @dev Returns IFixedPriceSignatureMinter.MintInfo instance containing the full minter parameter set.
-     * @param edition The edition to get the mint instance for.
-     * @param mintId  The ID of the mint instance.
+     * @dev Returns     IFixedPriceSignatureMinter.MintInfo instance containing the full minter parameter set.
+     * @param edition   The edition to get the mint instance for.
+     * @param mintId    The ID of the mint instance.
+     * @return mintInfo Information about this mint.
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 }
