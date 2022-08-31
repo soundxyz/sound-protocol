@@ -51,16 +51,16 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint32 maxMintable_,
-        uint32 maxMintablePerAccount_
+        uint32 maxMintable,
+        uint32 maxMintablePerAccount
     ) public returns (uint128 mintId) {
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
         data.price = price;
-        data.maxMintable = maxMintable_;
-        data.maxMintablePerAccount = maxMintablePerAccount_;
+        data.maxMintable = maxMintable;
+        data.maxMintablePerAccount = maxMintablePerAccount;
         // prettier-ignore
         emit MerkleDropMintCreated(
             edition,
@@ -70,8 +70,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
             startTime,
             endTime,
             affiliateFeeBPS,
-            maxMintable_,
-            maxMintablePerAccount_
+            maxMintable,
+            maxMintablePerAccount
         );
     }
 

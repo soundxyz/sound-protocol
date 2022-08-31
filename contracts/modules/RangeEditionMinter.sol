@@ -52,7 +52,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint16 affiliateFeeBPS,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
-        uint32 maxMintablePerAccount_
+        uint32 maxMintablePerAccount
     ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint128 mintId) {
         if (!(maxMintableLower <= maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
@@ -63,7 +63,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.closingTime = closingTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
-        data.maxMintablePerAccount = maxMintablePerAccount_;
+        data.maxMintablePerAccount = maxMintablePerAccount;
 
         // prettier-ignore
         emit RangeEditionMintCreated(
@@ -76,7 +76,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             affiliateFeeBPS,
             maxMintableLower,
             maxMintableUpper,
-            maxMintablePerAccount_
+            maxMintablePerAccount
         );
     }
 

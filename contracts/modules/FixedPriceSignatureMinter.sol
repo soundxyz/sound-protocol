@@ -39,7 +39,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address edition,
         uint96 price,
         address signer,
-        uint32 maxMintable_,
+        uint32 maxMintable,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
@@ -50,14 +50,14 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
         data.signer = signer;
-        data.maxMintable = maxMintable_;
+        data.maxMintable = maxMintable;
         // prettier-ignore
         emit FixedPriceSignatureMintCreated(
             edition,
             mintId,
             price,
             signer,
-            maxMintable_,
+            maxMintable,
             startTime,
             endTime,
             affiliateFeeBPS
