@@ -97,11 +97,16 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         // Require that the increased value does not exceed `maxMintable`.
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, _maxMintable);
 
-        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // check the additional quantity does not exceed the set maximum
-        if ((userMintedBalance + quantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
-
-        mintedTallies[edition][mintId][msg.sender] = userMintedBalance + quantity;
+        unchecked {
+            uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+            // Check the additional quantity does not exceed the set maximum.
+            // If `quantity` is large enough to cause an overflow,
+            // `_mint` will give an out of gas error.
+            uint256 tally = userMintedBalance + quantity;
+            if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
+            // Update the minted tally for this account
+            mintedTallies[edition][mintId][msg.sender] = tally;
+        }
 
         _mint(edition, mintId, quantity, affiliate);
     }

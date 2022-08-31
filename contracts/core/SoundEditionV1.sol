@@ -220,8 +220,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function withdrawERC20(address[] calldata tokens) external {
-        for (uint256 i; i < tokens.length; ++i) {
-            SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+        unchecked {
+            uint256 n = tokens.length;
+            for (uint256 i; i != n; ++i) {
+                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+            }
         }
     }
 
