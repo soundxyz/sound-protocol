@@ -206,6 +206,9 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_mintWithUnderpaidReverts() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
+        uint32 quantity = 2;
+        uint32 signedQuantity = quantity;
+
         address buyer = getFundedAccount(1);
         bytes memory sig = _getSignature(
             buyer,
@@ -213,12 +216,9 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             address(minter),
             MINT_ID,
             CLAIM_TICKET_0,
-            SIGNED_QUANTITY_1,
+            signedQuantity,
             NULL_AFFILIATE
         );
-
-        uint32 quantity = 2;
-        uint32 signedQuantity = quantity;
 
         vm.prank(buyer);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.Underpaid.selector, PRICE * quantity - 1, PRICE * 2));
