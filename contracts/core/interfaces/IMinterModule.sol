@@ -80,9 +80,9 @@ interface IMinterModule is IERC165 {
 
     /**
      * @dev The number minted has exceeded the max mintable amount.
-     * @param maxMintable The total maximum mintable number of tokens.
+     * @param available The number of tokens remaining available for mint.
      */
-    error MaxMintableReached(uint32 maxMintable);
+    error ExceedsAvailableSupply(uint32 available);
 
     /**
      * @dev The mint is not opened.

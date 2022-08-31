@@ -349,11 +349,22 @@ abstract contract BaseMinter is IMinterModule {
     }
 
     /**
-     * @dev Throws error if `totalMinted > maxMintable`.
+     * @dev Increments `totalMinted` with `quantity`, reverting if `totalMinted + quantity > maxMintable`.
      * @param totalMinted The current total number of minted tokens.
      * @param maxMintable The maximum number of mintable tokens.
+     * @return `totalMinted` + `quantity`.
      */
-    function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
-        if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
+    function _incrementTotalMinted(
+        uint32 totalMinted,
+        uint32 quantity,
+        uint32 maxMintable
+    ) internal pure returns (uint32) {
+        unchecked {
+            uint256 sum = uint256(totalMinted) + uint256(quantity);
+            uint32 available;
+            if (maxMintable > totalMinted) available = maxMintable - totalMinted;
+            if (sum > maxMintable) revert ExceedsAvailableSupply(available);
+            return uint32(sum);
+        }
     }
 }

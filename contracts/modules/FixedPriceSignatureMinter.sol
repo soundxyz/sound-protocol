@@ -75,9 +75,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
-        uint32 nextTotalMinted = data.totalMinted + quantity;
-        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
-        data.totalMinted = nextTotalMinted;
+
+        data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition, mintId));
         hash = hash.toEthSignedMessageHash();
