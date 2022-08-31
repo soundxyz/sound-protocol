@@ -139,7 +139,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         if (storedBit != 0) revert SignatureAlreadyUsed();
 
         // Flip the bit to 1 to indicate that the ticket has been claimed
-        claimTickets[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
+        _claimTickets[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
 
         bytes32 digest = keccak256(
             abi.encodePacked(
@@ -255,7 +255,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         }
 
         // cache the local group for efficiency
-        ticketGroup = claimTickets[edition][mintId][ticketGroupIdx];
+        ticketGroup = _claimTickets[edition][mintId][ticketGroupIdx];
 
         // gets the stored bit
         storedBit = (ticketGroup >> ticketGroupOffset) & uint256(1);

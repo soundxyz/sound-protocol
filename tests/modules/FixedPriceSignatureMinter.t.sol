@@ -48,12 +48,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         return vm.addr(SIGNER_PRIVATE_KEY);
     }
 
-    // function _getSignature(address buyer, address edition) internal returns (bytes memory) {
-    //     bytes32 digest = keccak256(abi.encode(buyer, address(edition), MINT_ID)).toEthSignedMessageHash();
-    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(SIGNER_PRIVATE_KEY, digest);
-    //     return abi.encodePacked(r, s, v);
-    // }
-
     function _getSignature(
         address buyer,
         address edition,
@@ -390,6 +384,62 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         data = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(data.totalMinted, quantity);
+    }
+
+    function test_multipleMintsFromSameBuyer() public {
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        uint32 quantity = 1;
+        uint32 signedQuantity = 2;
+        uint32 claimTicket1 = 0;
+        uint32 claimTicket2 = 1;
+        address buyer = getFundedAccount(1);
+
+        bytes memory sig1 = _getSignature(
+            buyer,
+            address(edition),
+            address(minter),
+            MINT_ID,
+            claimTicket1,
+            signedQuantity,
+            NULL_AFFILIATE
+        );
+
+        vm.prank(buyer);
+        minter.mint{ value: PRICE * quantity }(
+            address(edition),
+            MINT_ID,
+            quantity,
+            signedQuantity,
+            NULL_AFFILIATE,
+            sig1,
+            claimTicket1
+        );
+
+        assertEq(edition.balanceOf(buyer), uint256(quantity));
+
+        bytes memory sig2 = _getSignature(
+            buyer,
+            address(edition),
+            address(minter),
+            MINT_ID,
+            claimTicket2,
+            signedQuantity,
+            NULL_AFFILIATE
+        );
+
+        vm.prank(buyer);
+        minter.mint{ value: PRICE * quantity }(
+            address(edition),
+            MINT_ID,
+            quantity,
+            signedQuantity,
+            NULL_AFFILIATE,
+            sig2,
+            claimTicket2
+        );
+
+        assertEq(edition.balanceOf(buyer), uint256(quantity * 2));
     }
 
     function test_supportsInterface() public {
