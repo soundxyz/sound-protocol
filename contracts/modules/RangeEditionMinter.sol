@@ -95,9 +95,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
 
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        uint32 nextTotalMinted = data.totalMinted + quantity;
-        _requireNotSoldOut(nextTotalMinted, _maxMintable);
-        data.totalMinted = nextTotalMinted;
+        data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, _maxMintable);
 
         uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
         // check the additional quantity does not exceed the set maximum
