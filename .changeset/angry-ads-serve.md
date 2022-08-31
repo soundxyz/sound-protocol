@@ -1,5 +1,5 @@
 ---
-"@soundxyz/sound-protocol": patch
+"@soundxyz/sound-protocol": minor
 ---
 
 typechain fix
