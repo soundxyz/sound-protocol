@@ -68,8 +68,6 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
         // Create Sound Edition proxy
         soundEdition = payable(Clones.clone(soundEditionImplementation));
 
-        emit SoundEditionCreated(soundEdition, msg.sender);
-
         // Initialize proxy
         assembly {
             // Grab the free memory pointer.
@@ -81,8 +79,8 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
             // Call the initializer, and revert if the call fails.
             if iszero(
                 call(
-                    gas(),
-                    soundEdition,
+                    gas(), // Gas remaining.
+                    soundEdition, // Address of the edition.
                     0, // `msg.value` of the call.
                     m, // Start of input.
                     initData.length, // Length of input
@@ -95,6 +93,8 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
                 revert(0x00, returndatasize())
             }
         }
+
+        emit SoundEditionCreated(soundEdition, msg.sender);
     }
 
     /**
