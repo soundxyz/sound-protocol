@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
 
 import "../TestConfig.sol";
-import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
+import { ISoundFeeRegistry, SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 
 contract SoundFeeRegistryTests is TestConfig {
     event SoundFeeAddressSet(address soundFeeAddress);
@@ -10,12 +10,12 @@ contract SoundFeeRegistryTests is TestConfig {
 
     function test_deployFeeRegistry(address soundFeeAddress, uint16 platformFeeBPS) public {
         if (soundFeeAddress == address(0)) {
-            vm.expectRevert(SoundFeeRegistry.InvalidSoundFeeAddress.selector);
+            vm.expectRevert(ISoundFeeRegistry.InvalidSoundFeeAddress.selector);
             new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
             return;
         }
         if (platformFeeBPS > MAX_BPS) {
-            vm.expectRevert(SoundFeeRegistry.InvalidPlatformFeeBPS.selector);
+            vm.expectRevert(ISoundFeeRegistry.InvalidPlatformFeeBPS.selector);
             new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
             return;
         }
@@ -26,9 +26,9 @@ contract SoundFeeRegistryTests is TestConfig {
         assertEq(soundFeeRegistry.platformFeeBPS(), platformFeeBPS);
     }
 
-    // ================================
-    // setSoundFeeAddress()
-    // ================================
+    // =============================================================
+    //                     setSoundFeeAddress()
+    // =============================================================
 
     // Test if setSoundFeeAddress only callable by owner
     function test_setSoundFeeAddressRevertsForNonOwner() external {
@@ -40,7 +40,7 @@ contract SoundFeeRegistryTests is TestConfig {
 
     function test_setSoundFeeAddress(address newSoundFeeAddress) external {
         if (newSoundFeeAddress == address(0)) {
-            vm.expectRevert(SoundFeeRegistry.InvalidSoundFeeAddress.selector);
+            vm.expectRevert(ISoundFeeRegistry.InvalidSoundFeeAddress.selector);
             feeRegistry.setSoundFeeAddress(newSoundFeeAddress);
             return;
         }
@@ -52,9 +52,9 @@ contract SoundFeeRegistryTests is TestConfig {
         assertEq(feeRegistry.soundFeeAddress(), newSoundFeeAddress);
     }
 
-    // ================================
-    // setPlatformFeeBPS()
-    // ================================
+    // =============================================================
+    //                      setPlatformFeeBPS()
+    // =============================================================
 
     // Test if setPlatformFeeBPS only callable by owner
     function test_setPlatformFeeBPSRevertsForNonOwner() external {
@@ -66,7 +66,7 @@ contract SoundFeeRegistryTests is TestConfig {
 
     function test_setPlatformFeeBPS(uint16 newPlatformFeeBPS) external {
         if (newPlatformFeeBPS > MAX_BPS) {
-            vm.expectRevert(SoundFeeRegistry.InvalidPlatformFeeBPS.selector);
+            vm.expectRevert(ISoundFeeRegistry.InvalidPlatformFeeBPS.selector);
             feeRegistry.setPlatformFeeBPS(newPlatformFeeBPS);
             return;
         }
