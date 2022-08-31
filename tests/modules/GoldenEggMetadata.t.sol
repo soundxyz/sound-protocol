@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { Strings } from "openzeppelin/utils/Strings.sol";
-import "forge-std/console.sol";
+
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
@@ -66,14 +66,8 @@ contract GoldenEggMetadataTests is TestConfig {
         );
     }
 
-    function test_getGoldenEggTokenId(
-        uint32 maxMintable,
-        uint32 mintRandomnessTimeThreshold,
-        uint32 mintRandomnessTokenThreshold,
-        uint32 mintQuantity
-    ) external {
-        vm.assume(maxMintable > 0 && maxMintable < 5000);
-        vm.assume(mintQuantity > 0 && mintQuantity <= maxMintable);
+    function test_getGoldenEggTokenId(uint32 mintRandomnessTokenThreshold, uint32 mintQuantity) external {
+        vm.assume(mintQuantity > 0 && mintQuantity < 5000);
 
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
 
@@ -86,29 +80,12 @@ contract GoldenEggMetadataTests is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                maxMintable,
-                mintRandomnessTimeThreshold,
-                mintRandomnessTokenThreshold
+                EDITION_MAX_MINTABLE,
+                mintRandomnessTokenThreshold,
+                type(uint32).max // mintRandomnessTimeThreshold
             )
         );
 
-        _createMintInstanceAndMint(edition, maxMintable, mintQuantity);
-
-        bool isRandomnessLocked = mintQuantity >= mintRandomnessTokenThreshold ||
-            block.timestamp >= mintRandomnessTimeThreshold;
-
-        uint256 expectedGoldenEggId = mintRandomnessTokenThreshold == 0 ? 0 : isRandomnessLocked
-            ? (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1
-            : 0;
-
-        assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
-    }
-
-    function _createMintInstanceAndMint(
-        SoundEditionV1 edition,
-        uint32 maxMintable,
-        uint32 mintQuantity
-    ) public {
         RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
@@ -120,12 +97,20 @@ contract GoldenEggMetadataTests is TestConfig {
             END_TIME - 1,
             END_TIME,
             AFFILIATE_FEE_BPS,
-            maxMintable, // max mintable lower
-            maxMintable, // max mintable upper
-            maxMintable // max mintable per account
+            EDITION_MAX_MINTABLE, // max mintable lower
+            EDITION_MAX_MINTABLE, // max mintable upper
+            EDITION_MAX_MINTABLE // max mintable per account
         );
 
         minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, mintQuantity, address(0));
+
+        bool isRandomnessLocked = mintQuantity >= mintRandomnessTokenThreshold;
+
+        uint256 expectedGoldenEggId = mintRandomnessTokenThreshold == 0 ? 0 : isRandomnessLocked
+            ? (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1
+            : 0;
+
+        assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
     }
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
