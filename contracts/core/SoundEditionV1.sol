@@ -84,7 +84,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     string public baseURI;
 
     /**
-     * @dev The contract URI used by Opensea.
+     * @dev The contract URI to be used by Opensea.
      *      See: https://docs.opensea.io/docs/contract-level-metadata
      */
     string public contractURI;
