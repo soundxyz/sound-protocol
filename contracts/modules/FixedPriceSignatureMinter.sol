@@ -38,9 +38,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
     /**
      * @dev Claim tickets each representing a signed message which can only be used once.
-     *      edition -> mintId -> index -> bit array
+     *      `edition` => `mintId` => `index` => bit array
      */
-    mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal claimTickets;
+    mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal _claimTickets;
 
     // =============================================================
     //                          CONSTRUCTOR
