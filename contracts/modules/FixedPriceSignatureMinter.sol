@@ -95,7 +95,10 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address, /* minter */
         uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
-        return _editionMintData[edition][mintId].price * quantity;
+        unchecked {
+            // Won't overflow, as `price` is 96 bits, and `quantity` is 32 bits.
+            return _editionMintData[edition][mintId].price * quantity;
+        }
     }
 
     /**
