@@ -69,16 +69,6 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
         emit PlatformFeeSet(platformFeeBPS_);
     }
 
-    /**
-     * @inheritdoc ISoundFeeRegistry
-     */
-    function platformFee(uint128 requiredEtherValue) external view returns (uint128 fee) {
-        // Won't overflow, as `requiredEtherValue` is 128 bits, and `platformFeeBPS` is 16 bits.
-        unchecked {
-            fee = (requiredEtherValue * platformFeeBPS) / _MAX_BPS;
-        }
-    }
-
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
