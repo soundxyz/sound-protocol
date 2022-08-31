@@ -189,17 +189,23 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         uint256 totalMintedQty = _totalMinted();
 
-        // Check if there are enough tokens to mint.
-        if (totalMintedQty + quantity > editionMaxMintable) {
-            uint256 available = editionMaxMintable - totalMintedQty;
-            revert ExceedsEditionAvailableSupply(uint32(available));
+        unchecked {
+            // Check if there are enough tokens to mint.
+            // If quantity is big enough to cause an overflow,
+            // `ERC721A._mint` will revert with an out of gas error.
+            if (totalMintedQty + quantity > editionMaxMintable) {
+                uint256 available = editionMaxMintable - totalMintedQty;
+                revert ExceedsEditionAvailableSupply(uint32(available));
+            }
         }
 
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
         if (totalMintedQty <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
-            mintRandomness = bytes9(blockhash(block.number - 1));
+            unchecked {
+                mintRandomness = bytes9(blockhash(block.number - 1));
+            }
         }
     }
 
@@ -214,8 +220,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function withdrawERC20(address[] calldata tokens) external {
-        for (uint256 i; i < tokens.length; ++i) {
-            SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+        unchecked {
+            uint256 n = tokens.length;
+            for (uint256 i; i != n; ++i) {
+                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+            }
         }
     }
 
