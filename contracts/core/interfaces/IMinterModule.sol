@@ -48,24 +48,45 @@ interface IMinterModule is IERC165 {
     /**
      * @dev Emitted when the `paused` status of `edition` is updated.
      * @param edition The edition address.
-     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
-     * @param paused The new paused status.
+     * @param mintId  The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param paused  The new paused status.
      */
     event MintPausedSet(address indexed edition, uint128 mintId, bool paused);
 
     /**
      * @dev Emitted when the `paused` status of `edition` is updated.
-     * @param edition The edition address.
-     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param edition   The edition address.
+     * @param mintId    The mint ID, to distinguish beteen multiple mints for the same edition.
      * @param startTime The start time of the mint.
-     * @param endTime The end time of the mint.
+     * @param endTime   The end time of the mint.
      */
     event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
     /**
      * @notice Emitted when the `affiliateFeeBPS` is updated.
+     * @param edition The edition address.
+     * @param mintId  The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param bps     The affiliate fee basis points.
      */
-    event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 feeBPS);
+    event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 bps);
+
+    /**
+     * @notice Emitted when a mint with an affiliate happens.
+     * @param edition      The edition address.
+     * @param mintId       The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param fromTokenId  The first token ID of the batch.
+     * @param quantity     The size of the batch.
+     * @param affiliateFee The cut paid to the affiliate.
+     * @param affiliate    The affiliate's address.
+     */
+    event MintedWithAffiliate(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 fromTokenId,
+        uint32 quantity,
+        uint128 affiliateFee,
+        address affiliate
+    );
 
     // =============================================================
     //                            ERRORS

@@ -27,6 +27,15 @@ contract MintControllerBaseTests is TestConfig {
 
     event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 affiliateFeeBPS);
 
+    event MintedWithAffiliate(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 fromTokenId,
+        uint32 quantity,
+        uint128 affiliateFee,
+        address affiliate
+    );
+
     MockMinter public minter;
 
     uint32 constant START_TIME = 0;
@@ -407,6 +416,17 @@ contract MintControllerBaseTests is TestConfig {
         if (affiliated) {
             // The affiliate fees are deducted after the platform fees.
             expectedAffiliateFees = ((requiredEtherValue - expectedPlatformFees) * affiliateFeeBPS) / minter.MAX_BPS();
+            // Expect an event.
+            uint32 fromTokenId = uint32(edition.nextTokenId());
+            vm.expectEmit(true, true, true, true);
+            emit MintedWithAffiliate(
+                address(edition),
+                mintId,
+                fromTokenId,
+                quantity,
+                uint128(expectedAffiliateFees),
+                affiliate
+            );
         }
 
         minter.mint{ value: requiredEtherValue }(address(edition), mintId, quantity, affiliate);
