@@ -315,7 +315,7 @@ abstract contract BaseMinter is IMinterModule {
             uint128 affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
             // Deduct the affiliate fee from the remaining payment.
             remainingPayment -= affiliateFee;
-            // Increment the affiliate fees accrued
+            // Increment the affiliate fees accrued.
             _affiliateFeesAccrued[affiliate] += affiliateFee;
         }
 
@@ -349,11 +349,29 @@ abstract contract BaseMinter is IMinterModule {
     }
 
     /**
-     * @dev Throws error if `totalMinted > maxMintable`.
+     * @dev Increments `totalMinted` with `quantity`, reverting if `totalMinted + quantity > maxMintable`.
      * @param totalMinted The current total number of minted tokens.
      * @param maxMintable The maximum number of mintable tokens.
+     * @return `totalMinted` + `quantity`.
      */
-    function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
-        if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
+    function _incrementTotalMinted(
+        uint32 totalMinted,
+        uint32 quantity,
+        uint32 maxMintable
+    ) internal pure returns (uint32) {
+        unchecked {
+            // Won't overflow as both are 32 bits.
+            uint256 sum = uint256(totalMinted) + uint256(quantity);
+            if (sum > maxMintable) {
+                uint32 available;
+                // Note that the `maxMintable` may vary and drop over time
+                // and cause `totalMinted` to be greater than `maxMintable`.
+                if (maxMintable > totalMinted) {
+                    available = maxMintable - totalMinted;
+                }
+                revert ExceedsAvailableSupply(available);
+            }
+            return uint32(sum);
+        }
     }
 }

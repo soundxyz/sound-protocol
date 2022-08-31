@@ -298,7 +298,9 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 totalMinted;
 
         if (quantityToBuyBeforeClosing > MAX_MINTABLE_UPPER) {
-            vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE_UPPER));
+            vm.expectRevert(
+                abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, MAX_MINTABLE_UPPER - totalMinted)
+            );
         } else {
             totalMinted = quantityToBuyBeforeClosing;
         }
@@ -311,7 +313,8 @@ contract RangeEditionMinterTests is TestConfig {
         );
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
-            vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE_LOWER));
+            uint32 available = MAX_MINTABLE_LOWER > totalMinted ? MAX_MINTABLE_LOWER - totalMinted : 0;
+            vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, available));
         }
         vm.warp(CLOSING_TIME);
         minter.mint{ value: quantityToBuyAfterClosing * PRICE }(
@@ -320,6 +323,12 @@ contract RangeEditionMinterTests is TestConfig {
             quantityToBuyAfterClosing,
             address(0)
         );
+    }
+
+    function test_mintRevertsForSoldOut() public {
+        test_mintRevertsForSoldOut(1, 1);
+        test_mintRevertsForSoldOut(MAX_MINTABLE_UPPER, MAX_MINTABLE_LOWER);
+        test_mintRevertsForSoldOut(MAX_MINTABLE_LOWER, MAX_MINTABLE_UPPER);
     }
 
     function test_mintBeforeAndAfterClosingTimeBaseCase() public {
@@ -333,7 +342,7 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
         vm.warp(CLOSING_TIME);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, maxMintableLower));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, maxMintableLower));
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
     }
 

@@ -89,9 +89,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         // Increase `totalMinted` by `requestedQuantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
-        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
-        data.totalMinted = nextTotalMinted;
+        data.totalMinted = _incrementTotalMinted(data.totalMinted, requestedQuantity, data.maxMintable);
 
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);

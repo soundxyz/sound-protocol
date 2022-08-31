@@ -76,5 +76,8 @@ contract SoundFeeRegistryTests is TestConfig {
         feeRegistry.setPlatformFeeBPS(newPlatformFeeBPS);
 
         assertEq(feeRegistry.platformFeeBPS(), newPlatformFeeBPS);
+
+        uint128 requiredEtherValue = 1 ether;
+        assertEq(feeRegistry.platformFee(requiredEtherValue), (requiredEtherValue * newPlatformFeeBPS) / MAX_BPS);
     }
 }
