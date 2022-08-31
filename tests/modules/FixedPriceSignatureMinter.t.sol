@@ -17,7 +17,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     uint96 constant PRICE = 1;
     uint32 constant MAX_MINTABLE = 5;
     uint256 constant SIGNER_PRIVATE_KEY = 1;
-    uint256 constant MINT_ID = 0;
+    uint128 constant MINT_ID = 0;
     uint32 constant START_TIME = 0;
     uint32 constant END_TIME = type(uint32).max;
     uint16 constant AFFILIATE_FEE_BPS = 0;
@@ -25,7 +25,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     // prettier-ignore
     event FixedPriceSignatureMintCreated(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint96 price,
         address signer,
         uint32 maxMintable,
@@ -122,15 +122,17 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
     }
 
-    function test_mintWithWrongEtherValueReverts() public {
+    function test_mintWithUnderpaidReverts() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address caller = getFundedAccount(1);
         bytes memory sig = _getSignature(caller, address(edition));
 
+        uint32 quantity = 2;
+
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.WrongEtherValue.selector, PRICE * 2, PRICE));
-        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 1, sig, address(0));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.Underpaid.selector, PRICE * quantity - 1, PRICE * 2));
+        minter.mint{ value: PRICE * quantity - 1 }(address(edition), MINT_ID, quantity, sig, address(0));
     }
 
     function test_mintWhenSoldOutReverts() public {

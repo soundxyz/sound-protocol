@@ -23,14 +23,14 @@ contract RangeEditionMinterTests is TestConfig {
 
     uint32 constant MAX_MINTABLE_UPPER = 10;
 
-    uint256 constant MINT_ID = 0;
+    uint128 constant MINT_ID = 0;
 
     uint32 constant MAX_MINTABLE_PER_ACCOUNT = 0;
 
     // prettier-ignore
     event RangeEditionMintCreated(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint96 price,
         uint32 startTime,
         uint32 closingTime,
@@ -41,16 +41,16 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintablePerAccount
     );
 
-    event ClosingTimeSet(address indexed edition, uint256 indexed mintId, uint32 closingTime);
+    event ClosingTimeSet(address indexed edition, uint128 indexed mintId, uint32 closingTime);
 
     event MaxMintableRangeSet(
         address indexed edition,
-        uint256 indexed mintId,
+        uint128 indexed mintId,
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     );
 
-    event TimeRangeSet(address indexed edition, uint256 indexed mintId, uint32 startTime, uint32 endTime);
+    event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
@@ -107,7 +107,7 @@ contract RangeEditionMinterTests is TestConfig {
         if (!(startTime < closingTime && closingTime < endTime)) {
             vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
             hasRevert = true;
-        } else if (!(maxMintableLower < maxMintableUpper)) {
+        } else if (!(maxMintableLower <= maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IRangeEditionMinter.InvalidMaxMintableRange.selector,
@@ -244,7 +244,7 @@ contract RangeEditionMinterTests is TestConfig {
         assertEq(data.totalMinted, quantity);
     }
 
-    function test_mintRevertForWrongEtherValue() public {
+    function test_mintRevertForUnderpaid() public {
         uint32 quantity = 2;
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(quantity);
 
@@ -253,7 +253,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint256 requiredPayment = quantity * PRICE;
 
         bytes memory expectedRevert = abi.encodeWithSelector(
-            IMinterModule.WrongEtherValue.selector,
+            IMinterModule.Underpaid.selector,
             requiredPayment - 1,
             requiredPayment
         );
@@ -407,7 +407,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         bool hasRevert;
 
-        if (!(maxMintableLower < maxMintableUpper)) {
+        if (!(maxMintableLower <= maxMintableUpper)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IRangeEditionMinter.InvalidMaxMintableRange.selector,
