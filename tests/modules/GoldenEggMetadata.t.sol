@@ -66,6 +66,53 @@ contract GoldenEggMetadataTests is TestConfig {
         );
     }
 
+    function test_getGoldenEggTokenId(uint32 mintRandomnessTokenThreshold, uint32 mintQuantity) external {
+        vm.assume(mintQuantity > 0 && mintQuantity < 5000);
+
+        GoldenEggMetadata eggModule = new GoldenEggMetadata();
+
+        SoundEditionV1 edition = SoundEditionV1(
+            soundCreator.createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                eggModule,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                EDITION_MAX_MINTABLE,
+                mintRandomnessTokenThreshold,
+                type(uint32).max // mintRandomnessTimeThreshold
+            )
+        );
+
+        RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
+
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
+
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            0,
+            END_TIME - 1,
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            EDITION_MAX_MINTABLE, // max mintable lower
+            EDITION_MAX_MINTABLE, // max mintable upper
+            EDITION_MAX_MINTABLE // max mintable per account
+        );
+
+        minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, mintQuantity, address(0));
+
+        bool isRandomnessLocked = mintQuantity >= mintRandomnessTokenThreshold;
+
+        uint256 expectedGoldenEggId = mintRandomnessTokenThreshold == 0 ? 0 : isRandomnessLocked
+            ? (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1
+            : 0;
+
+        assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
+    }
+
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
     function test_getTokenURIBeforeAuctionEnded() external {
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition();
