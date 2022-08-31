@@ -3,13 +3,11 @@ pragma solidity ^0.8.16;
 
 import { LibString } from "solady/utils/LibString.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
-import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
+import { IGoldenEggMetadata } from "@modules/interfaces/IGoldenEggMetadata.sol";
 
-contract GoldenEggMetadata is IMetadataModule {
+contract GoldenEggMetadata is IGoldenEggMetadata {
     /**
-     * @dev When registered on a SoundEdition proxy, its `tokenURI` redirects execution to this `tokenURI`.
-     * @param tokenId The token ID to retrieve the token URI for.
-     * @return The token URI string.
+     * @inheritdoc IGoldenEggMetadata
      */
     function tokenURI(uint256 tokenId) external view returns (string memory) {
         uint256 goldenEggTokenId = getGoldenEggTokenId(ISoundEditionV1(msg.sender));
@@ -23,9 +21,7 @@ contract GoldenEggMetadata is IMetadataModule {
     }
 
     /**
-     * @dev Returns token ID for the golden egg after the `mintRandomness` is locked, else returns 0.
-     * @param edition The edition address.
-     * @return tokenId The token ID for the golden egg.
+     * @inheritdoc IGoldenEggMetadata
      */
     function getGoldenEggTokenId(ISoundEditionV1 edition) public view returns (uint256 tokenId) {
         uint32 mintRandomnessTokenThreshold = edition.mintRandomnessTokenThreshold();
