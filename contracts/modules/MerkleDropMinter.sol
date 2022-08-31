@@ -95,12 +95,16 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // check the additional requestedQuantity does not exceed the set maximum
-        if ((userMintedBalance + requestedQuantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
-
-        // Update the minted tally for this account
-        mintedTallies[edition][mintId][msg.sender] = userMintedBalance + requestedQuantity;
+        unchecked {
+            uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+            // Check the additional requestedQuantity does not exceed the set maximum.
+            // If `requestedQuantity` is large enough to cause an overflow,
+            // `_mint` will give an out of gas error.
+            uint256 tally = userMintedBalance + requestedQuantity;
+            if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
+            // Update the minted tally for this account
+            mintedTallies[edition][mintId][msg.sender] = tally;
+        }
 
         _mint(edition, mintId, requestedQuantity, affiliate);
 
@@ -120,7 +124,10 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         address, /* minter */
         uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
-        return _editionMintData[edition][mintId].price * quantity;
+        unchecked {
+            // Won't overflow, as `price` is 96 bits, and `quantity` is 32 bits.
+            return _editionMintData[edition][mintId].price * quantity;
+        }
     }
 
     /**
