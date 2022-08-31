@@ -69,12 +69,11 @@ contract GoldenEggMetadataTests is TestConfig {
     function test_getGoldenEggTokenId(
         uint32 maxMintable,
         uint32 mintRandomnessTimeThreshold,
-        uint256 mintedAtTime,
         uint32 mintRandomnessTokenThreshold,
-        uint32 purchaseQuantity
+        uint32 mintQuantity
     ) external {
         vm.assume(maxMintable > 0 && maxMintable < 5000);
-        vm.assume(purchaseQuantity > 0 && purchaseQuantity <= maxMintable);
+        vm.assume(mintQuantity > 0 && mintQuantity <= maxMintable);
 
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
 
@@ -93,19 +92,13 @@ contract GoldenEggMetadataTests is TestConfig {
             )
         );
 
-        vm.warp(mintedAtTime);
-        _createMintInstanceAndMint(edition, maxMintable, purchaseQuantity);
+        _createMintInstanceAndMint(edition, maxMintable, mintQuantity);
 
-        bool isRandomnessLocked = purchaseQuantity == maxMintable ||
-            purchaseQuantity >= mintRandomnessTokenThreshold ||
-            mintedAtTime >= mintRandomnessTimeThreshold;
+        bool isRandomnessLocked = mintQuantity >= mintRandomnessTokenThreshold ||
+            block.timestamp >= mintRandomnessTimeThreshold;
 
-        uint32 upperBoundForGoldenEgg = isRandomnessLocked && (mintRandomnessTokenThreshold > 0)
-            ? mintRandomnessTokenThreshold
-            : maxMintable;
-
-        uint256 expectedGoldenEggId = isRandomnessLocked
-            ? (uint256(uint72(edition.mintRandomness())) % upperBoundForGoldenEgg) + 1
+        uint256 expectedGoldenEggId = mintRandomnessTokenThreshold == 0 ? 0 : isRandomnessLocked
+            ? (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1
             : 0;
 
         assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
@@ -114,7 +107,7 @@ contract GoldenEggMetadataTests is TestConfig {
     function _createMintInstanceAndMint(
         SoundEditionV1 edition,
         uint32 maxMintable,
-        uint32 purchaseQuantity
+        uint32 mintQuantity
     ) public {
         RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
 
@@ -132,7 +125,7 @@ contract GoldenEggMetadataTests is TestConfig {
             maxMintable // max mintable per account
         );
 
-        minter.mint{ value: PRICE * purchaseQuantity }(address(edition), MINT_ID, purchaseQuantity, address(0));
+        minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, mintQuantity, address(0));
     }
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
