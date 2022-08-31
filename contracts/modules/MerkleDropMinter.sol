@@ -15,21 +15,35 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  * @author Sound.xyz
  */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
+
+    /**
+     * @dev Edition mint data.
+     *      Maps `edition` => `mintId` => value.
+     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev Number of tokens minted by each buyer address
-     * edition => mintId => buyer => mintedTallies
+     *      Maps: `edition` => `mintId` => `buyer` => value.
      */
     mapping(address => mapping(uint128 => mapping(address => uint256))) public mintedTallies;
 
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /// @inheritdoc IMerkleDropMinter
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
@@ -61,7 +75,9 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         );
     }
 
-    /// @inheritdoc IMerkleDropMinter
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
     function mint(
         address edition,
         uint128 mintId,
@@ -93,10 +109,13 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         emit DropClaimed(msg.sender, requestedQuantity);
     }
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
+    /**
+     * @inheritdoc IMinterModule
+     */
     function totalPrice(
         address edition,
         uint128 mintId,
@@ -135,7 +154,9 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
     }
 
-    /// @inheritdoc IMinterModule
+    /**
+     * @inheritdoc IMinterModule
+     */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IMerkleDropMinter).interfaceId;
     }

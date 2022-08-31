@@ -13,9 +13,9 @@ import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
  * @dev The `BaseMinter` class maintains a central storage record of edition mint instances.
  */
 abstract contract BaseMinter is IMinterModule {
-    // ================================
-    // CONSTANTS
-    // ================================
+    // =============================================================
+    //                           CONSTANTS
+    // =============================================================
 
     /**
      * @dev This is the denominator, in basis points (BPS), for:
@@ -24,9 +24,9 @@ abstract contract BaseMinter is IMinterModule {
      */
     uint16 private constant _MAX_BPS = 10_000;
 
-    // ================================
-    // STORAGE
-    // ================================
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
 
     /**
      * @dev The next mint ID. Shared amongst all editions connected.
@@ -48,35 +48,27 @@ abstract contract BaseMinter is IMinterModule {
      */
     mapping(address => uint128) private _affiliateFeesAccrued;
 
+    /**
+     * @dev The fee registry. Used for handling platform fees.
+     */
     ISoundFeeRegistry public immutable feeRegistry;
 
-    // ================================
-    // ACCESS MODIFIERS
-    // ================================
-
-    /**
-     * @dev Restricts the function to be only callable by the owner or admin of `edition`.
-     * @param edition The edition address.
-     */
-    modifier onlyEditionOwnerOrAdmin(address edition) virtual {
-        if (
-            msg.sender != OwnableRoles(edition).owner() &&
-            !OwnableRoles(edition).hasAnyRole(msg.sender, ISoundEditionV1(edition).ADMIN_ROLE())
-        ) revert Unauthorized();
-
-        _;
-    }
-
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
 
     constructor(ISoundFeeRegistry feeRegistry_) {
         if (address(feeRegistry_) == address(0)) revert FeeRegistryIsZeroAddress();
         feeRegistry = feeRegistry_;
     }
 
-    /// @inheritdoc IMinterModule
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
+    /**
+     * @inheritdoc IMinterModule
+     */
     function setEditionMintPaused(
         address edition,
         uint128 mintId,
@@ -86,7 +78,9 @@ abstract contract BaseMinter is IMinterModule {
         emit MintPausedSet(edition, mintId, paused);
     }
 
-    /// @inheritdoc IMinterModule
+    /**
+     * @inheritdoc IMinterModule
+     */
     function setTimeRange(
         address edition,
         uint128 mintId,
@@ -130,9 +124,9 @@ abstract contract BaseMinter is IMinterModule {
         }
     }
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
     /**
      * @dev Getter for the max basis points.
@@ -180,9 +174,32 @@ abstract contract BaseMinter is IMinterModule {
         return interfaceId == type(IMinterModule).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 
-    // ================================
-    // VALIDATION MODIFIERS
-    // ================================
+    /**
+     * @inheritdoc IMinterModule
+     */
+    function totalPrice(
+        address edition,
+        uint128 mintId,
+        address minter,
+        uint32 quantity
+    ) public view virtual override returns (uint128);
+
+    // =============================================================
+    //                  INTERNAL / PRIVATE HELPERS
+    // =============================================================
+
+    /**
+     * @dev Restricts the function to be only callable by the owner or admin of `edition`.
+     * @param edition The edition address.
+     */
+    modifier onlyEditionOwnerOrAdmin(address edition) virtual {
+        if (
+            msg.sender != OwnableRoles(edition).owner() &&
+            !OwnableRoles(edition).hasAnyRole(msg.sender, ISoundEditionV1(edition).ADMIN_ROLE())
+        ) revert Unauthorized();
+
+        _;
+    }
 
     /**
      * @dev Restricts the start time to be less than the end time.
@@ -201,10 +218,6 @@ abstract contract BaseMinter is IMinterModule {
         if (affiliateFeeBPS > _MAX_BPS) revert InvalidAffiliateFeeBPS();
         _;
     }
-
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
 
     /**
      * @dev Creates an edition mint instance.
@@ -321,6 +334,11 @@ abstract contract BaseMinter is IMinterModule {
         }
     }
 
+    /**
+     * @dev Deducts the platform fee from `requiredEtherValue`.
+     * @param requiredEtherValue The amount of Ether required.
+     * @return remainingPayment The remaining payment Ether amount.
+     */
     function _deductPlatformFee(uint128 requiredEtherValue) internal returns (uint128 remainingPayment) {
         // Compute the platform fee.
         uint128 platformFee = (requiredEtherValue * feeRegistry.platformFeeBPS()) / _MAX_BPS;
@@ -338,14 +356,4 @@ abstract contract BaseMinter is IMinterModule {
     function _requireNotSoldOut(uint32 totalMinted, uint32 maxMintable) internal pure {
         if (totalMinted > maxMintable) revert MaxMintableReached(maxMintable);
     }
-
-    /**
-     * @inheritdoc IMinterModule
-     */
-    function totalPrice(
-        address edition,
-        uint128 mintId,
-        address minter,
-        uint32 quantity
-    ) public view virtual override returns (uint128);
 }

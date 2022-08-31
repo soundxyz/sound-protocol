@@ -12,9 +12,9 @@ import { IMetadataModule } from "./IMetadataModule.sol";
  * @notice The interface for Sound edition contracts.
  */
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
-    // ================================
-    // EVENTS
-    // ================================
+    // =============================================================
+    //                            EVENTS
+    // =============================================================
 
     /**
      * @dev Emitted when the metadata module is set.
@@ -37,8 +37,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /**
      * @dev Emitted when the metadata is frozen (e.g.: `baseURI` can no longer be changed).
      * @param metadataModule The address of the metadata module.
-     * @param baseURI The base URI of the edition.
-     * @param contractURI The contract URI of the edition.
+     * @param baseURI        The base URI of the edition.
+     * @param contractURI    The contract URI of the edition.
      */
     event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
 
@@ -60,9 +60,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     event EditionMaxMintableSet(uint32 newMax);
 
-    // ================================
-    // ERRORS
-    // ================================
+    // =============================================================
+    //                            ERRORS
+    // =============================================================
 
     /**
      * @dev The edition's metadata is frozen (e.g.: `baseURI` can no longer be changed).
@@ -99,46 +99,50 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     error MaximumHasAlreadyBeenReached();
 
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
 
     /**
-     * @dev Initializes the contract
-     * @param owner Owner of contract (artist).
-     * @param name Name of the token.
-     * @param symbol Symbol of the token.
-     * @param metadataModule Address of metadata module, address(0x00) if not used.
-     * @param baseURI Base URI.
-     * @param contractURI Contract URI for OpenSea storefront.
-     * @param fundingRecipient Address that receives primary and secondary royalties.
-     * @param royaltyBPS Royalty amount in bps (basis points).
-     * @param editionMaxMintable The maximum amount of tokens that can be minted for this edition.
-     * @param mintRandomnessTokenThreshold Minted token count after which randomness gets locked.
-     * @param mintRandomnessTimeThreshold after which randomness gets locked.
+     * @dev Initializes the contract.
+     * @param owner                         Owner of contract (artist).
+     * @param name_                         Name of the collection.
+     * @param symbol_                       Symbol of the collection.
+     * @param metadataModule_               Address of metadata module, address(0x00) if not used.
+     * @param baseURI_                      Base URI.
+     * @param contractURI_                  Contract URI for OpenSea storefront.
+     * @param fundingRecipient_             Address that receives primary and secondary royalties.
+     * @param royaltyBPS_                   Royalty amount in bps (basis points).
+     * @param editionMaxMintable_           The maximum amount of tokens mintable for this edition.
+     * @param mintRandomnessTokenThreshold_ Token supply after which randomness gets locked.
+     * @param mintRandomnessTimeThreshold_  Timestamp after which randomness gets locked.
      */
     function initialize(
         address owner,
-        string memory name,
-        string memory symbol,
-        IMetadataModule metadataModule,
-        string memory baseURI,
-        string memory contractURI,
-        address fundingRecipient,
-        uint16 royaltyBPS,
-        uint32 editionMaxMintable,
-        uint32 mintRandomnessTokenThreshold,
-        uint32 mintRandomnessTimeThreshold
+        string memory name_,
+        string memory symbol_,
+        IMetadataModule metadataModule_,
+        string memory baseURI_,
+        string memory contractURI_,
+        address fundingRecipient_,
+        uint16 royaltyBPS_,
+        uint32 editionMaxMintable_,
+        uint32 mintRandomnessTokenThreshold_,
+        uint32 mintRandomnessTimeThreshold_
     ) external;
 
     /**
-     * @dev Mints `quantity` tokens to addrress `to`.
+     * @dev Mints `quantity` tokens to addrress `to`
      *      Each token will be assigned a token ID that is consecutively increasing.
-     *      The caller must have the `MINTERROLE`, which can be granted via
-     *      {grantRole}. Multiple minters, such as different minter contracts,
-     *      can be authorized simultaneously.
-     * @param to Address to mint to
-     * @param quantity Number of tokens to mint
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have either the
+     *   `ADMIN_ROLE`, `MINTER_ROLE`, which can be granted via {grantRole}.
+     *   Multiple minters, such as different minter contracts,
+     *   can be authorized simultaneously.
+     *
+     * @param to       Address to mint to.
+     * @param quantity Number of tokens to mint.
      */
     function mint(address to, uint256 quantity) external payable;
 
@@ -155,100 +159,138 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Sets metadata module.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param metadataModule Address of metadata module.
      */
     function setMetadataModule(IMetadataModule metadataModule) external;
 
     /**
      * @dev Sets global base URI.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param baseURI The base URI to be set.
      */
     function setBaseURI(string memory baseURI) external;
 
     /**
      * @dev Sets contract URI.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param contractURI The contract URI to be set.
      */
     function setContractURI(string memory contractURI) external;
 
     /**
      * @dev Freezes metadata by preventing any more changes to base URI.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      */
     function freezeMetadata() external;
 
     /**
      * @dev Sets funding recipient address.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param fundingRecipient Address to be set as the new funding recipient.
      */
     function setFundingRecipient(address fundingRecipient) external;
 
     /**
      * @dev Sets royalty amount in bps (basis points).
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param royaltyBPS The new royalty to be set.
      */
     function setRoyalty(uint16 royaltyBPS) external;
 
     /**
      * @dev Reduces the maximum mintable quantity for the edition.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param newMax The maximum mintable quantity to be set.
      */
     function reduceEditionMaxMintable(uint32 newMax) external;
 
     /**
      * @dev Sets a minted token count, after which `mintRandomness` gets locked.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param mintRandomnessTokenThreshold The token quantity to be set.
      */
     function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold) external;
 
     /**
      * @dev Sets the timestamp, after which `mintRandomness` gets locked.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
      * @param mintRandomnessTimeThreshold_ The randomness timestamp to be set.
      */
     function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external;
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
     /**
-     * @dev Getter for minter role flag.
-     * @return The minter role flag.
+     * @dev Returns the minter role flag.
+     * @return The constant value.
      */
     function MINTER_ROLE() external view returns (uint256);
 
     /**
-     * @dev Getter for admin role flag.
-     * @return The admin role flag.
+     * @dev Returns the admin role flag.
+     * @return The constant value.
      */
     function ADMIN_ROLE() external view returns (uint256);
 
     /**
-     * @dev Getter for the base token URI for the collection
+     * @dev Returns the base token URI for the collection.
+     * @return The configured value.
      */
     function baseURI() external view returns (string memory);
 
     /**
-     * @dev Getter for the total amount of tokens minted for the edition.
-     * @return The total amount of tokens minted.
+     * @dev Returns the total amount of tokens minted.
+     * @return The latest value.
      */
     function totalMinted() external view returns (uint256);
 
     /**
-     * @dev Getter for the token count after which randomness gets locked.
-     * @return The token count after which randomness gets locked.
+     * @dev Returns the token count after which randomness gets locked.
+     * @return The configured value.
      */
     function mintRandomnessTokenThreshold() external view returns (uint32);
 
     /**
-     * @dev Getter for the timestamp after which randomness gets locked.
-     * @return The timestamp after which randomness gets locked.
+     * @dev Returns the timestamp after which randomness gets locked.
+     * @return The configured value.
      */
     function mintRandomnessTimeThreshold() external view returns (uint32);
 
     /**
-     * Getter for the latest block hash, which is stored on each mint unless `randomnessLockedAfterMinted`
-     * or `randomnessLockedTimestamp` have been surpassed. Used for game mechanics like the Sound Golden Egg.
-     * @return The latest block hash.
+     * @dev Returns the randomness based on latest block hash, which is stored upon each mint
+     *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp`
+     *      have been surpassed.
+     *      Used for game mechanics like the Sound Golden Egg.
+     * @return The latest value.
      */
     function mintRandomness() external view returns (bytes9);
 
@@ -256,7 +298,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @dev Informs other contracts which interfaces this contract supports.
      *      Required by https://eips.ethereum.org/EIPS/eip-165
      * @param interfaceId The interface id to check.
-     * @return True if the interface is supported, false otherwise.
+     * @return Whether the `interfaceId` is supported.
      */
     function supportsInterface(bytes4 interfaceId)
         external

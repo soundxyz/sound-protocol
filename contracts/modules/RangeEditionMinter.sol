@@ -14,40 +14,35 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  * @author Sound.xyz
  */
 contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
+
     /**
      * @dev Edition mint data
      * edition => mintId => EditionMintData
      */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+
     /**
      * @dev Number of tokens minted by each buyer address
      * edition => mintId => buyer => mintedTallies
      */
     mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
-    // ================================
-    // MODIFIERS
-    // ================================
-
-    /**
-     * @dev Restricts the start time to be less than the end time.
-     */
-    modifier onlyValidRangeTimes(
-        uint32 startTime,
-        uint32 closingTime,
-        uint32 endTime
-    ) virtual {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
-        _;
-    }
-
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /// @inheritdoc IRangeEditionMinter
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
     function createEditionMint(
         address edition,
         uint96 price,
@@ -85,7 +80,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         );
     }
 
-    /// @inheritdoc IRangeEditionMinter
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
     function mint(
         address edition,
         uint128 mintId,
@@ -111,7 +108,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
-    /// @inheritdoc IRangeEditionMinter
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
     function setTimeRange(
         address edition,
         uint128 mintId,
@@ -129,7 +128,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         emit ClosingTimeSet(edition, mintId, closingTime);
     }
 
-    /// @inheritdoc BaseMinter
+    /**
+     * @inheritdoc BaseMinter
+     */
     function setTimeRange(
         address edition,
         uint128 mintId,
@@ -142,7 +143,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         _setTimeRange(edition, mintId, startTime, endTime);
     }
 
-    /// @inheritdoc IRangeEditionMinter
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
     function setMaxMintableRange(
         address edition,
         uint128 mintId,
@@ -158,10 +161,13 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
     }
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
+    /**
+     * @inheritdoc IMinterModule
+     */
     function totalPrice(
         address edition,
         uint128 mintId,
@@ -194,22 +200,43 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         return combinedMintData;
     }
 
-    /// @inheritdoc IERC165
+    /**
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRangeEditionMinter).interfaceId;
     }
 
-    // @inheritdoc IMinterModule
+    /**
+     * @inheritdoc IMinterModule
+     */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IRangeEditionMinter).interfaceId;
     }
 
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
+    // =============================================================
+    //                  INTERNAL / PRIVATE HELPERS
+    // =============================================================
+
+    /**
+     * @dev Restricts the start time to be less than the end time.
+     * @param startTime The start unix timestamp of the mint.
+     * @param endTime   The closing unix timestamp of the mint.
+     * @param endTime   The end unix timestamp of the mint.
+     */
+    modifier onlyValidRangeTimes(
+        uint32 startTime,
+        uint32 closingTime,
+        uint32 endTime
+    ) virtual {
+        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+        _;
+    }
 
     /**
      * @dev Gets the current maximum mintable quantity.
+     * @param data The edition mint data.
+     * @return The computed value.
      */
     function _getMaxMintable(EditionMintData storage data) internal view returns (uint32) {
         uint32 _maxMintable;
