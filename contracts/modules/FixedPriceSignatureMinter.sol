@@ -109,10 +109,47 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
+    function isValidSignature(
+        bytes calldata signature,
+        address expectedSigner,
+        uint32 claimTicket,
+        address edition,
+        uint128 mintId,
+        uint32 signedQuantity,
+        address affiliate
+    ) public returns (bool) {
+        (
+            uint256 storedBit,
+            uint256 ticketGroup,
+            uint256 ticketGroupOffset,
+            uint256 ticketGroupIdx
+        ) = _getBitForClaimTicket(edition, mintId, claimTicket);
+
+        if (storedBit != 0) revert SignatureAlreadyUsed();
+
+        // Flip the bit to 1 to indicate that the ticket has been claimed
+        _claimTickets[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
+            )
+        );
+        return digest.recover(signature) == expectedSigner;
+    }
+
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
 
+    /**
+     * @inheritdoc IMinterModule
+     */
     function totalPrice(
         address edition,
         uint128 mintId,
