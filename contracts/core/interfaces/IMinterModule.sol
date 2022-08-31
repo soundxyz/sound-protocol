@@ -67,6 +67,17 @@ interface IMinterModule is IERC165 {
      */
     event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 feeBPS);
 
+    /**
+     * @notice Emitted when a mint with an affiliate happens.
+     */
+    event MintedWithAffiliate(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 quantity,
+        uint128 affiliateFee,
+        address affiliate
+    );
+
     // =============================================================
     //                            ERRORS
     // =============================================================

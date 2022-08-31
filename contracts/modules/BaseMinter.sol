@@ -321,6 +321,8 @@ abstract contract BaseMinter is IMinterModule {
                 // Increment the affiliate fees accrued.
                 // Overflow is incredibly unrealistic.
                 _affiliateFeesAccrued[affiliate] += affiliateFee;
+                // Emit the event.
+                emit MintedWithAffiliate(edition, mintId, quantity, affiliateFee, affiliate);
             }
         }
 
