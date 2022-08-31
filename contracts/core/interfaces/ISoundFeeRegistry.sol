@@ -74,4 +74,11 @@ interface ISoundFeeRegistry {
      * @return The configured value.
      */
     function platformFeeBPS() external view returns (uint16);
+
+    /**
+     * @dev The platform fee for `requiredEtherValue`.
+     * @param requiredEtherValue The required Ether value for payment.
+     * @return fee The computed value.
+     */
+    function platformFee(uint128 requiredEtherValue) external view returns (uint128 fee);
 }
