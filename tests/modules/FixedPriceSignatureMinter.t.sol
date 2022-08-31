@@ -142,14 +142,14 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         bytes memory sig = _getSignature(caller, address(edition));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(address(edition), MINT_ID, MAX_MINTABLE + 1, sig, address(0));
 
         vm.prank(caller);
         minter.mint{ value: PRICE * MAX_MINTABLE }(address(edition), MINT_ID, MAX_MINTABLE, sig, address(0));
 
         vm.prank(caller);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, 0));
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, sig, address(0));
     }
 

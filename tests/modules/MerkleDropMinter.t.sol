@@ -120,7 +120,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.MaxMintableReached.selector, 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, 2));
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
