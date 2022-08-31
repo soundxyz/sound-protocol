@@ -43,11 +43,4 @@ contract GoldenEggMetadata is IMetadataModule {
             tokenId = (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1;
         }
     }
-
-    function _minUint32(uint32 a, uint32 b) internal pure returns (uint32) {
-        if (a < b) {
-            return a;
-        }
-        return b;
-    }
 }
