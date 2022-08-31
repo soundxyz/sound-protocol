@@ -59,6 +59,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint256 public constant ADMIN_ROLE = _ROLE_0;
 
     /**
+     * @dev EIP-712 Domain separator - used to prevent replay attacks using signatures from different networks.
+     *      https://eips.ethereum.org/EIPS/eip-712
+     */
+    bytes32 public immutable DOMAIN_SEPARATOR;
+
+    /**
      * @dev Basis points denominator used in fee calculations.
      */
     uint16 internal constant _MAX_BPS = 10_000;
@@ -130,6 +136,16 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev Indicates if the `baseURI` is mutable.
      */
     bool public isMetadataFrozen;
+
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
+
+    constructor() {
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(keccak256("EIP712Domain(uint256 chainId,address edition)"), block.chainid, address(this))
+        );
+    }
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS

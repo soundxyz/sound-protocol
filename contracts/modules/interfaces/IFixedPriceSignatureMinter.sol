@@ -73,6 +73,11 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     error InvalidSignature();
 
     /**
+     * @dev The mint sigature can only be used a single time.
+     */
+    error SignatureAlreadyUsed();
+
+    /**
      * @dev The signer can't be the zero address.
      */
     error SignerIsZeroAddress();
@@ -104,16 +109,18 @@ interface IFixedPriceSignatureMinter is IMinterModule {
 
     /**
      * @dev Mints a token for a particular mint instance.
-     * @param mintId    The mint ID.
-     * @param quantity  The quantity of tokens to mint.
-     * @param affiliate The affiliate address.
-     * @param signature The signed message to authorize the mint.
-     * @param claimTicket The ticket number to enforce single-use of the signature.
+     * @param mintId         The mint ID.
+     * @param quantity       The quantity of tokens to mint.
+     * @param signedQuantity The max quantity this buyer has been approved to mint.
+     * @param affiliate      The affiliate address.
+     * @param signature      The signed message to authorize the mint.
+     * @param claimTicket    The ticket number to enforce single-use of the signature.
      */
     function mint(
         address edition,
         uint128 mintId,
         uint32 quantity,
+        uint32 signedQuantity,
         address affiliate,
         bytes calldata signature,
         uint32 claimTicket
@@ -126,9 +133,9 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @param claimTicket    The ticket number to enforce single-use of the signature.
      * @param edition        The edition address.
      * @param mintId         The mint instance ID.
-     * @param quantity       The quantity of tokens to mint.
+     * @param signedQuantity The max quantity this buyer has been approved to mint.
      * @param affiliate      The affiliate address.
-     * @return
+     * @return isValid       Whether the signature is valid.
      */
     function isValidSignature(
         bytes calldata signature,
@@ -136,13 +143,19 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint32 claimTicket,
         address edition,
         uint128 mintId,
-        uint32 quantity,
+        uint32 signedQuantity,
         address affiliate
-    ) external returns (bool);
+    ) external returns (bool isValid);
 
     // =============================================================
     //               PUBLIC / EXTERNAL READ FUNCTIONS
     // =============================================================
+
+    /**
+     * @dev Returns the EIP-712 type hash of the signature for minting.
+     * @return typeHash The constant value.
+     */
+    function MINT_TYPEHASH() external view returns (bytes32 typeHash);
 
     /**
      * @dev Returns     IFixedPriceSignatureMinter.MintInfo instance containing the full minter parameter set.

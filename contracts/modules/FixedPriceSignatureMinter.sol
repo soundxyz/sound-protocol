@@ -7,6 +7,7 @@ import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfaces/IFixedPriceSignatureMinter.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 
 /**
  * @title IFixedPriceSignatureMinter
@@ -24,16 +25,10 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      * @dev EIP-712 Typed structured data hash (used for checking signature validity).
      *      https://eips.ethereum.org/EIPS/eip-712
      */
-    bytes32 private constant MINT_TYPEHASH =
+    bytes32 public constant MINT_TYPEHASH =
         keccak256(
             "EditionInfo(address buyer,uint256 mintId,uint32 claimTicket,uint32 quantityLimit,address affiliate)"
         );
-
-    /**
-     * @dev EIP-712 Domain separator - used to prevent replay attacks using signatures from different networks.
-     *      https://eips.ethereum.org/EIPS/eip-712
-     */
-    bytes32 private immutable DOMAIN_SEPARATOR;
 
     // =============================================================
     //                            STORAGE
@@ -51,11 +46,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(keccak256("EIP712Domain(uint256 chainId,address edition)"), block.chainid, address(this))
-        );
-    }
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -100,6 +91,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address edition,
         uint128 mintId,
         uint32 quantity,
+        uint32 signedQuantity,
         address affiliate,
         bytes calldata signature,
         uint32 claimTicket
@@ -108,8 +100,17 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
-        bool isValid = isValidSignature(signature, data.signer, claimTicket, edition, mintId, quantity, affiliate);
-        if (isValid) {
+        bool isValid = isValidSignature(
+            signature,
+            data.signer,
+            claimTicket,
+            edition,
+            mintId,
+            signedQuantity,
+            affiliate
+        );
+
+        if (!isValid) {
             revert InvalidSignature();
         }
 
@@ -125,14 +126,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 claimTicket,
         address edition,
         uint128 mintId,
-        uint32 quantity,
+        uint32 signedQuantity,
         address affiliate
     ) public returns (bool) {
-        // Check that the ticket number is within the reserved range for the edition
-        // permissionedQuantity is uint32, so claimTicket can't exceed max uint32
-        require(claimTicket < 2**32, "Claim ticket number exceeds max");
-
-        // gets the stored bit
         (
             uint256 storedBit,
             uint256 ticketGroup,
@@ -140,14 +136,19 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
             uint256 ticketGroupIdx
         ) = _getBitForClaimTicket(edition, mintId, claimTicket);
 
-        require(storedBit == 0, "Invalid claim ticket number or already claimed");
+        if (storedBit != 0) revert SignatureAlreadyUsed();
 
         // Flip the bit to 1 to indicate that the ticket has been claimed
         claimTickets[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
 
-        bytes32 hash = keccak256(abi.encode(msg.sender, edition, mintId));
-        hash = hash.toEthSignedMessageHash();
-        return hash.recover(signature) != expectedSigner;
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
+            )
+        );
+        return digest.recover(signature) == expectedSigner;
     }
 
     // =============================================================
