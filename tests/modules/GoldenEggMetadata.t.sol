@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { Strings } from "openzeppelin/utils/Strings.sol";
-
+import "forge-std/console.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
@@ -69,10 +69,12 @@ contract GoldenEggMetadataTests is TestConfig {
     function test_getGoldenEggTokenId(
         uint32 maxMintable,
         uint32 mintRandomnessTimeThreshold,
+        uint256 mintedAtTime,
         uint32 mintRandomnessTokenThreshold,
         uint32 purchaseQuantity
     ) external {
         vm.assume(maxMintable > 0 && maxMintable < 5000);
+        vm.assume(purchaseQuantity > 0 && purchaseQuantity <= maxMintable);
 
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
 
@@ -91,12 +93,20 @@ contract GoldenEggMetadataTests is TestConfig {
             )
         );
 
+        vm.warp(mintedAtTime);
         _createMintInstanceAndMint(edition, maxMintable, purchaseQuantity);
 
-        uint32 upperBoundForGoldenEgg = purchaseQuantity == edition.editionMaxMintable()
-            ? purchaseQuantity
-            : mintRandomnessTokenThreshold;
-        uint256 expectedGoldenEggId = (uint256(uint72(edition.mintRandomness())) % maxMintable) + 1;
+        bool isRandomnessLocked = purchaseQuantity == maxMintable ||
+            purchaseQuantity >= mintRandomnessTokenThreshold ||
+            mintedAtTime >= mintRandomnessTimeThreshold;
+
+        uint32 upperBoundForGoldenEgg = isRandomnessLocked && (mintRandomnessTokenThreshold > 0)
+            ? mintRandomnessTokenThreshold
+            : maxMintable;
+
+        uint256 expectedGoldenEggId = isRandomnessLocked
+            ? (uint256(uint72(edition.mintRandomness())) % upperBoundForGoldenEgg) + 1
+            : 0;
 
         assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
     }
@@ -117,7 +127,7 @@ contract GoldenEggMetadataTests is TestConfig {
             END_TIME - 1,
             END_TIME,
             AFFILIATE_FEE_BPS,
-            0, // max mintable lower
+            maxMintable, // max mintable lower
             maxMintable, // max mintable upper
             maxMintable // max mintable per account
         );

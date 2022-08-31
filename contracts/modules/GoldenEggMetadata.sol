@@ -33,15 +33,26 @@ contract GoldenEggMetadata is IMetadataModule {
         bool isSoldOut = totalMinted == editionMaxMintable;
         uint32 mintRandomnessTokenThreshold = edition.mintRandomnessTokenThreshold();
 
+        // Return the golden egg token id if...
         if (
+            // edition is sold out, or
             isSoldOut ||
-            totalMinted >= mintRandomnessTokenThreshold ||
+            // mintRandomnessTimeThreshold is set and it's less than or equal to total minted, or
+            (mintRandomnessTokenThreshold > 0 && mintRandomnessTokenThreshold <= totalMinted) ||
+            // the current time is past mintRandomnessTimeThreshold.
             block.timestamp >= edition.mintRandomnessTimeThreshold()
         ) {
-            uint32 upperBound = isSoldOut ? totalMinted : mintRandomnessTokenThreshold;
-
-            // calculate number between 1 and upper bound (mintRandomness corresponds to the blockhash)
+            // Always use mintRandomnessTokenThreshold as the upper bound if it is set, otherwise use the total minted.
+            uint32 upperBound = mintRandomnessTokenThreshold > 0 ? mintRandomnessTokenThreshold : totalMinted;
+            // Calculate number between 1 and upper bound (mintRandomness corresponds to the blockhash).
             tokenId = (uint256(uint72(edition.mintRandomness())) % upperBound) + 1;
         }
+    }
+
+    function _minUint32(uint32 a, uint32 b) internal pure returns (uint32) {
+        if (a < b) {
+            return a;
+        }
+        return b;
     }
 }
