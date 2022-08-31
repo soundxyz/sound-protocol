@@ -52,43 +52,10 @@ contract TestConfig is Test {
         return addr;
     }
 
-    function createSound(
-        SoundCreatorV1 factory,
-        string memory name,
-        string memory symbol,
-        IMetadataModule metadataModule,
-        string memory baseURI,
-        string memory contractURI,
-        address fundingRecipient,
-        uint16 royaltyBPS,
-        uint32 editionMaxMintable,
-        uint32 mintRandomnessTokenThreshold,
-        uint32 mintRandomnessTimeThreshold
-    ) public returns (address payable) {
-        return
-            factory.createSound(
-                abi.encodeWithSelector(
-                    SoundEditionV1.initialize.selector,
-                    address(0),
-                    name,
-                    symbol,
-                    metadataModule,
-                    baseURI,
-                    contractURI,
-                    fundingRecipient,
-                    royaltyBPS,
-                    editionMaxMintable,
-                    mintRandomnessTokenThreshold,
-                    mintRandomnessTimeThreshold
-                )
-            );
-    }
-
     function createGenericEdition() public returns (SoundEditionV1) {
         return
             SoundEditionV1(
-                createSound(
-                    soundCreator,
+                soundCreator.createSound(
                     SONG_NAME,
                     SONG_SYMBOL,
                     METADATA_MODULE,

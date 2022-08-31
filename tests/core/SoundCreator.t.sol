@@ -21,9 +21,11 @@ contract SoundCreatorTests is TestConfig {
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
         // Deploy & initialize creator proxy
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(editionImplementation));
+        SoundCreatorV1 soundCreatorImp = new SoundCreatorV1(address(editionImplementation));
 
-        assertEq(address(soundCreator.soundEditionImplementation()), address(editionImplementation));
+        assert(address(soundCreatorImp) != address(0));
+
+        assertEq(address(soundCreatorImp.soundEditionImplementation()), address(editionImplementation));
     }
 
     // Tests that the factory creates a new sound NFT
@@ -42,8 +44,7 @@ contract SoundCreatorTests is TestConfig {
 
     function test_createSoundSetsNameAndSymbolCorrectly(string memory name, string memory symbol) public {
         SoundEditionV1 soundEdition = SoundEditionV1(
-            createSound(
-                soundCreator,
+            soundCreator.createSound(
                 name,
                 symbol,
                 METADATA_MODULE,
@@ -117,23 +118,4 @@ contract SoundCreatorTests is TestConfig {
         vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
         soundCreator.setEditionImplementation(address(0));
     }
-
-    // function test_ownerCanSuccessfullyUpgrade() public {
-    //     MockSoundCreatorV2 creatorV2Implementation = new MockSoundCreatorV2();
-
-    //     vm.expectEmit(true, false, false, true);
-    //     emit Upgraded(address(creatorV2Implementation));
-    //     soundCreator.upgradeTo(address(creatorV2Implementation));
-
-    //     assertEq(MockSoundCreatorV2(address(soundCreator)).success(), "upgrade to v2 success!");
-    // }
-
-    // function test_attackerCantUpgrade(address attacker) public {
-    //     vm.assume(attacker != address(this));
-    //     vm.assume(attacker != address(0));
-
-    //     vm.expectRevert("Ownable: caller is not the owner");
-    //     vm.prank(attacker);
-    //     soundCreator.upgradeTo(address(666));
-    // }
 }

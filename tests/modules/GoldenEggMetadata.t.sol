@@ -37,8 +37,7 @@ contract GoldenEggMetadataTests is TestConfig {
         goldenEggModule = new GoldenEggMetadata();
 
         edition = SoundEditionV1(
-            createSound(
-                soundCreator,
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 goldenEggModule,
@@ -73,8 +72,7 @@ contract GoldenEggMetadataTests is TestConfig {
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
 
         SoundEditionV1 edition = SoundEditionV1(
-            createSound(
-                soundCreator,
+            soundCreator.createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 eggModule,
