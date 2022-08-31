@@ -362,7 +362,11 @@ abstract contract BaseMinter is IMinterModule {
         unchecked {
             uint256 sum = uint256(totalMinted) + uint256(quantity);
             if (sum > maxMintable) {
-                revert ExceedsAvailableSupply(maxMintable > totalMinted ? maxMintable - totalMinted : 0);
+                uint32 available;
+                assembly {
+                    available := mul(gt(maxMintable, totalMinted), sub(maxMintable, totalMinted))
+                }
+                revert ExceedsAvailableSupply(available);
             }
             return uint32(sum);
         }
