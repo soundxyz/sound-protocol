@@ -34,13 +34,17 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     //                            STORAGE
     // =============================================================
 
+    /**
+     * @dev Edition mint data
+     *      `edition` => `mintId` => EditionMintData
+     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
-     * @dev Claim tickets each representing a signed message which can only be used once.
+     * @dev A bitmap where each bit representing whether the ticket has been claimed.
      *      `edition` => `mintId` => `index` => bit array
      */
-    mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal _claimTickets;
+    mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal _claimsBitmap;
 
     // =============================================================
     //                          CONSTRUCTOR
@@ -100,55 +104,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
-        bool isValid = isValidSignature(
-            signature,
-            data.signer,
-            claimTicket,
-            edition,
-            mintId,
-            signedQuantity,
-            affiliate
-        );
-
-        if (!isValid) {
-            revert InvalidSignature();
-        }
+        _claimTicketSignature(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
 
         _mint(edition, mintId, quantity, affiliate);
-    }
-
-    /**
-     * @inheritdoc IFixedPriceSignatureMinter
-     */
-    function isValidSignature(
-        bytes calldata signature,
-        address expectedSigner,
-        uint32 claimTicket,
-        address edition,
-        uint128 mintId,
-        uint32 signedQuantity,
-        address affiliate
-    ) public returns (bool) {
-        (
-            uint256 storedBit,
-            uint256 ticketGroup,
-            uint256 ticketGroupOffset,
-            uint256 ticketGroupIdx
-        ) = _getBitForClaimTicket(edition, mintId, claimTicket);
-
-        if (storedBit != 0) revert SignatureAlreadyUsed();
-
-        // Flip the bit to 1 to indicate that the ticket has been claimed
-        claimTickets[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
-
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
-                keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
-            )
-        );
-        return digest.recover(signature) == expectedSigner;
     }
 
     // =============================================================
@@ -203,59 +161,101 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return type(IFixedPriceSignatureMinter).interfaceId;
     }
 
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
     function checkClaimTickets(
         address edition,
         uint128 mintId,
-        uint32[] calldata _claimTickets
-    ) external view returns (bool[] memory) {
-        bool[] memory claimed = new bool[](_claimTickets.length);
-
-        for (uint256 i = 0; i < _claimTickets.length; i++) {
-            (uint256 storedBit, , , ) = _getBitForClaimTicket(edition, mintId, _claimTickets[i]);
-            claimed[i] = storedBit == 1;
+        uint32[] calldata claimTickets
+    ) external view returns (bool[] memory claimed) {
+        claimed = new bool[](claimTickets.length);
+        // Will not overflow due to max block gas limit bounding the size of `claimTickets`.
+        unchecked {
+            for (uint256 i = 0; i < claimTickets.length; i++) {
+                (uint256 storedBit, , , ) = _getBitForClaimTicket(edition, mintId, claimTickets[i]);
+                claimed[i] = storedBit == 1;
+            }
         }
-
-        return claimed;
     }
 
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
 
-    /// @notice Gets the bit variables associated with a ticket number
-    /// @param edition The edition address.
-    /// @param mintId The mint instance ID.
-    /// @param _claimTicket ticket number
+    /**
+     * @dev Validates and claims the signed message required to mint.
+     * @param signature      The signed message to authorize the mint.
+     * @param expectedSigner The address of the signer that authorizes mints.
+     * @param claimTicket    The ticket number to enforce single-use of the signature.
+     * @param edition        The edition address.
+     * @param mintId         The mint instance ID.
+     * @param signedQuantity The max quantity this buyer has been approved to mint.
+     * @param affiliate      The affiliate address.
+     */
+    function _claimTicketSignature(
+        bytes calldata signature,
+        address expectedSigner,
+        uint32 claimTicket,
+        address edition,
+        uint128 mintId,
+        uint32 signedQuantity,
+        address affiliate
+    ) private {
+        (
+            uint256 storedBit,
+            uint256 ticketGroup,
+            uint256 ticketGroupOffset,
+            uint256 ticketGroupIdx
+        ) = _getBitForClaimTicket(edition, mintId, claimTicket);
+
+        if (storedBit != 0) revert SignatureAlreadyUsed();
+
+        // Flip the bit to 1 to indicate that the ticket has been claimed
+        _claimsBitmap[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
+            )
+        );
+
+        if (digest.recover(signature) != expectedSigner) revert InvalidSignature();
+    }
+
+    /**
+     * @dev Gets the bit variables associated with a ticket number
+     * @param edition      The edition address.
+     * @param mintId       The mint instance ID.
+     * @param claimTicket The ticket number.
+     * @return ticketGroup       The bit array for this ticket number.
+     * @return ticketGroupIdx    The index of the the local group.
+     * @return ticketGroupOffset The offset/index for the ticket number in the local group.
+     * @return storedBit         The stored bit at this ticket number's index within the local group.
+     */
     function _getBitForClaimTicket(
         address edition,
         uint128 mintId,
-        uint32 _claimTicket
+        uint32 claimTicket
     )
         private
         view
         returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
+            uint256 ticketGroup,
+            uint256 ticketGroupIdx,
+            uint256 ticketGroupOffset,
+            uint256 storedBit
         )
     {
-        // the bit array for this ticket number
-        uint256 ticketGroup;
-        // the index of the the local group
-        uint256 ticketGroupIdx;
-        // the offset/index for the ticket number in the local group
-        uint256 ticketGroupOffset;
-        // the stored bit at this ticket number's index within the local group
-        uint256 storedBit;
-
         unchecked {
-            ticketGroupIdx = _claimTicket / 256;
-            ticketGroupOffset = _claimTicket % 256;
+            ticketGroupIdx = claimTicket >> 8;
+            ticketGroupOffset = claimTicket & 255;
         }
 
         // cache the local group for efficiency
-        ticketGroup = claimTickets[edition][mintId][ticketGroupIdx];
+        ticketGroup = _claimsBitmap[edition][mintId][ticketGroupIdx];
 
         // gets the stored bit
         storedBit = (ticketGroup >> ticketGroupOffset) & uint256(1);

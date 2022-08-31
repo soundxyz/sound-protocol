@@ -126,27 +126,6 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint32 claimTicket
     ) external payable;
 
-    /**
-     * @dev Validates the signed message required to mint.
-     * @param signature      The signed message to authorize the mint.
-     * @param expectedSigner The address of the signer that authorizes mints.
-     * @param claimTicket    The ticket number to enforce single-use of the signature.
-     * @param edition        The edition address.
-     * @param mintId         The mint instance ID.
-     * @param signedQuantity The max quantity this buyer has been approved to mint.
-     * @param affiliate      The affiliate address.
-     * @return isValid       Whether the signature is valid.
-     */
-    function isValidSignature(
-        bytes calldata signature,
-        address expectedSigner,
-        uint32 claimTicket,
-        address edition,
-        uint128 mintId,
-        uint32 signedQuantity,
-        address affiliate
-    ) external returns (bool isValid);
-
     // =============================================================
     //               PUBLIC / EXTERNAL READ FUNCTIONS
     // =============================================================
@@ -158,10 +137,23 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     function MINT_TYPEHASH() external view returns (bytes32 typeHash);
 
     /**
-     * @dev Returns     IFixedPriceSignatureMinter.MintInfo instance containing the full minter parameter set.
+     * @dev Returns IFixedPriceSignatureMinter.MintInfo instance containing the full minter parameter set.
      * @param edition   The edition to get the mint instance for.
      * @param mintId    The ID of the mint instance.
-     * @return mintInfo Information about this mint.
+     * @return Information about this mint.
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
+
+    /**
+     * @dev Returns an array of booleans on whether each claim ticket has been claimed.
+     * @param edition      The edition to get the mint instance for.
+     * @param mintId       The ID of the mint instance.
+     * @param claimTickets The claim tickets to check.
+     * @return claimed The computed values.
+     */
+    function checkClaimTickets(
+        address edition,
+        uint128 mintId,
+        uint32[] calldata claimTickets
+    ) external view returns (bool[] memory claimed);
 }
