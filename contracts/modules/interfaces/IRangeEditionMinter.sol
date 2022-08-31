@@ -189,7 +189,7 @@ interface IRangeEditionMinter is IMinterModule {
      * @dev Returns {IRangeEditionMinter.MintInfo} instance containing the full minter parameter set.
      * @param edition The edition to get the mint instance for.
      * @param mintId  The ID of the mint instance.
-     * @return The struct containing the values.
+     * @return mintInfo Information about this mint.
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 }

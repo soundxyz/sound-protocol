@@ -17,16 +17,45 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
 
     // =============================================================
+    //                           CONSTANTS
+    // =============================================================
+
+    /**
+     * @dev EIP-712 Typed structured data hash (used for checking signature validity).
+     *      https://eips.ethereum.org/EIPS/eip-712
+     */
+    bytes32 private constant MINT_TYPEHASH =
+        keccak256(
+            "EditionInfo(address buyer,uint256 mintId,uint32 claimTicket,uint32 quantityLimit,address affiliate)"
+        );
+
+    /**
+     * @dev EIP-712 Domain separator - used to prevent replay attacks using signatures from different networks.
+     *      https://eips.ethereum.org/EIPS/eip-712
+     */
+    bytes32 private immutable DOMAIN_SEPARATOR;
+
+    // =============================================================
     //                            STORAGE
     // =============================================================
 
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
+    /**
+     * @dev Claim tickets each representing a signed message which can only be used once.
+     *      edition -> mintId -> index -> bit array
+     */
+    mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal claimTickets;
+
     // =============================================================
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
+    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(keccak256("EIP712Domain(uint256 chainId,address edition)"), block.chainid, address(this))
+        );
+    }
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -71,18 +100,54 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address edition,
         uint128 mintId,
         uint32 quantity,
+        address affiliate,
         bytes calldata signature,
-        address affiliate
+        uint32 claimTicket
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
-        bytes32 hash = keccak256(abi.encode(msg.sender, edition, mintId));
-        hash = hash.toEthSignedMessageHash();
-        if (hash.recover(signature) != data.signer) revert InvalidSignature();
+        bool isValid = isValidSignature(signature, data.signer, claimTicket, edition, mintId, quantity, affiliate);
+        if (isValid) {
+            revert InvalidSignature();
+        }
 
         _mint(edition, mintId, quantity, affiliate);
+    }
+
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
+    function isValidSignature(
+        bytes calldata signature,
+        address expectedSigner,
+        uint32 claimTicket,
+        address edition,
+        uint128 mintId,
+        uint32 quantity,
+        address affiliate
+    ) public returns (bool) {
+        // Check that the ticket number is within the reserved range for the edition
+        // permissionedQuantity is uint32, so claimTicket can't exceed max uint32
+        require(claimTicket < 2**32, "Claim ticket number exceeds max");
+
+        // gets the stored bit
+        (
+            uint256 storedBit,
+            uint256 ticketGroup,
+            uint256 ticketGroupOffset,
+            uint256 ticketGroupIdx
+        ) = _getBitForClaimTicket(edition, mintId, claimTicket);
+
+        require(storedBit == 0, "Invalid claim ticket number or already claimed");
+
+        // Flip the bit to 1 to indicate that the ticket has been claimed
+        claimTickets[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
+
+        bytes32 hash = keccak256(abi.encode(msg.sender, edition, mintId));
+        hash = hash.toEthSignedMessageHash();
+        return hash.recover(signature) != expectedSigner;
     }
 
     // =============================================================
@@ -135,5 +200,65 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IFixedPriceSignatureMinter).interfaceId;
+    }
+
+    function checkClaimTickets(
+        address edition,
+        uint128 mintId,
+        uint32[] calldata _claimTickets
+    ) external view returns (bool[] memory) {
+        bool[] memory claimed = new bool[](_claimTickets.length);
+
+        for (uint256 i = 0; i < _claimTickets.length; i++) {
+            (uint256 storedBit, , , ) = _getBitForClaimTicket(edition, mintId, _claimTickets[i]);
+            claimed[i] = storedBit == 1;
+        }
+
+        return claimed;
+    }
+
+    // =============================================================
+    //                  INTERNAL / PRIVATE HELPERS
+    // =============================================================
+
+    /// @notice Gets the bit variables associated with a ticket number
+    /// @param edition The edition address.
+    /// @param mintId The mint instance ID.
+    /// @param _claimTicket ticket number
+    function _getBitForClaimTicket(
+        address edition,
+        uint128 mintId,
+        uint32 _claimTicket
+    )
+        private
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        // the bit array for this ticket number
+        uint256 ticketGroup;
+        // the index of the the local group
+        uint256 ticketGroupIdx;
+        // the offset/index for the ticket number in the local group
+        uint256 ticketGroupOffset;
+        // the stored bit at this ticket number's index within the local group
+        uint256 storedBit;
+
+        unchecked {
+            ticketGroupIdx = _claimTicket / 256;
+            ticketGroupOffset = _claimTicket % 256;
+        }
+
+        // cache the local group for efficiency
+        ticketGroup = claimTickets[edition][mintId][ticketGroupIdx];
+
+        // gets the stored bit
+        storedBit = (ticketGroup >> ticketGroupOffset) & uint256(1);
+
+        return (storedBit, ticketGroup, ticketGroupOffset, ticketGroupIdx);
     }
 }
