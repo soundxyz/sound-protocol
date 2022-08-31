@@ -38,8 +38,12 @@ struct MintInfo {
  * @author Sound.xyz
  */
 interface IFixedPriceSignatureMinter is IMinterModule {
+    // =============================================================
+    //                            EVENTS
+    // =============================================================
+
     /**
-     * Emits event when a new fixed price signature mint is created.
+     * @dev Emitted when a new fixed price signature mint is created.
      * @param edition The edition address.
      * @param mintId The mint ID.
      * @param signer The address of the signer that authorizes mints.
@@ -59,6 +63,10 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint16 affiliateFeeBPS
     );
 
+    // =============================================================
+    //                            ERRORS
+    // =============================================================
+
     /**
      * @dev The signature is invalid.
      */
@@ -69,14 +77,18 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      */
     error SignerIsZeroAddress();
 
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
     /**
      * @dev Initializes a fixed-price signature mint instance.
-     * @param edition The edition address.
-     * @param price The price to mint a token.
-     * @param signer The address of the signer that authorizes mints.
-     * @param maxMintable_ The maximum number of tokens that can be minted.
-     * @param startTime The time minting can begin.
-     * @param endTime The time minting will end.
+     * @param edition         The edition address.
+     * @param price           The price to mint a token.
+     * @param signer          The address of the signer that authorizes mints.
+     * @param maxMintable_    The maximum number of tokens that can be minted.
+     * @param startTime       The time minting can begin.
+     * @param endTime         The time minting will end.
      * @param affiliateFeeBPS The affiliate fee in basis points.
      * @return mintId The ID of the new mint instance.
      */
@@ -92,8 +104,8 @@ interface IFixedPriceSignatureMinter is IMinterModule {
 
     /**
      * @dev Mints a token for a particular mint instance.
-     * @param mintId The mint ID.
-     * @param quantity The quantity of tokens to mint.
+     * @param mintId    The mint ID.
+     * @param quantity  The quantity of tokens to mint.
      * @param signature The signed message to authorize the mint.
      */
     function mint(
@@ -104,10 +116,14 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         address affiliate
     ) external payable;
 
+    // =============================================================
+    //               PUBLIC / EXTERNAL READ FUNCTIONS
+    // =============================================================
+
     /**
      * @dev Returns IFixedPriceSignatureMinter.MintInfo instance containing the full minter parameter set.
      * @param edition The edition to get the mint instance for.
-     * @param mintId The ID of the mint instance.
+     * @param mintId  The ID of the mint instance.
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 }

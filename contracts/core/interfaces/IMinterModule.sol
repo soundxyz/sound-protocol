@@ -2,26 +2,31 @@
 pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
+import { ISoundFeeRegistry } from "./ISoundFeeRegistry.sol";
 
 /**
  * @title IMinterModule
  * @notice The interface for Sound protocol minter modules.
  */
 interface IMinterModule is IERC165 {
-    // ================================
-    // STRUCTS
-    // ================================
+    // =============================================================
+    //                            STRUCTS
+    // =============================================================
 
     struct BaseData {
+        // The start unix timestamp of the mint.
         uint32 startTime;
+        // The end unix timestamp of the mint.
         uint32 endTime;
+        // The affiliate fee in basis points.
         uint16 affiliateFeeBPS;
+        // Whether the mint is paused.
         bool mintPaused;
     }
 
-    // ================================
-    // EVENTS
-    // ================================
+    // =============================================================
+    //                            EVENTS
+    // =============================================================
 
     /**
      * @dev Emitted when the mint instance for an `edition` is created.
@@ -62,9 +67,9 @@ interface IMinterModule is IERC165 {
      */
     event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 feeBPS);
 
-    // ================================
-    // ERRORS
-    // ================================
+    // =============================================================
+    //                            ERRORS
+    // =============================================================
 
     /**
      * @dev The Ether value paid is below the value required.
@@ -75,9 +80,9 @@ interface IMinterModule is IERC165 {
 
     /**
      * @dev The number minted has exceeded the max mintable amount.
-     * @param maxMintable The total maximum mintable number of tokens.
+     * @param available The number of tokens remaining available for mint.
      */
-    error MaxMintableReached(uint32 maxMintable);
+    error ExceedsAvailableSupply(uint32 available);
 
     /**
      * @dev The mint is not opened.
@@ -112,14 +117,15 @@ interface IMinterModule is IERC165 {
      */
     error FeeRegistryIsZeroAddress();
 
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
 
     /**
      * @dev Sets the paused status for (`edition`, `mintId`).
+     *
      * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
+     * - The caller must be the edition's owner or admin.
      */
     function setEditionMintPaused(
         address edition,
@@ -129,12 +135,14 @@ interface IMinterModule is IERC165 {
 
     /**
      * @dev Sets the time range for an edition mint.
+     *
+     * Calling conditions:
+     * - The caller must be the edition's owner or admin.
+     *
      * @param edition The edition address.
      * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
      * @param startTime The start time of the mint.
      * @param endTime The end time of the mint.
-     * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
      */
     function setTimeRange(
         address edition,
@@ -145,8 +153,9 @@ interface IMinterModule is IERC165 {
 
     /**
      * @dev Sets the affiliate fee for (`edition`, `mintId`).
+     *
      * Calling conditions:
-     * - The caller must be the edition's owner or an admin.
+     * - The caller must be the edition's owner or admin.
      */
     function setAffiliateFee(
         address edition,
@@ -164,22 +173,29 @@ interface IMinterModule is IERC165 {
      */
     function withdrawForPlatform() external;
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
     /**
-     * @dev Returns the total fees accrued for `affiliate`.
+     * @dev The total fees accrued for `affiliate`.
+     * @param affiliate The affiliate's address.
+     * @return The latest value.
      */
     function affiliateFeesAccrued(address affiliate) external view returns (uint128);
 
     /**
-     * @dev Returns the total fees accrued for the platform.
+     * @dev The total fees accrued for the platform.
+     * @return The latest value.
      */
     function platformFeesAccrued() external view returns (uint128);
 
     /**
-     * @dev Returns whether `affiliate` is affiliated for (`edition`, `mintId`).
+     * @dev Whether `affiliate` is affiliated for (`edition`, `mintId`).
+     * @param edition   The edition's address.
+     * @param mintId    The mint ID.
+     * @param affiliate The affiliate's address.
+     * @return The computed value.
      */
     function isAffiliated(
         address edition,
@@ -188,7 +204,12 @@ interface IMinterModule is IERC165 {
     ) external view returns (bool);
 
     /**
-     * @dev Returns the total price for `quantity` tokens for (`edition`, `mintId`).
+     * @dev The total price for `quantity` tokens for (`edition`, `mintId`).
+     * @param edition   The edition's address.
+     * @param mintId    The mint ID.
+     * @param mintId    The minter's address.
+     * @param quantity  The number of tokens to mint.
+     * @return The computed value.
      */
     function totalPrice(
         address edition,
@@ -198,15 +219,22 @@ interface IMinterModule is IERC165 {
     ) external view returns (uint128);
 
     /**
-     * @dev Returns the next mint ID.
-     * A mint ID is assigned sequentially starting from (0, 1, 2, ...),
-     * and is shared amonsgt all editions connected to the minter contract.
+     * @dev The next mint ID.
+     *      A mint ID is assigned sequentially starting from (0, 1, 2, ...),
+     *      and is shared amongst all editions connected to the minter contract.
+     * @return The latest value.
      */
     function nextMintId() external view returns (uint128);
 
     /**
-     * Returns child minter interface ID
-     * @return interfaceId The child minter interface ID.
+     * @dev The interface ID of the minter.
+     * @return The constant value.
      */
     function moduleInterfaceId() external view returns (bytes4);
+
+    /**
+     * @dev The fee registry. Used for handling platform fees.
+     * @return The immutable value.
+     */
+    function feeRegistry() external view returns (ISoundFeeRegistry);
 }

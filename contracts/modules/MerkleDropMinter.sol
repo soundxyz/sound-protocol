@@ -15,21 +15,35 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  * @author Sound.xyz
  */
 contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
+
+    /**
+     * @dev Edition mint data.
+     *      Maps `edition` => `mintId` => value.
+     */
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev Number of tokens minted by each buyer address
-     * edition => mintId => buyer => mintedTallies
+     *      Maps: `edition` => `mintId` => `buyer` => value.
      */
     mapping(address => mapping(uint128 => mapping(address => uint256))) public mintedTallies;
 
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /// @inheritdoc IMerkleDropMinter
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
     function createEditionMint(
         address edition,
         bytes32 merkleRootHash,
@@ -37,16 +51,16 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint32 maxMintable_,
-        uint32 maxMintablePerAccount_
+        uint32 maxMintable,
+        uint32 maxMintablePerAccount
     ) public returns (uint128 mintId) {
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.merkleRootHash = merkleRootHash;
         data.price = price;
-        data.maxMintable = maxMintable_;
-        data.maxMintablePerAccount = maxMintablePerAccount_;
+        data.maxMintable = maxMintable;
+        data.maxMintablePerAccount = maxMintablePerAccount;
         // prettier-ignore
         emit MerkleDropMintCreated(
             edition,
@@ -56,12 +70,14 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
             startTime,
             endTime,
             affiliateFeeBPS,
-            maxMintable_,
-            maxMintablePerAccount_
+            maxMintable,
+            maxMintablePerAccount
         );
     }
 
-    /// @inheritdoc IMerkleDropMinter
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
     function mint(
         address edition,
         uint128 mintId,
@@ -73,37 +89,45 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         // Increase `totalMinted` by `requestedQuantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        uint32 nextTotalMinted = data.totalMinted + requestedQuantity;
-        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
-        data.totalMinted = nextTotalMinted;
+        data.totalMinted = _incrementTotalMinted(data.totalMinted, requestedQuantity, data.maxMintable);
 
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
-        uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-        // check the additional requestedQuantity does not exceed the set maximum
-        if ((userMintedBalance + requestedQuantity) > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
-
-        // Update the minted tally for this account
-        mintedTallies[edition][mintId][msg.sender] = userMintedBalance + requestedQuantity;
+        unchecked {
+            uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+            // Check the additional requestedQuantity does not exceed the set maximum.
+            // If `requestedQuantity` is large enough to cause an overflow,
+            // `_mint` will give an out of gas error.
+            uint256 tally = userMintedBalance + requestedQuantity;
+            if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
+            // Update the minted tally for this account
+            mintedTallies[edition][mintId][msg.sender] = tally;
+        }
 
         _mint(edition, mintId, requestedQuantity, affiliate);
 
         emit DropClaimed(msg.sender, requestedQuantity);
     }
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
+    /**
+     * @inheritdoc IMinterModule
+     */
     function totalPrice(
         address edition,
         uint128 mintId,
         address, /* minter */
         uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
-        return _editionMintData[edition][mintId].price * quantity;
+        unchecked {
+            // Won't overflow, as `price` is 96 bits, and `quantity` is 32 bits.
+            return _editionMintData[edition][mintId].price * quantity;
+        }
     }
 
     /**
@@ -135,7 +159,9 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
     }
 
-    /// @inheritdoc IMinterModule
+    /**
+     * @inheritdoc IMinterModule
+     */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IMerkleDropMinter).interfaceId;
     }

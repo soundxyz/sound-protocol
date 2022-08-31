@@ -14,10 +14,9 @@
     "postinstall": "forge install",
     "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol scripts/**/*.sol",
     "gen:interfaceIds": "forge script ./scripts/solidity/getInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > interfaceIds.json",
-    "prep-typechain": "bob-tsm scripts/js/prep-typechain.ts",
-    "typechain": "pnpm prep-typechain && npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-sound/**/*[!metadata].json'",
+    "typechain": "npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-2/**/*.json'",
     "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
-    "prepack": "rm -rf out && pnpm build && pnpm typechain && bob-tsm build.ts",
+    "prepack": "rm -rf out out-2 dist typechain && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm typechain && bob-tsm build.ts",
     "postpublish": "gh-release"
   },
   "repository": {
@@ -70,7 +69,7 @@
     "typescript": "^4.7.4"
   },
   "publishConfig": {
-    "access": "public",
+    "access": "restricted",
     "directory": "dist"
   }
 }

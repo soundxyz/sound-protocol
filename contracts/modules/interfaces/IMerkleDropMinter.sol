@@ -40,16 +40,20 @@ struct MintInfo {
  * @author Sound.xyz
  */
 interface IMerkleDropMinter is IMinterModule {
+    // =============================================================
+    //                            EVENTS
+    // =============================================================
+
     /**
      * @dev Emitted when a new merkle drop mint is created.
-     * @param edition The edition address.
-     * @param mintId The mint ID.
-     * @param merkleRootHash The merkle root hash of the merkle tree containing the approved addresses.
-     * @param price The price at which each token will be sold, in ETH.
-     * @param startTime The time minting can begin.
-     * @param endTime The time minting will end.
-     * @param affiliateFeeBPS The affiliate fee in basis points.
-     * @param maxMintable The maximum number of tokens that can be minted.
+     * @param edition               The edition address.
+     * @param mintId                The mint ID.
+     * @param merkleRootHash        The root of the merkle tree of the approved addresses.
+     * @param price                 The price at which each token will be sold, in ETH.
+     * @param startTime             The time minting can begin.
+     * @param endTime               The time minting will end.
+     * @param affiliateFeeBPS       The affiliate fee in basis points.
+     * @param maxMintable           The maximum number of tokens that can be minted.
      * @param maxMintablePerAccount The maximum number of tokens that an account can mint.
      */
     event MerkleDropMintCreated(
@@ -67,9 +71,13 @@ interface IMerkleDropMinter is IMinterModule {
     /**
      * @dev Emitted when tokens are claimed by an account.
      * @param recipient The address of the account that claimed the tokens.
-     * @param quantity The quantity of tokens claimed.
+     * @param quantity  The quantity of tokens claimed.
      */
     event DropClaimed(address recipient, uint32 quantity);
+
+    // =============================================================
+    //                            ERRORS
+    // =============================================================
 
     /**
      * @dev The merkle proof is invalid.
@@ -81,15 +89,19 @@ interface IMerkleDropMinter is IMinterModule {
      */
     error ExceedsMaxPerAccount();
 
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
     /**
      * @dev Initializes merkle drop mint instance.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param merkleRootHash bytes32 hash of the Merkle tree representing eligible mints.
-     * @param price Sale price in ETH for minting a single token in `edition`.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     * @param affiliateFeeBPS The affiliate fee in basis points.
-     * @param maxMintable_ The maximum number of tokens that can can be minted for this sale.
+     * @param edition                Address of the song edition contract we are minting for.
+     * @param merkleRootHash         bytes32 hash of the Merkle tree representing eligible mints.
+     * @param price                  Sale price in ETH for minting a single token in `edition`.
+     * @param startTime              Start timestamp of sale (in seconds since unix epoch).
+     * @param endTime                End timestamp of sale (in seconds since unix epoch).
+     * @param affiliateFeeBPS        The affiliate fee in basis points.
+     * @param maxMintable_           The maximum number of tokens that can can be minted for this sale.
      * @param maxMintablePerAccount_ The maximum number of tokens that a single account can mint.
      * @return mintId The ID of the new mint instance.
      */
@@ -106,7 +118,7 @@ interface IMerkleDropMinter is IMinterModule {
 
     /**
      * @dev Mints a token for a particular mint instance.
-     * @param mintId The ID of the mint instance.
+     * @param mintId            The ID of the mint instance.
      * @param requestedQuantity The quantity of tokens to mint.
      */
     function mint(
@@ -117,10 +129,14 @@ interface IMerkleDropMinter is IMinterModule {
         address affiliate
     ) external payable;
 
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
+
     /**
      * @dev Returns the amount of minted tokens for `account` in `mintData`.
      * @param edition Address of the edition.
-     * @param mintId Mint identifier.
+     * @param mintId  Mint identifier.
      * @param account Address of the account.
      * @return tally The number of minted tokens for the account.
      */

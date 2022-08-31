@@ -23,17 +23,25 @@ contract GoldenEggMetadata is IMetadataModule {
     }
 
     /**
-     * @dev Returns token ID for the golden egg after randomness is locked, else returns 0.
+     * @dev Returns token ID for the golden egg after the `mintRandomness` is locked, else returns 0.
      * @param edition The edition address.
      * @return tokenId The token ID for the golden egg.
      */
     function getGoldenEggTokenId(ISoundEditionV1 edition) public view returns (uint256 tokenId) {
+        uint32 mintRandomnessTokenThreshold = edition.mintRandomnessTokenThreshold();
+
+        // If mintRandomnessTokenThreshold is zero, mintRandomness will always be zero.
+        if (mintRandomnessTokenThreshold == 0) {
+            return 0;
+        }
+
         if (
-            edition.totalMinted() >= edition.mintRandomnessTokenThreshold() ||
+            edition.totalMinted() >= mintRandomnessTokenThreshold ||
             block.timestamp >= edition.mintRandomnessTimeThreshold()
         ) {
-            // calculate number between 1 and mintRandomnessTokenThreshold, corresponding to the blockhash
-            tokenId = (uint256(uint72(edition.mintRandomness())) % edition.mintRandomnessTokenThreshold()) + 1;
+            // Calculate number between 1 and mintRandomnessTokenThreshold.
+            // mintRandomness is set during edition.mint() & corresponds to the blockhash.
+            tokenId = (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1;
         }
     }
 }

@@ -16,20 +16,30 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
 
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
+
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /// @inheritdoc IFixedPriceSignatureMinter
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
     function createEditionMint(
         address edition,
         uint96 price,
         address signer,
-        uint32 maxMintable_,
+        uint32 maxMintable,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
@@ -40,21 +50,23 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
         data.signer = signer;
-        data.maxMintable = maxMintable_;
+        data.maxMintable = maxMintable;
         // prettier-ignore
         emit FixedPriceSignatureMintCreated(
             edition,
             mintId,
             price,
             signer,
-            maxMintable_,
+            maxMintable,
             startTime,
             endTime,
             affiliateFeeBPS
         );
     }
 
-    /// @inheritdoc IFixedPriceSignatureMinter
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
     function mint(
         address edition,
         uint128 mintId,
@@ -63,9 +75,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
-        uint32 nextTotalMinted = data.totalMinted + quantity;
-        _requireNotSoldOut(nextTotalMinted, data.maxMintable);
-        data.totalMinted = nextTotalMinted;
+
+        data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
         bytes32 hash = keccak256(abi.encode(msg.sender, edition, mintId));
         hash = hash.toEthSignedMessageHash();
@@ -74,9 +85,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
     function totalPrice(
         address edition,
@@ -84,7 +95,10 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address, /* minter */
         uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
-        return _editionMintData[edition][mintId].price * quantity;
+        unchecked {
+            // Won't overflow, as `price` is 96 bits, and `quantity` is 32 bits.
+            return _editionMintData[edition][mintId].price * quantity;
+        }
     }
 
     /**
@@ -116,7 +130,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
     }
 
-    /// @inheritdoc IMinterModule
+    /**
+     * @inheritdoc IMinterModule
+     */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IFixedPriceSignatureMinter).interfaceId;
     }

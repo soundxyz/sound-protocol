@@ -41,22 +41,21 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
  * @dev The proxies are OpenZeppelin's Clones implementation of https://eips.ethereum.org/EIPS/eip-1167
  */
 contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable {
-    // The implementation contract delegated to by Sound edition proxies.
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
+
+    /**
+     * @dev The implementation contract delegated to by Sound edition proxies.
+     */
     address public soundEditionImplementation;
 
-    /**
-     * @dev Reverts if the given implementation address is zero.
-     */
-    modifier implementationNotZero(address implementation) {
-        if (implementation == address(0)) {
-            revert ImplementationAddressCantBeZero();
-        }
-        _;
-    }
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
 
     /**
-     * @dev Initialize the creator proxy with the edition implementation.
-     * @param _soundEditionImplementation The address of the Sound edition implementation.
+     * @inheritdoc ISoundCreatorV1
      */
     function initialize(address _soundEditionImplementation)
         public
@@ -69,18 +68,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     /**
-     * @dev Deploys a Sound edition minimal proxy contract.
-     * @param name The name of the edition.
-     * @param symbol The symbol of the edition.
-     * @param metadataModule The address of the metadata module.
-     * @param baseURI The base URI of the edition's metadata.
-     * @param contractURI The contract URI of the edition.
-     * @param fundingRecipient The edition's funding recipient address.
-     * @param royaltyBPS The secondary sales royalty in basis points.
-     * @param editionMaxMintable The maximum number of tokens that can be minted.
-     * @param mintRandomnessTokenThreshold The token count after which `SoundEdition.mintRandomness` gets locked.
-     * @param mintRandomnessTimeThreshold The timestamp after which `SoundEdition.mintRandomness` gets locked.
-     * @return soundEdition The address of the deployed edition proxy.
+     * @inheritdoc ISoundCreatorV1
      */
     function createSound(
         string memory name,
@@ -115,8 +103,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     /**
-     * @dev Changes the SoundEdition implementation contract address.
-     * @param newImplementation The new implementation address to be set.
+     * @inheritdoc ISoundCreatorV1
      */
     function setEditionImplementation(address newImplementation)
         external
@@ -128,9 +115,24 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         emit SoundEditionImplementationSet(soundEditionImplementation);
     }
 
+    // =============================================================
+    //                  INTERNAL / PRIVATE HELPERS
+    // =============================================================
+
     /**
      * @dev Enables the owner to upgrade the contract.
      *      Required by `UUPSUpgradeable`.
      */
     function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    /**
+     * @dev Reverts if the given implementation address is zero.
+     * @param implementation The address of the implementation.
+     */
+    modifier implementationNotZero(address implementation) {
+        if (implementation == address(0)) {
+            revert ImplementationAddressCantBeZero();
+        }
+        _;
+    }
 }

@@ -44,81 +44,99 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
  * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
 contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
-    // ================================
-    // CONSTANTS
-    // ================================
+    // =============================================================
+    //                           CONSTANTS
+    // =============================================================
 
-    // A role every minter module must have in order to mint new tokens.
+    /**
+     * @dev A role every minter module must have in order to mint new tokens.
+     */
     uint256 public constant MINTER_ROLE = _ROLE_1;
-    // A role the owner can grant for performing admin actions.
+
+    /**
+     * @dev A role the owner can grant for performing admin actions.
+     */
     uint256 public constant ADMIN_ROLE = _ROLE_0;
-    // Basis points denominator used in fee calculations.
-    uint16 internal constant MAX_BPS = 10_000;
-    // The interface ID for EIP-2981 (royaltyInfo)
+
+    /**
+     * @dev Basis points denominator used in fee calculations.
+     */
+    uint16 internal constant _MAX_BPS = 10_000;
+
+    /**
+     * @dev The interface ID for EIP-2981 (royaltyInfo)
+     */
     bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
-    // ================================
-    // STORAGE
-    // ================================
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
 
-    // The value for `name` and `symbol` if their combined
-    // length is (32 - 2) bytes. We need 2 bytes for their lengths.
+    /**
+     * @dev The value for `name` and `symbol` if their combined
+     *      length is (32 - 2) bytes. We need 2 bytes for their lengths.
+     */
     bytes32 private _shortNameAndSymbol;
-    // The metadata's base URI.
+
+    /**
+     * @dev The metadata's base URI.
+     */
     string public baseURI;
-    // The contract URI used by Opensea https://docs.opensea.io/docs/contract-level-metadata.
+
+    /**
+     * @dev The contract URI to be used by Opensea.
+     *      See: https://docs.opensea.io/docs/contract-level-metadata
+     */
     string public contractURI;
 
-    // The destination for ETH withdrawals.
+    /**
+     * @dev The destination for ETH withdrawals.
+     */
     address public fundingRecipient;
-    // The max mintable quantity for the edition.
+
+    /**
+     * @dev The max mintable quantity for the edition.
+     */
     uint32 public editionMaxMintable;
-    // The token count after which `mintRandomness` gets locked.
+
+    /**
+     * @dev The token count after which `mintRandomness` gets locked.
+     */
     uint32 public mintRandomnessTokenThreshold;
-    // The timestamp after which `mintRandomness` gets locked.
+
+    /**
+     * @dev The timestamp after which `mintRandomness` gets locked.
+     */
     uint32 public mintRandomnessTimeThreshold;
 
-    // Metadata module used for `tokenURI` if it is set.
-    IMetadataModule public metadataModule;
     /**
-     * Getter for the previous block hash - stored on each mint unless `mintRandomnessTokenThreshold` or
-     * `mintRandomnessTimeThreshold` have been surpassed. Used for game mechanics like the Sound Golden Egg.
+     * @dev Metadata module used for `tokenURI` if it is set.
+     */
+    IMetadataModule public metadataModule;
+
+    /**
+     * @dev The randomness based on latest block hash, which is stored upon each mint
+     *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp` have been surpassed.
+     *      Used for game mechanics like the Sound Golden Egg.
      */
     bytes9 public mintRandomness;
-    // The royalty fee in basis points.
+
+    /**
+     * @dev The royalty fee in basis points.
+     */
     uint16 public royaltyBPS;
-    // Indicates if the `baseURI` is mutable.
+
+    /**
+     * @dev Indicates if the `baseURI` is mutable.
+     */
     bool public isMetadataFrozen;
 
-    // ================================
-    // MODIFIERS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
 
     /**
-     * @dev Ensures the royalty basis points is a valid value.
-     */
-    modifier onlyValidRoyaltyBPS(uint16 royalty) {
-        if (royalty > MAX_BPS) revert InvalidRoyaltyBPS();
-        _;
-    }
-
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
-
-    /**
-     * @dev Initializes the contract
-     * @param owner Owner of contract (artist)
-     * @param name_ Name of the token
-     * @param symbol_ Symbol of the token
-     * @param metadataModule_ Address of metadata module, address(0x00) if not used
-     * @param baseURI_ Base URI
-     * @param contractURI_ Contract URI for OpenSea storefront
-     * @param fundingRecipient_ Address that receives primary and secondary royalties
-     * @param royaltyBPS_ Royalty amount in bps (basis points)
-     * @param editionMaxMintable_ The maximum amount of tokens that can be minted for this edition.
-     * @param mintRandomnessTokenThreshold_ Token supply after which randomness gets locked
-     * @param mintRandomnessTimeThreshold_ Timestamp after which randomness gets locked
+     * @inheritdoc ISoundEditionV1
      */
     function initialize(
         address owner,
@@ -160,13 +178,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @dev Mints `quantity` tokens to addrress `to`
-     * Each token will be assigned a token ID that is consecutively increasing.
-     * The caller must have the `MINTERROLE`, which can be granted via
-     * {grantRole}. Multiple minters, such as different minter contracts,
-     * can be authorized simultaneously.
-     * @param to Address to mint to
-     * @param quantity Number of tokens to mint
+     * @inheritdoc ISoundEditionV1
      */
     function mint(address to, uint256 quantity) public payable {
         address caller = msg.sender;
@@ -177,32 +189,48 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         uint256 totalMintedQty = _totalMinted();
 
-        // Check if there are enough tokens to mint.
-        if (totalMintedQty + quantity > editionMaxMintable) {
-            uint256 available = editionMaxMintable - totalMintedQty;
-            revert ExceedsEditionAvailableSupply(uint32(available));
+        unchecked {
+            // Check if there are enough tokens to mint.
+            // If quantity is big enough to cause an overflow,
+            // `ERC721A._mint` will revert with an out of gas error.
+            if (totalMintedQty + quantity > editionMaxMintable) {
+                uint256 available = editionMaxMintable - totalMintedQty;
+                revert ExceedsEditionAvailableSupply(uint32(available));
+            }
         }
+
         // Mint the tokens.
         _mint(to, quantity);
         // Set randomness
         if (totalMintedQty <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
-            mintRandomness = bytes9(blockhash(block.number - 1));
+            unchecked {
+                mintRandomness = bytes9(blockhash(block.number - 1));
+            }
         }
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function withdrawETH() external {
         SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function withdrawERC20(address[] calldata tokens) external {
-        for (uint256 i; i < tokens.length; ++i) {
-            SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+        unchecked {
+            uint256 n = tokens.length;
+            for (uint256 i; i != n; ++i) {
+                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+            }
         }
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function setMetadataModule(IMetadataModule metadataModule_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
@@ -210,7 +238,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         emit MetadataModuleSet(metadataModule_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         baseURI = baseURI_;
@@ -218,7 +248,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         emit BaseURISet(baseURI_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
         contractURI = contractURI_;
@@ -226,7 +258,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         emit ContractURISet(contractURI_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen) revert MetadataIsFrozen();
 
@@ -234,20 +268,26 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function setFundingRecipient(address fundingRecipient_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
         fundingRecipient = fundingRecipient_;
         emit FundingRecipientSet(fundingRecipient_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function setRoyalty(uint16 royaltyBPS_) external onlyRolesOrOwner(ADMIN_ROLE) onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
         emit RoyaltySet(royaltyBPS_);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function reduceEditionMaxMintable(uint32 newMax) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (_totalMinted() == editionMaxMintable) {
             revert MaximumHasAlreadyBeenReached();
@@ -269,7 +309,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         emit EditionMaxMintableSet(editionMaxMintable);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
 
@@ -281,16 +323,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
     }
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
     }
 
-    /// @inheritdoc IERC721AUpgradeable
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
     function tokenURI(uint256 tokenId)
         public
         view
@@ -307,7 +353,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         return bytes(baseURI_).length != 0 ? string.concat(baseURI_, _toString(tokenId)) : "";
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -320,39 +368,58 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             interfaceId == _INTERFACE_ID_ERC2981;
     }
 
-    /// @inheritdoc IERC2981Upgradeable
+    /**
+     * @inheritdoc IERC2981Upgradeable
+     */
     function royaltyInfo(
         uint256, // tokenId
         uint256 salePrice
     ) external view override(IERC2981Upgradeable) returns (address fundingRecipient_, uint256 royaltyAmount) {
         fundingRecipient_ = fundingRecipient;
-        royaltyAmount = (salePrice * royaltyBPS) / MAX_BPS;
+        royaltyAmount = (salePrice * royaltyBPS) / _MAX_BPS;
     }
 
-    /// @inheritdoc IERC721AUpgradeable
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
     function name() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         (string memory name_, ) = _loadNameAndSymbol();
         return name_;
     }
 
-    /// @inheritdoc IERC721AUpgradeable
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
     function symbol() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         (, string memory symbol_) = _loadNameAndSymbol();
         return symbol_;
     }
 
-    // ================================
-    // INTERNAL FUNCTIONS
-    // ================================
+    // =============================================================
+    //                  INTERNAL / PRIVATE HELPERS
+    // =============================================================
 
-    /// @inheritdoc ERC721AUpgradeable
+    /**
+     * @inheritdoc ERC721AUpgradeable
+     */
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
     }
 
     /**
+     * @dev Ensures the royalty basis points is a valid value.
+     * @param bps The royalty BPS.
+     */
+    modifier onlyValidRoyaltyBPS(uint16 bps) {
+        if (bps > _MAX_BPS) revert InvalidRoyaltyBPS();
+        _;
+    }
+
+    /**
      * @dev Helper function for initializing the name and symbol,
-     * packing them into a single word if possible.
+     *      packing them into a single word if possible.
+     * @param name_   Name of the collection.
+     * @param symbol_ Symbol of the collection.
      */
     function _initializeNameAndSymbol(string memory name_, string memory symbol_) internal {
         // Overflow impossible since max block gas limit bounds the length of the strings.
@@ -374,7 +441,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
     /**
      * @dev Helper function for retrieving the name and symbol,
-     * unpacking them from a single word in storage if previously packed.
+     *      unpacking them from a single word in storage if previously packed.
+     * @return name_   Name of the collection.
+     * @return symbol_ Symbol of the collection.
      */
     function _loadNameAndSymbol() internal view returns (string memory name_, string memory symbol_) {
         // Overflow impossible since max block gas limit bounds the length of the strings.
