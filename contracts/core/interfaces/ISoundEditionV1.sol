@@ -213,7 +213,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
      * @param bps The new royalty basis points to be set.
-     * @param royaltyBPS The new royalty to be set.
      */
     function setRoyalty(uint16 bps) external;
 
