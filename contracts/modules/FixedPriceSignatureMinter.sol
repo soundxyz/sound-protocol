@@ -16,15 +16,25 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     using ECDSA for bytes32;
 
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
+
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
-    // ================================
-    // WRITE FUNCTIONS
-    // ================================
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
-    /// @inheritdoc IFixedPriceSignatureMinter
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
     function createEditionMint(
         address edition,
         uint96 price,
@@ -54,7 +64,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         );
     }
 
-    /// @inheritdoc IFixedPriceSignatureMinter
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
     function mint(
         address edition,
         uint128 mintId,
@@ -74,9 +86,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
-    // ================================
-    // VIEW FUNCTIONS
-    // ================================
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
 
     function totalPrice(
         address edition,
@@ -116,7 +128,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IFixedPriceSignatureMinter).interfaceId;
     }
 
-    /// @inheritdoc IMinterModule
+    /**
+     * @inheritdoc IMinterModule
+     */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IFixedPriceSignatureMinter).interfaceId;
     }

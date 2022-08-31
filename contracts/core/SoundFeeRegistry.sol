@@ -10,18 +10,18 @@ import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
  * @author Sound.xyz
  */
 contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
-    // ================================
-    // CONSTANTS
-    // ================================
+    // =============================================================
+    //                           CONSTANTS
+    // =============================================================
 
     /**
-     * @dev This is the denominator, in basis points (BPS), for platform fees
+     * @dev This is the denominator, in basis points (BPS), for platform fees.
      */
-    uint16 private constant MAX_BPS = 10_000;
+    uint16 private constant _MAX_BPS = 10_000;
 
-    // ================================
-    // STORAGE
-    // ================================
+    // =============================================================
+    //                            STORAGE
+    // =============================================================
 
     /**
      * @dev The sound protocol's address that receives platform fees.
@@ -33,47 +33,24 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
      */
     uint16 public override platformFeeBPS;
 
-    // ================================
-    // EVENTS & ERRORS
-    // ================================
-
-    /**
-     * @notice Emitted when the `soundFeeAddress` is changed.
-     */
-    event SoundFeeAddressSet(address soundFeeAddress);
-
-    /**
-     * @notice Emitted when the `platformFeeBPS` is changed.
-     */
-    event PlatformFeeSet(uint16 platformFeeBPS);
-
-    /**
-     * The sound fee address must not be address(0).
-     */
-    error InvalidSoundFeeAddress();
-
-    /**
-     * The platform fee numerator must not exceed `MAX_BPS`.
-     */
-    error InvalidPlatformFeeBPS();
-
-    // ================================
-    // PUBLIC & EXTERNAL WRITABLE FUNCTIONS
-    // ================================
+    // =============================================================
+    //                          CONSTRUCTOR
+    // =============================================================
 
     constructor(address soundFeeAddress_, uint16 platformFeeBPS_)
         onlyValidSoundFeeAddress(soundFeeAddress_)
         onlyValidPlatformFeeBPS(platformFeeBPS_)
     {
         soundFeeAddress = soundFeeAddress_;
-
         platformFeeBPS = platformFeeBPS_;
     }
 
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
+
     /**
-     * @dev Sets the `soundFeeAddress`.
-     * Calling conditions:
-     * - The caller must be the owner of the contract.
+     * @inheritdoc ISoundFeeRegistry
      */
     function setSoundFeeAddress(address soundFeeAddress_)
         external
@@ -85,21 +62,20 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     }
 
     /**
-     * @dev Sets the `platformFeePBS`.
-     * Calling conditions:
-     * - The caller must be the owner of the contract.
+     * @inheritdoc ISoundFeeRegistry
      */
     function setPlatformFeeBPS(uint16 platformFeeBPS_) external onlyOwner onlyValidPlatformFeeBPS(platformFeeBPS_) {
         platformFeeBPS = platformFeeBPS_;
         emit PlatformFeeSet(platformFeeBPS_);
     }
 
-    // ================================
-    // MODIFIERS
-    // ================================
+    // =============================================================
+    //                  INTERNAL / PRIVATE HELPERS
+    // =============================================================
 
     /**
      * @dev Restricts the sound fee address to be address(0).
+     * @param soundFeeAddress_ The sound fee address.
      */
     modifier onlyValidSoundFeeAddress(address soundFeeAddress_) {
         if (soundFeeAddress_ == address(0)) revert InvalidSoundFeeAddress();
@@ -107,10 +83,11 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     }
 
     /**
-     * @dev Restricts the platform fee numerator to not excced the `MAX_BPS`.
+     * @dev Restricts the platform fee numerator to not excced the `_MAX_BPS`.
+     * @param platformFeeBPS_ Platform fee amount in bps (basis points).
      */
     modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) {
-        if (platformFeeBPS_ > MAX_BPS) revert InvalidPlatformFeeBPS();
+        if (platformFeeBPS_ > _MAX_BPS) revert InvalidPlatformFeeBPS();
         _;
     }
 }

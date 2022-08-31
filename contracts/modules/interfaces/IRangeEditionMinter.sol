@@ -45,6 +45,24 @@ struct MintInfo {
  * @author Sound.xyz
  */
 interface IRangeEditionMinter is IMinterModule {
+    // =============================================================
+    //                            EVENTS
+    // =============================================================
+
+    /**
+     * @dev Emitted when a range edition is created.
+     * @param edition          Address of the song edition contract we are minting for.
+     * @param mintId           The mint ID.
+     * @param price            Sale price in ETH for minting a single token in `edition`.
+     * @param startTime        Start timestamp of sale (in seconds since unix epoch).
+     * @param closingTime      The timestamp (in seconds since unix epoch) after which the
+     *                         max amount of tokens mintable will drop from
+     *                         `maxMintableUpper` to `maxMintableLower`.
+     * @param endTime          End timestamp of sale (in seconds since unix epoch).
+     * @param affiliateFeeBPS  The affiliate fee in basis points.
+     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
+     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     */
     event RangeEditionMintCreated(
         address indexed edition,
         uint128 indexed mintId,
@@ -60,6 +78,13 @@ interface IRangeEditionMinter is IMinterModule {
 
     event ClosingTimeSet(address indexed edition, uint128 indexed mintId, uint32 closingTime);
 
+    /**
+     * @dev Emitted when the max mintable range is updated.
+     * @param edition          Address of the song edition contract we are minting for.
+     * @param mintId           The mint ID.
+     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
+     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     */
     event MaxMintableRangeSet(
         address indexed edition,
         uint128 indexed mintId,
@@ -67,26 +92,39 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintableUpper
     );
 
+    // =============================================================
+    //                            ERRORS
+    // =============================================================
+
     /**
      * The following condition must hold: `maxMintableLower` < `maxMintableUpper`.
+     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
+     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
      */
     error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
-    // The number of tokens minted has exceeded the number allowed for each account.
+    /**
+     * @dev The number of tokens minted has exceeded the number allowed for each account.
+     */
     error ExceedsMaxPerAccount();
+
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
 
     /*
      * @dev Initializes a range mint instance
-     * @param edition Address of the song edition contract we are minting for.
-     * @param price Sale price in ETH for minting a single token in `edition`.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime The timestamp (in seconds since unix epoch) after which the
-     * max amount of tokens mintable will drop from
-     * `maxMintableUpper` to `maxMintableLower`.
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
-     * @param affiliateFeeBPS The affiliate fee in basis points.
-     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     * @param edition                Address of the song edition contract we are minting for.
+     * @param price                  Sale price in ETH for minting a single token in `edition`.
+     * @param startTime              Start timestamp of sale (in seconds since unix epoch).
+     * @param closingTime            The timestamp (in seconds since unix epoch) after which the
+     *                               max amount of tokens mintable will drop from
+     *                               `maxMintableUpper` to `maxMintableLower`.
+     * @param endTime                End timestamp of sale (in seconds since unix epoch).
+     * @param affiliateFeeBPS        The affiliate fee in basis points.
+     * @param maxMintableLower       The lower limit of the maximum number of tokens that can be minted.
+     * @param maxMintableUpper       The upper limit of the maximum number of tokens that can be minted.
+     * @param maxMintablePerAccount_ The maximum number of tokens that can be minted by an account.
      * @return mintId The ID for the new mint instance.
      */
     function createEditionMint(
@@ -103,12 +141,12 @@ interface IRangeEditionMinter is IMinterModule {
 
     /*
      * @dev Sets the time range.
-     * @param edition Address of the song edition contract we are minting for.
-     * @param startTime Start timestamp of sale (in seconds since unix epoch).
+     * @param edition     Address of the song edition contract we are minting for.
+     * @param startTime   Start timestamp of sale (in seconds since unix epoch).
      * @param closingTime The timestamp (in seconds since unix epoch) after which the
-     * max amount of tokens mintable will drop from
-     * `maxMintableUpper` to `maxMintableLower`.
-     * @param endTime End timestamp of sale (in seconds since unix epoch).
+     *                    max amount of tokens mintable will drop from
+     *                    `maxMintableUpper` to `maxMintableLower`.
+     * @param endTime     End timestamp of sale (in seconds since unix epoch).
      */
     function setTimeRange(
         address edition,
@@ -120,7 +158,7 @@ interface IRangeEditionMinter is IMinterModule {
 
     /*
      * @dev Sets the max mintable range.
-     * @param edition Address of the song edition contract we are minting for.
+     * @param edition          Address of the song edition contract we are minting for.
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
      * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
      */
@@ -133,7 +171,7 @@ interface IRangeEditionMinter is IMinterModule {
 
     /*
      * @dev Mints tokens for a given edition.
-     * @param edition Address of the song edition contract we are minting for.
+     * @param edition  Address of the song edition contract we are minting for.
      * @param quantity Token quantity to mint in song `edition`.
      */
     function mint(
@@ -143,10 +181,15 @@ interface IRangeEditionMinter is IMinterModule {
         address affiliate
     ) external payable;
 
+    // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
+
     /**
-     * @dev Returns IRangeEditionMinter.MintInfo instance containing the full minter parameter set.
+     * @dev Returns {IRangeEditionMinter.MintInfo} instance containing the full minter parameter set.
      * @param edition The edition to get the mint instance for.
-     * @param mintId The ID of the mint instance.
+     * @param mintId  The ID of the mint instance.
+     * @return The struct containing the values.
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 }
