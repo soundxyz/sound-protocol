@@ -325,6 +325,12 @@ contract RangeEditionMinterTests is TestConfig {
         );
     }
 
+    function test_mintRevertsForSoldOut() public {
+        test_mintRevertsForSoldOut(1, 1);
+        test_mintRevertsForSoldOut(MAX_MINTABLE_UPPER, MAX_MINTABLE_LOWER);
+        test_mintRevertsForSoldOut(MAX_MINTABLE_LOWER, MAX_MINTABLE_UPPER);
+    }
+
     function test_mintBeforeAndAfterClosingTimeBaseCase() public {
         uint32 quantity = 1;
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(quantity);
