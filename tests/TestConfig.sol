@@ -6,7 +6,7 @@ import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
-import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
+import { SoundFeeRegistryV1 } from "@core/SoundFeeRegistryV1.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
 
@@ -27,21 +27,23 @@ contract TestConfig is Test {
     uint256 constant MAX_BPS = 10_000;
 
     SoundCreatorV1 soundCreator;
-    SoundFeeRegistry feeRegistry;
+    SoundFeeRegistryV1 feeRegistry;
 
     // Set up called before each test
     function setUp() public virtual {
-        feeRegistry = new SoundFeeRegistry(SOUND_FEE_ADDRESS, PLATFORM_FEE_BPS);
-
         // Deploy implementations
+        SoundFeeRegistryV1 feeRegistryImp = new SoundFeeRegistryV1();
         SoundCreatorV1 soundCreatorImp = new SoundCreatorV1();
         MockSoundEditionV1 editionImplementation = new MockSoundEditionV1();
 
-        // Deploy creator
-        ERC1967Proxy proxy = new ERC1967Proxy(address(soundCreatorImp), bytes(""));
-        soundCreator = SoundCreatorV1(address(proxy));
+        // Deploy & initialize registry proxy
+        ERC1967Proxy registryProxy = new ERC1967Proxy(address(feeRegistryImp), bytes(""));
+        feeRegistry = SoundFeeRegistryV1(address(registryProxy));
+        feeRegistry.initialize(SOUND_FEE_ADDRESS, PLATFORM_FEE_BPS);
 
-        // Initialize creator
+        // Deploy & initialize creator proxy
+        ERC1967Proxy creatorProxy = new ERC1967Proxy(address(soundCreatorImp), bytes(""));
+        soundCreator = SoundCreatorV1(address(creatorProxy));
         soundCreator.initialize(address(editionImplementation));
     }
 

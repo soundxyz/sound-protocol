@@ -1,29 +1,39 @@
 pragma solidity ^0.8.16;
 
 import "../TestConfig.sol";
-import { ISoundFeeRegistry, SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
+import { ISoundFeeRegistry, SoundFeeRegistryV1 } from "@core/SoundFeeRegistryV1.sol";
+import { MockSoundFeeRegistryV2 } from "../mocks/MockSoundFeeRegistryV2.sol";
 
 contract SoundFeeRegistryTests is TestConfig {
     event SoundFeeAddressSet(address soundFeeAddress);
-
     event PlatformFeeSet(uint16 platformFeeBPS);
+    event Upgraded(address indexed implementation);
 
     function test_deployFeeRegistry(address soundFeeAddress, uint16 platformFeeBPS) public {
+        // Deploy implementation, proxy, & initialize proxy
+        SoundFeeRegistryV1 feeRegistryImp = new SoundFeeRegistryV1();
+        ERC1967Proxy registryProxy = new ERC1967Proxy(address(feeRegistryImp), bytes(""));
+        feeRegistry = SoundFeeRegistryV1(address(registryProxy));
+
         if (soundFeeAddress == address(0)) {
+            // Test revert on invalid sound fee address
             vm.expectRevert(ISoundFeeRegistry.InvalidSoundFeeAddress.selector);
-            new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
+            feeRegistry.initialize(soundFeeAddress, platformFeeBPS);
             return;
         }
+
+        // Test revert if platform fee BPS is invalid
         if (platformFeeBPS > MAX_BPS) {
             vm.expectRevert(ISoundFeeRegistry.InvalidPlatformFeeBPS.selector);
-            new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
+            feeRegistry.initialize(soundFeeAddress, platformFeeBPS);
             return;
         }
 
-        SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(soundFeeAddress, platformFeeBPS);
+        // Test success
+        feeRegistry.initialize(soundFeeAddress, platformFeeBPS);
 
-        assertEq(soundFeeRegistry.soundFeeAddress(), soundFeeAddress);
-        assertEq(soundFeeRegistry.platformFeeBPS(), platformFeeBPS);
+        assertEq(feeRegistry.soundFeeAddress(), soundFeeAddress);
+        assertEq(feeRegistry.platformFeeBPS(), platformFeeBPS);
     }
 
     // =============================================================
@@ -56,7 +66,7 @@ contract SoundFeeRegistryTests is TestConfig {
     //                      setPlatformFeeBPS()
     // =============================================================
 
-    // Test if setPlatformFeeBPS only callable by owner
+    // Test if setPlatformFeeBPS only callable by ownerfeeRegistry
     function test_setPlatformFeeBPSRevertsForNonOwner() external {
         address caller = getFundedAccount(1);
         vm.prank(caller);
@@ -79,5 +89,24 @@ contract SoundFeeRegistryTests is TestConfig {
 
         uint128 requiredEtherValue = 1 ether;
         assertEq(feeRegistry.platformFee(requiredEtherValue), (requiredEtherValue * newPlatformFeeBPS) / MAX_BPS);
+    }
+
+    function test_ownerCanSuccessfullyUpgrade() public {
+        MockSoundFeeRegistryV2 v2Implementation = new MockSoundFeeRegistryV2();
+
+        vm.expectEmit(true, false, false, true);
+        emit Upgraded(address(v2Implementation));
+        feeRegistry.upgradeTo(address(v2Implementation));
+
+        assertEq(MockSoundFeeRegistryV2(address(feeRegistry)).success(), "Upgrade to MockSoundFeeRegistryV2 success!");
+    }
+
+    function test_attackerCantUpgrade(address attacker) public {
+        vm.assume(attacker != address(this));
+        vm.assume(attacker != address(0));
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(attacker);
+        feeRegistry.upgradeTo(address(666));
     }
 }

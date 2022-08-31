@@ -17,12 +17,12 @@ contract Deploy is Script {
         vm.startBroadcast();
 
         // TODO - deploy this for real
-        ISoundFeeRegistry soundFeeRegistry = ISoundFeeRegistry(address(0));
+        ISoundFeeRegistry feeRegistry = ISoundFeeRegistry(address(0));
 
         new GoldenEggMetadata();
-        new FixedPriceSignatureMinter(soundFeeRegistry);
-        new MerkleDropMinter(soundFeeRegistry);
-        new RangeEditionMinter(soundFeeRegistry);
+        new FixedPriceSignatureMinter(feeRegistry);
+        new MerkleDropMinter(feeRegistry);
+        new RangeEditionMinter(feeRegistry);
 
         // Deploy implementations
         SoundEditionV1 editionImplementation = new SoundEditionV1();

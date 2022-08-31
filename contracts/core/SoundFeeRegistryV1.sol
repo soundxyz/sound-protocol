@@ -2,14 +2,15 @@
 
 pragma solidity ^0.8.16;
 
-import { Ownable } from "openzeppelin/access/Ownable.sol";
+import { OwnableUpgradeable } from "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import { UUPSUpgradeable } from "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 
 /**
- * @title SoundFeeRegistry
- * @author Sound.xyz
+ * @title SoundFeeRegistryV1
+ * @dev Exposes the Sound platform fee & receiver address.
  */
-contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
+contract SoundFeeRegistryV1 is ISoundFeeRegistry, OwnableUpgradeable, UUPSUpgradeable {
     // =============================================================
     //                           CONSTANTS
     // =============================================================
@@ -37,10 +38,14 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(address soundFeeAddress_, uint16 platformFeeBPS_)
+    function initialize(address soundFeeAddress_, uint16 platformFeeBPS_)
+        public
         onlyValidSoundFeeAddress(soundFeeAddress_)
         onlyValidPlatformFeeBPS(platformFeeBPS_)
+        initializer
     {
+        __Ownable_init_unchained();
+
         soundFeeAddress = soundFeeAddress_;
         platformFeeBPS = platformFeeBPS_;
     }
@@ -82,6 +87,12 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
+
+    /**
+     * @dev Enables the owner to upgrade the contract.
+     *      Required by `UUPSUpgradeable`.
+     */
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     /**
      * @dev Restricts the sound fee address to be address(0).
