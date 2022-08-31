@@ -66,7 +66,7 @@ contract SoundFeeRegistryTests is TestConfig {
     //                      setPlatformFeeBPS()
     // =============================================================
 
-    // Test if setPlatformFeeBPS only callable by ownerfeeRegistry
+    // Test if setPlatformFeeBPS only callable by owner
     function test_setPlatformFeeBPSRevertsForNonOwner() external {
         address caller = getFundedAccount(1);
         vm.prank(caller);
