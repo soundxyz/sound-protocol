@@ -19,14 +19,9 @@ contract SoundCreatorTests is TestConfig {
     function test_deploysSoundCreator() public {
         // Deploy logic contracts
         SoundEditionV1 editionImplementation = new SoundEditionV1();
-        SoundCreatorV1 soundCreatorImp = new SoundCreatorV1();
 
         // Deploy & initialize creator proxy
-        ERC1967Proxy proxy = new ERC1967Proxy(address(soundCreatorImp), bytes(""));
-        SoundCreatorV1 soundCreator = SoundCreatorV1(address(proxy));
-        soundCreator.initialize(address(editionImplementation));
-
-        assert(address(soundCreator) != address(0));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(editionImplementation));
 
         assertEq(address(soundCreator.soundEditionImplementation()), address(editionImplementation));
     }
@@ -47,7 +42,8 @@ contract SoundCreatorTests is TestConfig {
 
     function test_createSoundSetsNameAndSymbolCorrectly(string memory name, string memory symbol) public {
         SoundEditionV1 soundEdition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
+                soundCreator,
                 name,
                 symbol,
                 METADATA_MODULE,
@@ -112,35 +108,32 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_implementationAddressOfZeroReverts() public {
-        SoundCreatorV1 soundCreator = new SoundCreatorV1();
-
         vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
-        soundCreator.initialize(address(0));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(0));
 
         SoundEditionV1 soundEdition = createGenericEdition();
-        soundCreator = new SoundCreatorV1();
-        soundCreator.initialize(address(soundEdition));
+        soundCreator = new SoundCreatorV1(address(soundEdition));
 
         vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
         soundCreator.setEditionImplementation(address(0));
     }
 
-    function test_ownerCanSuccessfullyUpgrade() public {
-        MockSoundCreatorV2 creatorV2Implementation = new MockSoundCreatorV2();
+    // function test_ownerCanSuccessfullyUpgrade() public {
+    //     MockSoundCreatorV2 creatorV2Implementation = new MockSoundCreatorV2();
 
-        vm.expectEmit(true, false, false, true);
-        emit Upgraded(address(creatorV2Implementation));
-        soundCreator.upgradeTo(address(creatorV2Implementation));
+    //     vm.expectEmit(true, false, false, true);
+    //     emit Upgraded(address(creatorV2Implementation));
+    //     soundCreator.upgradeTo(address(creatorV2Implementation));
 
-        assertEq(MockSoundCreatorV2(address(soundCreator)).success(), "upgrade to v2 success!");
-    }
+    //     assertEq(MockSoundCreatorV2(address(soundCreator)).success(), "upgrade to v2 success!");
+    // }
 
-    function test_attackerCantUpgrade(address attacker) public {
-        vm.assume(attacker != address(this));
-        vm.assume(attacker != address(0));
+    // function test_attackerCantUpgrade(address attacker) public {
+    //     vm.assume(attacker != address(this));
+    //     vm.assume(attacker != address(0));
 
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(attacker);
-        soundCreator.upgradeTo(address(666));
-    }
+    //     vm.expectRevert("Ownable: caller is not the owner");
+    //     vm.prank(attacker);
+    //     soundCreator.upgradeTo(address(666));
+    // }
 }

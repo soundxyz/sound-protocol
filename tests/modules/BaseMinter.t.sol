@@ -41,7 +41,8 @@ contract MintControllerBaseTests is TestConfig {
 
     function _createEdition(uint32 editionMaxMintable) internal returns (SoundEditionV1 edition) {
         edition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
+                soundCreator,
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,

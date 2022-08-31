@@ -15,7 +15,8 @@ contract SoundEdition_payments is TestConfig {
         vm.assume(royaltyBPS > MAX_BPS);
 
         vm.expectRevert(ISoundEditionV1.InvalidRoyaltyBPS.selector);
-        soundCreator.createSound(
+        createSound(
+            soundCreator,
             SONG_NAME,
             SONG_SYMBOL,
             METADATA_MODULE,
@@ -31,7 +32,8 @@ contract SoundEdition_payments is TestConfig {
 
     function test_initializeRevertsForInvalidFundingRecipient() public {
         vm.expectRevert(ISoundEditionV1.InvalidFundingRecipient.selector);
-        soundCreator.createSound(
+        createSound(
+            soundCreator,
             SONG_NAME,
             SONG_SYMBOL,
             METADATA_MODULE,

@@ -71,7 +71,8 @@ contract MintersIntegration is TestConfig {
         uint32 EDITION_MAX_MINTABLE = 1000;
         // Setup Glass house sound edition
         edition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
+                soundCreator,
                 "Glass House",
                 "GLASS",
                 METADATA_MODULE,

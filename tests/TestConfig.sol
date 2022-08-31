@@ -34,15 +34,10 @@ contract TestConfig is Test {
         feeRegistry = new SoundFeeRegistry(SOUND_FEE_ADDRESS, PLATFORM_FEE_BPS);
 
         // Deploy implementations
-        SoundCreatorV1 soundCreatorImp = new SoundCreatorV1();
         MockSoundEditionV1 editionImplementation = new MockSoundEditionV1();
 
         // Deploy creator
-        ERC1967Proxy proxy = new ERC1967Proxy(address(soundCreatorImp), bytes(""));
-        soundCreator = SoundCreatorV1(address(proxy));
-
-        // Initialize creator
-        soundCreator.initialize(address(editionImplementation));
+        soundCreator = new SoundCreatorV1(address(editionImplementation));
     }
 
     /**
@@ -57,10 +52,43 @@ contract TestConfig is Test {
         return addr;
     }
 
+    function createSound(
+        SoundCreatorV1 factory,
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule,
+        string memory baseURI,
+        string memory contractURI,
+        address fundingRecipient,
+        uint16 royaltyBPS,
+        uint32 editionMaxMintable,
+        uint32 mintRandomnessTokenThreshold,
+        uint32 mintRandomnessTimeThreshold
+    ) public returns (address payable) {
+        return
+            factory.createSound(
+                abi.encodeWithSelector(
+                    SoundEditionV1.initialize.selector,
+                    address(0),
+                    name,
+                    symbol,
+                    metadataModule,
+                    baseURI,
+                    contractURI,
+                    fundingRecipient,
+                    royaltyBPS,
+                    editionMaxMintable,
+                    mintRandomnessTokenThreshold,
+                    mintRandomnessTimeThreshold
+                )
+            );
+    }
+
     function createGenericEdition() public returns (SoundEditionV1) {
         return
             SoundEditionV1(
-                soundCreator.createSound(
+                createSound(
+                    soundCreator,
                     SONG_NAME,
                     SONG_SYMBOL,
                     METADATA_MODULE,
