@@ -11,6 +11,8 @@ import { IFixedPriceSignatureMinter, MintInfo } from "@modules/interfaces/IFixed
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
+import "forge-std/console.sol";
+
 contract FixedPriceSignatureMinterTests is TestConfig {
     using ECDSA for bytes32;
 
@@ -577,18 +579,19 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         uint32[] memory tokensPerBuyer = new uint32[](1);
         tokensPerBuyer[0] = 1;
 
-        uint32 numOfTokensToBuy = 50;
+        uint32 numOfTokensToBuy = 10;
+        uint32 claimsArrayLength = numOfTokensToBuy * 2;
 
-        uint32[] memory claimTickets = new uint32[](numOfTokensToBuy * 2);
-        bool[] memory expectedClaimedAndUnclaimed = new bool[](numOfTokensToBuy * 2);
+        uint32[] memory claimTickets = new uint32[](claimsArrayLength);
+        bool[] memory expectedClaimedAndUnclaimed = new bool[](claimsArrayLength);
 
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-        minter.createEditionMint(
+       uint128 mintId = minter.createEditionMint(
             address(edition),
             PRICE,
             _signerAddress(),
-            numOfTokensToBuy, // max mintable
+            type(uint32).max, // max mintable
             START_TIME,
             END_TIME,
             AFFILIATE_FEE_BPS
@@ -599,13 +602,12 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         uint32 index = 0;
         for (uint32 claimTicket = 0; claimTicket < numOfTokensToBuy; claimTicket++) {
             address buyer = getFundedAccount(index + 1);
-            uint32 claimTicket = index;
 
             bytes memory sig = _getSignature(
                 buyer,
                 address(edition),
                 address(minter),
-                MINT_ID,
+                mintId,
                 claimTicket,
                 SIGNED_QUANTITY_1,
                 NULL_AFFILIATE
@@ -615,7 +617,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             vm.prank(buyer);
             minter.mint{ value: PRICE }(
                 address(edition),
-                MINT_ID,
+                mintId,
                 QUANTITY_1,
                 SIGNED_QUANTITY_1,
                 NULL_AFFILIATE,
@@ -629,8 +631,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
             index++;
 
-            // Add unclaimed ticket number
-            claimTickets[index] = claimTicket + numOfTokensToBuy;
+            // Add an unclaimed ticket number
+            claimTickets[index] = claimTicket + 100000;
             expectedClaimedAndUnclaimed[index] = false;
 
             index++;
@@ -638,7 +640,9 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bool[] memory claimedAndUnclaimed = minter.checkClaimTickets(address(edition), MINT_ID, claimTickets);
 
-        for (uint256 i = 0; i < numOfTokensToBuy; i++) {
+        for (uint256 i = 0; i < claimsArrayLength; i++) {
+            console.log('claimTicket', claimTickets[i]);
+            console.log(claimedAndUnclaimed[i], expectedClaimedAndUnclaimed[i]);
             assertEq(claimedAndUnclaimed[i], expectedClaimedAndUnclaimed[i]);
         }
     }
