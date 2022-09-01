@@ -104,7 +104,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
-        _claimTicketSignature(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
+        _validateAndClaimSignature(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
 
         _mint(edition, mintId, quantity, affiliate);
     }
@@ -196,7 +196,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      * @param signedQuantity The max quantity this buyer has been approved to mint.
      * @param affiliate      The affiliate address.
      */
-    function _claimTicketSignature(
+    function _validateAndClaimSignature(
         bytes calldata signature,
         address expectedSigner,
         uint32 claimTicket,
