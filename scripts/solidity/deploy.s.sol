@@ -13,27 +13,50 @@ import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 
 contract Deploy is Script {
+    uint16 private constant PLATFORM_FEE_BPS = 500;
+    address SOUND_GNOSIS_SAFE_MAINNET = 0x858a92511485715Cfb754f397a7894b7724c7Abd;
+
     function run() external {
         vm.startBroadcast();
 
-        // TODO - deploy this for real
-        ISoundFeeRegistry soundFeeRegistry = ISoundFeeRegistry(address(0));
+        // Deploy the SoundFeeRegistry
+        SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(SOUND_GNOSIS_SAFE_MAINNET, PLATFORM_FEE_BPS);
 
+        // Deploy modules
         new GoldenEggMetadata();
         new FixedPriceSignatureMinter(soundFeeRegistry);
         new MerkleDropMinter(soundFeeRegistry);
         new RangeEditionMinter(soundFeeRegistry);
 
-        // Deploy implementations
+        // Deploy edition implementation (& initialize it for security)
         SoundEditionV1 editionImplementation = new SoundEditionV1();
+        editionImplementation.initialize(
+            address(0), // owner
+            "SoundEditionV1", // name
+            "SOUND", // symbol
+            address(0), // metadataModule
+            "baseURI", // baseURI
+            "contractURI", // contractURI
+            address(1), // fundingRecipient
+            0, // royaltyBPS
+            0, // editionMaxMintable
+            0, // mintRandomnessTokenThreshold
+            0 // mintRandomnessTimeThreshold
+        );
+
+        // Deploy creator implementation (& initialize it for security)
         SoundCreatorV1 creatorImplementation = new SoundCreatorV1();
+        creatorImplementation.initialize(address(editionImplementation));
 
         // Deploy creator proxy
         ERC1967Proxy proxy = new ERC1967Proxy(address(creatorImplementation), bytes(""));
         SoundCreatorV1 soundCreator = SoundCreatorV1(address(proxy));
 
-        // Initialize creator
+        // Initialize creator proxy
         soundCreator.initialize(address(editionImplementation));
+
+        // Set creator ownership to gnosis safe
+        soundCreator.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
 
         vm.stopBroadcast();
     }
