@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import "forge-std/console.sol";
+
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
+import { Clones } from "openzeppelin/proxy/Clones.sol";
 
 import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
+import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
+import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
+import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockSoundCreatorV2 } from "../mocks/MockSoundCreatorV2.sol";
@@ -14,6 +21,11 @@ contract SoundCreatorTests is TestConfig {
     event SoundEditionCreated(address indexed soundEdition, address indexed deployer);
     event SoundEditionImplementationSet(address newImplementation);
     event Upgraded(address indexed implementation);
+
+    uint96 constant PRICE = 1 ether;
+    uint32 constant START_TIME = 0;
+    uint32 constant END_TIME = 10000;
+    address constant SIGNER = address(111111);
 
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
@@ -142,5 +154,87 @@ contract SoundCreatorTests is TestConfig {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(attacker);
         soundCreator.upgradeTo(address(666));
+    }
+
+    function test_createSoundAndMints() public {
+        (
+            address editionAddress,
+            FixedPriceSignatureMinter signatureMinter,
+            MerkleDropMinter merkleMinter,
+            RangeEditionMinter rangeMinter,
+            address[] memory minterAddresses,
+            bytes[] memory createEditionMintCalls
+        ) = setupCreateEditionAndMints();
+
+        console.log("this", address(this));
+
+        SoundEditionV1 soundEdition = SoundEditionV1(
+            soundCreator.createSoundAndMints(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP,
+                minterAddresses,
+                createEditionMintCalls
+            )
+        );
+
+        // Grant minter roles
+        soundEdition.grantRoles(address(signatureMinter), soundEdition.MINTER_ROLE());
+        soundEdition.grantRoles(address(merkleMinter), soundEdition.MINTER_ROLE());
+        soundEdition.grantRoles(address(rangeMinter), soundEdition.MINTER_ROLE());
+
+        // Test mints
+    }
+
+    function setupCreateEditionAndMints()
+        public
+        returns (
+            address,
+            FixedPriceSignatureMinter,
+            MerkleDropMinter,
+            RangeEditionMinter,
+            address[] memory,
+            bytes[] memory
+        )
+    {
+        address[] memory minterAddresses = new address[](1);
+        bytes[] memory createEditionMintCalls = new bytes[](1);
+
+        ISoundFeeRegistry feeRegistry = ISoundFeeRegistry(address(1));
+        FixedPriceSignatureMinter signatureMinter = new FixedPriceSignatureMinter(feeRegistry);
+        MerkleDropMinter merkleMinter = new MerkleDropMinter(feeRegistry);
+        RangeEditionMinter rangeMinter = new RangeEditionMinter(feeRegistry);
+
+        address editionAddress = Clones.predictDeterministicAddress(
+            soundCreator.soundEditionImplementation(),
+            keccak256(abi.encodePacked(msg.sender, block.timestamp)),
+            address(this)
+        );
+
+        minterAddresses[0] = address(signatureMinter);
+        // minterAddresses[1] = address(merkleMinter);
+        // minterAddresses[2] = address(rangeMinter);
+
+        bytes memory signatureCall = abi.encodeWithSelector(
+            signatureMinter.createEditionMint.selector,
+            editionAddress,
+            PRICE,
+            SIGNER,
+            EDITION_MAX_MINTABLE,
+            START_TIME,
+            END_TIME,
+            0 // affiliateBPS
+        );
+
+        createEditionMintCalls[0] = signatureCall;
+
+        return (editionAddress, signatureMinter, merkleMinter, rangeMinter, minterAddresses, createEditionMintCalls);
     }
 }

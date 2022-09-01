@@ -34,6 +34,7 @@ import { UUPSUpgradeable } from "openzeppelin-upgradeable/proxy/utils/UUPSUpgrad
 import { ISoundCreatorV1 } from "./interfaces/ISoundCreatorV1.sol";
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
+import { IMinterModule } from "./interfaces/IMinterModule.sol";
 
 /**
  * @title SoundCreatorV1
@@ -98,6 +99,55 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             mintRandomnessTokenThreshold,
             mintRandomnessTimeThreshold
         );
+
+        emit SoundEditionCreated(soundEdition, msg.sender);
+    }
+
+    /**
+     * Creates a Sound Edition proxy, initializes it, and creates mint configurations on a given set of minter addresses.
+     */
+    function createSoundAndMints(
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule,
+        string memory baseURI,
+        string memory contractURI,
+        address fundingRecipient,
+        uint16 royaltyBPS,
+        uint32 editionMaxMintable,
+        uint32 mintRandomnessTokenThreshold,
+        uint32 mintRandomnessTimeThreshold,
+        address[] memory minterAddresses,
+        bytes[] memory createEditionMintCalls
+    ) external returns (address payable soundEdition) {
+        // Create Sound Edition proxy
+        soundEdition = payable(
+            Clones.cloneDeterministic(
+                soundEditionImplementation,
+                keccak256(abi.encodePacked(msg.sender, block.timestamp))
+            )
+        );
+
+        // Initialize proxy
+        ISoundEditionV1(soundEdition).initialize(
+            msg.sender,
+            name,
+            symbol,
+            metadataModule,
+            baseURI,
+            contractURI,
+            fundingRecipient,
+            royaltyBPS,
+            editionMaxMintable,
+            mintRandomnessTokenThreshold,
+            mintRandomnessTimeThreshold
+        );
+
+        // Loop over minter addresses and set up mint configurations
+        for (uint256 i = 0; i < minterAddresses.length; i++) {
+            (bool success, bytes memory returnData) = minterAddresses[i].call(createEditionMintCalls[i]);
+            require(success, string(returnData));
+        }
 
         emit SoundEditionCreated(soundEdition, msg.sender);
     }
