@@ -44,12 +44,12 @@ interface IFixedPriceSignatureMinter is IMinterModule {
 
     /**
      * @dev Emitted when a new fixed price signature mint is created.
-     * @param edition The edition address.
-     * @param mintId The mint ID.
-     * @param signer The address of the signer that authorizes mints.
-     * @param maxMintable The maximum number of tokens that can be minted.
-     * @param startTime The time minting can begin.
-     * @param endTime The time minting will end.
+     * @param edition         The edition address.
+     * @param mintId          The mint ID.
+     * @param signer          The address of the signer that authorizes mints.
+     * @param maxMintable     The maximum number of tokens that can be minted.
+     * @param startTime       The time minting can begin.
+     * @param endTime         The time minting will end.
      * @param affiliateFeeBPS The affiliate fee in basis points.
      */
     event FixedPriceSignatureMintCreated(
@@ -68,9 +68,19 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     // =============================================================
 
     /**
+     * @dev Cannot mint more than the signed quantity.
+     */
+    error ExceedsSignedQuantity();
+
+    /**
      * @dev The signature is invalid.
      */
     error InvalidSignature();
+
+    /**
+     * @dev The mint sigature can only be used a single time.
+     */
+    error SignatureAlreadyUsed();
 
     /**
      * @dev The signer can't be the zero address.
@@ -90,7 +100,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @param startTime       The time minting can begin.
      * @param endTime         The time minting will end.
      * @param affiliateFeeBPS The affiliate fee in basis points.
-     * @return mintId The ID of the new mint instance.
+     * @return mintId         The ID of the new mint instance.
      */
     function createEditionMint(
         address edition,
@@ -104,16 +114,21 @@ interface IFixedPriceSignatureMinter is IMinterModule {
 
     /**
      * @dev Mints a token for a particular mint instance.
-     * @param mintId    The mint ID.
-     * @param quantity  The quantity of tokens to mint.
-     * @param signature The signed message to authorize the mint.
+     * @param mintId         The mint ID.
+     * @param quantity       The quantity of tokens to mint.
+     * @param signedQuantity The max quantity this buyer has been approved to mint.
+     * @param affiliate      The affiliate address.
+     * @param signature      The signed message to authorize the mint.
+     * @param claimTicket    The ticket number to enforce single-use of the signature.
      */
     function mint(
         address edition,
         uint128 mintId,
         uint32 quantity,
+        uint32 signedQuantity,
+        address affiliate,
         bytes calldata signature,
-        address affiliate
+        uint32 claimTicket
     ) external payable;
 
     // =============================================================
@@ -121,9 +136,29 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     // =============================================================
 
     /**
+     * @dev Returns the EIP-712 type hash of the signature for minting.
+     * @return typeHash The constant value.
+     */
+    function MINT_TYPEHASH() external view returns (bytes32 typeHash);
+
+    /**
      * @dev Returns IFixedPriceSignatureMinter.MintInfo instance containing the full minter parameter set.
-     * @param edition The edition to get the mint instance for.
-     * @param mintId  The ID of the mint instance.
+     * @param edition   The edition to get the mint instance for.
+     * @param mintId    The ID of the mint instance.
+     * @return Information about this mint.
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
+
+    /**
+     * @dev Returns an array of booleans on whether each claim ticket has been claimed.
+     * @param edition      The edition to get the mint instance for.
+     * @param mintId       The ID of the mint instance.
+     * @param claimTickets The claim tickets to check.
+     * @return claimed The computed values.
+     */
+    function checkClaimTickets(
+        address edition,
+        uint128 mintId,
+        uint32[] calldata claimTickets
+    ) external view returns (bool[] memory claimed);
 }
