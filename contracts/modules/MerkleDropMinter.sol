@@ -23,7 +23,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      * @dev Edition mint data.
      *      Maps `edition` => `mintId` => value.
      */
-    mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+    mapping(address => mapping(uint128 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev Number of tokens minted by each buyer address

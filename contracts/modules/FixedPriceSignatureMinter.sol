@@ -38,7 +38,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      * @dev Edition mint data
      *      `edition` => `mintId` => EditionMintData
      */
-    mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+    mapping(address => mapping(uint128 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev A mapping of bitmaps where each bit represents whether the ticket has been claimed.
@@ -185,7 +185,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc IFixedPriceSignatureMinter
      */
     function DOMAIN_SEPARATOR() public view returns (bytes32 separator) {
         separator = keccak256(

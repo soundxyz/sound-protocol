@@ -47,7 +47,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
     function _getSignature(
         address buyer,
-        address edition,
         address minter,
         uint128 mintId,
         uint32 claimTicket,
@@ -148,7 +147,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig1 = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             claimTicket,
@@ -172,7 +170,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig2 = _getSignature(
             invalidBuyer,
-            address(edition),
             address(minter),
             MINT_ID,
             claimTicket++,
@@ -203,7 +200,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         address buyer = getFundedAccount(1);
         bytes memory sig = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             CLAIM_TICKET_0,
@@ -232,15 +228,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         uint32 signedQuantity = quantity;
 
         address buyer = getFundedAccount(1);
-        bytes memory sig1 = _getSignature(
-            buyer,
-            address(edition),
-            address(minter),
-            MINT_ID,
-            claimTicket,
-            signedQuantity,
-            NULL_AFFILIATE
-        );
+        bytes memory sig1 = _getSignature(buyer, address(minter), MINT_ID, claimTicket, signedQuantity, NULL_AFFILIATE);
 
         vm.prank(buyer);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, MAX_MINTABLE));
@@ -255,15 +243,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         );
 
         // Second buy is authorized to mint the max mintable quantity
-        bytes memory sig2 = _getSignature(
-            buyer,
-            address(edition),
-            address(minter),
-            MINT_ID,
-            claimTicket++,
-            MAX_MINTABLE,
-            NULL_AFFILIATE
-        );
+        bytes memory sig2 = _getSignature(buyer, address(minter), MINT_ID, claimTicket++, MAX_MINTABLE, NULL_AFFILIATE);
 
         // Mint should succeed
         vm.prank(buyer);
@@ -278,15 +258,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         );
 
         // Last signature authorizes max mintable quantity, but the mint is now sold out.
-        bytes memory sig3 = _getSignature(
-            buyer,
-            address(edition),
-            address(minter),
-            MINT_ID,
-            claimTicket++,
-            MAX_MINTABLE,
-            NULL_AFFILIATE
-        );
+        bytes memory sig3 = _getSignature(buyer, address(minter), MINT_ID, claimTicket++, MAX_MINTABLE, NULL_AFFILIATE);
 
         vm.prank(buyer);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, 0));
@@ -309,7 +281,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             claimTicket,
@@ -353,7 +324,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             CLAIM_TICKET_0,
@@ -394,7 +364,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig1 = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             claimTicket1,
@@ -417,7 +386,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig2 = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             claimTicket2,
@@ -475,7 +443,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig = _getSignature(
             buyer,
-            address(edition1),
             address(minter),
             mintId1,
             CLAIM_TICKET_0,
@@ -540,7 +507,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bytes memory sig = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             mintId1,
             CLAIM_TICKET_0,
@@ -605,7 +571,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
             bytes memory sig = _getSignature(
                 buyer,
-                address(edition),
                 address(minter),
                 mintId,
                 claimTicket,
@@ -702,7 +667,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         vm.chainId(1);
         bytes memory sig1 = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             claimTicket,
@@ -747,7 +711,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         address buyer = getFundedAccount(1);
         bytes memory sig = _getSignature(
             buyer,
-            address(edition),
             address(minter),
             MINT_ID,
             CLAIM_TICKET_0,
@@ -791,15 +754,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         address buyer = getFundedAccount(1);
         address affiliate = getFundedAccount(2);
         address wrongAffiliate = getFundedAccount(3);
-        bytes memory sig = _getSignature(
-            buyer,
-            address(edition),
-            address(minter),
-            MINT_ID,
-            CLAIM_TICKET_0,
-            SIGNED_QUANTITY_1,
-            affiliate
-        );
+        bytes memory sig = _getSignature(buyer, address(minter), MINT_ID, CLAIM_TICKET_0, SIGNED_QUANTITY_1, affiliate);
 
         // This mint fails because we are not minting with the correct affiliate.
         vm.prank(buyer);
