@@ -41,7 +41,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
 
     /**
-     * @dev A bitmap where each bit represents whether the ticket has been claimed.
+     * @dev A mapping of bitmaps where each bit represents whether the ticket has been claimed.
      *      `edition` => `mintId` => `index` => bit array
      */
     mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal _claimsBitmaps;
