@@ -100,9 +100,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         bytes calldata signature,
         uint32 claimTicket
     ) public payable {
-        EditionMintData storage data = _editionMintData[edition][mintId];
-
         if (quantity > signedQuantity) revert ExceedsSignedQuantity();
+
+        EditionMintData storage data = _editionMintData[edition][mintId];
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
