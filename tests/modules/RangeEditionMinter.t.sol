@@ -1,5 +1,6 @@
 pragma solidity ^0.8.16;
 
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
@@ -445,7 +446,11 @@ contract RangeEditionMinterTests is TestConfig {
         (, RangeEditionMinter minter) = _createEditionAndMinter(0);
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
+        bool supportsIRangeEditionMinter = minter.supportsInterface(type(IRangeEditionMinter).interfaceId);
+        bool supports165 = minter.supportsInterface(type(IERC165).interfaceId);
 
+        assertTrue(supports165);
+        assertTrue(supportsIRangeEditionMinter);
         assertTrue(supportsIMinterModule);
     }
 
