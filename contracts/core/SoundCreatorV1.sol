@@ -28,7 +28,7 @@ pragma solidity ^0.8.16;
 */
 
 import { Clones } from "openzeppelin/proxy/Clones.sol";
-import { OwnableUpgradeable } from "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import { Ownable } from "openzeppelin/access/Ownable.sol";
 import { UUPSUpgradeable } from "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import { ISoundCreatorV1 } from "./interfaces/ISoundCreatorV1.sol";
@@ -40,7 +40,7 @@ import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
  * @notice A factory that deploys minimal proxies of `SoundEditionV1.sol`.
  * @dev The proxies are OpenZeppelin's Clones implementation of https://eips.ethereum.org/EIPS/eip-1167
  */
-contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable {
+contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
     // =============================================================
     //                            STORAGE
     // =============================================================
@@ -51,21 +51,16 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     address public soundEditionImplementation;
 
     // =============================================================
-    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    //                          CONSTRUCTOR
     // =============================================================
 
-    /**
-     * @inheritdoc ISoundCreatorV1
-     */
-    function initialize(address _soundEditionImplementation)
-        public
-        implementationNotZero(_soundEditionImplementation)
-        initializer
-    {
-        __Ownable_init_unchained();
-
+    constructor(address _soundEditionImplementation) implementationNotZero(_soundEditionImplementation) {
         soundEditionImplementation = _soundEditionImplementation;
     }
+
+    // =============================================================
+    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
+    // =============================================================
 
     /**
      * @inheritdoc ISoundCreatorV1
@@ -118,12 +113,6 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
-
-    /**
-     * @dev Enables the owner to upgrade the contract.
-     *      Required by `UUPSUpgradeable`.
-     */
-    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     /**
      * @dev Reverts if the given implementation address is zero.
