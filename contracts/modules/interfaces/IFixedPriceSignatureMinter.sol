@@ -68,6 +68,11 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     // =============================================================
 
     /**
+     * @dev Cannot mint more than the signed quantity.
+     */
+    error ExceedsSignedQuantity();
+
+    /**
      * @dev The signature is invalid.
      */
     error InvalidSignature();

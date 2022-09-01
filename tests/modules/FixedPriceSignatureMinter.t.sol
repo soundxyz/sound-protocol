@@ -13,9 +13,9 @@ import { TestConfig } from "../TestConfig.sol";
 
 // TODO: test buyer can mint multiple times with new signatures / claim tickets
 // TODO: test signature created on one edition can't be to mint from another edition
-// TODO: test a valid signature can't be used on the wrong network
-// TODO: test buyer can't mint more than the signed quantity
-// TODO: test buyer can't mint with invalid affiliate address
+// TODO: test a valid signature can't be used on the wrong network [DONE]
+// TODO: test buyer can't mint more than the signed quantity [DONE]
+// TODO: test buyer can't mint with invalid affiliate address [DONE]
 
 contract FixedPriceSignatureMinterTests is TestConfig {
     using ECDSA for bytes32;
@@ -442,145 +442,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         assertEq(edition.balanceOf(buyer), uint256(quantity * 2));
     }
 
-    function test_signatureCannotBeReusedOnDifferentEditions() public {
-        SoundEditionV1 edition1 = createGenericEdition();
-        SoundEditionV1 edition2 = createGenericEdition();
-
-        // Use the same minter for both editions
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
-
-        edition1.grantRoles(address(minter), edition1.MINTER_ROLE());
-        edition2.grantRoles(address(minter), edition2.MINTER_ROLE());
-
-        uint128 mintId1 = minter.createEditionMint(
-            address(edition1),
-            PRICE,
-            _signerAddress(),
-            MAX_MINTABLE,
-            START_TIME,
-            END_TIME,
-            AFFILIATE_FEE_BPS
-        );
-
-        uint128 mintId2 = minter.createEditionMint(
-            address(edition2),
-            PRICE,
-            _signerAddress(),
-            MAX_MINTABLE,
-            START_TIME,
-            END_TIME,
-            AFFILIATE_FEE_BPS
-        );
-
-        address buyer = getFundedAccount(1);
-
-        // Create signature to mint from edition 1
-
-        bytes memory sig = _getSignature(
-            buyer,
-            address(edition1),
-            address(minter),
-            mintId1,
-            CLAIM_TICKET_0,
-            SIGNED_QUANTITY_1,
-            NULL_AFFILIATE
-        );
-
-        // Mint on edition 1 succeeds
-
-        vm.prank(buyer);
-        minter.mint{ value: PRICE }(
-            address(edition1),
-            mintId1,
-            QUANTITY_1,
-            SIGNED_QUANTITY_1,
-            NULL_AFFILIATE,
-            sig,
-            CLAIM_TICKET_0
-        );
-
-        // Mint with same signature on edition 2 fails - signature invalid
-
-        vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
-        minter.mint{ value: PRICE }(
-            address(edition2),
-            mintId2,
-            QUANTITY_1,
-            SIGNED_QUANTITY_1,
-            NULL_AFFILIATE,
-            sig,
-            CLAIM_TICKET_0
-        );
-    }
-
-    function test_signatureCannotBeReusedOnDifferentMintInstances() external {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
-
-        uint32 quantity = 1;
-        uint32 signedQuantity = 2;
-        address buyer = getFundedAccount(1);
-
-        uint128 mintId1 = minter.createEditionMint(
-            address(edition),
-            PRICE,
-            _signerAddress(),
-            MAX_MINTABLE,
-            START_TIME,
-            END_TIME,
-            AFFILIATE_FEE_BPS
-        );
-
-        uint128 mintId2 = minter.createEditionMint(
-            address(edition),
-            PRICE,
-            _signerAddress(),
-            MAX_MINTABLE,
-            START_TIME,
-            END_TIME,
-            AFFILIATE_FEE_BPS
-        );
-
-        // Create signature to mint from first mint instance
-
-        bytes memory sig = _getSignature(
-            buyer,
-            address(edition),
-            address(minter),
-            mintId1,
-            CLAIM_TICKET_0,
-            SIGNED_QUANTITY_1,
-            NULL_AFFILIATE
-        );
-
-        // Mint on edition 1 succeeds
-
-        vm.prank(buyer);
-        minter.mint{ value: PRICE }(
-            address(edition),
-            mintId1,
-            QUANTITY_1,
-            SIGNED_QUANTITY_1,
-            NULL_AFFILIATE,
-            sig,
-            CLAIM_TICKET_0
-        );
-
-        // Mint with same signature on mint instance 2 - signature invalid
-
-        vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
-        minter.mint{ value: PRICE }(
-            address(edition),
-            mintId2,
-            QUANTITY_1,
-            SIGNED_QUANTITY_1,
-            NULL_AFFILIATE,
-            sig,
-            CLAIM_TICKET_0
-        );
-    }
-
     function test_supportsInterface() public {
         (, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
@@ -631,5 +492,152 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         assertEq(type(uint32).max, mintData.maxMintablePerAccount);
         assertEq(MAX_MINTABLE, mintData.maxMintable);
         assertEq(0, mintData.totalMinted);
+    }
+
+    function test_mintWithDifferentChainIdReverts() public {
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        uint32 claimTicket = 0;
+        address buyer = getFundedAccount(1);
+
+        vm.chainId(1);
+        bytes memory sig1 = _getSignature(
+            buyer,
+            address(edition),
+            address(minter),
+            MINT_ID,
+            claimTicket,
+            SIGNED_QUANTITY_1,
+            NULL_AFFILIATE
+        );
+
+        // This mint fails because the chain id is different.
+        vm.prank(buyer);
+        vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
+        vm.chainId(11111);
+        minter.mint{ value: PRICE }(
+            address(edition),
+            MINT_ID,
+            QUANTITY_1,
+            SIGNED_QUANTITY_1,
+            NULL_AFFILIATE,
+            sig1,
+            claimTicket
+        );
+
+        // This mint succeeds.
+        vm.chainId(1);
+        vm.prank(buyer);
+        minter.mint{ value: PRICE }(
+            address(edition),
+            MINT_ID,
+            QUANTITY_1,
+            SIGNED_QUANTITY_1,
+            NULL_AFFILIATE,
+            sig1,
+            claimTicket
+        );
+    }
+
+    function test_mintWithMoreThanSignedQuantityReverts() public {
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        uint32 quantity = 2;
+        uint32 signedQuantity = 2;
+
+        address buyer = getFundedAccount(1);
+        bytes memory sig = _getSignature(
+            buyer,
+            address(edition),
+            address(minter),
+            MINT_ID,
+            CLAIM_TICKET_0,
+            signedQuantity,
+            NULL_AFFILIATE
+        );
+
+        quantity = signedQuantity + 1;
+
+        // This mint fails because we have exceeded the signed quantity.
+        vm.prank(buyer);
+        vm.expectRevert(IFixedPriceSignatureMinter.ExceedsSignedQuantity.selector);
+        minter.mint{ value: PRICE * quantity }(
+            address(edition),
+            MINT_ID,
+            quantity,
+            signedQuantity,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
+
+        quantity = signedQuantity - 1;
+
+        // This mint succeeds.
+        vm.prank(buyer);
+        minter.mint{ value: PRICE * quantity }(
+            address(edition),
+            MINT_ID,
+            quantity,
+            signedQuantity,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
+    }
+
+    function test_mintWithInvalidAffiliateReverts() public {
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        address buyer = getFundedAccount(1);
+        address affiliate = getFundedAccount(2);
+        address wrongAffiliate = getFundedAccount(3);
+        bytes memory sig = _getSignature(
+            buyer,
+            address(edition),
+            address(minter),
+            MINT_ID,
+            CLAIM_TICKET_0,
+            SIGNED_QUANTITY_1,
+            affiliate
+        );
+
+        // This mint fails because we are not minting with the correct affiliate.
+        vm.prank(buyer);
+        vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
+        minter.mint{ value: PRICE * QUANTITY_1 }(
+            address(edition),
+            MINT_ID,
+            QUANTITY_1,
+            SIGNED_QUANTITY_1,
+            wrongAffiliate,
+            sig,
+            CLAIM_TICKET_0
+        );
+
+        // This mint fails because we are not minting with the correct affiliate.
+        vm.prank(buyer);
+        vm.expectRevert(IFixedPriceSignatureMinter.InvalidSignature.selector);
+        minter.mint{ value: PRICE * QUANTITY_1 }(
+            address(edition),
+            MINT_ID,
+            QUANTITY_1,
+            SIGNED_QUANTITY_1,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
+
+        // This mint succeeds.
+        vm.prank(buyer);
+        minter.mint{ value: PRICE * QUANTITY_1 }(
+            address(edition),
+            MINT_ID,
+            QUANTITY_1,
+            SIGNED_QUANTITY_1,
+            affiliate,
+            sig,
+            CLAIM_TICKET_0
+        );
     }
 }

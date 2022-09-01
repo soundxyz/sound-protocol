@@ -102,6 +102,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
+        if (quantity > signedQuantity) revert ExceedsSignedQuantity();
+
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
         _validateAndClaimSignature(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
