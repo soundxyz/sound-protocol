@@ -2,5 +2,5 @@ openzeppelin/=./lib/openzeppelin-contracts/contracts/
 openzeppelin-upgradeable/=./lib/openzeppelin-contracts-upgradeable/contracts/
 chiru-labs/ERC721A-Upgradeable/=./lib/ERC721A-Upgradeable/contracts/
 solady/=./lib/solady/src/
-@core=./contracts/core
-@modules=./contracts/modules/
+@core=./src/contracts/core
+@modules=./src/contracts/modules/
