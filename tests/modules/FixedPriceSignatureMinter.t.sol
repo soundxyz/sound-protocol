@@ -57,7 +57,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
+                IFixedPriceSignatureMinter(minter).DOMAIN_SEPARATOR(),
                 keccak256(
                     abi.encode(
                         IFixedPriceSignatureMinter(minter).MINT_TYPEHASH(),
