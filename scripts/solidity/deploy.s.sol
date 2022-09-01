@@ -4,9 +4,10 @@ pragma solidity ^0.8.16;
 import { Script } from "forge-std/Script.sol";
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
+import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
+import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
@@ -22,6 +23,9 @@ contract Deploy is Script {
         // Deploy the SoundFeeRegistry
         SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(SOUND_GNOSIS_SAFE_MAINNET, PLATFORM_FEE_BPS);
 
+        // Make the gnosis safe the owner of SoundFeeRegistry
+        soundFeeRegistry.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
+
         // Deploy modules
         new GoldenEggMetadata();
         new FixedPriceSignatureMinter(soundFeeRegistry);
@@ -34,9 +38,9 @@ contract Deploy is Script {
             address(0), // owner
             "SoundEditionV1", // name
             "SOUND", // symbol
-            address(0), // metadataModule
-            "baseURI", // baseURI
-            "contractURI", // contractURI
+            IMetadataModule(address(0)),
+            "baseURI",
+            "contractURI",
             address(1), // fundingRecipient
             0, // royaltyBPS
             0, // editionMaxMintable
