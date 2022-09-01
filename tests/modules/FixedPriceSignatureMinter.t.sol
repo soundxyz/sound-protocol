@@ -580,14 +580,14 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         tokensPerBuyer[0] = 1;
 
         uint32 numOfTokensToBuy = 10;
-        uint32 claimsArrayLength = numOfTokensToBuy * 2;
 
-        uint32[] memory claimTickets = new uint32[](claimsArrayLength);
-        bool[] memory expectedClaimedAndUnclaimed = new bool[](claimsArrayLength);
+        uint32[] memory claimTickets = new uint32[](numOfTokensToBuy * 2);
+
+        bool[] memory expectedClaimedAndUnclaimed = new bool[](numOfTokensToBuy * 2);
 
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-       uint128 mintId = minter.createEditionMint(
+        uint128 mintId = minter.createEditionMint(
             address(edition),
             PRICE,
             _signerAddress(),
@@ -599,9 +599,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         // For each ticket number, mint a token, store the claim ticket as claimed (true),
         // then add an unclaimed ticket number so we can test the response from checkClaimTickets alternates as true and false
-        uint32 index = 0;
         for (uint32 claimTicket = 0; claimTicket < numOfTokensToBuy; claimTicket++) {
-            address buyer = getFundedAccount(index + 1);
+            address buyer = getFundedAccount(claimTicket + 1);
 
             bytes memory sig = _getSignature(
                 buyer,
@@ -626,25 +625,17 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             );
 
             // Store ticket number as claimed
-            claimTickets[index] = claimTicket;
-            expectedClaimedAndUnclaimed[index] = true;
-
-            index++;
+            claimTickets[claimTicket * 2] = claimTicket;
+            expectedClaimedAndUnclaimed[claimTicket * 2] = true;
 
             // Add an unclaimed ticket number
-            claimTickets[index] = claimTicket + 100000;
-            expectedClaimedAndUnclaimed[index] = false;
-
-            index++;
+            claimTickets[claimTicket * 2 + 1] = claimTicket + 100000;
+            expectedClaimedAndUnclaimed[claimTicket * 2 + 1] = false;
         }
 
-        bool[] memory claimedAndUnclaimed = minter.checkClaimTickets(address(edition), MINT_ID, claimTickets);
+        bool[] memory results = minter.checkClaimTickets(address(edition), mintId, claimTickets);
 
-        for (uint256 i = 0; i < claimsArrayLength; i++) {
-            console.log('claimTicket', claimTickets[i]);
-            console.log(claimedAndUnclaimed[i], expectedClaimedAndUnclaimed[i]);
-            assertEq(claimedAndUnclaimed[i], expectedClaimedAndUnclaimed[i]);
-        }
+        assertEq(abi.encode(results), abi.encode(expectedClaimedAndUnclaimed));
     }
 
     function test_supportsInterface() public {
