@@ -188,23 +188,27 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         }
 
         uint256 totalMintedQty = _totalMinted();
-        fromTokenId = totalMintedQty + _startTokenId();
 
         unchecked {
             // Check if there are enough tokens to mint.
-            // If quantity is big enough to cause an overflow,
-            // `ERC721A._mint` will revert with an out of gas error.
+            // We use version v4.2+ of `ERC721A._mint` will revert with out of gas error
+            // if `quantity` is large enough to cause an overflow.
             if (totalMintedQty + quantity > editionMaxMintable) {
+                // Won't underflow as `editionMaxMintable` cannot be decreased
+                // below `_totalMinted()`. See {reduceEditionMaxMintable}.
                 uint256 available = editionMaxMintable - totalMintedQty;
                 revert ExceedsEditionAvailableSupply(uint32(available));
             }
+            // Won't overflow, as `_startTokenId()` is 1, which is the minimum valid `quantity`.
+            fromTokenId = totalMintedQty + _startTokenId();
         }
 
-        // Mint the tokens.
+        // Mint the tokens. Will revert if quantity is zero.
         _mint(to, quantity);
-        // Set randomness
+        // Set randomness.
         if (totalMintedQty <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
             unchecked {
+                // Won't underflow, as block number is non-zero.
                 mintRandomness = bytes9(blockhash(block.number - 1));
             }
         }

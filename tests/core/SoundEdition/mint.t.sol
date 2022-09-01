@@ -6,6 +6,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../../TestConfig.sol";
+import { stdError } from "forge-std/Test.sol";
 
 /**
  * @dev Tests base minting functionality directly from edition.
@@ -90,6 +91,13 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(recipient2, quantity);
 
         assert(edition.balanceOf(recipient2) == quantity);
+    }
+
+    function test_mintWithOverflowReverts() public {
+        SoundEditionV1 edition = createGenericEdition();
+        edition.mint(address(this), 1);
+        vm.expectRevert();
+        edition.mint(address(this), type(uint256).max);
     }
 
     function test_burn(address attacker) public {
