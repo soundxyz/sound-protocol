@@ -27,7 +27,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      */
     bytes32 public constant MINT_TYPEHASH =
         keccak256(
-            "EditionInfo(address buyer,uint256 mintId,uint32 claimTicket,uint32 quantityLimit,address affiliate)"
+            "EditionInfo(address buyer,uint128 mintId,uint32 claimTicket,uint32 quantityLimit,address affiliate)"
         );
 
     // =============================================================
@@ -38,7 +38,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      * @dev Edition mint data
      *      `edition` => `mintId` => EditionMintData
      */
-    mapping(address => mapping(uint256 => EditionMintData)) internal _editionMintData;
+    mapping(address => mapping(uint128 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev A mapping of bitmaps where each bit represents whether the ticket has been claimed.
@@ -184,6 +184,15 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         }
     }
 
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
+    function DOMAIN_SEPARATOR() public view returns (bytes32 separator) {
+        separator = keccak256(
+            abi.encode(keccak256("EIP712Domain(uint256 chainId,address edition)"), block.chainid, address(this))
+        );
+    }
+
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
@@ -210,7 +219,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
+                DOMAIN_SEPARATOR(),
                 keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
             )
         );
