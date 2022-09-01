@@ -1,6 +1,7 @@
 pragma solidity ^0.8.16;
 
 import { ECDSA } from "solady/utils/ECDSA.sol";
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
@@ -199,7 +200,9 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         bool supportsIFixedPriceSignatureMinter = minter.supportsInterface(
             type(IFixedPriceSignatureMinter).interfaceId
         );
+        bool supports165 = minter.supportsInterface(type(IERC165).interfaceId);
 
+        assertTrue(supports165);
         assertTrue(supportsIMinterModule);
         assertTrue(supportsIFixedPriceSignatureMinter);
     }

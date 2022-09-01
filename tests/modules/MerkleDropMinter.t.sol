@@ -1,7 +1,9 @@
 pragma solidity ^0.8.16;
 
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
+import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { Merkle } from "murky/Merkle.sol";
+
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
@@ -159,7 +161,9 @@ contract MerkleDropMinterTests is TestConfig {
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
         bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMinter).interfaceId);
+        bool supports165 = minter.supportsInterface(type(IERC165).interfaceId);
 
+        assertTrue(supports165);
         assertTrue(supportsIMinterModule);
         assertTrue(supportsIMerkleDropMint);
     }

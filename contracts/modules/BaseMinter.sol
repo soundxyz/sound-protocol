@@ -171,7 +171,7 @@ abstract contract BaseMinter is IMinterModule {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IMinterModule).interfaceId || interfaceId == type(IERC165).interfaceId;
+        return interfaceId == type(IMinterModule).interfaceId || interfaceId == this.supportsInterface.selector;
     }
 
     /**
