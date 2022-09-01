@@ -106,7 +106,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
-        _validateAndClaimSignature(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
+        _validateSignatureAndClaim(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
 
         _mint(edition, mintId, quantity, affiliate);
     }
@@ -198,7 +198,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      * @param signedQuantity The max quantity this buyer has been approved to mint.
      * @param affiliate      The affiliate address.
      */
-    function _validateAndClaimSignature(
+    function _validateSignatureAndClaim(
         bytes calldata signature,
         address expectedSigner,
         uint32 claimTicket,
@@ -207,6 +207,16 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 signedQuantity,
         address affiliate
     ) private {
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
+            )
+        );
+
+        if (digest.recover(signature) != expectedSigner) revert InvalidSignature();
+
         (
             uint256 storedBit,
             uint256 ticketGroup,
@@ -218,16 +228,6 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         // Flip the bit to 1 to indicate that the ticket has been claimed
         _claimsBitmaps[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
-
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                ISoundEditionV1(edition).DOMAIN_SEPARATOR(),
-                keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
-            )
-        );
-
-        if (digest.recover(signature) != expectedSigner) revert InvalidSignature();
     }
 
     /**
