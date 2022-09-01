@@ -11,12 +11,6 @@ import { IFixedPriceSignatureMinter, MintInfo } from "@modules/interfaces/IFixed
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
-// TODO: test buyer can mint multiple times with new signatures / claim tickets
-// TODO: test signature created on one edition can't be to mint from another edition
-// TODO: test a valid signature can't be used on the wrong network
-// TODO: test buyer can't mint more than the signed quantity
-// TODO: test buyer can't mint with invalid affiliate address
-
 contract FixedPriceSignatureMinterTests is TestConfig {
     using ECDSA for bytes32;
 
@@ -517,8 +511,6 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_signatureCannotBeReusedOnDifferentMintInstances() external {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-        uint32 quantity = 1;
-        uint32 signedQuantity = 2;
         address buyer = getFundedAccount(1);
 
         uint128 mintId1 = minter.createEditionMint(
@@ -579,6 +571,76 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             sig,
             CLAIM_TICKET_0
         );
+    }
+
+    function test_checkClaimTickets() public {
+        uint32[] memory tokensPerBuyer = new uint32[](1);
+        tokensPerBuyer[0] = 1;
+
+        uint32 numOfTokensToBuy = 50;
+
+        uint32[] memory claimTickets = new uint32[](numOfTokensToBuy * 2);
+        bool[] memory expectedClaimedAndUnclaimed = new bool[](numOfTokensToBuy * 2);
+
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            _signerAddress(),
+            numOfTokensToBuy, // max mintable
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS
+        );
+
+        // For each ticket number, mint a token, store the claim ticket as claimed (true),
+        // then add an unclaimed ticket number so we can test the response from checkClaimTickets alternates as true and false
+        uint32 index = 0;
+        for (uint32 claimTicket = 0; claimTicket < numOfTokensToBuy; claimTicket++) {
+            address buyer = getFundedAccount(index + 1);
+            uint32 claimTicket = index;
+
+            bytes memory sig = _getSignature(
+                buyer,
+                address(edition),
+                address(minter),
+                MINT_ID,
+                claimTicket,
+                SIGNED_QUANTITY_1,
+                NULL_AFFILIATE
+            );
+
+            // Buy token
+            vm.prank(buyer);
+            minter.mint{ value: PRICE }(
+                address(edition),
+                MINT_ID,
+                QUANTITY_1,
+                SIGNED_QUANTITY_1,
+                NULL_AFFILIATE,
+                sig,
+                claimTicket
+            );
+
+            // Store ticket number as claimed
+            claimTickets[index] = claimTicket;
+            expectedClaimedAndUnclaimed[index] = true;
+
+            index++;
+
+            // Add unclaimed ticket number
+            claimTickets[index] = claimTicket + numOfTokensToBuy;
+            expectedClaimedAndUnclaimed[index] = false;
+
+            index++;
+        }
+
+        bool[] memory claimedAndUnclaimed = minter.checkClaimTickets(address(edition), MINT_ID, claimTickets);
+
+        for (uint256 i = 0; i < numOfTokensToBuy; i++) {
+            assertEq(claimedAndUnclaimed[i], expectedClaimedAndUnclaimed[i]);
+        }
     }
 
     function test_supportsInterface() public {
