@@ -13,7 +13,10 @@ import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.so
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 
-contract Deploy is Script {
+/**
+ * Seed script for deploying editions & mint instances on goerli or anvil
+ */
+contract Seed is Script {
     uint16 private constant PLATFORM_FEE_BPS = 500;
     address SOUND_GNOSIS_SAFE_MAINNET = 0x858a92511485715Cfb754f397a7894b7724c7Abd;
 
@@ -65,6 +68,8 @@ contract Deploy is Script {
 
         // Set creator ownership to gnosis safe
         soundCreator.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
+
+        _deployDummyEdition(soundCreator);
 
         vm.stopBroadcast();
     }

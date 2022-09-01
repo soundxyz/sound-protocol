@@ -16,3 +16,5 @@ node_modules
 # Code coverage artifacts
 lcov.info
 /coverage/*
+
+.DS_Store
