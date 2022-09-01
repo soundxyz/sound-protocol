@@ -44,7 +44,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      * @dev A bitmap where each bit representing whether the ticket has been claimed.
      *      `edition` => `mintId` => `index` => bit array
      */
-    mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal _claimsBitmap;
+    mapping(address => mapping(uint128 => mapping(uint256 => uint256))) internal _claimsBitmaps;
 
     // =============================================================
     //                          CONSTRUCTOR
@@ -215,7 +215,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         if (storedBit != 0) revert SignatureAlreadyUsed();
 
         // Flip the bit to 1 to indicate that the ticket has been claimed
-        _claimsBitmap[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
+        _claimsBitmaps[edition][mintId][ticketGroupIdx] = ticketGroup | (uint256(1) << ticketGroupOffset);
 
         bytes32 digest = keccak256(
             abi.encodePacked(
@@ -258,7 +258,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         }
 
         // cache the local group for efficiency
-        ticketGroup = _claimsBitmap[edition][mintId][ticketGroupIdx];
+        ticketGroup = _claimsBitmaps[edition][mintId][ticketGroupIdx];
 
         // gets the stored bit
         storedBit = (ticketGroup >> ticketGroupOffset) & uint256(1);
