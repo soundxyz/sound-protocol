@@ -335,6 +335,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
+    function DOMAIN_SEPARATOR() public view returns (bytes32 separator) {
+        separator = keccak256(
+            abi.encode(keccak256("EIP712Domain(uint256 chainId,address edition)"), block.chainid, address(this))
+        );
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function nextTokenId() external view returns (uint256) {
         return _nextTokenId();
     }
