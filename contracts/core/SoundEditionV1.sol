@@ -191,8 +191,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         unchecked {
             // Check if there are enough tokens to mint.
-            // We use version v4.2+ of `ERC721A._mint` will revert with out of gas error
-            // if `quantity` is large enough to cause an overflow.
+            // We use version v4.2+ of ERC721A, which `_mint` will revert with out-of-gas
+            // error via a loop if `quantity` is large enough to cause an overflow in uint256.
             if (totalMintedQty + quantity > editionMaxMintable) {
                 // Won't underflow as `editionMaxMintable` cannot be decreased
                 // below `_totalMinted()`. See {reduceEditionMaxMintable}.
