@@ -6,8 +6,7 @@ dist
 interfaceIds.json
 
 # Ignores development broadcast logs
-/broadcast/*
-/broadcast/*/31337/
+/broadcast/**/*
 
 # Don't ignore run-latest.json
 !/broadcast/*/run-latest.json
