@@ -186,8 +186,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
 
     /**
      * @dev Call the `contracts` in order with `data`.
-     * @param contracts The addresses of the contracts.
-     * @param data      The `abi.encodeWithSelector` calldata for each of the contracts.
+     * @param soundEdition The addresses of the sound edition.
+     * @param contracts    The addresses of the contracts.
+     * @param data         The `abi.encodeWithSelector` calldata for each of the contracts.
      */
     function _callContracts(
         address soundEdition,
