@@ -61,7 +61,7 @@ contract SoundCreatorTests is TestConfig {
 
     function test_createSoundSetsNameAndSymbolCorrectly(string memory name, string memory symbol) public {
         SoundEditionV1 soundEdition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
                 name,
                 symbol,
                 METADATA_MODULE,
@@ -168,8 +168,6 @@ contract SoundCreatorTests is TestConfig {
 
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
-        address placeholderAddress = soundCreator.PLACEHOLDER_ADDRESS();
-
         bytes32 salt = keccak256(bytes("SomeRandomString"));
         address soundEditionAddress = soundCreator.soundEditionAddress(salt);
 
@@ -243,7 +241,7 @@ contract SoundCreatorTests is TestConfig {
         vm.expectEmit(false, true, false, false);
         emit SoundEditionCreated(address(0), address(this));
 
-        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(salt, placeholderAddress, contracts, data);
+        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(salt, contracts, data);
 
         assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
         assertTrue(soundEdition.hasAnyRole(address(merkleMinter), editionImplementation.MINTER_ROLE()));
@@ -264,13 +262,12 @@ contract SoundCreatorTests is TestConfig {
         data = new bytes[](1);
         salt = keccak256(bytes("AnotherRandomString"));
         vm.expectRevert(ISoundCreatorV1.ArrayLengthsMismatch.selector);
-        _createSoundEditionWithCalls(salt, placeholderAddress, contracts, data);
+        _createSoundEditionWithCalls(salt, contracts, data);
     }
 
     // For avoiding the stack too deep error.
     function _createSoundEditionWithCalls(
         bytes32 salt,
-        address placeholderAddress,
         address[] memory contracts,
         bytes[] memory data
     ) internal returns (SoundEditionV1) {

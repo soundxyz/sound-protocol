@@ -30,7 +30,7 @@ contract SoundEdition_mint is TestConfig {
         uint32 maxQuantity = 5000;
 
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -135,7 +135,7 @@ contract SoundEdition_mint is TestConfig {
         emit EditionMaxMintableSet(MAX_3);
 
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,
@@ -174,7 +174,7 @@ contract SoundEdition_mint is TestConfig {
         emit EditionMaxMintableSet(MAX_3);
 
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,

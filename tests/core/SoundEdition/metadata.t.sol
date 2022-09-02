@@ -20,7 +20,7 @@ contract SoundEdition_metadata is TestConfig {
     function _createEdition() internal returns (MockSoundEditionV1 soundEdition) {
         // deploy new sound contract
         soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(
+            createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 IMetadataModule(address(0)),
@@ -43,7 +43,7 @@ contract SoundEdition_metadata is TestConfig {
 
         // deploy new sound contract
         soundEdition = MockSoundEditionV1(
-            soundCreator.createSound(
+            createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 metadataModule,
