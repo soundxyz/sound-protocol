@@ -26,7 +26,7 @@ contract TestConfig is Test {
     uint16 constant PLATFORM_FEE_BPS = 200;
     uint256 constant MAX_BPS = 10_000;
 
-    uint256 internal _salt = 1;
+    uint256 internal _salt;
 
     SoundCreatorV1 soundCreator;
     SoundFeeRegistry feeRegistry;
@@ -88,7 +88,9 @@ contract TestConfig is Test {
         address[] memory contracts;
         bytes[] memory data;
 
-        return soundCreator.createSoundAndMints(bytes32(_salt++), initData, contracts, data);
+        soundCreator.createSoundAndMints(bytes32(++_salt), initData, contracts, data);
+
+        return payable(soundCreator.soundEditionAddress(bytes32(_salt)));
     }
 
     function createGenericEdition() public returns (SoundEditionV1) {

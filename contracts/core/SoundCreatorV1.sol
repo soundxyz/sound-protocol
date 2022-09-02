@@ -78,9 +78,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] calldata data
-    ) external returns (address payable soundEdition) {
+    ) external returns (bytes[] memory results) {
         // Create Sound Edition proxy
-        soundEdition = payable(Clones.cloneDeterministic(soundEditionImplementation, salt));
+        address soundEdition = payable(Clones.cloneDeterministic(soundEditionImplementation, salt));
 
         // Initialize proxy.
         assembly {
@@ -106,7 +106,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             }
         }
 
-        _callContracts(contracts, data);
+        results = _callContracts(contracts, data);
 
         OwnableRoles(soundEdition).transferOwnership(msg.sender);
 
@@ -146,15 +146,26 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @param contracts The addresses of the contracts.
      * @param data      The `abi.encodeWithSelector` calldata for each of the contracts.
      */
-    function _callContracts(address[] calldata contracts, bytes[] calldata data) internal {
+    function _callContracts(address[] calldata contracts, bytes[] calldata data)
+        internal
+        returns (bytes[] memory results)
+    {
         if (contracts.length != data.length) revert ArrayLengthsMismatch();
 
         assembly {
             // Grab the free memory pointer.
-            let m := mload(0x40)
+            // We will use the free memory to construct the `results` array,
+            // and also as a temporary space for the calldata.
+            results := mload(0x40)
+            // Set `results.length = data.length`.
+            mstore(results, data.length)
+            // Skip the first word, which is used to store the length
+            let resultsOffsets := add(results, 0x20)
             // Compute the location of the last calldata offset in `data`.
             // `shl(5, n)` is a gas-saving shorthand for `mul(0x20, n)`.
             let dataLengthsEnd := add(data.offset, shl(5, data.length))
+            // This is the start of the memory to temporarily store the calldata.
+            let m := add(resultsOffsets, shl(5, data.length))
             // prettier-ignore
             for { let i := data.offset } iszero(eq(i, dataLengthsEnd)) { i := add(i, 0x20) } {
                 // Location of `bytes[i]` in calldata.
@@ -186,7 +197,19 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                     returndatacopy(0x00, 0x00, returndatasize())
                     revert(0x00, returndatasize())
                 }
+                // Append the current `m` into `resultsOffsets`.
+                mstore(resultsOffsets, m)
+                resultsOffsets := add(resultsOffsets, 0x20)
+
+                // Append the `returndatasize()`, and the return data.
+                mstore(m, returndatasize())
+                returndatacopy(add(m, 0x20), 0x00, returndatasize())
+                // Advance `m` by `returndatasize() + 0x20`,
+                // rounded up to the next multiple of 32.
+                m := and(add(add(m, returndatasize()), 0x3f), 0xffffffffffffffe0)
             }
+            // Allocate the memory for `results` by updating the free memory pointer.
+            mstore(0x40, m)
         }
     }
 

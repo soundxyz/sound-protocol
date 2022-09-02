@@ -59,14 +59,14 @@ interface ISoundCreatorV1 {
      * @param contracts A list of contracts to call.
      * @param data      A list of calldata created via `abi.encodeWithSelector`
      *                  This must contain the same number of entries as `contracts`.
-     * @return soundEdition The address of the deployed edition proxy.
+     * @return results The results of calling the contracts.
      */
     function createSoundAndMints(
         bytes32 salt,
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] calldata data
-    ) external returns (address payable soundEdition);
+    ) external returns (bytes[] memory results);
 
     /**
      * @dev Changes the SoundEdition implementation contract address.

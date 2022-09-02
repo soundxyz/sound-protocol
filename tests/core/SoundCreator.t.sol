@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
+import "forge-std/console.sol";
+
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
+import { Clones } from "openzeppelin/proxy/Clones.sol";
 
 import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
@@ -238,19 +241,22 @@ contract SoundCreatorTests is TestConfig {
         vm.expectEmit(false, true, false, false);
         emit SoundEditionCreated(address(0), address(this));
 
-        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(salt, contracts, data);
+        bytes[] memory results = _createSoundEditionWithCalls(salt, contracts, data);
 
+        SoundEditionV1 soundEdition = SoundEditionV1(soundEditionAddress);
         assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
         assertTrue(soundEdition.hasAnyRole(address(merkleMinter), editionImplementation.MINTER_ROLE()));
         assertTrue(soundEdition.hasAnyRole(address(rangeMinter), editionImplementation.MINTER_ROLE()));
 
-        // It is not convenient to return are parse the created mint IDs --
-        // We have to depend on events to fetch them.
+        // Check that the mint IDs have been properly incremented, and encoded into the results.
+        assertEq(abi.decode(results[3], (uint128)), signatureMinter.nextMintId() - 1);
+        assertEq(abi.decode(results[4], (uint128)), merkleMinter.nextMintId() - 1);
+        assertEq(abi.decode(results[5], (uint128)), rangeMinter.nextMintId() - 1);
 
         // Simply check that the data has been initialized.
-        assertEq(signatureMinter.mintInfo(address(soundEdition), signatureMinter.nextMintId() - 1).price, price + 3);
-        assertEq(merkleMinter.mintInfo(address(soundEdition), merkleMinter.nextMintId() - 1).price, price + 4);
-        assertEq(rangeMinter.mintInfo(address(soundEdition), rangeMinter.nextMintId() - 1).price, price + 5);
+        assertEq(signatureMinter.mintInfo(soundEditionAddress, signatureMinter.nextMintId() - 1).price, price + 3);
+        assertEq(merkleMinter.mintInfo(soundEditionAddress, merkleMinter.nextMintId() - 1).price, price + 4);
+        assertEq(rangeMinter.mintInfo(soundEditionAddress, rangeMinter.nextMintId() - 1).price, price + 5);
 
         // Check that the caller owns the `soundEdition`.
         assertEq(soundEdition.owner(), address(this));
@@ -267,27 +273,24 @@ contract SoundCreatorTests is TestConfig {
         bytes32 salt,
         address[] memory contracts,
         bytes[] memory data
-    ) internal returns (SoundEditionV1) {
-        return
-            SoundEditionV1(
-                soundCreator.createSoundAndMints(
-                    salt,
-                    abi.encodeWithSelector(
-                        SoundEditionV1.initialize.selector,
-                        SONG_NAME,
-                        SONG_SYMBOL,
-                        METADATA_MODULE,
-                        BASE_URI,
-                        CONTRACT_URI,
-                        FUNDING_RECIPIENT,
-                        ROYALTY_BPS,
-                        EDITION_MAX_MINTABLE,
-                        EDITION_MAX_MINTABLE,
-                        RANDOMNESS_LOCKED_TIMESTAMP
-                    ),
-                    contracts,
-                    data
-                )
-            );
+    ) internal returns (bytes[] memory results) {
+        results = soundCreator.createSoundAndMints(
+            salt,
+            abi.encodeWithSelector(
+                SoundEditionV1.initialize.selector,
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                RANDOMNESS_LOCKED_TIMESTAMP
+            ),
+            contracts,
+            data
+        );
     }
 }
