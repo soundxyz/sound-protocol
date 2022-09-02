@@ -45,6 +45,16 @@ import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
  */
 contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable {
     // =============================================================
+    //                            CONSTANTS
+    // =============================================================
+
+    /**
+     * @dev Used for search and replace in the calldata to be forwarded.
+     *      `keccak256(bytes("soundxyz.SoundCreator.PLACEHOLDER_ADDRESS"))`
+     */
+    address public constant PLACEHOLDER_ADDRESS = 0xEBef849c9501107C20e13685050941D44C362E43;
+
+    // =============================================================
     //                            STORAGE
     // =============================================================
 
@@ -197,18 +207,18 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 )
                 // The end of the current bytes in memory.
                 let e := add(m, l)
-                // Replace the first instance of `address(this)` in the data with `soundEdition`.
+                // Replace the first instance of `PLACEHOLDER_ADDRESS` in the data with `soundEdition`.
                 // prettier-ignore
                 for { let j := add(m, 0x04) } lt(j, e) { j := add(0x20, j) } {
-                    if eq(mload(j), address()) {
+                    if eq(mload(j), PLACEHOLDER_ADDRESS) {
                         mstore(j, soundEdition)
                         break
                     }
                 }
                 // The current contract to call.
                 let c := calldataload(add(contracts.offset, sub(i, data.offset)))
-                // If `c == address(this)`, replace it with `soundEdition`.
-                if eq(c, address()) {
+                // If `c == PLACEHOLDER_ADDRESS`, replace it with `soundEdition`.
+                if eq(c, PLACEHOLDER_ADDRESS) {
                     c := soundEdition
                 }
                 // Try to call, and bubble up the revert if any.

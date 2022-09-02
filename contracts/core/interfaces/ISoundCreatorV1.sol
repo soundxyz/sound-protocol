@@ -83,13 +83,13 @@ interface ISoundCreatorV1 {
      *      and creates mint configurations on a given set of minter addresses.
      * @param initData  The calldata to initialize created via
      *                  `abi.encodeWithSelector`. The first argument will
-     *                   be replaced with the address of the caller.
-     * @param contracts A list of contracts to call. The first argument equal
-     *                  to the sound creator factory's address will be
+     *                  be replaced with the address of the caller.
+     * @param contracts A list of contracts to call.
+     *                  If an entry is equal to `PLACEHOLDER_ADDRESS`, it will be
      *                  replaced with the sound edition address.
      * @param data      A list of calldata created via `abi.encodeWithSelector`
      *                  that are to be passed to the contracts.
-     *                  Any word equal to the sound creator factory's address
+     *                  The first argument in the bytes equal to `PLACEHOLDER_ADDRESS`
      *                  will be replaced with the sound edition address.
      * @return soundEdition The address of the deployed edition proxy.
      */
@@ -112,6 +112,12 @@ interface ISoundCreatorV1 {
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
+
+    /**
+     * @dev Used for search and replace in the calldata to be forwarded.
+     * @return The constant value.
+     */
+    function PLACEHOLDER_ADDRESS() external pure returns (address);
 
     /**
      * @dev The address of the sound edition implementation.

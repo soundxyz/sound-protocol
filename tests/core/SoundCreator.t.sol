@@ -169,11 +169,11 @@ contract SoundCreatorTests is TestConfig {
 
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
-        // If the contract is the `soundCreator`, the create method will
+        // If the contract is the `PLACEHOLDER_ADDRESS`, the create method will
         // replace it with the address of the `soundEdition`.
-        contracts[0] = address(soundCreator);
-        contracts[1] = address(soundCreator);
-        contracts[2] = address(soundCreator);
+        contracts[0] = soundCreator.PLACEHOLDER_ADDRESS();
+        contracts[1] = soundCreator.PLACEHOLDER_ADDRESS();
+        contracts[2] = soundCreator.PLACEHOLDER_ADDRESS();
 
         contracts[3] = address(signatureMinter);
         contracts[4] = address(merkleMinter);
@@ -200,7 +200,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[3] = abi.encodeWithSelector(
             signatureMinter.createEditionMint.selector,
-            address(soundCreator), // Will be replaced by the address of the `soundEdition`.
+            soundCreator.PLACEHOLDER_ADDRESS(), // Will be replaced by the address of the `soundEdition`.
             price + 3,
             SIGNER,
             EDITION_MAX_MINTABLE,
@@ -211,7 +211,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[4] = abi.encodeWithSelector(
             merkleMinter.createEditionMint.selector,
-            address(soundCreator), // Will be replaced by the address of the `soundEdition`.
+            soundCreator.PLACEHOLDER_ADDRESS(), // Will be replaced by the address of the `soundEdition`.
             bytes32(uint256(123456)), // Merkle root hash.
             price + 4,
             START_TIME,
@@ -223,7 +223,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[5] = abi.encodeWithSelector(
             rangeMinter.createEditionMint.selector,
-            address(soundCreator), // Will be replaced by the address of the `soundEdition`.
+            soundCreator.PLACEHOLDER_ADDRESS(), // Will be replaced by the address of the `soundEdition`.
             price + 5,
             START_TIME,
             START_TIME + 1, // Closing time
