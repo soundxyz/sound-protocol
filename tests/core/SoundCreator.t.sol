@@ -176,18 +176,20 @@ contract SoundCreatorTests is TestConfig {
             address(signatureMinter),
             editionImplementation.MINTER_ROLE()
         );
+
         data[1] = abi.encodeWithSelector(
             editionImplementation.grantRoles.selector,
             address(merkleMinter),
             editionImplementation.MINTER_ROLE()
         );
+
         data[2] = abi.encodeWithSelector(
             editionImplementation.grantRoles.selector,
             address(rangeMinter),
             editionImplementation.MINTER_ROLE()
         );
 
-        // USe a unusual looking price.
+        // Use a unusual looking price.
         uint256 price = 308712640125698797;
 
         data[3] = abi.encodeWithSelector(
@@ -226,12 +228,15 @@ contract SoundCreatorTests is TestConfig {
             5 // Max mintable per account.
         );
 
+        // Check that the creation event is emitted.
         vm.expectEmit(true, true, true, true);
         emit SoundEditionCreated(soundEditionAddress, address(this));
 
         bytes[] memory results = _createSoundEditionWithCalls(salt, contracts, data);
 
         SoundEditionV1 soundEdition = SoundEditionV1(soundEditionAddress);
+
+        // Check that the `MINTER_ROLE` has been assigned properly.
         assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
         assertTrue(soundEdition.hasAnyRole(address(merkleMinter), editionImplementation.MINTER_ROLE()));
         assertTrue(soundEdition.hasAnyRole(address(rangeMinter), editionImplementation.MINTER_ROLE()));
