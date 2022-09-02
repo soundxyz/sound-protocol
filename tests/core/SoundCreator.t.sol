@@ -189,7 +189,7 @@ contract SoundCreatorTests is TestConfig {
             editionImplementation.MINTER_ROLE()
         );
 
-        // Use a unusual looking price.
+        // Use an unusual looking price.
         uint256 price = 308712640125698797;
 
         data[3] = abi.encodeWithSelector(
@@ -256,6 +256,7 @@ contract SoundCreatorTests is TestConfig {
 
         // Check that it will revert if the lengths of the arrays are not the same.
         data = new bytes[](1);
+        // Everytime we create, we have to use a different salt.
         salt = keccak256(bytes("AnotherRandomString"));
         vm.expectRevert(ISoundCreatorV1.ArrayLengthsMismatch.selector);
         _createSoundEditionWithCalls(salt, contracts, data);
