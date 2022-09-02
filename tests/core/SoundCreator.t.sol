@@ -171,11 +171,14 @@ contract SoundCreatorTests is TestConfig {
 
         address placeholderAddress = soundCreator.PLACEHOLDER_ADDRESS();
 
+        bytes32 salt = keccak256(bytes("SomeRandomString"));
+        address soundEditionAddress = soundCreator.soundEditionAddress(salt);
+
         // If the contract is the `PLACEHOLDER_ADDRESS`, the create method will
         // replace it with the address of the `soundEdition`.
-        contracts[0] = placeholderAddress;
-        contracts[1] = placeholderAddress;
-        contracts[2] = placeholderAddress;
+        contracts[0] = soundEditionAddress;
+        contracts[1] = soundEditionAddress;
+        contracts[2] = soundEditionAddress;
 
         contracts[3] = address(signatureMinter);
         contracts[4] = address(merkleMinter);
@@ -202,7 +205,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[3] = abi.encodeWithSelector(
             signatureMinter.createEditionMint.selector,
-            placeholderAddress, // Will be replaced by the address of the `soundEdition`.
+            soundEditionAddress,
             price + 3,
             SIGNER,
             EDITION_MAX_MINTABLE,
@@ -213,7 +216,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[4] = abi.encodeWithSelector(
             merkleMinter.createEditionMint.selector,
-            placeholderAddress, // Will be replaced by the address of the `soundEdition`.
+            soundEditionAddress,
             bytes32(uint256(123456)), // Merkle root hash.
             price + 4,
             START_TIME,
@@ -225,7 +228,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[5] = abi.encodeWithSelector(
             rangeMinter.createEditionMint.selector,
-            placeholderAddress, // Will be replaced by the address of the `soundEdition`.
+            soundEditionAddress,
             price + 5,
             START_TIME,
             START_TIME + 1, // Closing time
@@ -241,7 +244,7 @@ contract SoundCreatorTests is TestConfig {
         vm.expectEmit(false, true, false, false);
         emit SoundEditionCreated(address(0), address(this));
 
-        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(placeholderAddress, contracts, data);
+        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(salt, placeholderAddress, contracts, data);
 
         assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
         assertTrue(soundEdition.hasAnyRole(address(merkleMinter), editionImplementation.MINTER_ROLE()));
@@ -260,12 +263,14 @@ contract SoundCreatorTests is TestConfig {
 
         // Check that it will revert if the lengths of the arrays are not the same.
         data = new bytes[](1);
+        salt = keccak256(bytes("AnotherRandomString"));
         vm.expectRevert(ISoundCreatorV1.ArrayLengthsMismatch.selector);
-        _createSoundEditionWithCalls(placeholderAddress, contracts, data);
+        _createSoundEditionWithCalls(salt, placeholderAddress, contracts, data);
     }
 
     // For avoiding the stack too deep error.
     function _createSoundEditionWithCalls(
+        bytes32 salt,
         address placeholderAddress,
         address[] memory contracts,
         bytes[] memory data
@@ -273,6 +278,7 @@ contract SoundCreatorTests is TestConfig {
         return
             SoundEditionV1(
                 soundCreator.createSoundAndMints(
+                    salt,
                     abi.encodeWithSelector(
                         SoundEditionV1.initialize.selector,
                         placeholderAddress, // Will be replaced by the address of the caller.

@@ -119,12 +119,13 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @inheritdoc ISoundCreatorV1
      */
     function createSoundAndMints(
+        bytes32 salt,
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] calldata data
     ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
-        soundEdition = payable(Clones.clone(soundEditionImplementation));
+        soundEdition = payable(Clones.cloneDeterministic(soundEditionImplementation, salt));
 
         // Initialize proxy.
         assembly {
@@ -160,7 +161,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             }
         }
 
-        _callContracts(soundEdition, contracts, data);
+        _callContracts(contracts, data);
 
         OwnableRoles(soundEdition).transferOwnership(msg.sender);
 
@@ -181,6 +182,17 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     // =============================================================
+    //               PUBLIC / EXTERNAL VIEW FUNCTIONS
+    // =============================================================
+
+    /**
+     * @inheritdoc ISoundCreatorV1
+     */
+    function soundEditionAddress(bytes32 salt) external view returns (address) {
+        return Clones.predictDeterministicAddress(soundEditionImplementation, salt, address(this));
+    }
+
+    // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
 
@@ -189,11 +201,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @param contracts The addresses of the contracts.
      * @param data      The `abi.encodeWithSelector` calldata for each of the contracts.
      */
-    function _callContracts(
-        address soundEdition,
-        address[] calldata contracts,
-        bytes[] calldata data
-    ) internal {
+    function _callContracts(address[] calldata contracts, bytes[] calldata data) internal {
         if (contracts.length != data.length) revert ArrayLengthsMismatch();
 
         assembly {
@@ -213,26 +221,11 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                     add(o, 0x20), // The offset of the current bytes' bytes.
                     l // The length of the current bytes.
                 )
-                // The end of the current bytes in memory.
-                let e := add(m, l)
-                // Replace the first instance of `PLACEHOLDER_ADDRESS` in the data with `soundEdition`.
-                // prettier-ignore
-                for { let j := add(m, 0x04) } lt(j, e) { j := add(0x20, j) } {
-                    if eq(mload(j), PLACEHOLDER_ADDRESS) {
-                        mstore(j, soundEdition)
-                        break
-                    }
-                }
-                // The current contract to call.
-                let c := calldataload(add(contracts.offset, sub(i, data.offset)))
-                // If `c == PLACEHOLDER_ADDRESS`, replace it with `soundEdition`.
-                if eq(c, PLACEHOLDER_ADDRESS) {
-                    c := soundEdition
-                }
                 // Try to call, and bubble up the revert if any.
                 if iszero(call(
                     gas(), // Remaining gas.
-                    c, // The contract to call.
+                    // The contract to call.
+                    calldataload(add(contracts.offset, sub(i, data.offset))), 
                     0, // `msg.value` of the call.
                     m, // Start of the current bytes in memory.
                     l, // The length of the current bytes.

@@ -81,23 +81,19 @@ interface ISoundCreatorV1 {
     /**
      * @dev Creates a Sound Edition proxy, initializes it,
      *      and creates mint configurations on a given set of minter addresses.
+     * @param salt      The salt used for the CREATE2 to deploy the clone to a
+     *                  deterministic address.
      * @param initData  The calldata to initialize created via
      *                  `abi.encodeWithSelector`. The first argument in the bytes
      *                  equal to `PLACEHOLDER_ADDRESS`  will be replaced with
      *                  the address of the caller.
      * @param contracts A list of contracts to call.
-     *                  If an entry is equal to `PLACEHOLDER_ADDRESS`, it will be
-     *                  replaced with the sound edition address.
-     *                  The contracts can be any valid contract, they may
-     *                  not necessarily be the sound edition, or the minters.
      * @param data      A list of calldata created via `abi.encodeWithSelector`
-     *                  that are to be passed to the contracts.
-     *                  The first argument in the bytes equal to `PLACEHOLDER_ADDRESS`
-     *                  will be replaced with the sound edition address.
      *                  This must contain the same number of entries as `contracts`.
      * @return soundEdition The address of the deployed edition proxy.
      */
     function createSoundAndMints(
+        bytes32 salt,
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] memory data
@@ -128,4 +124,11 @@ interface ISoundCreatorV1 {
      * @return The configured value.
      */
     function soundEditionImplementation() external returns (address);
+
+    /**
+     * @dev Returns the deterministic address for the sound edition clone.
+     * @param salt The salt, generated on the client side.
+     * @return The computed value.
+     */
+    function soundEditionAddress(bytes32 salt) external view returns (address);
 }
