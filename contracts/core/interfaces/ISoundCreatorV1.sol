@@ -54,7 +54,7 @@ interface ISoundCreatorV1 {
      *      and creates mint configurations on a given set of minter addresses.
      * @param salt      The salt used for the CREATE2 to deploy the clone to a
      *                  deterministic address.
-     * @param initData  The calldata to initialize created via
+     * @param initData  The calldata to initialize SoundEdition via
      *                  `abi.encodeWithSelector`.
      * @param contracts A list of contracts to call.
      * @param data      A list of calldata created via `abi.encodeWithSelector`
