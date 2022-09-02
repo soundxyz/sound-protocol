@@ -78,8 +78,10 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         address[] calldata contracts,
         bytes[] calldata data
     ) external returns (bytes[] memory results) {
-        // Create Sound Edition proxy
-        address soundEdition = payable(Clones.cloneDeterministic(soundEditionImplementation, salt));
+        // Create Sound Edition proxy.
+        address soundEdition = payable(
+            Clones.cloneDeterministic(soundEditionImplementation, _saltedSalt(msg.sender, salt))
+        );
 
         // Initialize proxy.
         assembly {
@@ -132,8 +134,8 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     /**
      * @inheritdoc ISoundCreatorV1
      */
-    function soundEditionAddress(bytes32 salt) external view returns (address) {
-        return Clones.predictDeterministicAddress(soundEditionImplementation, salt, address(this));
+    function soundEditionAddress(address by, bytes32 salt) external view returns (address) {
+        return Clones.predictDeterministicAddress(soundEditionImplementation, _saltedSalt(by, salt), address(this));
     }
 
     // =============================================================
@@ -215,6 +217,14 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             }
             // Allocate the memory for `results` by updating the free memory pointer.
             mstore(0x40, m)
+        }
+    }
+
+    function _saltedSalt(address by, bytes32 salt) internal pure returns (bytes32 result) {
+        assembly {
+            mstore(0x00, by)
+            mstore(0x20, salt)
+            result := keccak256(0x00, 0x40)
         }
     }
 

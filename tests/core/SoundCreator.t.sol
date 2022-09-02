@@ -161,7 +161,7 @@ contract SoundCreatorTests is TestConfig {
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
         bytes32 salt = keccak256(bytes("SomeRandomString"));
-        address soundEditionAddress = soundCreator.soundEditionAddress(salt);
+        address soundEditionAddress = soundCreator.soundEditionAddress(address(this), salt);
 
         contracts[0] = soundEditionAddress;
         contracts[1] = soundEditionAddress;
