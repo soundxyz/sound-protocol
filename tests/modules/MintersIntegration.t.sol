@@ -95,7 +95,7 @@ contract MintersIntegration is TestConfig {
         // Setup the Merkle tree
         (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(accountsFreeMerkleDrop);
 
-        MerkleDropMinter merkleDropMinter = new MerkleDropMinter(feeRegistry);
+        MerkleDropMinter merkleDropMinter = new MerkleDropMinter(feeRegistry, soundCreator);
         edition.grantRoles(address(merkleDropMinter), edition.MINTER_ROLE());
 
         bytes32 root = merkleFreeDrop.getRoot(leavesFreeMerkleDrop);
@@ -132,7 +132,7 @@ contract MintersIntegration is TestConfig {
         );
 
         // SETUP PUBLIC SALE
-        RangeEditionMinter publicSaleMinter = new RangeEditionMinter(feeRegistry);
+        RangeEditionMinter publicSaleMinter = new RangeEditionMinter(feeRegistry, soundCreator);
         edition.grantRoles(address(publicSaleMinter), edition.MINTER_ROLE());
 
         uint128 mintIdPublicSale = publicSaleMinter.createEditionMint(

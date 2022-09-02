@@ -22,6 +22,7 @@ contract SoundCreatorTests is TestConfig {
     event SoundEditionImplementationSet(address newImplementation);
     event Upgraded(address indexed implementation);
 
+    uint256 constant SEED = 10973071390;
     uint96 constant PRICE = 1 ether;
     uint32 constant START_TIME = 0;
     uint32 constant END_TIME = 10000;
@@ -157,18 +158,9 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_createSoundAndMints() public {
-        (
-            address editionAddress,
-            FixedPriceSignatureMinter signatureMinter,
-            MerkleDropMinter merkleMinter,
-            RangeEditionMinter rangeMinter,
-            address[] memory minterAddresses,
-            bytes[] memory createEditionMintCalls
-        ) = setupCreateEditionAndMints();
+        (address[] memory minterAddresses, bytes[] memory createEditionMintCalls) = _setupCreateEditionAndMints();
 
-        console.log("this", address(this));
-
-        SoundEditionV1 soundEdition = SoundEditionV1(
+        SoundEditionV1(
             soundCreator.createSoundAndMints(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -184,45 +176,28 @@ contract SoundCreatorTests is TestConfig {
                 createEditionMintCalls
             )
         );
-
-        // Grant minter roles
-        soundEdition.grantRoles(address(signatureMinter), soundEdition.MINTER_ROLE());
-        soundEdition.grantRoles(address(merkleMinter), soundEdition.MINTER_ROLE());
-        soundEdition.grantRoles(address(rangeMinter), soundEdition.MINTER_ROLE());
-
-        // Test mints
     }
 
-    function setupCreateEditionAndMints()
-        public
-        returns (
-            address,
-            FixedPriceSignatureMinter,
-            MerkleDropMinter,
-            RangeEditionMinter,
-            address[] memory,
-            bytes[] memory
-        )
-    {
-        address[] memory minterAddresses = new address[](1);
-        bytes[] memory createEditionMintCalls = new bytes[](1);
+    function _setupCreateEditionAndMints() internal returns (address[] memory, bytes[] memory) {
+        address[] memory minterAddresses = new address[](3);
+        bytes[] memory createEditionMintCalls = new bytes[](3);
 
         ISoundFeeRegistry feeRegistry = ISoundFeeRegistry(address(1));
-        FixedPriceSignatureMinter signatureMinter = new FixedPriceSignatureMinter(feeRegistry);
-        MerkleDropMinter merkleMinter = new MerkleDropMinter(feeRegistry);
-        RangeEditionMinter rangeMinter = new RangeEditionMinter(feeRegistry);
+        FixedPriceSignatureMinter signatureMinter = new FixedPriceSignatureMinter(feeRegistry, soundCreator);
+        MerkleDropMinter merkleMinter = new MerkleDropMinter(feeRegistry, soundCreator);
+        RangeEditionMinter rangeMinter = new RangeEditionMinter(feeRegistry, soundCreator);
 
         address editionAddress = Clones.predictDeterministicAddress(
             soundCreator.soundEditionImplementation(),
-            keccak256(abi.encodePacked(msg.sender, block.timestamp)),
-            address(this)
+            keccak256(abi.encodePacked(SONG_NAME, SONG_SYMBOL)),
+            address(soundCreator)
         );
 
         minterAddresses[0] = address(signatureMinter);
-        // minterAddresses[1] = address(merkleMinter);
-        // minterAddresses[2] = address(rangeMinter);
+        minterAddresses[1] = address(merkleMinter);
+        minterAddresses[2] = address(rangeMinter);
 
-        bytes memory signatureCall = abi.encodeWithSelector(
+        createEditionMintCalls[0] = abi.encodeWithSelector(
             signatureMinter.createEditionMint.selector,
             editionAddress,
             PRICE,
@@ -233,8 +208,31 @@ contract SoundCreatorTests is TestConfig {
             0 // affiliateBPS
         );
 
-        createEditionMintCalls[0] = signatureCall;
+        createEditionMintCalls[1] = abi.encodeWithSelector(
+            merkleMinter.createEditionMint.selector,
+            editionAddress,
+            bytes32(""),
+            PRICE,
+            START_TIME,
+            END_TIME,
+            0, // affiliateFeeBPS
+            EDITION_MAX_MINTABLE, // maxMintableUpper
+            EDITION_MAX_MINTABLE // maxMintablePerAccount
+        );
 
-        return (editionAddress, signatureMinter, merkleMinter, rangeMinter, minterAddresses, createEditionMintCalls);
+        createEditionMintCalls[2] = abi.encodeWithSelector(
+            rangeMinter.createEditionMint.selector,
+            editionAddress,
+            PRICE,
+            START_TIME,
+            END_TIME - 1, // closingTime
+            END_TIME,
+            0, // affiliateBPS
+            EDITION_MAX_MINTABLE, // maxMintableLower
+            EDITION_MAX_MINTABLE, // maxMintableUpper
+            EDITION_MAX_MINTABLE // maxMintablePerAccount
+        );
+
+        return (minterAddresses, createEditionMintCalls);
     }
 }

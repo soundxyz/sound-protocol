@@ -77,7 +77,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPriceSignatureMinter minter) {
         edition = createGenericEdition();
 
-        minter = new FixedPriceSignatureMinter(feeRegistry);
+        minter = new FixedPriceSignatureMinter(feeRegistry, soundCreator);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
@@ -95,7 +95,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry, soundCreator);
 
         vm.expectEmit(false, false, false, true);
 
@@ -124,7 +124,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry, soundCreator);
 
         vm.expectRevert(IFixedPriceSignatureMinter.SignerIsZeroAddress.selector);
 
@@ -412,7 +412,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         SoundEditionV1 edition2 = createGenericEdition();
 
         // Use the same minter for both editions
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry, soundCreator);
 
         edition1.grantRoles(address(minter), edition1.MINTER_ROLE());
         edition2.grantRoles(address(minter), edition2.MINTER_ROLE());
@@ -627,7 +627,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_mintInfo() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry, soundCreator);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 

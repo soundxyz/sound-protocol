@@ -138,6 +138,11 @@ interface IMinterModule is IERC165 {
      */
     error FeeRegistryIsZeroAddress();
 
+    /**
+     * @dev Sound Creator cannot be the zero address.
+     */
+    error SoundCreatorIsZeroAddress();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================

@@ -122,10 +122,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
         soundEdition = payable(
-            Clones.cloneDeterministic(
-                soundEditionImplementation,
-                keccak256(abi.encodePacked(msg.sender, block.timestamp))
-            )
+            Clones.cloneDeterministic(soundEditionImplementation, keccak256(abi.encodePacked(name, symbol)))
         );
 
         // Initialize proxy

@@ -45,7 +45,7 @@ contract MintControllerBaseTests is TestConfig {
     function setUp() public override {
         super.setUp();
 
-        minter = new MockMinter(feeRegistry);
+        minter = new MockMinter(feeRegistry, soundCreator);
     }
 
     function _createEdition(uint32 editionMaxMintable) internal returns (SoundEditionV1 edition) {
@@ -437,7 +437,12 @@ contract MintControllerBaseTests is TestConfig {
 
     function test_revertsIfFeeRegistryIsZero() external {
         vm.expectRevert(IMinterModule.FeeRegistryIsZeroAddress.selector);
-        new MockMinter(ISoundFeeRegistry(address(0)));
+        new MockMinter(ISoundFeeRegistry(address(0)), soundCreator);
+    }
+
+    function test_revertsIfSoundCreatorIsZero() external {
+        vm.expectRevert(IMinterModule.FeeRegistryIsZeroAddress.selector);
+        new MockMinter(ISoundFeeRegistry(address(1)), SoundCreatorV1(address(0)));
     }
 
     // Test helper for withdrawing the affiliate fees and testing the expected effects.

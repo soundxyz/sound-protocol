@@ -33,7 +33,7 @@ contract GoldenEggMetadataTests is TestConfig {
             GoldenEggMetadata goldenEggModule
         )
     {
-        minter = new RangeEditionMinter(feeRegistry);
+        minter = new RangeEditionMinter(feeRegistry, soundCreator);
         goldenEggModule = new GoldenEggMetadata();
 
         edition = SoundEditionV1(
@@ -86,7 +86,7 @@ contract GoldenEggMetadataTests is TestConfig {
             )
         );
 
-        RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
+        RangeEditionMinter minter = new RangeEditionMinter(feeRegistry, soundCreator);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 

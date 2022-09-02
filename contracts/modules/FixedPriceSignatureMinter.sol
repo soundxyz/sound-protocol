@@ -8,6 +8,7 @@ import { IFixedPriceSignatureMinter, EditionMintData, MintInfo } from "./interfa
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 
 /**
  * @title IFixedPriceSignatureMinter
@@ -50,7 +51,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
+    constructor(ISoundFeeRegistry feeRegistry_, ISoundCreatorV1 soundCreator_)
+        BaseMinter(feeRegistry_, soundCreator_)
+    {}
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS

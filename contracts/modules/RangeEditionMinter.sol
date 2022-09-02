@@ -7,6 +7,7 @@ import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IRangeEditionMinter, EditionMintData, MintInfo } from "./interfaces/IRangeEditionMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 
 /*
  * @title RangeEditionMinter
@@ -34,7 +35,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
+    constructor(ISoundFeeRegistry feeRegistry_, ISoundCreatorV1 soundCreator_)
+        BaseMinter(feeRegistry_, soundCreator_)
+    {}
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS

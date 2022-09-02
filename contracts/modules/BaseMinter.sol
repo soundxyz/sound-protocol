@@ -3,10 +3,13 @@ pragma solidity ^0.8.16;
 
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
+
+import "forge-std/console.sol";
 
 /**
  * @title Minter Base
@@ -53,13 +56,21 @@ abstract contract BaseMinter is IMinterModule {
      */
     ISoundFeeRegistry public immutable feeRegistry;
 
+    /**
+     * @dev The fee registry. Used for handling platform fees.
+     */
+    ISoundCreatorV1 public immutable soundCreator;
+
     // =============================================================
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(ISoundFeeRegistry feeRegistry_) {
-        if (address(feeRegistry_) == address(0)) revert FeeRegistryIsZeroAddress();
+    constructor(ISoundFeeRegistry feeRegistry_, ISoundCreatorV1 soundCreator_) {
+        soundCreator = soundCreator_;
         feeRegistry = feeRegistry_;
+
+        if (address(feeRegistry_) == address(0)) revert FeeRegistryIsZeroAddress();
+        if (address(soundCreator) == address(0)) revert SoundCreatorIsZeroAddress();
     }
 
     // =============================================================
@@ -194,6 +205,7 @@ abstract contract BaseMinter is IMinterModule {
      */
     modifier onlyEditionOwnerOrAdmin(address edition) virtual {
         if (
+            msg.sender != address(soundCreator) &&
             msg.sender != OwnableRoles(edition).owner() &&
             !OwnableRoles(edition).hasAnyRole(msg.sender, ISoundEditionV1(edition).ADMIN_ROLE())
         ) revert Unauthorized();

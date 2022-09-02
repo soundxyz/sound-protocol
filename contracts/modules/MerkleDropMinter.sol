@@ -5,6 +5,7 @@ pragma solidity ^0.8.16;
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
+import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
@@ -35,7 +36,9 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
+    constructor(ISoundFeeRegistry feeRegistry_, ISoundCreatorV1 soundCreator_)
+        BaseMinter(feeRegistry_, soundCreator_)
+    {}
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
