@@ -94,8 +94,8 @@ interface ISoundCreatorV1 {
      * @return soundEdition The address of the deployed edition proxy.
      */
     function createSoundAndMints(
-        bytes memory initData,
-        address[] memory contracts,
+        bytes calldata initData,
+        address[] calldata contracts,
         bytes[] memory data
     ) external returns (address payable soundEdition);
 

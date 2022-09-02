@@ -110,7 +110,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      */
     function createSoundAndMints(
         bytes calldata initData,
-        address[] memory contracts,
+        address[] calldata contracts,
         bytes[] memory data
     ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
@@ -173,7 +173,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      */
     function _callMinters(
         address soundEdition,
-        address[] memory contracts,
+        address[] calldata contracts,
         bytes[] memory data
     ) internal {
         if (contracts.length != data.length) revert ArrayLengthsMismatch();
@@ -202,7 +202,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                     }
                 }
                 // The current contract to call.
-                let c := mload(add(contracts, sub(i, data)))
+                let c := calldataload(add(contracts.offset, sub(i, dataOffset)))
                 // If `c == address(this)`, replace it with `soundEdition`.
                 if eq(c, address()) {
                     c := soundEdition
