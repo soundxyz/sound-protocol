@@ -20,7 +20,10 @@ contract Seed is Script {
     uint16 private constant PLATFORM_FEE_BPS = 500;
     address SOUND_GNOSIS_SAFE_MAINNET = 0x858a92511485715Cfb754f397a7894b7724c7Abd;
 
+<<<<<<< HEAD
     GoldenEggMetadata public goldenEggModule;
+=======
+>>>>>>> scripts -> script
     FixedPriceSignatureMinter public fixedPriceSignatureMinter;
     MerkleDropMinter public merkleDropMinter;
     RangeEditionMinter public rangeEditionMinter;
@@ -35,7 +38,11 @@ contract Seed is Script {
         soundFeeRegistry.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
 
         // Deploy modules
+<<<<<<< HEAD
         goldenEggModule = new GoldenEggMetadata();
+=======
+        new GoldenEggMetadata();
+>>>>>>> scripts -> script
         fixedPriceSignatureMinter = new FixedPriceSignatureMinter(soundFeeRegistry);
         merkleDropMinter = new MerkleDropMinter(soundFeeRegistry);
         rangeEditionMinter = new RangeEditionMinter(soundFeeRegistry);
@@ -70,17 +77,29 @@ contract Seed is Script {
         // Set creator ownership to gnosis safe
         soundCreator.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
 
+<<<<<<< HEAD
         _deployDummyEdition(soundCreator, goldenEggModule);
+=======
+        _deployDummyEdition(soundCreator);
+>>>>>>> scripts -> script
 
         vm.stopBroadcast();
     }
 
+<<<<<<< HEAD
     function _deployDummyEdition(SoundCreatorV1 soundCreator, GoldenEggMetadata goldenEggModule_) internal {
+=======
+    function _deployDummyEdition(SoundCreatorV1 soundCreator) internal {
+>>>>>>> scripts -> script
         SoundEditionV1 soundEdition = SoundEditionV1(
             soundCreator.createSound(
                 "SoundEditionV1", // name
                 "SOUND", // symbol
+<<<<<<< HEAD
                 IMetadataModule(address(goldenEggModule_)),
+=======
+                IMetadataModule(address(0)),
+>>>>>>> scripts -> script
                 "baseURI",
                 "contractURI",
                 address(1), // fundingRecipient
