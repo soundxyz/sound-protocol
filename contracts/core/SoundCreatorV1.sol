@@ -204,7 +204,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 mstore(resultsOffsets, m)
                 resultsOffsets := add(resultsOffsets, 0x20)
 
-                // Append the `returndatasize()`, and the return data.
+                // Append the `returndatasize()` and the return data, to `results`.
                 mstore(m, returndatasize())
                 returndatacopy(add(m, 0x20), 0x00, returndatasize())
                 // Advance `m` by `returndatasize() + 0x20`,
