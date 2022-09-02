@@ -78,9 +78,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] calldata data
-    ) external returns (address payable soundEdition) {
+    ) external returns (address soundEdition) {
         // Create Sound Edition proxy
-        soundEdition = payable(Clones.cloneDeterministic(soundEditionImplementation, salt));
+        soundEdition = Clones.cloneDeterministic(soundEditionImplementation, salt);
 
         // Initialize proxy.
         assembly {

@@ -66,7 +66,7 @@ interface ISoundCreatorV1 {
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] calldata data
-    ) external returns (address payable soundEdition);
+    ) external returns (address soundEdition);
 
     /**
      * @dev Changes the SoundEdition implementation contract address.
