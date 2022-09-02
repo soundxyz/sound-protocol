@@ -160,7 +160,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             }
         }
 
-        _callMinters(soundEdition, contracts, data);
+        _callContracts(soundEdition, contracts, data);
 
         OwnableRoles(soundEdition).transferOwnership(msg.sender);
 
@@ -189,7 +189,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @param contracts The addresses of the contracts.
      * @param data      The `abi.encodeWithSelector` calldata for each of the contracts.
      */
-    function _callMinters(
+    function _callContracts(
         address soundEdition,
         address[] calldata contracts,
         bytes[] calldata data

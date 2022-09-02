@@ -88,10 +88,13 @@ interface ISoundCreatorV1 {
      * @param contracts A list of contracts to call.
      *                  If an entry is equal to `PLACEHOLDER_ADDRESS`, it will be
      *                  replaced with the sound edition address.
+     *                  The contracts can be any valid contract, they may
+     *                  not necessarily be the sound edition, or the minters.
      * @param data      A list of calldata created via `abi.encodeWithSelector`
      *                  that are to be passed to the contracts.
      *                  The first argument in the bytes equal to `PLACEHOLDER_ADDRESS`
      *                  will be replaced with the sound edition address.
+     *                  This must contain the same number of entries as `contracts`.
      * @return soundEdition The address of the deployed edition proxy.
      */
     function createSoundAndMints(
