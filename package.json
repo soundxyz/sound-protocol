@@ -18,7 +18,11 @@
     "release:canary": "(node scripts/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
     "prepack": "rm -rf out out-2 dist typechain && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm typechain && bob-tsm build.ts",
     "postpublish": "gh-release",
+<<<<<<< HEAD
     "seed": "source .env && forge script script/solidity/Seed.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast"
+=======
+    "seed": "source .env && cp -r scripts contracts/scripts && forge script contracts/scripts/solidity/Seed.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && rm -rf contracts/scripts"
+>>>>>>> directory structure back as it was
   },
   "repository": {
     "type": "git",
