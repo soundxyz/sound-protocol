@@ -159,7 +159,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             // We will use the free memory to construct the `results` array,
             // and also as a temporary space for the calldata.
             results := mload(0x40)
-            // Set `results.length = data.length`.
+            // Set `results.length` to be equal to `data.length`.
             mstore(results, data.length)
             // Skip the first word, which is used to store the length
             let resultsOffsets := add(results, 0x20)
@@ -167,7 +167,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             // `shl(5, n)` is a gas-saving shorthand for `mul(0x20, n)`.
             let dataOffsetsEnd := add(data.offset, shl(5, data.length))
             // This is the start of the unused free memory.
-            // We use it to temporarily store the calldata.
+            // We use it to temporarily store the calldata to call the contracts.
             let m := add(resultsOffsets, shl(5, data.length))
 
             // Loop through `contacts` and `data` together.
@@ -177,8 +177,8 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 let o := add(data.offset, calldataload(i))
                 // Copy `bytes[i]` from calldata to the free memory.
                 calldatacopy(
-                    m, // Start of the free memory.
-                    add(o, 0x20), // Location of starting byte in `data[i]` in calldata.
+                    m, // Start of the unused free memory.
+                    add(o, 0x20), // Location of starting byte of `data[i]` in calldata.
                     calldataload(o) // The length of the `bytes[i]`.
                 )
                 // Grab `contracts[i]` from the calldata.
@@ -206,8 +206,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 mstore(resultsOffsets, m)
                 resultsOffsets := add(resultsOffsets, 0x20)
 
-                // Append the `returndatasize()` and the return data, to `results`.
+                // Append the `returndatasize()` to `results`.
                 mstore(m, returndatasize())
+                // Append the return data to `results`.
                 returndatacopy(add(m, 0x20), 0x00, returndatasize())
                 // Advance `m` by `returndatasize() + 0x20`,
                 // rounded up to the next multiple of 32.
