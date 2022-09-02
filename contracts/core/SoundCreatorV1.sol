@@ -163,14 +163,14 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             let resultsOffsets := add(results, 0x20)
             // Compute the location of the last calldata offset in `data`.
             // `shl(5, n)` is a gas-saving shorthand for `mul(0x20, n)`.
-            let dataLengthsEnd := add(data.offset, shl(5, data.length))
+            let dataOffsetsEnd := add(data.offset, shl(5, data.length))
             // This is the start of the unused free memory.
             // We use it to temporarily store the calldata.
             let m := add(resultsOffsets, shl(5, data.length))
 
             // Loop through `contacts` and `data` together, and call the contracts.
             // prettier-ignore
-            for { let i := data.offset } iszero(eq(i, dataLengthsEnd)) { i := add(i, 0x20) } {
+            for { let i := data.offset } iszero(eq(i, dataOffsetsEnd)) { i := add(i, 0x20) } {
                 // Location of `bytes[i]` in calldata.
                 let o := add(data.offset, calldataload(i))
                 // Copy `bytes[i]` from calldata to the free memory.
