@@ -70,7 +70,7 @@ contract TestConfig is Test {
         uint32 editionMaxMintable,
         uint32 mintRandomnessTokenThreshold,
         uint32 mintRandomnessTimeThreshold
-    ) public returns (address payable) {
+    ) public returns (address) {
         bytes memory initData = abi.encodeWithSelector(
             SoundEditionV1.initialize.selector,
             name,

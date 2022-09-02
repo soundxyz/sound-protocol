@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "forge-std/console.sol";
-
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
-import { Clones } from "openzeppelin/proxy/Clones.sol";
 
 import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
@@ -47,11 +44,6 @@ contract SoundCreatorTests is TestConfig {
 
     // Tests that the factory creates a new sound NFT
     function test_createSound() public {
-        // Can't test edition address is emitted from event unless we precalculate it,
-        // but cloneDeterminstic would require a salt (==more gas & complexity)
-        vm.expectEmit(false, true, false, false);
-        emit SoundEditionCreated(address(0), address(this));
-
         SoundEditionV1 soundEdition = createGenericEdition();
 
         assert(address(soundEdition) != address(0));
@@ -171,8 +163,6 @@ contract SoundCreatorTests is TestConfig {
         bytes32 salt = keccak256(bytes("SomeRandomString"));
         address soundEditionAddress = soundCreator.soundEditionAddress(salt);
 
-        // If the contract is the `PLACEHOLDER_ADDRESS`, the create method will
-        // replace it with the address of the `soundEdition`.
         contracts[0] = soundEditionAddress;
         contracts[1] = soundEditionAddress;
         contracts[2] = soundEditionAddress;
@@ -236,10 +226,8 @@ contract SoundCreatorTests is TestConfig {
             5 // Max mintable per account.
         );
 
-        // Can't test edition address is emitted from event unless we precalculate it,
-        // but cloneDeterminstic would require a salt (==more gas & complexity)
-        vm.expectEmit(false, true, false, false);
-        emit SoundEditionCreated(address(0), address(this));
+        vm.expectEmit(true, true, true, true);
+        emit SoundEditionCreated(soundEditionAddress, address(this));
 
         bytes[] memory results = _createSoundEditionWithCalls(salt, contracts, data);
 

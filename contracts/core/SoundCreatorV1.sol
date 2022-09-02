@@ -34,7 +34,6 @@ import { UUPSUpgradeable } from "openzeppelin-upgradeable/proxy/utils/UUPSUpgrad
 import { ISoundCreatorV1 } from "./interfaces/ISoundCreatorV1.sol";
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
-import { IMinterModule } from "./interfaces/IMinterModule.sol";
 
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
