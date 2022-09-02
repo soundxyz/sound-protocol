@@ -233,7 +233,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 if iszero(call(
                     gas(), // Remaining gas.
                     c, // The contract to call.
-                    0, // Zero ETH sent.
+                    0, // `msg.value` of the call.
                     m, // Start of the current bytes in memory.
                     l, // The length of the current bytes.
                     0x00, // Zero return data expected.
