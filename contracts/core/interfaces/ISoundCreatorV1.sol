@@ -82,8 +82,9 @@ interface ISoundCreatorV1 {
      * @dev Creates a Sound Edition proxy, initializes it,
      *      and creates mint configurations on a given set of minter addresses.
      * @param initData  The calldata to initialize created via
-     *                  `abi.encodeWithSelector`. The first argument will
-     *                  be replaced with the address of the caller.
+     *                  `abi.encodeWithSelector`. The first argument in the bytes
+     *                  equal to `PLACEHOLDER_ADDRESS`  will be replaced with
+     *                  the address of the caller.
      * @param contracts A list of contracts to call.
      *                  If an entry is equal to `PLACEHOLDER_ADDRESS`, it will be
      *                  replaced with the sound edition address.

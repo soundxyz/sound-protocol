@@ -132,8 +132,16 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             let m := mload(0x40)
             // Copy the `initData` to the free memory.
             calldatacopy(m, initData.offset, initData.length)
-            // Replace the first argument of `initData` with the `address(this)`.
-            mstore(add(m, 0x04), address())
+            // The end of the current bytes in memory.
+            let e := add(m, initData.length)
+            // Replace the first instance of `PLACEHOLDER_ADDRESS` in the data with `address(this)`.
+            // prettier-ignore
+            for { let j := add(m, 0x04) } lt(j, e) { j := add(0x20, j) } {
+                if eq(mload(j), PLACEHOLDER_ADDRESS) {
+                    mstore(j, address())
+                    break
+                }
+            }
             // Call the initializer, and revert if the call fails.
             if iszero(
                 call(

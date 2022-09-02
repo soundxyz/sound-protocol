@@ -169,11 +169,13 @@ contract SoundCreatorTests is TestConfig {
 
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
+        address placeholderAddress = soundCreator.PLACEHOLDER_ADDRESS();
+
         // If the contract is the `PLACEHOLDER_ADDRESS`, the create method will
         // replace it with the address of the `soundEdition`.
-        contracts[0] = soundCreator.PLACEHOLDER_ADDRESS();
-        contracts[1] = soundCreator.PLACEHOLDER_ADDRESS();
-        contracts[2] = soundCreator.PLACEHOLDER_ADDRESS();
+        contracts[0] = placeholderAddress;
+        contracts[1] = placeholderAddress;
+        contracts[2] = placeholderAddress;
 
         contracts[3] = address(signatureMinter);
         contracts[4] = address(merkleMinter);
@@ -200,7 +202,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[3] = abi.encodeWithSelector(
             signatureMinter.createEditionMint.selector,
-            soundCreator.PLACEHOLDER_ADDRESS(), // Will be replaced by the address of the `soundEdition`.
+            placeholderAddress, // Will be replaced by the address of the `soundEdition`.
             price + 3,
             SIGNER,
             EDITION_MAX_MINTABLE,
@@ -211,7 +213,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[4] = abi.encodeWithSelector(
             merkleMinter.createEditionMint.selector,
-            soundCreator.PLACEHOLDER_ADDRESS(), // Will be replaced by the address of the `soundEdition`.
+            placeholderAddress, // Will be replaced by the address of the `soundEdition`.
             bytes32(uint256(123456)), // Merkle root hash.
             price + 4,
             START_TIME,
@@ -223,7 +225,7 @@ contract SoundCreatorTests is TestConfig {
 
         data[5] = abi.encodeWithSelector(
             rangeMinter.createEditionMint.selector,
-            soundCreator.PLACEHOLDER_ADDRESS(), // Will be replaced by the address of the `soundEdition`.
+            placeholderAddress, // Will be replaced by the address of the `soundEdition`.
             price + 5,
             START_TIME,
             START_TIME + 1, // Closing time
@@ -234,7 +236,7 @@ contract SoundCreatorTests is TestConfig {
             5 // Max mintable per account.
         );
 
-        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(contracts, data);
+        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(placeholderAddress, contracts, data);
 
         assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
         assertTrue(soundEdition.hasAnyRole(address(merkleMinter), editionImplementation.MINTER_ROLE()));
@@ -251,20 +253,21 @@ contract SoundCreatorTests is TestConfig {
         // Check that it will revert if the lengths of the arrays are not the same.
         data = new bytes[](1);
         vm.expectRevert(ISoundCreatorV1.ArrayLengthsMismatch.selector);
-        _createSoundEditionWithCalls(contracts, data);
+        _createSoundEditionWithCalls(placeholderAddress, contracts, data);
     }
 
     // For avoiding the stack too deep error.
-    function _createSoundEditionWithCalls(address[] memory contracts, bytes[] memory data)
-        internal
-        returns (SoundEditionV1)
-    {
+    function _createSoundEditionWithCalls(
+        address placeholderAddress,
+        address[] memory contracts,
+        bytes[] memory data
+    ) internal returns (SoundEditionV1) {
         return
             SoundEditionV1(
                 soundCreator.createSoundAndMints(
                     abi.encodeWithSelector(
                         SoundEditionV1.initialize.selector,
-                        address(0),
+                        placeholderAddress, // Will be replaced by the address of the caller.
                         SONG_NAME,
                         SONG_SYMBOL,
                         METADATA_MODULE,
