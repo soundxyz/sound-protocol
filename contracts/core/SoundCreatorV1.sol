@@ -111,7 +111,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     function createSoundAndMints(
         bytes calldata initData,
         address[] calldata contracts,
-        bytes[] memory data
+        bytes[] calldata data
     ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
         soundEdition = payable(Clones.clone(soundEditionImplementation));
@@ -174,35 +174,39 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     function _callMinters(
         address soundEdition,
         address[] calldata contracts,
-        bytes[] memory data
+        bytes[] calldata data
     ) internal {
         if (contracts.length != data.length) revert ArrayLengthsMismatch();
 
         assembly {
-            // Skip the length's slot.
-            let dataOffset := add(data, 0x20)
+            // Grab the free memory pointer.
+            let m := mload(0x40)
             // Compute the end of the data.
-            let dataLengthsEnd := add(dataOffset, shl(5, mload(data)))
+            let dataLengthsEnd := add(data.offset, shl(5, data.length))
             // prettier-ignore
-            for { let i := dataOffset } iszero(eq(i, dataLengthsEnd)) { i := add(i, 0x20) } {
-                // The location of the current bytes in memory.
-                let o := mload(i)
-                // Start of the current bytes.
-                let s := add(o, 0x20)
+            for { let i := data.offset } iszero(eq(i, dataLengthsEnd)) { i := add(i, 0x20) } {
+                // The location of the current bytes in calldata.
+                let o := add(data.offset, calldataload(i))
                 // The length of the current bytes.
-                let l := mload(o)
-                // The end of the current bytes.
-                let e := add(s, l)
+                let l := calldataload(o)
+                // Copy the current bytes from calldata to the memory.
+                calldatacopy(
+                    m, // Start of the current bytes in memory.
+                    add(o, 0x20), // The offset of the current bytes' bytes.
+                    l // The length of the current bytes.
+                )
+                // The end of the current bytes in memory.
+                let e := add(m, l)
                 // Replace the first instance of `address(this)` in the data with `soundEdition`.
                 // prettier-ignore
-                for { let j := add(s, 0x04) } lt(j, e) { j := add(0x20, j) } {
+                for { let j := add(m, 0x04) } lt(j, e) { j := add(0x20, j) } {
                     if eq(mload(j), address()) {
                         mstore(j, soundEdition)
                         break
                     }
                 }
                 // The current contract to call.
-                let c := calldataload(add(contracts.offset, sub(i, dataOffset)))
+                let c := calldataload(add(contracts.offset, sub(i, data.offset)))
                 // If `c == address(this)`, replace it with `soundEdition`.
                 if eq(c, address()) {
                     c := soundEdition
@@ -212,7 +216,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                     gas(), // Remaining gas.
                     c, // The contract to call.
                     0, // Zero ETH sent.
-                    s, // Start of the current bytes.
+                    m, // Start of the current bytes in memory.
                     l, // The length of the current bytes.
                     0x00, // Zero return data expected.
                     0x00 // Zero return data expected.
