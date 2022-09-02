@@ -35,7 +35,7 @@ interface ISoundCreatorV1 {
     error ImplementationAddressCantBeZero();
 
     /**
-     * @dev Thrown if the lengths the input arrays are not equal.
+     * @dev Thrown if the lengths of the input arrays are not equal.
      */
     error ArrayLengthsMismatch();
 
