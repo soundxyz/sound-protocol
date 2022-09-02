@@ -65,7 +65,7 @@ interface ISoundCreatorV1 {
         bytes32 salt,
         bytes calldata initData,
         address[] calldata contracts,
-        bytes[] memory data
+        bytes[] calldata data
     ) external returns (address payable soundEdition);
 
     /**
