@@ -209,8 +209,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 returndatacopy(add(m, 0x20), 0x00, returndatasize())
                 // Advance `m` by `returndatasize() + 0x20`,
                 // rounded up to the next multiple of 32.
-                // `0x3f = 32 + 31`. `0x1f = 31`.
-                m := and(add(add(m, returndatasize()), 0x3f), not(0x1f))
+                // `0x3f = 32 + 31`. The mask is `type(uint64).max & ~31`,
+                // which is big enough for all purposes (see memory expansion costs).
+                m := and(add(add(m, returndatasize()), 0x3f), 0xffffffffffffffe0)
             }
             // Allocate the memory for `results` by updating the free memory pointer.
             mstore(0x40, m)
