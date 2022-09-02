@@ -109,35 +109,38 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
      * @inheritdoc ISoundCreatorV1
      */
     function createSoundAndMints(
-        string memory name,
-        string memory symbol,
-        IMetadataModule metadataModule,
-        string memory baseURI,
-        string memory contractURI,
-        address fundingRecipient,
-        uint16 royaltyBPS,
-        uint32 editionMaxMintable,
-        uint32 mintRandomnessTokenThreshold,
-        uint32 mintRandomnessTimeThreshold,
+        bytes calldata initData,
         address[] memory contracts,
         bytes[] memory data
     ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
         soundEdition = payable(Clones.clone(soundEditionImplementation));
-        // Initialize proxy
-        ISoundEditionV1(soundEdition).initialize(
-            address(this),
-            name,
-            symbol,
-            metadataModule,
-            baseURI,
-            contractURI,
-            fundingRecipient,
-            royaltyBPS,
-            editionMaxMintable,
-            mintRandomnessTokenThreshold,
-            mintRandomnessTimeThreshold
-        );
+
+        // Initialize proxy.
+        assembly {
+            // Grab the free memory pointer.
+            let m := mload(0x40)
+            // Copy the `initData` to the free memory.
+            calldatacopy(m, initData.offset, initData.length)
+            // Replace the first argument of `initData` with the `address(this)`.
+            mstore(add(m, 0x04), address())
+            // Call the initializer, and revert if the call fails.
+            if iszero(
+                call(
+                    gas(), // Gas remaining.
+                    soundEdition, // Address of the edition.
+                    0, // `msg.value` of the call.
+                    m, // Start of input.
+                    initData.length, // Length of input
+                    0x00, // Start of output.
+                    0x00 // Size of output.
+                )
+            ) {
+                // Bubble up the revert if the call reverts.
+                returndatacopy(0x00, 0x00, returndatasize())
+                revert(0x00, returndatasize())
+            }
+        }
 
         _callMinters(soundEdition, contracts, data);
 

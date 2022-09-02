@@ -257,16 +257,20 @@ contract SoundCreatorTests is TestConfig {
         return
             SoundEditionV1(
                 soundCreator.createSoundAndMints(
-                    SONG_NAME,
-                    SONG_SYMBOL,
-                    METADATA_MODULE,
-                    BASE_URI,
-                    CONTRACT_URI,
-                    FUNDING_RECIPIENT,
-                    ROYALTY_BPS,
-                    EDITION_MAX_MINTABLE,
-                    EDITION_MAX_MINTABLE,
-                    RANDOMNESS_LOCKED_TIMESTAMP,
+                    abi.encodeWithSelector(
+                        SoundEditionV1.initialize.selector,
+                        address(0),
+                        SONG_NAME,
+                        SONG_SYMBOL,
+                        METADATA_MODULE,
+                        BASE_URI,
+                        CONTRACT_URI,
+                        FUNDING_RECIPIENT,
+                        ROYALTY_BPS,
+                        EDITION_MAX_MINTABLE,
+                        EDITION_MAX_MINTABLE,
+                        RANDOMNESS_LOCKED_TIMESTAMP
+                    ),
                     contracts,
                     data
                 )
