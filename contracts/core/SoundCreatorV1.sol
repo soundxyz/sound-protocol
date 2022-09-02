@@ -45,16 +45,6 @@ import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
  */
 contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable {
     // =============================================================
-    //                            CONSTANTS
-    // =============================================================
-
-    /**
-     * @dev Used for search and replace in the calldata to be forwarded.
-     *      `keccak256(bytes("soundxyz.SoundCreator.PLACEHOLDER_ADDRESS"))`
-     */
-    address public constant PLACEHOLDER_ADDRESS = 0xEBef849c9501107C20e13685050941D44C362E43;
-
-    // =============================================================
     //                            STORAGE
     // =============================================================
 
@@ -99,7 +89,6 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         soundEdition = payable(Clones.clone(soundEditionImplementation));
         // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
-            msg.sender,
             name,
             symbol,
             metadataModule,
@@ -111,6 +100,8 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             mintRandomnessTokenThreshold,
             mintRandomnessTimeThreshold
         );
+
+        OwnableRoles(soundEdition).transferOwnership(msg.sender);
 
         emit SoundEditionCreated(soundEdition, msg.sender);
     }
@@ -133,16 +124,6 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             let m := mload(0x40)
             // Copy the `initData` to the free memory.
             calldatacopy(m, initData.offset, initData.length)
-            // The end of the current bytes in memory.
-            let e := add(m, initData.length)
-            // Replace the first instance of `PLACEHOLDER_ADDRESS` in the data with `address(this)`.
-            // prettier-ignore
-            for { let j := add(m, 0x04) } lt(j, e) { j := add(0x20, j) } {
-                if eq(mload(j), PLACEHOLDER_ADDRESS) {
-                    mstore(j, address())
-                    break
-                }
-            }
             // Call the initializer, and revert if the call fails.
             if iszero(
                 call(

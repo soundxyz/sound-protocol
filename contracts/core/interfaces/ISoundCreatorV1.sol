@@ -84,9 +84,7 @@ interface ISoundCreatorV1 {
      * @param salt      The salt used for the CREATE2 to deploy the clone to a
      *                  deterministic address.
      * @param initData  The calldata to initialize created via
-     *                  `abi.encodeWithSelector`. The first argument in the bytes
-     *                  equal to `PLACEHOLDER_ADDRESS`  will be replaced with
-     *                  the address of the caller.
+     *                  `abi.encodeWithSelector`.
      * @param contracts A list of contracts to call.
      * @param data      A list of calldata created via `abi.encodeWithSelector`
      *                  This must contain the same number of entries as `contracts`.
@@ -112,12 +110,6 @@ interface ISoundCreatorV1 {
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
-
-    /**
-     * @dev Used for search and replace in the calldata to be forwarded.
-     * @return The constant value.
-     */
-    function PLACEHOLDER_ADDRESS() external pure returns (address);
 
     /**
      * @dev The address of the sound edition implementation.

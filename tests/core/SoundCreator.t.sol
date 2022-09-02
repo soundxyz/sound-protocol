@@ -83,7 +83,6 @@ contract SoundCreatorTests is TestConfig {
         SoundEditionV1 soundEdition = createGenericEdition();
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
         soundEdition.initialize(
-            address(this),
             SONG_NAME,
             SONG_SYMBOL,
             METADATA_MODULE,
@@ -281,7 +280,6 @@ contract SoundCreatorTests is TestConfig {
                     salt,
                     abi.encodeWithSelector(
                         SoundEditionV1.initialize.selector,
-                        placeholderAddress, // Will be replaced by the address of the caller.
                         SONG_NAME,
                         SONG_SYMBOL,
                         METADATA_MODULE,
