@@ -255,6 +255,9 @@ contract SoundCreatorTests is TestConfig {
         assertEq(merkleMinter.mintInfo(address(soundEdition), merkleMinter.nextMintId() - 1).price, price + 4);
         assertEq(rangeMinter.mintInfo(address(soundEdition), rangeMinter.nextMintId() - 1).price, price + 5);
 
+        // Check that the caller owns the `soundEdition`.
+        assertEq(soundEdition.owner(), address(this));
+
         // Check that it will revert if the lengths of the arrays are not the same.
         data = new bytes[](1);
         vm.expectRevert(ISoundCreatorV1.ArrayLengthsMismatch.selector);
