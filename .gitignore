@@ -22,6 +22,3 @@ lcov.info
 /coverage/*
 
 .DS_Store
-
-# This is a temporary folder we create when deploying & verifying on etherscan
-contracts/scripts
