@@ -150,48 +150,55 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_createSoundAndMints() public {
+        // These are the arrays we have to pass into the create function
+        // to setup the minters.
         address[] memory contracts = new address[](6);
         bytes[] memory data = new bytes[](6);
 
+        // Deploy the registry and minters.
         ISoundFeeRegistry feeRegistry = ISoundFeeRegistry(address(1));
         FixedPriceSignatureMinter signatureMinter = new FixedPriceSignatureMinter(feeRegistry);
         MerkleDropMinter merkleMinter = new MerkleDropMinter(feeRegistry);
         RangeEditionMinter rangeMinter = new RangeEditionMinter(feeRegistry);
 
+        // Deploy the implementation of the edition.
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
+        // Compute the deterministic sound edition address with a salt.
         bytes32 salt = keccak256(bytes("SomeRandomString"));
         address soundEditionAddress = soundCreator.soundEditionAddress(address(this), salt);
 
+        // Use an unusual looking price.
+        uint256 price = 308712640125698797;
+
+        // Populate the contracts:
+        // First, we have to call the {grantRoles} on the `soundEditionAddress`.
         contracts[0] = soundEditionAddress;
         contracts[1] = soundEditionAddress;
         contracts[2] = soundEditionAddress;
-
+        // Then, we have to call the {createEditionMint} on the minters.
         contracts[3] = address(signatureMinter);
         contracts[4] = address(merkleMinter);
         contracts[5] = address(rangeMinter);
 
+        // Populate the data:
+        // First, we have to call the {grantRoles} on the `soundEditionAddress`.
         data[0] = abi.encodeWithSelector(
             editionImplementation.grantRoles.selector,
             address(signatureMinter),
             editionImplementation.MINTER_ROLE()
         );
-
         data[1] = abi.encodeWithSelector(
             editionImplementation.grantRoles.selector,
             address(merkleMinter),
             editionImplementation.MINTER_ROLE()
         );
-
         data[2] = abi.encodeWithSelector(
             editionImplementation.grantRoles.selector,
             address(rangeMinter),
             editionImplementation.MINTER_ROLE()
         );
-
-        // Use an unusual looking price.
-        uint256 price = 308712640125698797;
-
+        // Then, we have to call the {createEditionMint} on the minters.
         data[3] = abi.encodeWithSelector(
             signatureMinter.createEditionMint.selector,
             soundEditionAddress,
@@ -202,7 +209,6 @@ contract SoundCreatorTests is TestConfig {
             END_TIME,
             AFFILIATE_FEE_BPS
         );
-
         data[4] = abi.encodeWithSelector(
             merkleMinter.createEditionMint.selector,
             soundEditionAddress,
@@ -214,7 +220,6 @@ contract SoundCreatorTests is TestConfig {
             EDITION_MAX_MINTABLE,
             5 // Max mintable per account.
         );
-
         data[5] = abi.encodeWithSelector(
             rangeMinter.createEditionMint.selector,
             soundEditionAddress,
@@ -232,8 +237,10 @@ contract SoundCreatorTests is TestConfig {
         vm.expectEmit(true, true, true, true);
         emit SoundEditionCreated(soundEditionAddress, address(this));
 
+        // Call the create function.
         bytes[] memory results = _createSoundEditionWithCalls(salt, contracts, data);
 
+        // Cast it to `SoundEditionV1` for convenience.
         SoundEditionV1 soundEdition = SoundEditionV1(soundEditionAddress);
 
         // Check that the `MINTER_ROLE` has been assigned properly.
