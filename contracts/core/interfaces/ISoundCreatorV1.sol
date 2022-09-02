@@ -93,9 +93,9 @@ interface ISoundCreatorV1 {
      *                                     `SoundEdition.mintRandomness` gets locked.
      * @param mintRandomnessTimeThreshold  The timestamp after which
      *                                     `SoundEdition.mintRandomness` gets locked.
-     * @param contracts                    A list of contracts to call. Entries equal to the
-     *                                     sound creator factory's address will be replaced
-     *                                     with the sound edition address.
+     * @param contracts                    A list of contracts to call. The first entry equal
+     *                                     to the sound creator factory's address will be
+     *                                     replaced with the sound edition address.
      * @param data                         A list of calldata created via `abi.encodeWithSelector`
      *                                     that are to be passed to the contracts.
      *                                     Any word equal to the sound creator factory's address

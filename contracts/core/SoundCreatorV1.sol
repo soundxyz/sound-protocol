@@ -195,6 +195,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 for { let j := add(s, 0x04) } lt(j, e) { j := add(0x20, j) } {
                     if eq(mload(j), address()) {
                         mstore(j, soundEdition)
+                        break
                     }
                 }
                 // The current contract to call.
