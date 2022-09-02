@@ -441,7 +441,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_revertsIfSoundCreatorIsZero() external {
-        vm.expectRevert(IMinterModule.FeeRegistryIsZeroAddress.selector);
+        vm.expectRevert(IMinterModule.SoundCreatorIsZeroAddress.selector);
         new MockMinter(ISoundFeeRegistry(address(1)), SoundCreatorV1(address(0)));
     }
 

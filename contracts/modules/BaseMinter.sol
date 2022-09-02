@@ -9,8 +9,6 @@ import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title Minter Base
  * @dev The `BaseMinter` class maintains a central storage record of edition mint instances.
