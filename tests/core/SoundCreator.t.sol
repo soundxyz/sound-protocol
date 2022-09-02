@@ -236,6 +236,11 @@ contract SoundCreatorTests is TestConfig {
             5 // Max mintable per account.
         );
 
+        // Can't test edition address is emitted from event unless we precalculate it,
+        // but cloneDeterminstic would require a salt (==more gas & complexity)
+        vm.expectEmit(false, true, false, false);
+        emit SoundEditionCreated(address(0), address(this));
+
         SoundEditionV1 soundEdition = _createSoundEditionWithCalls(placeholderAddress, contracts, data);
 
         assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
