@@ -168,7 +168,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             // We use it to temporarily store the calldata.
             let m := add(resultsOffsets, shl(5, data.length))
 
-            // Loop through `contacts` and `data` together, and call the contracts.
+            // Loop through `contacts` and `data` together.
             // prettier-ignore
             for { let i := data.offset } iszero(eq(i, dataOffsetsEnd)) { i := add(i, 0x20) } {
                 // Location of `bytes[i]` in calldata.
