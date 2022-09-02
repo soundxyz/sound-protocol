@@ -152,27 +152,32 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         assembly {
             // Grab the free memory pointer.
             let m := mload(0x40)
-            // Compute the end of the data's lengths sub-array.
+            // Compute the location of the last calldata offset in `data`.
+            // `shl(5, n)` is a gas-saving shorthand for `mul(0x20, n)`.
             let dataLengthsEnd := add(data.offset, shl(5, data.length))
             // prettier-ignore
             for { let i := data.offset } iszero(eq(i, dataLengthsEnd)) { i := add(i, 0x20) } {
-                // The location of the current bytes in calldata.
+                // Location of `bytes[i]` in calldata.
                 let o := add(data.offset, calldataload(i))
-                // Copy the current bytes from calldata to the memory.
+                // Copy `bytes[i]` from calldata to the free memory.
                 calldatacopy(
-                    m, // Start of the current bytes in memory.
-                    add(o, 0x20), // The offset of the current bytes' bytes.
-                    calldataload(o) // The length of the current bytes.
+                    m, // Start of the free memory.
+                    add(o, 0x20), // Location of starting byte in `data[i]` in calldata.
+                    calldataload(o) // The length of the `bytes[i]`.
                 )
+                // Grab `contracts[i]` from the calldata.
+                // As `contracts` is the same length as `data`,
+                // `sub(i, data.offset)` gives the relative offset to apply to
+                // `contracts.offset` for `contracts[i]` to match `data[i]`.
+                let c := calldataload(add(contracts.offset, sub(i, data.offset)))
                 // Call the contract, and revert if the call fails.
                 if iszero(
                     call(
                         gas(), // Gas remaining.
-                        // The contract to call.
-                        calldataload(add(contracts.offset, sub(i, data.offset))), 
+                        c, // `contracts[i]`.
                         0, // `msg.value` of the call: 0 ETH.
-                        m, // Start of the current bytes in memory.
-                        calldataload(o), // The length of the current bytes.
+                        m, // Start of the copy of `bytes[i]` in memory.
+                        calldataload(o), // The length of the `bytes[i]`.
                         0x00, // Start of output. Not used.
                         0x00 // Size of output. Not used.
                     )
