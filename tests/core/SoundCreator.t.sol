@@ -27,6 +27,8 @@ contract SoundCreatorTests is TestConfig {
     uint32 constant END_TIME = 10000;
     address constant SIGNER = address(111111);
 
+    uint16 constant AFFILIATE_FEE_BPS = 0;
+
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
         // Deploy logic contracts
@@ -157,84 +159,117 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_createSoundAndMints() public {
-        (
-            address editionAddress,
-            FixedPriceSignatureMinter signatureMinter,
-            MerkleDropMinter merkleMinter,
-            RangeEditionMinter rangeMinter,
-            address[] memory minterAddresses,
-            bytes[] memory createEditionMintCalls
-        ) = setupCreateEditionAndMints();
-
-        console.log("this", address(this));
-
-        SoundEditionV1 soundEdition = SoundEditionV1(
-            soundCreator.createSoundAndMints(
-                SONG_NAME,
-                SONG_SYMBOL,
-                METADATA_MODULE,
-                BASE_URI,
-                CONTRACT_URI,
-                FUNDING_RECIPIENT,
-                ROYALTY_BPS,
-                EDITION_MAX_MINTABLE,
-                EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP,
-                minterAddresses,
-                createEditionMintCalls
-            )
-        );
-
-        // Grant minter roles
-        soundEdition.grantRoles(address(signatureMinter), soundEdition.MINTER_ROLE());
-        soundEdition.grantRoles(address(merkleMinter), soundEdition.MINTER_ROLE());
-        soundEdition.grantRoles(address(rangeMinter), soundEdition.MINTER_ROLE());
-
-        // Test mints
-    }
-
-    function setupCreateEditionAndMints()
-        public
-        returns (
-            address,
-            FixedPriceSignatureMinter,
-            MerkleDropMinter,
-            RangeEditionMinter,
-            address[] memory,
-            bytes[] memory
-        )
-    {
-        address[] memory minterAddresses = new address[](1);
-        bytes[] memory createEditionMintCalls = new bytes[](1);
+        address[] memory contracts = new address[](6);
+        bytes[] memory data = new bytes[](6);
 
         ISoundFeeRegistry feeRegistry = ISoundFeeRegistry(address(1));
         FixedPriceSignatureMinter signatureMinter = new FixedPriceSignatureMinter(feeRegistry);
         MerkleDropMinter merkleMinter = new MerkleDropMinter(feeRegistry);
         RangeEditionMinter rangeMinter = new RangeEditionMinter(feeRegistry);
 
-        address editionAddress = Clones.predictDeterministicAddress(
-            soundCreator.soundEditionImplementation(),
-            keccak256(abi.encodePacked(msg.sender, block.timestamp)),
-            address(this)
+        SoundEditionV1 editionImplementation = new SoundEditionV1();
+
+        // If the contract is the `soundCreator`, the create method will
+        // replace it with the address of the `soundEdition`.
+        contracts[0] = address(soundCreator);
+        contracts[1] = address(soundCreator);
+        contracts[2] = address(soundCreator);
+
+        contracts[3] = address(signatureMinter);
+        contracts[4] = address(merkleMinter);
+        contracts[5] = address(rangeMinter);
+
+        data[0] = abi.encodeWithSelector(
+            editionImplementation.grantRoles.selector,
+            address(signatureMinter),
+            editionImplementation.MINTER_ROLE()
+        );
+        data[1] = abi.encodeWithSelector(
+            editionImplementation.grantRoles.selector,
+            address(merkleMinter),
+            editionImplementation.MINTER_ROLE()
+        );
+        data[2] = abi.encodeWithSelector(
+            editionImplementation.grantRoles.selector,
+            address(rangeMinter),
+            editionImplementation.MINTER_ROLE()
         );
 
-        minterAddresses[0] = address(signatureMinter);
-        // minterAddresses[1] = address(merkleMinter);
-        // minterAddresses[2] = address(rangeMinter);
+        // USe a unusual looking price.
+        uint256 price = 308712640125698797;
 
-        bytes memory signatureCall = abi.encodeWithSelector(
+        data[3] = abi.encodeWithSelector(
             signatureMinter.createEditionMint.selector,
-            editionAddress,
-            PRICE,
+            address(soundCreator), // Will be replaced by the address of the `soundEdition`.
+            price + 3,
             SIGNER,
             EDITION_MAX_MINTABLE,
             START_TIME,
             END_TIME,
-            0 // affiliateBPS
+            AFFILIATE_FEE_BPS
         );
 
-        createEditionMintCalls[0] = signatureCall;
+        data[4] = abi.encodeWithSelector(
+            merkleMinter.createEditionMint.selector,
+            address(soundCreator), // Will be replaced by the address of the `soundEdition`.
+            bytes32(uint256(123456)), // Merkle root hash.
+            price + 4,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            EDITION_MAX_MINTABLE,
+            5 // Max mintable per account.
+        );
 
-        return (editionAddress, signatureMinter, merkleMinter, rangeMinter, minterAddresses, createEditionMintCalls);
+        data[5] = abi.encodeWithSelector(
+            rangeMinter.createEditionMint.selector,
+            address(soundCreator), // Will be replaced by the address of the `soundEdition`.
+            price + 5,
+            START_TIME,
+            START_TIME + 1, // Closing time
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            10, // Max mintable lower.
+            20, // Max mintable upper.
+            5 // Max mintable per account.
+        );
+
+        SoundEditionV1 soundEdition = _createSoundEditionWithCalls(contracts, data);
+
+        assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
+        assertTrue(soundEdition.hasAnyRole(address(merkleMinter), editionImplementation.MINTER_ROLE()));
+        assertTrue(soundEdition.hasAnyRole(address(rangeMinter), editionImplementation.MINTER_ROLE()));
+
+        // It is not convenient to return are parse the created mint IDs --
+        // We have to depend on events to fetch them.
+
+        // Simply check that the data has been initialized.
+        assertEq(signatureMinter.mintInfo(address(soundEdition), signatureMinter.nextMintId() - 1).price, price + 3);
+        assertEq(merkleMinter.mintInfo(address(soundEdition), merkleMinter.nextMintId() - 1).price, price + 4);
+        assertEq(rangeMinter.mintInfo(address(soundEdition), rangeMinter.nextMintId() - 1).price, price + 5);
+    }
+
+    // For avoiding the stack too deep error.
+    function _createSoundEditionWithCalls(address[] memory contracts, bytes[] memory data)
+        internal
+        returns (SoundEditionV1)
+    {
+        return
+            SoundEditionV1(
+                soundCreator.createSoundAndMints(
+                    SONG_NAME,
+                    SONG_SYMBOL,
+                    METADATA_MODULE,
+                    BASE_URI,
+                    CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS,
+                    EDITION_MAX_MINTABLE,
+                    EDITION_MAX_MINTABLE,
+                    RANDOMNESS_LOCKED_TIMESTAMP,
+                    contracts,
+                    data
+                )
+            );
     }
 }

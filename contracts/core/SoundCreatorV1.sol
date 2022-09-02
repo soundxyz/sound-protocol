@@ -36,6 +36,8 @@ import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 import { IMinterModule } from "./interfaces/IMinterModule.sol";
 
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+
 /**
  * @title SoundCreatorV1
  * @notice A factory that deploys minimal proxies of `SoundEditionV1.sol`.
@@ -104,7 +106,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     }
 
     /**
-     * Creates a Sound Edition proxy, initializes it, and creates mint configurations on a given set of minter addresses.
+     * @inheritdoc ISoundCreatorV1
      */
     function createSoundAndMints(
         string memory name,
@@ -117,20 +119,14 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         uint32 editionMaxMintable,
         uint32 mintRandomnessTokenThreshold,
         uint32 mintRandomnessTimeThreshold,
-        address[] memory minterAddresses,
-        bytes[] memory createEditionMintCalls
+        address[] memory contracts,
+        bytes[] memory data
     ) external returns (address payable soundEdition) {
         // Create Sound Edition proxy
-        soundEdition = payable(
-            Clones.cloneDeterministic(
-                soundEditionImplementation,
-                keccak256(abi.encodePacked(msg.sender, block.timestamp))
-            )
-        );
-
+        soundEdition = payable(Clones.clone(soundEditionImplementation));
         // Initialize proxy
         ISoundEditionV1(soundEdition).initialize(
-            msg.sender,
+            address(this),
             name,
             symbol,
             metadataModule,
@@ -143,11 +139,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
             mintRandomnessTimeThreshold
         );
 
-        // Loop over minter addresses and set up mint configurations
-        for (uint256 i = 0; i < minterAddresses.length; i++) {
-            (bool success, bytes memory returnData) = minterAddresses[i].call(createEditionMintCalls[i]);
-            require(success, string(returnData));
-        }
+        _callMinters(soundEdition, contracts, data);
+
+        OwnableRoles(soundEdition).transferOwnership(msg.sender);
 
         emit SoundEditionCreated(soundEdition, msg.sender);
     }
@@ -168,6 +162,64 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
+
+    /**
+     * @dev Call the `contracts` in order with `data`.
+     * @param contracts The addresses of the contracts.
+     * @param data      The `abi.encodeWithSelector` calldata for each of the contracts.
+     */
+    function _callMinters(
+        address soundEdition,
+        address[] memory contracts,
+        bytes[] memory data
+    ) internal {
+        if (contracts.length != data.length) revert ArrayLengthsMismatch();
+
+        assembly {
+            // Skip the length's slot.
+            let dataOffset := add(data, 0x20)
+            // Compute the end of the data.
+            let dataLengthsEnd := add(dataOffset, shl(5, mload(data)))
+            // prettier-ignore
+            for { let i := dataOffset } iszero(eq(i, dataLengthsEnd)) { i := add(i, 0x20) } {
+                // The location of the current bytes in memory.
+                let o := mload(i)
+                // Start of the current bytes.
+                let s := add(o, 0x20)
+                // The length of the current bytes.
+                let l := mload(o)
+                // The end of the current bytes.
+                let e := add(s, l)
+                // Replace the first instance of `address(this)` in the data with `soundEdition`.
+                // prettier-ignore
+                for { let j := add(s, 0x04) } lt(j, e) { j := add(0x20, j) } {
+                    if eq(mload(j), address()) {
+                        mstore(j, soundEdition)
+                    }
+                }
+                // The current contract to call.
+                let c := mload(add(contracts, sub(i, data)))
+                // If `c == address(this)`, replace it with `soundEdition`.
+                if eq(c, address()) {
+                    c := soundEdition
+                }
+                // Try to call, and bubble up the revert if any.
+                if iszero(call(
+                    gas(), // Remaining gas.
+                    c, // The contract to call.
+                    0, // Zero ETH sent.
+                    s, // Start of the current bytes.
+                    l, // The length of the current bytes.
+                    0x00, // Zero return data expected.
+                    0x00 // Zero return data expected.
+                )) {
+                    // Bubble up the revert if the call reverts.
+                    returndatacopy(0x00, 0x00, returndatasize())
+                    revert(0x00, returndatasize())
+                }
+            }
+        }
+    }
 
     /**
      * @dev Enables the owner to upgrade the contract.

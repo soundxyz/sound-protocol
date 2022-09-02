@@ -6,5 +6,5 @@ module.exports = {
     singleQuote: false,
     bracketSpacing: true,
 
-    // plugins: ["prettier-plugin-solidity"],
+    plugins: ["prettier-plugin-solidity"],
 };
