@@ -220,10 +220,20 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         }
     }
 
+    /**
+     * @dev Returns the salted salt.
+     *      To prevent griefing and accidental collisions from clients that don't
+     *      generate their salt properly.
+     * @param by   The caller of the {createSoundAndMints} function.
+     * @param salt The salt, generated on the client side.
+     * @return result The computed value.
+     */
     function _saltedSalt(address by, bytes32 salt) internal pure returns (bytes32 result) {
         assembly {
+            // Store the variables into the scratch space.
             mstore(0x00, by)
             mstore(0x20, salt)
+            // Equivalent to `keccak256(abi.encode(by, salt))`.
             result := keccak256(0x00, 0x40)
         }
     }
