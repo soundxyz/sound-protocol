@@ -60,6 +60,7 @@ interface ISoundCreatorV1 {
      * @param data      A list of calldata created via `abi.encodeWithSelector`
      *                  This must contain the same number of entries as `contracts`.
      * @return results The results of calling the contracts.
+     *                 Use `abi.decode` to decode them.
      */
     function createSoundAndMints(
         bytes32 salt,
