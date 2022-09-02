@@ -93,11 +93,11 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
                 call(
                     gas(), // Gas remaining.
                     soundEdition, // Address of the edition.
-                    0, // `msg.value` of the call.
+                    0, // `msg.value` of the call: 0 ETH.
                     m, // Start of input.
-                    initData.length, // Length of input
-                    0x00, // Start of output.
-                    0x00 // Size of output.
+                    initData.length, // Length of input.
+                    0x00, // Start of output. Not used.
+                    0x00 // Size of output. Not used.
                 )
             ) {
                 // Bubble up the revert if the call reverts.
@@ -152,31 +152,31 @@ contract SoundCreatorV1 is ISoundCreatorV1, OwnableUpgradeable, UUPSUpgradeable 
         assembly {
             // Grab the free memory pointer.
             let m := mload(0x40)
-            // Compute the end of the data.
+            // Compute the end of the data's lengths sub-array.
             let dataLengthsEnd := add(data.offset, shl(5, data.length))
             // prettier-ignore
             for { let i := data.offset } iszero(eq(i, dataLengthsEnd)) { i := add(i, 0x20) } {
                 // The location of the current bytes in calldata.
                 let o := add(data.offset, calldataload(i))
-                // The length of the current bytes.
-                let l := calldataload(o)
                 // Copy the current bytes from calldata to the memory.
                 calldatacopy(
                     m, // Start of the current bytes in memory.
                     add(o, 0x20), // The offset of the current bytes' bytes.
-                    l // The length of the current bytes.
+                    calldataload(o) // The length of the current bytes.
                 )
-                // Try to call, and bubble up the revert if any.
-                if iszero(call(
-                    gas(), // Remaining gas.
-                    // The contract to call.
-                    calldataload(add(contracts.offset, sub(i, data.offset))), 
-                    0, // `msg.value` of the call.
-                    m, // Start of the current bytes in memory.
-                    l, // The length of the current bytes.
-                    0x00, // Zero return data expected.
-                    0x00 // Zero return data expected.
-                )) {
+                // Call the contract, and revert if the call fails.
+                if iszero(
+                    call(
+                        gas(), // Gas remaining.
+                        // The contract to call.
+                        calldataload(add(contracts.offset, sub(i, data.offset))), 
+                        0, // `msg.value` of the call: 0 ETH.
+                        m, // Start of the current bytes in memory.
+                        calldataload(o), // The length of the current bytes.
+                        0x00, // Start of output. Not used.
+                        0x00 // Size of output. Not used.
+                    )
+                ) {
                     // Bubble up the revert if the call reverts.
                     returndatacopy(0x00, 0x00, returndatasize())
                     revert(0x00, returndatasize())
