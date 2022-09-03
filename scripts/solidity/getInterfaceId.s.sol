@@ -11,19 +11,24 @@ import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol
 
 contract GetInterfaceId is Script {
     function run() external {
-        console.log("ISoundEditionV1");
+        console.log("{");
+
+        /* solhint-disable quotes */
+        console.log('"ISoundEditionV1": "');
         console.logBytes4(type(ISoundEditionV1).interfaceId);
 
-        console.log("IMinterModule");
+        console.log('", "IMinterModule": "');
         console.logBytes4(type(IMinterModule).interfaceId);
 
-        console.log("IFixedPriceSignatureMinter");
+        console.log('", "IFixedPriceSignatureMinter": "');
         console.logBytes4(type(IFixedPriceSignatureMinter).interfaceId);
 
-        console.log("IMerkleDropMinter");
+        console.log('", "IMerkleDropMinter": "');
         console.logBytes4(type(IMerkleDropMinter).interfaceId);
 
-        console.log("IRangeEditionMinter");
+        console.log('", "IRangeEditionMinter": "');
         console.logBytes4(type(IRangeEditionMinter).interfaceId);
+
+        console.log('"}');
     }
 }
