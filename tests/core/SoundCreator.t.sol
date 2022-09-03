@@ -231,9 +231,11 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_createSoundAndMints() public {
-        uint96 price = 308712640125698797;
+        uint96 price0 = 308712640125698797;
+        uint96 price1 = 208712640125698797;
+        uint96 price2 = 108712640125698797;
         bytes32 salt = keccak256(bytes("SomeRandomString"));
-        test_createSoundAndMints(price, price, price, salt);
+        test_createSoundAndMints(price0, price1, price2, salt);
     }
 
     function test_createSoundAndMintsRevertForArrayLengthsMismatch(
