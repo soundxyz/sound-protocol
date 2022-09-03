@@ -161,4 +161,10 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint128 mintId,
         uint32[] calldata claimTickets
     ) external view returns (bool[] memory claimed);
+
+    /**
+     * @dev Returns the EIP-712 domain separator of the signature for minting.
+     * @return separator The constant value.
+     */
+    function DOMAIN_SEPARATOR() external view returns (bytes32 separator);
 }
