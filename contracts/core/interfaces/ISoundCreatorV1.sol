@@ -39,12 +39,6 @@ interface ISoundCreatorV1 {
     // =============================================================
 
     /**
-     * @dev Initialize the creator proxy with the edition implementation.
-     * @param _soundEditionImplementation The address of the Sound edition implementation.
-     */
-    function initialize(address _soundEditionImplementation) external;
-
-    /**
      * @dev Deploys a Sound edition minimal proxy contract.
      * @param name                         The name of the edition.
      * @param symbol                       The symbol of the edition.
