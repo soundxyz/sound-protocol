@@ -59,15 +59,7 @@ contract Seed is Script {
         );
 
         // Deploy creator implementation (& initialize it for security)
-        SoundCreatorV1 creatorImplementation = new SoundCreatorV1();
-        creatorImplementation.initialize(address(editionImplementation));
-
-        // Deploy creator proxy
-        ERC1967Proxy proxy = new ERC1967Proxy(address(creatorImplementation), bytes(""));
-        SoundCreatorV1 soundCreator = SoundCreatorV1(address(proxy));
-
-        // Initialize creator proxy
-        soundCreator.initialize(address(editionImplementation));
+        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(editionImplementation));
 
         // Set creator ownership to gnosis safe
         soundCreator.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
