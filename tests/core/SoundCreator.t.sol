@@ -117,7 +117,12 @@ contract SoundCreatorTests is TestConfig {
         soundCreator.setEditionImplementation(address(0));
     }
 
-    function test_createSoundAndMints(bytes32 salt) public {
+    function test_createSoundAndMints(
+        uint96 price0,
+        uint96 price1,
+        uint96 price2,
+        bytes32 salt
+    ) public {
         // These are the arrays we have to pass into the create function
         // to setup the minters.
         address[] memory contracts = new address[](6);
@@ -133,9 +138,6 @@ contract SoundCreatorTests is TestConfig {
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
         address soundEditionAddress = soundCreator.soundEditionAddress(address(this), salt);
-
-        // Use an unusual looking price.
-        uint256 price = 308712640125698797;
 
         // Populate the contracts:
         // First, we have to call the {grantRoles} on the `soundEditionAddress`.
@@ -168,7 +170,7 @@ contract SoundCreatorTests is TestConfig {
         data[3] = abi.encodeWithSelector(
             signatureMinter.createEditionMint.selector,
             soundEditionAddress,
-            price + 3,
+            price0,
             SIGNER,
             EDITION_MAX_MINTABLE,
             START_TIME,
@@ -179,7 +181,7 @@ contract SoundCreatorTests is TestConfig {
             merkleMinter.createEditionMint.selector,
             soundEditionAddress,
             bytes32(uint256(123456)), // Merkle root hash.
-            price + 4,
+            price1,
             START_TIME,
             END_TIME,
             AFFILIATE_FEE_BPS,
@@ -189,7 +191,7 @@ contract SoundCreatorTests is TestConfig {
         data[5] = abi.encodeWithSelector(
             rangeMinter.createEditionMint.selector,
             soundEditionAddress,
-            price + 5,
+            price2,
             START_TIME,
             START_TIME + 1, // Closing time
             END_TIME,
@@ -215,22 +217,23 @@ contract SoundCreatorTests is TestConfig {
         assertTrue(soundEdition.hasAnyRole(address(rangeMinter), editionImplementation.MINTER_ROLE()));
 
         // Check that the mint IDs have been properly incremented, and encoded into the results.
-        assertEq(abi.decode(results[3], (uint128)), signatureMinter.nextMintId() - 1);
-        assertEq(abi.decode(results[4], (uint128)), merkleMinter.nextMintId() - 1);
-        assertEq(abi.decode(results[5], (uint128)), rangeMinter.nextMintId() - 1);
+        assertEq(abi.decode(results[3], (uint96)), signatureMinter.nextMintId() - 1);
+        assertEq(abi.decode(results[4], (uint96)), merkleMinter.nextMintId() - 1);
+        assertEq(abi.decode(results[5], (uint96)), rangeMinter.nextMintId() - 1);
 
         // Simply check that the data has been initialized.
-        assertEq(signatureMinter.mintInfo(soundEditionAddress, signatureMinter.nextMintId() - 1).price, price + 3);
-        assertEq(merkleMinter.mintInfo(soundEditionAddress, merkleMinter.nextMintId() - 1).price, price + 4);
-        assertEq(rangeMinter.mintInfo(soundEditionAddress, rangeMinter.nextMintId() - 1).price, price + 5);
+        assertEq(signatureMinter.mintInfo(soundEditionAddress, signatureMinter.nextMintId() - 1).price, price0);
+        assertEq(merkleMinter.mintInfo(soundEditionAddress, merkleMinter.nextMintId() - 1).price, price1);
+        assertEq(rangeMinter.mintInfo(soundEditionAddress, rangeMinter.nextMintId() - 1).price, price2);
 
         // Check that the caller owns the `soundEdition`.
         assertEq(soundEdition.owner(), address(this));
     }
 
-    function xxx() public {
+    function test_createSoundAndMints() public {
+        uint96 price = 308712640125698797;
         bytes32 salt = keccak256(bytes("SomeRandomString"));
-        test_createSoundAndMints(salt);
+        test_createSoundAndMints(price, price, price, salt);
     }
 
     function test_createSoundAndMintsRevertForArrayLengthsMismatch(
