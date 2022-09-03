@@ -44,12 +44,6 @@ interface ISoundCreatorV1 {
     // =============================================================
 
     /**
-     * @dev Initialize the creator proxy with the edition implementation.
-     * @param _soundEditionImplementation The address of the Sound edition implementation.
-     */
-    function initialize(address _soundEditionImplementation) external;
-
-    /**
      * @dev Creates a Sound Edition proxy, initializes it,
      *      and creates mint configurations on a given set of minter addresses.
      * @param salt      The salt used for the CREATE2 to deploy the clone to a

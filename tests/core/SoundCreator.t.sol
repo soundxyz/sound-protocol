@@ -117,7 +117,7 @@ contract SoundCreatorTests is TestConfig {
         soundCreator.setEditionImplementation(address(0));
     }
 
-    function test_createSoundAndMints() public {
+    function test_createSoundAndMints(bytes32 salt) public {
         // These are the arrays we have to pass into the create function
         // to setup the minters.
         address[] memory contracts = new address[](6);
@@ -132,8 +132,6 @@ contract SoundCreatorTests is TestConfig {
         // Deploy the implementation of the edition.
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
-        // Compute the deterministic sound edition address with a salt.
-        bytes32 salt = keccak256(bytes("SomeRandomString"));
         address soundEditionAddress = soundCreator.soundEditionAddress(address(this), salt);
 
         // Use an unusual looking price.
@@ -228,13 +226,30 @@ contract SoundCreatorTests is TestConfig {
 
         // Check that the caller owns the `soundEdition`.
         assertEq(soundEdition.owner(), address(this));
+    }
 
-        // Check that it will revert if the lengths of the arrays are not the same.
-        data = new bytes[](1);
-        // Everytime we create, we have to use a different salt.
-        salt = keccak256(bytes("AnotherRandomString"));
+    function xxx() public {
+        bytes32 salt = keccak256(bytes("SomeRandomString"));
+        test_createSoundAndMints(salt);
+    }
+
+    function test_createSoundAndMintsRevertForArrayLengthsMismatch(
+        uint8 contractsLength,
+        uint8 dataLength,
+        bytes32 salt
+    ) public {
+        vm.assume(contractsLength != dataLength);
+
+        address[] memory contracts = new address[](contractsLength);
+        bytes[] memory data = new bytes[](dataLength);
+
         vm.expectRevert(ISoundCreatorV1.ArrayLengthsMismatch.selector);
         _createSoundEditionWithCalls(salt, contracts, data);
+    }
+
+    function test_createSoundAndMintsRevertForArrayLengthsMismatch() public {
+        bytes32 salt = keccak256(bytes("SomeRandomString"));
+        test_createSoundAndMintsRevertForArrayLengthsMismatch(0, 1, salt);
     }
 
     // For avoiding the stack too deep error.
