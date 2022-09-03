@@ -234,6 +234,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
         }
     }
 
+    /**
      * @dev Reverts if the given implementation address is zero.
      * @param implementation The address of the implementation.
      */
