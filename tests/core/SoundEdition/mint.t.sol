@@ -242,6 +242,11 @@ contract SoundEdition_mint is TestConfig {
         to[2] = address(10000002);
 
         uint256 quantity = 10;
+
+        assertEq(edition.balanceOf(to[0]), 0);
+        assertEq(edition.balanceOf(to[1]), 0);
+        assertEq(edition.balanceOf(to[2]), 0);
+
         uint256 expectedFromTokenId = edition.nextTokenId();
         uint256 fromTokenId = edition.airdrop(to, quantity);
 
