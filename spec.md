@@ -9,7 +9,7 @@ status: Draft
 
 Sound Protocol 2.0 enables creators to permissionlessly deploy gas-efficient minimal, non-upgradeable [721a](https://www.azuki.com/erc721a) proxies from a factory contract. The protocol enables support for customizing auction formats, payments, & metadata.
 
-## CONTRACTS
+## CORE CONTRACTS
 
 ### `SoundCreatorV1.sol`
 
@@ -53,9 +53,9 @@ Features:
 
 -   A contract that exposes a Sound recipient address & protocol fee used by minter modules to pay a portion of primary sales to Sound.xyz for its services.
 
-### SOUND MODULES
+## SOUND MODULES
 
-#### Metadata modules
+### Metadata modules
 
 -   Metadata modules must implement `IMetadataModule.sol`
 -   Current modules:
@@ -64,7 +64,7 @@ Features:
         -   The `mintRandomness` is determined by storing the blockhash of each mint on the edition contract, up until a token quantity threshold or timestamp (whichever comes first). NOTE: The randommness doesn't necessarily need to be used for the golden egg.
         -   `GoldenEggMetadataModule.sol` uses the `mintRandomness` on the edition to return the golden egg token ID.
 
-#### Minter modules
+### Minter modules
 
 -   Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
 -   Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.editionMaxMintable`. It is up to the artist to initialize the `editionMaxMintable` with a value high enough to accomodate all current & future mints.
@@ -84,3 +84,9 @@ Features:
         -   The eligible token quantity for each recipient can be unique.
         -   Each whitelisted user can claim their eligible amount in multiple transactions.
         -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.
+
+#### Adding a custom minter module
+
+The minter modules are designed with extensibility in mind in order to allow innovation around token distribution for artists. There are no mandated properties of a custom minter although we recommend all custom minters implement `BaseMinter`. This contains base functionality that allows for Pausability, Affiliate and platform fees, and IERC165 support.
+
+Additionally for NFTs based on the `SoundEditionV1` implementation, the edition owner needs to grant `MINTER_ROLE` permissions to the minter contract.
