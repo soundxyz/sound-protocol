@@ -22,6 +22,7 @@ await ensureDir("dist");
 
 await Promise.all([
     copy("LICENSE", "dist/LICENSE"),
+    copy("broadcast", "dist/broadcast"),
     copy("typechain", "dist/typechain", {
         filter(file) {
             if (extname(file) === "") return true;
