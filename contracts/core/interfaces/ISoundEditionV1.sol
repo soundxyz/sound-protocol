@@ -101,9 +101,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     error MaximumHasAlreadyBeenReached();
 
     /**
-     * @dev The mint `quantity` cannot exceed `MAX_QUANTITY_LIMIT` tokens.
+     * @dev The mint `quantity` cannot exceed `MAX_BATCH_SIZE` tokens.
      */
-    error ExceedsMaxQuantityLimit();
+    error ExceedsMaxBatchSize();
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -285,7 +285,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
      * @return The constant value.
      */
-    function MAX_QUANTITY_LIMIT() external pure returns (uint256);
+    function MAX_BATCH_SIZE() external pure returns (uint256);
 
     /**
      * @dev Returns the base token URI for the collection.

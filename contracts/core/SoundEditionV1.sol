@@ -63,7 +63,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      *      Prevents the first-time transfer costs for tokens near the end of large mint batches
      *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
      */
-    uint256 public constant MAX_QUANTITY_LIMIT = 255;
+    uint256 public constant MAX_BATCH_SIZE = 255;
 
     /**
      * @dev Basis points denominator used in fee calculations.
@@ -190,7 +190,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         public
         payable
         onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE)
-        requireQuantityWithinLimit(quantity)
+        requireQuantityWithinBound(quantity)
         requireMintable(quantity)
         updatesMintRandomness
         returns (uint256 fromTokenId)
@@ -206,7 +206,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function airdrop(address[] calldata to, uint256 quantity)
         public
         onlyRolesOrOwner(ADMIN_ROLE)
-        requireQuantityWithinLimit(quantity)
+        requireQuantityWithinBound(quantity)
         requireMintable(to.length * quantity)
         updatesMintRandomness
         returns (uint256 fromTokenId)
@@ -458,11 +458,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @dev Ensures that the `quantity` does not exceed `MAX_QUANTITY_LIMIT`.
+     * @dev Ensures that the `quantity` does not exceed `MAX_BATCH_SIZE`.
      * @param quantity The number of tokens minted per address.
      */
-    modifier requireQuantityWithinLimit(uint256 quantity) {
-        if (quantity > MAX_QUANTITY_LIMIT) revert ExceedsMaxQuantityLimit();
+    modifier requireQuantityWithinBound(uint256 quantity) {
+        if (quantity > MAX_BATCH_SIZE) revert ExceedsMaxBatchSize();
         _;
     }
 
