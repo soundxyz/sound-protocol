@@ -273,6 +273,43 @@ contract SoundEdition_mint is TestConfig {
         assertEq(edition.balanceOf(to[2]), quantity * 2);
     }
 
+    function test_airdropRevertsIfExceedsEditionMaxMintable() external {
+        SoundEditionV1 edition = createGenericEdition();
+        uint32 editionMaxMintable = 9;
+        edition.reduceEditionMaxMintable(editionMaxMintable);
+
+        address[] memory to = new address[](3);
+        to[0] = address(10000000);
+        to[1] = address(10000001);
+        to[2] = address(10000002);
+
+        uint256 quantity = 4;
+        // Reverts if the `quantity * to.length > editionMaxMintable`.
+        vm.expectRevert(
+            abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, editionMaxMintable)
+        );
+        edition.airdrop(to, quantity);
+
+        // Otherwise, succeeds.
+        quantity = 3;
+        edition.airdrop(to, quantity);
+    }
+
+    function test_airdropSetsMintRandomness() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        address[] memory to = new address[](3);
+        to[0] = address(10000000);
+        to[1] = address(10000001);
+        to[2] = address(10000002);
+
+        bytes9 mintRandomnessBefore = edition.mintRandomness();
+        edition.airdrop(to, 1);
+        bytes9 mintRandomnessAfter = edition.mintRandomness();
+        // Super unlikely to be the same.
+        assertTrue(mintRandomnessBefore != mintRandomnessAfter);
+    }
+
     function test_airdropRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
