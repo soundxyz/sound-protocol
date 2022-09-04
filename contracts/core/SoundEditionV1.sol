@@ -64,7 +64,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
      *      See: https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
      */
-    uint256 public constant MAX_BATCH_SIZE = 255;
+    uint256 public constant ADDRESS_BATCH_MINT_LIMIT = 255;
 
     /**
      * @dev Basis points denominator used in fee calculations.
@@ -191,7 +191,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         public
         payable
         onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE)
-        requireQuantityWithinBound(quantity)
+        requireWithinAddressBatchMintLimit(quantity)
         requireMintable(quantity)
         updatesMintRandomness
         returns (uint256 fromTokenId)
@@ -207,7 +207,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function airdrop(address[] calldata to, uint256 quantity)
         public
         onlyRolesOrOwner(ADMIN_ROLE)
-        requireQuantityWithinBound(quantity)
+        requireWithinAddressBatchMintLimit(quantity)
         requireMintable(to.length * quantity)
         updatesMintRandomness
         returns (uint256 fromTokenId)
@@ -459,11 +459,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @dev Ensures that the `quantity` does not exceed `MAX_BATCH_SIZE`.
+     * @dev Ensures that the `quantity` does not exceed `ADDRESS_BATCH_MINT_LIMIT`.
      * @param quantity The number of tokens minted per address.
      */
-    modifier requireQuantityWithinBound(uint256 quantity) {
-        if (quantity > MAX_BATCH_SIZE) revert ExceedsMaxBatchSize();
+    modifier requireWithinAddressBatchMintLimit(uint256 quantity) {
+        if (quantity > ADDRESS_BATCH_MINT_LIMIT) revert ExceedsAddressBatchMintLimit();
         _;
     }
 

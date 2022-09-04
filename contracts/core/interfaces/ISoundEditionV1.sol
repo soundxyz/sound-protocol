@@ -101,9 +101,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     error MaximumHasAlreadyBeenReached();
 
     /**
-     * @dev The mint `quantity` cannot exceed `MAX_BATCH_SIZE` tokens.
+     * @dev The mint `quantity` cannot exceed `ADDRESS_BATCH_MINT_LIMIT` tokens.
      */
-    error ExceedsMaxBatchSize();
+    error ExceedsAddressBatchMintLimit();
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -286,7 +286,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *      See: https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
      * @return The constant value.
      */
-    function MAX_BATCH_SIZE() external pure returns (uint256);
+    function ADDRESS_BATCH_MINT_LIMIT() external pure returns (uint256);
 
     /**
      * @dev Returns the base token URI for the collection.

@@ -323,23 +323,23 @@ contract SoundEdition_mint is TestConfig {
 
     function test_mintWithQuantityOverLimitReverts() public {
         SoundEditionV1 edition = createGenericEdition();
-        uint256 maxBatchSize = edition.MAX_BATCH_SIZE();
+        uint256 limit = edition.ADDRESS_BATCH_MINT_LIMIT();
         // Minting one more than the limit will revert.
-        vm.expectRevert(ISoundEditionV1.ExceedsMaxBatchSize.selector);
-        edition.mint(address(this), maxBatchSize + 1);
+        vm.expectRevert(ISoundEditionV1.ExceedsAddressBatchMintLimit.selector);
+        edition.mint(address(this), limit + 1);
         // Minting right at the limit is ok.
-        edition.mint(address(this), maxBatchSize);
+        edition.mint(address(this), limit);
     }
 
     function test_airdropWithQuantityOverLimitReverts() public {
         SoundEditionV1 edition = createGenericEdition();
-        uint256 maxBatchSize = edition.MAX_BATCH_SIZE();
+        uint256 limit = edition.ADDRESS_BATCH_MINT_LIMIT();
         address[] memory to = new address[](1);
         to[0] = address(10000000);
         // Airdrop with `quantity` one more than the limit will revert.
-        vm.expectRevert(ISoundEditionV1.ExceedsMaxBatchSize.selector);
-        edition.airdrop(to, maxBatchSize + 1);
+        vm.expectRevert(ISoundEditionV1.ExceedsAddressBatchMintLimit.selector);
+        edition.airdrop(to, limit + 1);
         // Airdrop with `quantity` right at the limit is ok.
-        edition.airdrop(to, maxBatchSize);
+        edition.airdrop(to, limit);
     }
 }
