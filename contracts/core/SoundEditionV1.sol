@@ -59,6 +59,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint256 public constant ADMIN_ROLE = _ROLE_0;
 
     /**
+     * @dev The maximum limit for the mint or airdrop `quantity`
+     */
+    uint256 public constant MAX_QUANTITY_LIMIT = 255;
+
+    /**
      * @dev Basis points denominator used in fee calculations.
      */
     uint16 internal constant _MAX_BPS = 10_000;
@@ -183,6 +188,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         public
         payable
         onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE)
+        requireQuantityWithinLimit(quantity)
         requireMintable(quantity)
         updatesMintRandomness
         returns (uint256 fromTokenId)
@@ -198,6 +204,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function airdrop(address[] calldata to, uint256 quantity)
         public
         onlyRolesOrOwner(ADMIN_ROLE)
+        requireQuantityWithinLimit(quantity)
         requireMintable(to.length * quantity)
         updatesMintRandomness
         returns (uint256 fromTokenId)
@@ -445,6 +452,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 revert ExceedsEditionAvailableSupply(uint32(available));
             }
         }
+        _;
+    }
+
+    /**
+     * @dev Ensures that the `quantity` does not exceed `MAX_QUANTITY_LIMIT`.
+     * @param quantity The number of tokens minted per address.
+     */
+    modifier requireQuantityWithinLimit(uint256 quantity) {
+        if (quantity > MAX_QUANTITY_LIMIT) revert ExceedsMaxQuantityLimit();
         _;
     }
 
