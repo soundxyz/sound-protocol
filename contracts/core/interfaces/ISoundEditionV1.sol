@@ -270,7 +270,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     /**
      * @dev Returns the minter role flag.
      *      Prevents the first-time transfer costs for tokens at the end of large mint batches
-     *      via ERC721A from becoming too expensive due to need to scan many slots.
+     *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
      * @return The constant value.
      */
     function MINTER_ROLE() external view returns (uint256);
