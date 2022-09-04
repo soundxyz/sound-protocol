@@ -148,7 +148,7 @@ contract Seed is Script {
         );
 
         // Call the create function.
-        bytes[] memory results = _createSoundEditionWithCalls(SALT, contracts, data);
+        _createSoundEditionWithCalls(SALT, contracts, data);
 
         vm.stopBroadcast();
     }
