@@ -20,7 +20,7 @@
         "postpublish": "gh-release",
         "seed:goerli": "source .env && forge script script/solidity/Seed.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast",
         "seed:anvil": "source .env && forge script script/solidity/Seed.s.sol --fork-url http://localhost:8545 --private-key $PRIVATE_KEY -vvvv --broadcast",
-        "anvil": "anvil --mnemonic \"clog doll trouble plug drill deny bottom into age task hybrid cement\" --balance 300 --accounts 20 --chain-id 1337"
+        "anvil": "source .env anvil --mnemonic $MNEMONIC --balance 300 --accounts 20 --chain-id 1337"
     },
     "repository": {
         "type": "git",
