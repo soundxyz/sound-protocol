@@ -147,6 +147,19 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mint(address to, uint256 quantity) external payable returns (uint256 fromTokenId);
 
     /**
+     * @dev Mints `quantity` tokens to each of the addresses in `to`.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the
+     *   `ADMIN_ROLE`, which can be granted via {grantRole}.
+     *
+     * @param to       Address to mint to.
+     * @param quantity Number of tokens to mint.
+     * @return fromTokenId The first token ID minted.
+     */
+    function airdrop(address[] calldata to, uint256 quantity) external returns (uint256 fromTokenId);
+
+    /**
      * @dev Withdraws collected ETH royalties to the fundingRecipient
      */
     function withdrawETH() external;

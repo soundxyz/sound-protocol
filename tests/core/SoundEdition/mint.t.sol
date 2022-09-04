@@ -239,4 +239,20 @@ contract SoundEdition_mint is TestConfig {
         vm.expectRevert(ISoundEditionV1.MaximumHasAlreadyBeenReached.selector);
         edition.reduceEditionMaxMintable(4);
     }
+
+    function test_airdropSuccess() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        address[] memory to = new address[](3);
+        to[0] = address(10000000);
+        to[1] = address(10000001);
+        to[2] = address(10000002);
+
+        uint256 quantity = 10;
+        edition.airdrop(to, quantity);
+
+        assertEq(edition.balanceOf(to[0]), quantity);
+        assertEq(edition.balanceOf(to[1]), quantity);
+        assertEq(edition.balanceOf(to[2]), quantity);
+    }
 }

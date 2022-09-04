@@ -179,36 +179,37 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function mint(address to, uint256 quantity) public payable returns (uint256 fromTokenId) {
-        address caller = msg.sender;
-        // Only allow calls if caller has minter role, admin role, or is the owner.
-        if (!hasAnyRole(caller, MINTER_ROLE | ADMIN_ROLE) && caller != owner()) {
-            revert Unauthorized();
-        }
-
-        uint256 totalMintedQty = _totalMinted();
-
-        unchecked {
-            // Check if there are enough tokens to mint.
-            // We use version v4.2+ of ERC721A, which `_mint` will revert with out-of-gas
-            // error via a loop if `quantity` is large enough to cause an overflow in uint256.
-            if (totalMintedQty + quantity > editionMaxMintable) {
-                // Won't underflow as `editionMaxMintable` cannot be decreased
-                // below `_totalMinted()`. See {reduceEditionMaxMintable}.
-                uint256 available = editionMaxMintable - totalMintedQty;
-                revert ExceedsEditionAvailableSupply(uint32(available));
-            }
-            // Won't overflow, as `_startTokenId()` is 1, which is the minimum valid `quantity`.
-            fromTokenId = totalMintedQty + _startTokenId();
-        }
-
-        // Mint the tokens. Will revert if quantity is zero.
+    function mint(address to, uint256 quantity)
+        public
+        payable
+        onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE)
+        requireMintable(quantity)
+        updatesMintRandomness
+        returns (uint256 fromTokenId)
+    {
+        fromTokenId = _nextTokenId();
+        // Mint the tokens. Will revert if `quantity` is zero.
         _mint(to, quantity);
-        // Set randomness.
-        if (totalMintedQty <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
-            unchecked {
-                // Won't underflow, as block number is non-zero.
-                mintRandomness = bytes9(blockhash(block.number - 1));
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function airdrop(address[] calldata to, uint256 quantity)
+        public
+        onlyRolesOrOwner(ADMIN_ROLE)
+        requireMintable(to.length * quantity)
+        updatesMintRandomness
+        returns (uint256 fromTokenId)
+    {
+        fromTokenId = _nextTokenId();
+
+        // Won't overflow, as `to.length` is bounded by the block max gas limit.
+        unchecked {
+            uint256 toLength = to.length;
+            // Mint the tokens. Will revert if `quantity` is zero.
+            for (uint256 i; i != toLength; ++i) {
+                _mint(to[i], quantity);
             }
         }
     }
@@ -424,6 +425,41 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     modifier onlyValidRoyaltyBPS(uint16 bps) {
         if (bps > _MAX_BPS) revert InvalidRoyaltyBPS();
+        _;
+    }
+
+    /**
+     * @dev Ensures that `totalQuantity` can be minted.
+     * @param totalQuantity The total number of tokens to mint.
+     */
+    modifier requireMintable(uint256 totalQuantity) {
+        unchecked {
+            uint256 currentTotalMinted = _totalMinted();
+            // Check if there are enough tokens to mint.
+            // We use version v4.2+ of ERC721A, which `_mint` will revert with out-of-gas
+            // error via a loop if `totalQuantity` is large enough to cause an overflow in uint256.
+            if (currentTotalMinted + totalQuantity > editionMaxMintable) {
+                // Won't underflow as `editionMaxMintable` cannot be decreased
+                // below `_totalMinted()`. See {reduceEditionMaxMintable}.
+                uint256 available = editionMaxMintable - currentTotalMinted;
+                revert ExceedsEditionAvailableSupply(uint32(available));
+            }
+        }
+        _;
+    }
+
+    /**
+     * @dev Updates the mint randomness.
+     */
+    modifier updatesMintRandomness() {
+        unchecked {
+            if (_totalMinted() <= mintRandomnessTokenThreshold) {
+                if (block.timestamp <= mintRandomnessTimeThreshold) {
+                    // Won't underflow, as block number is non-zero.
+                    mintRandomness = bytes9(blockhash(block.number - 1));
+                }
+            }
+        }
         _;
     }
 
