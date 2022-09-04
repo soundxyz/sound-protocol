@@ -283,6 +283,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @dev Returns the maximum limit for the mint or airdrop `quantity`.
      *      Prevents the first-time transfer costs for tokens near the end of large mint batches
      *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
+     *      See: https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
      * @return The constant value.
      */
     function MAX_BATCH_SIZE() external pure returns (uint256);
