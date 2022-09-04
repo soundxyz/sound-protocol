@@ -11,5 +11,5 @@
         "allowSyntheticDefaultImports": true,
         "skipLibCheck": true
     },
-    "include": ["typechain"]
+    "include": ["src", "typechain"]
 }
