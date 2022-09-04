@@ -14,10 +14,6 @@ await rm("dist", {
     recursive: true,
 });
 
-const tsc = execaCommand("tsc -p tsconfig.build.json", {
-    stdio: "inherit",
-});
-
 await ensureDir("dist");
 
 await Promise.all([
@@ -61,6 +57,10 @@ await Promise.all([
         )
     ),
 ]);
+
+const tsc = execaCommand("tsc -p tsconfig.build.json", {
+    stdio: "inherit",
+});
 
 await buildCode({
     clean: false,
