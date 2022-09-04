@@ -62,6 +62,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev The maximum limit for the mint or airdrop `quantity`.
      *      Prevents the first-time transfer costs for tokens near the end of large mint batches
      *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
+     *      See: https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
      */
     uint256 public constant MAX_BATCH_SIZE = 255;
 
