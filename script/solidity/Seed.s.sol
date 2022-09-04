@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.16;
 
+import "forge-std/console.sol";
 import { Script } from "forge-std/Script.sol";
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -44,6 +45,8 @@ contract Seed is Script {
 
     function run() external {
         vm.startBroadcast();
+
+        console.log("msg.sender:", msg.sender);
 
         // Deploy the SoundFeeRegistry
         SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(SOUND_GNOSIS_SAFE_MAINNET, PLATFORM_FEE_BPS);

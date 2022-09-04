@@ -12,7 +12,7 @@
         "slither": "slither . --config-file slither.config.json",
         "prepare": "husky install",
         "postinstall": "forge install",
-        "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol scripts/**/*.sol",
+        "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol script/**/*.sol",
         "gen:ids": "forge script ./script/solidity/getInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/interfaceIds.json",
         "typechain": "npx typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-2/**/*.json'",
         "release:canary": "(node script/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
@@ -20,7 +20,7 @@
         "postpublish": "gh-release",
         "seed:goerli": "source .env && forge script script/solidity/Seed.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast",
         "seed:anvil": "source .env && forge script script/solidity/Seed.s.sol --fork-url http://localhost:8545 --private-key $PRIVATE_KEY -vvvv --broadcast",
-        "anvil": "source .env anvil --mnemonic $MNEMONIC --balance 300 --accounts 20 --chain-id 1337"
+        "anvil": "source .env && anvil --mnemonic \"$MNEMONIC\" --balance 300 --accounts 20 --chain-id 1337"
     },
     "repository": {
         "type": "git",

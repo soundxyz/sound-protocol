@@ -19,6 +19,7 @@ await ensureDir("dist");
 await Promise.all([
     copy("LICENSE", "dist/LICENSE"),
     copy("broadcast", "dist/broadcast"),
+    copy("src/interfaceIds.json", "dist/src/interfaceIds.json"),
     copy("typechain", "dist/typechain", {
         filter(file) {
             if (extname(file) === "") return true;
