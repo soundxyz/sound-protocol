@@ -19,12 +19,28 @@ import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 contract Seed is Script {
     uint16 private constant PLATFORM_FEE_BPS = 500;
     address SOUND_GNOSIS_SAFE_MAINNET = 0x858a92511485715Cfb754f397a7894b7724c7Abd;
+    uint96 constant PRICE = 1 ether;
+    address constant SIGNER = address(111111);
+    bytes32 constant SALT = bytes32(uint256(2932323523848306));
+    uint32 constant MAX_MINTABLE = 50;
+    uint16 constant ROYALTY_BPS = 1000;
+    uint16 constant AFFILIATE_FEE_BPS = 0;
+    uint32 immutable START_TIME;
+    uint32 immutable END_TIME;
+    uint32 immutable RANDOMNESS_LOCKED_TIMESTAMP;
 
+    SoundCreatorV1 public soundCreator;
 
     GoldenEggMetadata public goldenEggModule;
-    FixedPriceSignatureMinter public fixedPriceSignatureMinter;
-    MerkleDropMinter public merkleDropMinter;
-    RangeEditionMinter public rangeEditionMinter;
+    FixedPriceSignatureMinter public signatureMinter;
+    MerkleDropMinter public merkleMinter;
+    RangeEditionMinter public rangeMinter;
+
+    constructor() {
+        START_TIME = uint32(block.timestamp);
+        END_TIME = START_TIME + 1 days;
+        RANDOMNESS_LOCKED_TIMESTAMP = START_TIME + 1 hours;
+    }
 
     function run() external {
         vm.startBroadcast();
@@ -37,15 +53,13 @@ contract Seed is Script {
 
         // Deploy modules
         goldenEggModule = new GoldenEggMetadata();
-        goldenEggModule = new GoldenEggMetadata();
-        fixedPriceSignatureMinter = new FixedPriceSignatureMinter(soundFeeRegistry);
-        merkleDropMinter = new MerkleDropMinter(soundFeeRegistry);
-        rangeEditionMinter = new RangeEditionMinter(soundFeeRegistry);
+        signatureMinter = new FixedPriceSignatureMinter(soundFeeRegistry);
+        merkleMinter = new MerkleDropMinter(soundFeeRegistry);
+        rangeMinter = new RangeEditionMinter(soundFeeRegistry);
 
         // Deploy edition implementation (& initialize it for security)
         SoundEditionV1 editionImplementation = new SoundEditionV1();
         editionImplementation.initialize(
-            address(0), // owner
             "SoundEditionV1", // name
             "SOUND", // symbol
             IMetadataModule(address(0)),
@@ -59,44 +73,109 @@ contract Seed is Script {
         );
 
         // Deploy creator implementation (& initialize it for security)
-        SoundCreatorV1 soundCreator = new SoundCreatorV1(address(editionImplementation));
+        soundCreator = new SoundCreatorV1(address(editionImplementation));
 
         // Set creator ownership to gnosis safe
         soundCreator.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
 
-        _deployDummyEdition(soundCreator, goldenEggModule);
+        // These are the arrays we have to pass into the create function
+        // to setup the minters.
+        address[] memory contracts = new address[](6);
+        bytes[] memory data = new bytes[](6);
+
+        address soundEditionAddress = soundCreator.soundEditionAddress(msg.sender, SALT);
+
+        // Populate the contracts:
+        // First, we have to call the {grantRoles} on the `soundEditionAddress`.
+        contracts[0] = soundEditionAddress;
+        contracts[1] = soundEditionAddress;
+        contracts[2] = soundEditionAddress;
+        // Then, we have to call the {createEditionMint} on the minters.
+        contracts[3] = address(signatureMinter);
+        contracts[4] = address(merkleMinter);
+        contracts[5] = address(rangeMinter);
+
+        // Populate the data:
+        // First, we have to call the {grantRoles} on the `soundEditionAddress`.
+        data[0] = abi.encodeWithSelector(
+            editionImplementation.grantRoles.selector,
+            address(signatureMinter),
+            editionImplementation.MINTER_ROLE()
+        );
+        data[1] = abi.encodeWithSelector(
+            editionImplementation.grantRoles.selector,
+            address(merkleMinter),
+            editionImplementation.MINTER_ROLE()
+        );
+        data[2] = abi.encodeWithSelector(
+            editionImplementation.grantRoles.selector,
+            address(rangeMinter),
+            editionImplementation.MINTER_ROLE()
+        );
+        // Then, we have to call the {createEditionMint} on the minters.
+        data[3] = abi.encodeWithSelector(
+            signatureMinter.createEditionMint.selector,
+            soundEditionAddress,
+            PRICE,
+            SIGNER,
+            MAX_MINTABLE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS
+        );
+        data[4] = abi.encodeWithSelector(
+            merkleMinter.createEditionMint.selector,
+            soundEditionAddress,
+            bytes32(uint256(123456)), // Merkle root hash.
+            PRICE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            MAX_MINTABLE,
+            5 // Max mintable per account.
+        );
+        data[5] = abi.encodeWithSelector(
+            rangeMinter.createEditionMint.selector,
+            soundEditionAddress,
+            PRICE,
+            START_TIME,
+            START_TIME + 1 hours, // Closing time
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            10, // Max mintable lower.
+            20, // Max mintable upper.
+            5 // Max mintable per account.
+        );
+
+        // Call the create function.
+        bytes[] memory results = _createSoundEditionWithCalls(SALT, contracts, data);
 
         vm.stopBroadcast();
     }
 
-    function _deployDummyEdition(SoundCreatorV1 soundCreator, GoldenEggMetadata goldenEggModule_) internal {
-        SoundEditionV1 soundEdition = SoundEditionV1(
-            soundCreator.createSound(
-                "SoundEditionV1", // name
-                "SOUND", // symbol
-                IMetadataModule(address(goldenEggModule_)),
+    // For avoiding the stack too deep error.
+    function _createSoundEditionWithCalls(
+        bytes32 salt,
+        address[] memory contracts,
+        bytes[] memory data
+    ) internal returns (bytes[] memory results) {
+        results = soundCreator.createSoundAndMints(
+            salt,
+            abi.encodeWithSelector(
+                SoundEditionV1.initialize.selector,
+                "SongName",
+                "SONG",
+                address(goldenEggModule),
                 "baseURI",
                 "contractURI",
-                address(1), // fundingRecipient
-                0, // royaltyBPS
-                0, // editionMaxMintable
+                msg.sender, // fundingRecipient
+                1000, // royaltyBPS
+                100, // editionMaxMintable
                 0, // mintRandomnessTokenThreshold
                 0 // mintRandomnessTimeThreshold
-            )
+            ),
+            contracts,
+            data
         );
-
-        rangeEditionMinter.createEditionMint(
-            address(soundEdition),
-            10000000000000000, // 0.01 eth
-            0, // startTime
-            1662184609, // closingTime 9/2/22
-            1664863009, // endTime 10/3/22
-            0, // affiliateFeeBPS,
-            10, // maxMintableLower,
-            15, // maxMintableUpper,
-            3 // maxMintablePerAccount
-        );
-
-        soundEdition.grantRoles(address(rangeEditionMinter), soundEdition.MINTER_ROLE());
     }
 }
