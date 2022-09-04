@@ -100,6 +100,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     error MaximumHasAlreadyBeenReached();
 
+    /**
+     * @dev The mint `quantity` cannot exceed `MAX_QUANTITY_LIMIT` tokens.
+     */
+    error ExceedsMaxQuantityLimit();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
@@ -273,6 +278,14 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The constant value.
      */
     function ADMIN_ROLE() external view returns (uint256);
+
+    /**
+     * @dev Returns the maximum limit for the mint or airdrop `quantity`.
+     *      Prevents the first-time transfer costs for tokens near the end of large mint batches
+     *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
+     * @return The constant value.
+     */
+    function MAX_QUANTITY_LIMIT() external pure returns (uint256);
 
     /**
      * @dev Returns the base token URI for the collection.

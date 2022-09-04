@@ -27,7 +27,7 @@ contract SoundEdition_mint is TestConfig {
     }
 
     function test_adminMintCantMintPastMax() public {
-        uint32 maxQuantity = 5000;
+        uint32 maxQuantity = 50;
 
         SoundEditionV1 edition = SoundEditionV1(
             createSound(
@@ -81,9 +81,9 @@ contract SoundEdition_mint is TestConfig {
         vm.stopPrank();
 
         vm.prank(admin);
-        edition.mint(admin, 420);
+        edition.mint(admin, 69);
 
-        assert(edition.balanceOf(admin) == 420);
+        assert(edition.balanceOf(admin) == 69);
 
         // Test an admin can mint to a recipient address
         address recipient2 = address(837802);
@@ -91,13 +91,6 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(recipient2, quantity);
 
         assert(edition.balanceOf(recipient2) == quantity);
-    }
-
-    function test_mintWithOverflowReverts() public {
-        SoundEditionV1 edition = createGenericEdition();
-        edition.mint(address(this), 1);
-        vm.expectRevert();
-        edition.mint(address(this), type(uint256).max);
     }
 
     function test_burn(address attacker) public {
@@ -321,5 +314,27 @@ contract SoundEdition_mint is TestConfig {
         vm.prank(nonAdminOrOwner);
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
         edition.airdrop(to, 1);
+    }
+
+    function test_mintWithQuantityOverLimitReverts() public {
+        SoundEditionV1 edition = createGenericEdition();
+        uint256 maxQuantityLimit = edition.MAX_QUANTITY_LIMIT();
+        // Minting one more than the limit will revert.
+        vm.expectRevert(ISoundEditionV1.ExceedsMaxQuantityLimit.selector);
+        edition.mint(address(this), maxQuantityLimit + 1);
+        // Minting right at the limit is ok.
+        edition.mint(address(this), maxQuantityLimit);
+    }
+
+    function test_airdropWithQuantityOverLimitReverts() public {
+        SoundEditionV1 edition = createGenericEdition();
+        uint256 maxQuantityLimit = edition.MAX_QUANTITY_LIMIT();
+        address[] memory to = new address[](1);
+        to[0] = address(10000000);
+        // Airdrop with `quantity` one more than the limit will revert.
+        vm.expectRevert(ISoundEditionV1.ExceedsMaxQuantityLimit.selector);
+        edition.airdrop(to, maxQuantityLimit + 1);
+        // Airdrop with `quantity` right at the limit is ok.
+        edition.airdrop(to, maxQuantityLimit);
     }
 }
