@@ -249,10 +249,40 @@ contract SoundEdition_mint is TestConfig {
         to[2] = address(10000002);
 
         uint256 quantity = 10;
-        edition.airdrop(to, quantity);
+        uint256 expectedFromTokenId = edition.nextTokenId();
+        uint256 fromTokenId = edition.airdrop(to, quantity);
+
+        assertEq(expectedFromTokenId, fromTokenId);
 
         assertEq(edition.balanceOf(to[0]), quantity);
         assertEq(edition.balanceOf(to[1]), quantity);
         assertEq(edition.balanceOf(to[2]), quantity);
+
+        // Grant some new address the `ADMIN` role.
+        address admin = address(20000000);
+        edition.grantRoles(admin, edition.ADMIN_ROLE());
+
+        expectedFromTokenId = edition.nextTokenId();
+        vm.prank(admin);
+        fromTokenId = edition.airdrop(to, quantity);
+
+        assertEq(expectedFromTokenId, fromTokenId);
+
+        assertEq(edition.balanceOf(to[0]), quantity * 2);
+        assertEq(edition.balanceOf(to[1]), quantity * 2);
+        assertEq(edition.balanceOf(to[2]), quantity * 2);
+    }
+
+    function test_airdropRevertsIfNotAuthorized(address nonAdminOrOwner) public {
+        vm.assume(nonAdminOrOwner != address(this));
+        vm.assume(nonAdminOrOwner != address(0));
+
+        SoundEditionV1 edition = createGenericEdition();
+
+        address[] memory to;
+
+        vm.prank(nonAdminOrOwner);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        edition.airdrop(to, 1);
     }
 }
