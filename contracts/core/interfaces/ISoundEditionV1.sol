@@ -106,7 +106,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Initializes the contract.
-     * @param owner                         Owner of contract (artist).
      * @param name_                         Name of the collection.
      * @param symbol_                       Symbol of the collection.
      * @param metadataModule_               Address of metadata module, address(0x00) if not used.
@@ -119,7 +118,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param mintRandomnessTimeThreshold_  Timestamp after which randomness gets locked.
      */
     function initialize(
-        address owner,
         string memory name_,
         string memory symbol_,
         IMetadataModule metadataModule_,

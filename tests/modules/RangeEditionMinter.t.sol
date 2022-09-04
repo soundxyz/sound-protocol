@@ -87,7 +87,7 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintablePerAccount
     ) public {
         SoundEditionV1 edition = SoundEditionV1(
-            soundCreator.createSound(
+            createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,

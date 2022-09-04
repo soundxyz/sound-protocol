@@ -25,6 +25,8 @@ contract TestConfig is Test {
     uint16 constant PLATFORM_FEE_BPS = 200;
     uint256 constant MAX_BPS = 10_000;
 
+    uint256 internal _salt;
+
     SoundCreatorV1 soundCreator;
     SoundFeeRegistry feeRegistry;
 
@@ -50,10 +52,44 @@ contract TestConfig is Test {
         return addr;
     }
 
+    function createSound(
+        string memory name,
+        string memory symbol,
+        IMetadataModule metadataModule,
+        string memory baseURI,
+        string memory contractURI,
+        address fundingRecipient,
+        uint16 royaltyBPS,
+        uint32 editionMaxMintable,
+        uint32 mintRandomnessTokenThreshold,
+        uint32 mintRandomnessTimeThreshold
+    ) public returns (address) {
+        bytes memory initData = abi.encodeWithSelector(
+            SoundEditionV1.initialize.selector,
+            name,
+            symbol,
+            metadataModule,
+            baseURI,
+            contractURI,
+            fundingRecipient,
+            royaltyBPS,
+            editionMaxMintable,
+            mintRandomnessTokenThreshold,
+            mintRandomnessTimeThreshold
+        );
+
+        address[] memory contracts;
+        bytes[] memory data;
+
+        soundCreator.createSoundAndMints(bytes32(++_salt), initData, contracts, data);
+
+        return payable(soundCreator.soundEditionAddress(address(this), bytes32(_salt)));
+    }
+
     function createGenericEdition() public returns (SoundEditionV1) {
         return
             SoundEditionV1(
-                soundCreator.createSound(
+                createSound(
                     SONG_NAME,
                     SONG_SYMBOL,
                     METADATA_MODULE,

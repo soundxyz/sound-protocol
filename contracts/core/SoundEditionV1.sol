@@ -139,7 +139,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function initialize(
-        address owner,
         string memory name_,
         string memory symbol_,
         IMetadataModule metadataModule_,
@@ -161,7 +160,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         _initializeNameAndSymbol(name_, symbol_);
         ERC721AStorage.layout()._currentIndex = _startTokenId();
 
-        _initializeOwner(owner);
+        _initializeOwner(msg.sender);
 
         baseURI = baseURI_;
         contractURI = contractURI_;
