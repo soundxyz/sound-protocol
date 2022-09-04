@@ -269,8 +269,6 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Returns the minter role flag.
-     *      Prevents the first-time transfer costs for tokens near the end of large mint batches
-     *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
      * @return The constant value.
      */
     function MINTER_ROLE() external view returns (uint256);
@@ -283,6 +281,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Returns the maximum limit for the mint or airdrop `quantity`.
+     *      Prevents the first-time transfer costs for tokens near the end of large mint batches
+     *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
      * @return The constant value.
      */
     function MAX_QUANTITY_LIMIT() external pure returns (uint256);
