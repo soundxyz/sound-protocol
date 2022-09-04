@@ -30,42 +30,38 @@ interface ISoundCreatorV1 {
     // =============================================================
 
     /**
-     * Thrown if the implementation address is zero.
+     * @dev Thrown if the implementation address is zero.
      */
     error ImplementationAddressCantBeZero();
+
+    /**
+     * @dev Thrown if the lengths of the input arrays are not equal.
+     */
+    error ArrayLengthsMismatch();
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
 
     /**
-     * @dev Deploys a Sound edition minimal proxy contract.
-     * @param name                         The name of the edition.
-     * @param symbol                       The symbol of the edition.
-     * @param metadataModule               The address of the metadata module.
-     * @param baseURI                      The base URI of the edition's metadata.
-     * @param contractURI                  The contract URI of the edition.
-     * @param fundingRecipient             The edition's funding recipient address.
-     * @param royaltyBPS                   The secondary sales royalty in basis points.
-     * @param editionMaxMintable           The maximum number of tokens that can be minted.
-     * @param mintRandomnessTokenThreshold The token count after which
-     *                                     `SoundEdition.mintRandomness` gets locked.
-     * @param mintRandomnessTimeThreshold  The timestamp after which
-     *                                     `SoundEdition.mintRandomness` gets locked.
-     * @return soundEdition The address of the deployed edition proxy.
+     * @dev Creates a Sound Edition proxy, initializes it,
+     *      and creates mint configurations on a given set of minter addresses.
+     * @param salt      The salt used for the CREATE2 to deploy the clone to a
+     *                  deterministic address.
+     * @param initData  The calldata to initialize SoundEdition via
+     *                  `abi.encodeWithSelector`.
+     * @param contracts A list of contracts to call.
+     * @param data      A list of calldata created via `abi.encodeWithSelector`
+     *                  This must contain the same number of entries as `contracts`.
+     * @return results The results of calling the contracts.
+     *                 Use `abi.decode` to decode them.
      */
-    function createSound(
-        string memory name,
-        string memory symbol,
-        IMetadataModule metadataModule,
-        string memory baseURI,
-        string memory contractURI,
-        address fundingRecipient,
-        uint16 royaltyBPS,
-        uint32 editionMaxMintable,
-        uint32 mintRandomnessTokenThreshold,
-        uint32 mintRandomnessTimeThreshold
-    ) external returns (address payable soundEdition);
+    function createSoundAndMints(
+        bytes32 salt,
+        bytes calldata initData,
+        address[] calldata contracts,
+        bytes[] calldata data
+    ) external returns (bytes[] memory results);
 
     /**
      * @dev Changes the SoundEdition implementation contract address.
@@ -86,4 +82,12 @@ interface ISoundCreatorV1 {
      * @return The configured value.
      */
     function soundEditionImplementation() external returns (address);
+
+    /**
+     * @dev Returns the deterministic address for the sound edition clone.
+     * @param by   The caller of the {createSoundAndMints} function.
+     * @param salt The salt, generated on the client side.
+     * @return The computed value.
+     */
+    function soundEditionAddress(address by, bytes32 salt) external view returns (address);
 }
