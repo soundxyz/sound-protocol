@@ -69,10 +69,10 @@ contract Seed is Script {
             "baseURI",
             "contractURI",
             address(1), // fundingRecipient
-            0, // royaltyBPS
-            0, // editionMaxMintable
-            0, // mintRandomnessTokenThreshold
-            0 // mintRandomnessTimeThreshold
+            1000, // royaltyBPS
+            1000, // editionMaxMintable
+            50, // mintRandomnessTokenThreshold
+            uint32(block.timestamp + 1 days) // mintRandomnessTimeThreshold
         );
 
         // Deploy creator implementation (& initialize it for security)
