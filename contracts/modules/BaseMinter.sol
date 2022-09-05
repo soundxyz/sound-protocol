@@ -292,12 +292,13 @@ abstract contract BaseMinter is IMinterModule {
         BaseData storage baseData = _baseData[edition][mintId];
 
         /* --------------------- GENERAL CHECKS --------------------- */
-
-        uint32 startTime = baseData.startTime;
-        uint32 endTime = baseData.endTime;
-        if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-        if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
-        if (baseData.mintPaused) revert MintPaused();
+        {
+            uint32 startTime = baseData.startTime;
+            uint32 endTime = baseData.endTime;
+            if (block.timestamp < startTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+            if (block.timestamp > endTime) revert MintNotOpen(block.timestamp, startTime, endTime);
+            if (baseData.mintPaused) revert MintPaused();
+        }
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
@@ -306,7 +307,7 @@ abstract contract BaseMinter is IMinterModule {
         // Reverts if the payment is not exact.
         if (msg.value < requiredEtherValue) revert Underpaid(msg.value, requiredEtherValue);
 
-        uint128 remainingPayment = _deductPlatformFee(requiredEtherValue);
+        (uint128 remainingPayment, uint128 platformFee) = _deductPlatformFee(requiredEtherValue);
 
         // Check if the mint is an affiliated mint.
         bool affiliated = isAffiliated(edition, mintId, affiliate);
@@ -329,10 +330,18 @@ abstract contract BaseMinter is IMinterModule {
 
         uint32 fromTokenId = uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity));
 
-        if (affiliated) {
-            // Emit the event.
-            emit MintedWithAffiliate(edition, mintId, fromTokenId, quantity, affiliateFee, affiliate);
-        }
+        // Emit the event.
+        emit Minted(
+            edition,
+            mintId,
+            fromTokenId,
+            quantity,
+            requiredEtherValue,
+            platformFee,
+            affiliateFee,
+            affiliate,
+            affiliated
+        );
 
         /* ------------------------- REFUND ------------------------- */
 
@@ -348,12 +357,16 @@ abstract contract BaseMinter is IMinterModule {
     /**
      * @dev Deducts the platform fee from `requiredEtherValue`.
      * @param requiredEtherValue The amount of Ether required.
-     * @return remainingPayment The remaining payment Ether amount.
+     * @return remainingPayment  The remaining payment Ether amount.
+     * @return platformFee       The platform fee.
      */
-    function _deductPlatformFee(uint128 requiredEtherValue) internal returns (uint128 remainingPayment) {
+    function _deductPlatformFee(uint128 requiredEtherValue)
+        internal
+        returns (uint128 remainingPayment, uint128 platformFee)
+    {
         unchecked {
             // Compute the platform fee.
-            uint128 platformFee = feeRegistry.platformFee(requiredEtherValue);
+            platformFee = feeRegistry.platformFee(requiredEtherValue);
             // Increment the platform fees accrued.
             // Overflow is incredibly unrealistic.
             _platformFeesAccrued += platformFee;
