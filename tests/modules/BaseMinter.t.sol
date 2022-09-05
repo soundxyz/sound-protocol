@@ -227,7 +227,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_cantMintPastEditionMaxMintable() external {
         minter.setPrice(0);
 
-        uint32 maxSupply = 5000;
+        uint32 maxSupply = 50;
         SoundEditionV1 edition1 = _createEdition(maxSupply);
 
         uint128 mintId1 = minter.createEditionMint(address(edition1), START_TIME, END_TIME, AFFILIATE_FEE_BPS);

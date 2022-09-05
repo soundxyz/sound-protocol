@@ -100,6 +100,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     error MaximumHasAlreadyBeenReached();
 
+    /**
+     * @dev The mint `quantity` cannot exceed `ADDRESS_BATCH_MINT_LIMIT` tokens.
+     */
+    error ExceedsAddressBatchMintLimit();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
@@ -145,6 +150,19 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return fromTokenId The first token ID minted.
      */
     function mint(address to, uint256 quantity) external payable returns (uint256 fromTokenId);
+
+    /**
+     * @dev Mints `quantity` tokens to each of the addresses in `to`.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the
+     *   `ADMIN_ROLE`, which can be granted via {grantRole}.
+     *
+     * @param to       Address to mint to.
+     * @param quantity Number of tokens to mint.
+     * @return fromTokenId The first token ID minted.
+     */
+    function airdrop(address[] calldata to, uint256 quantity) external returns (uint256 fromTokenId);
 
     /**
      * @dev Withdraws collected ETH royalties to the fundingRecipient
@@ -260,6 +278,15 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The constant value.
      */
     function ADMIN_ROLE() external view returns (uint256);
+
+    /**
+     * @dev Returns the maximum limit for the mint or airdrop `quantity`.
+     *      Prevents the first-time transfer costs for tokens near the end of large mint batches
+     *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
+     *      See: https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
+     * @return The constant value.
+     */
+    function ADDRESS_BATCH_MINT_LIMIT() external pure returns (uint256);
 
     /**
      * @dev Returns the base token URI for the collection.

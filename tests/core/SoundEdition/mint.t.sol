@@ -27,7 +27,7 @@ contract SoundEdition_mint is TestConfig {
     }
 
     function test_adminMintCantMintPastMax() public {
-        uint32 maxQuantity = 5000;
+        uint32 maxQuantity = 50;
 
         SoundEditionV1 edition = SoundEditionV1(
             createSound(
@@ -81,9 +81,9 @@ contract SoundEdition_mint is TestConfig {
         vm.stopPrank();
 
         vm.prank(admin);
-        edition.mint(admin, 420);
+        edition.mint(admin, 69);
 
-        assert(edition.balanceOf(admin) == 420);
+        assert(edition.balanceOf(admin) == 69);
 
         // Test an admin can mint to a recipient address
         address recipient2 = address(837802);
@@ -91,13 +91,6 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(recipient2, quantity);
 
         assert(edition.balanceOf(recipient2) == quantity);
-    }
-
-    function test_mintWithOverflowReverts() public {
-        SoundEditionV1 edition = createGenericEdition();
-        edition.mint(address(this), 1);
-        vm.expectRevert();
-        edition.mint(address(this), type(uint256).max);
     }
 
     function test_burn(address attacker) public {
@@ -238,5 +231,115 @@ contract SoundEdition_mint is TestConfig {
         // Attempt to lower again - should revert
         vm.expectRevert(ISoundEditionV1.MaximumHasAlreadyBeenReached.selector);
         edition.reduceEditionMaxMintable(4);
+    }
+
+    function test_airdropSuccess() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        address[] memory to = new address[](3);
+        to[0] = address(10000000);
+        to[1] = address(10000001);
+        to[2] = address(10000002);
+
+        uint256 quantity = 10;
+
+        assertEq(edition.balanceOf(to[0]), 0);
+        assertEq(edition.balanceOf(to[1]), 0);
+        assertEq(edition.balanceOf(to[2]), 0);
+
+        uint256 expectedFromTokenId = edition.nextTokenId();
+        uint256 fromTokenId = edition.airdrop(to, quantity);
+
+        assertEq(expectedFromTokenId, fromTokenId);
+
+        assertEq(edition.balanceOf(to[0]), quantity);
+        assertEq(edition.balanceOf(to[1]), quantity);
+        assertEq(edition.balanceOf(to[2]), quantity);
+
+        // Grant some new address the `ADMIN` role.
+        address admin = address(20000000);
+        edition.grantRoles(admin, edition.ADMIN_ROLE());
+
+        expectedFromTokenId = edition.nextTokenId();
+        vm.prank(admin);
+        fromTokenId = edition.airdrop(to, quantity);
+
+        assertEq(expectedFromTokenId, fromTokenId);
+
+        assertEq(edition.balanceOf(to[0]), quantity * 2);
+        assertEq(edition.balanceOf(to[1]), quantity * 2);
+        assertEq(edition.balanceOf(to[2]), quantity * 2);
+    }
+
+    function test_airdropRevertsIfExceedsEditionMaxMintable() external {
+        SoundEditionV1 edition = createGenericEdition();
+        uint32 editionMaxMintable = 9;
+        edition.reduceEditionMaxMintable(editionMaxMintable);
+
+        address[] memory to = new address[](3);
+        to[0] = address(10000000);
+        to[1] = address(10000001);
+        to[2] = address(10000002);
+
+        uint256 quantity = 4;
+        // Reverts if the `quantity * to.length > editionMaxMintable`.
+        vm.expectRevert(
+            abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, editionMaxMintable)
+        );
+        edition.airdrop(to, quantity);
+
+        // Otherwise, succeeds.
+        quantity = 3;
+        edition.airdrop(to, quantity);
+    }
+
+    function test_airdropSetsMintRandomness() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        address[] memory to = new address[](3);
+        to[0] = address(10000000);
+        to[1] = address(10000001);
+        to[2] = address(10000002);
+
+        bytes9 mintRandomnessBefore = edition.mintRandomness();
+        edition.airdrop(to, 1);
+        bytes9 mintRandomnessAfter = edition.mintRandomness();
+        // Super unlikely to be the same.
+        assertTrue(mintRandomnessBefore != mintRandomnessAfter);
+    }
+
+    function test_airdropRevertsIfNotAuthorized(address nonAdminOrOwner) public {
+        vm.assume(nonAdminOrOwner != address(this));
+        vm.assume(nonAdminOrOwner != address(0));
+
+        SoundEditionV1 edition = createGenericEdition();
+
+        address[] memory to;
+
+        vm.prank(nonAdminOrOwner);
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        edition.airdrop(to, 1);
+    }
+
+    function test_mintWithQuantityOverLimitReverts() public {
+        SoundEditionV1 edition = createGenericEdition();
+        uint256 limit = edition.ADDRESS_BATCH_MINT_LIMIT();
+        // Minting one more than the limit will revert.
+        vm.expectRevert(ISoundEditionV1.ExceedsAddressBatchMintLimit.selector);
+        edition.mint(address(this), limit + 1);
+        // Minting right at the limit is ok.
+        edition.mint(address(this), limit);
+    }
+
+    function test_airdropWithQuantityOverLimitReverts() public {
+        SoundEditionV1 edition = createGenericEdition();
+        uint256 limit = edition.ADDRESS_BATCH_MINT_LIMIT();
+        address[] memory to = new address[](1);
+        to[0] = address(10000000);
+        // Airdrop with `quantity` one more than the limit will revert.
+        vm.expectRevert(ISoundEditionV1.ExceedsAddressBatchMintLimit.selector);
+        edition.airdrop(to, limit + 1);
+        // Airdrop with `quantity` right at the limit is ok.
+        edition.airdrop(to, limit);
     }
 }
