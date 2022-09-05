@@ -71,21 +71,28 @@ interface IMinterModule is IERC165 {
     event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 bps);
 
     /**
-     * @notice Emitted when a mint with an affiliate happens.
-     * @param edition      The edition address.
-     * @param mintId       The mint ID, to distinguish beteen multiple mints for the same edition.
-     * @param fromTokenId  The first token ID of the batch.
-     * @param quantity     The size of the batch.
-     * @param affiliateFee The cut paid to the affiliate.
-     * @param affiliate    The affiliate's address.
+     * @notice Emitted when a mint happens.
+     * @param edition            The edition address.
+     * @param mintId             The mint ID, to distinguish beteen multiple mints for
+     *                           the same edition.
+     * @param fromTokenId        The first token ID of the batch.
+     * @param quantity           The size of the batch.
+     * @param requiredEtherValue Total amount of Ether required for payment.
+     * @param platformFee        The cut paid to the platform.
+     * @param affiliateFee       The cut paid to the affiliate.
+     * @param affiliate          The affiliate's address.
+     * @param affiliated         Whether the affiliate is affiliated.
      */
-    event MintedWithAffiliate(
+    event Minted(
         address indexed edition,
         uint128 indexed mintId,
         uint32 fromTokenId,
         uint32 quantity,
+        uint128 requiredEtherValue,
+        uint128 platformFee,
         uint128 affiliateFee,
-        address affiliate
+        address affiliate,
+        bool affiliated
     );
 
     // =============================================================
