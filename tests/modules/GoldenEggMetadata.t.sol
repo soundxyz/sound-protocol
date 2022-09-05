@@ -67,7 +67,7 @@ contract GoldenEggMetadataTests is TestConfig {
     }
 
     function test_getGoldenEggTokenId(uint32 mintRandomnessTokenThreshold, uint32 mintQuantity) external {
-        vm.assume(mintQuantity > 0 && mintQuantity < 5000);
+        vm.assume(mintQuantity > 0 && mintQuantity < 50);
 
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
 

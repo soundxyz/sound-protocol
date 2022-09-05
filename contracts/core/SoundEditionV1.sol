@@ -59,6 +59,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint256 public constant ADMIN_ROLE = _ROLE_0;
 
     /**
+     * @dev The maximum limit for the mint or airdrop `quantity`.
+     *      Prevents the first-time transfer costs for tokens near the end of large mint batches
+     *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
+     *      See: https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
+     */
+    uint256 public constant ADDRESS_BATCH_MINT_LIMIT = 255;
+
+    /**
      * @dev Basis points denominator used in fee calculations.
      */
     uint16 internal constant _MAX_BPS = 10_000;
@@ -179,36 +187,39 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function mint(address to, uint256 quantity) public payable returns (uint256 fromTokenId) {
-        address caller = msg.sender;
-        // Only allow calls if caller has minter role, admin role, or is the owner.
-        if (!hasAnyRole(caller, MINTER_ROLE | ADMIN_ROLE) && caller != owner()) {
-            revert Unauthorized();
-        }
-
-        uint256 totalMintedQty = _totalMinted();
-
-        unchecked {
-            // Check if there are enough tokens to mint.
-            // We use version v4.2+ of ERC721A, which `_mint` will revert with out-of-gas
-            // error via a loop if `quantity` is large enough to cause an overflow in uint256.
-            if (totalMintedQty + quantity > editionMaxMintable) {
-                // Won't underflow as `editionMaxMintable` cannot be decreased
-                // below `_totalMinted()`. See {reduceEditionMaxMintable}.
-                uint256 available = editionMaxMintable - totalMintedQty;
-                revert ExceedsEditionAvailableSupply(uint32(available));
-            }
-            // Won't overflow, as `_startTokenId()` is 1, which is the minimum valid `quantity`.
-            fromTokenId = totalMintedQty + _startTokenId();
-        }
-
-        // Mint the tokens. Will revert if quantity is zero.
+    function mint(address to, uint256 quantity)
+        public
+        payable
+        onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE)
+        requireWithinAddressBatchMintLimit(quantity)
+        requireMintable(quantity)
+        updatesMintRandomness
+        returns (uint256 fromTokenId)
+    {
+        fromTokenId = _nextTokenId();
+        // Mint the tokens. Will revert if `quantity` is zero.
         _mint(to, quantity);
-        // Set randomness.
-        if (totalMintedQty <= mintRandomnessTokenThreshold && block.timestamp <= mintRandomnessTimeThreshold) {
-            unchecked {
-                // Won't underflow, as block number is non-zero.
-                mintRandomness = bytes9(blockhash(block.number - 1));
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function airdrop(address[] calldata to, uint256 quantity)
+        public
+        onlyRolesOrOwner(ADMIN_ROLE)
+        requireWithinAddressBatchMintLimit(quantity)
+        requireMintable(to.length * quantity)
+        updatesMintRandomness
+        returns (uint256 fromTokenId)
+    {
+        fromTokenId = _nextTokenId();
+
+        // Won't overflow, as `to.length` is bounded by the block max gas limit.
+        unchecked {
+            uint256 toLength = to.length;
+            // Mint the tokens. Will revert if `quantity` is zero.
+            for (uint256 i; i != toLength; ++i) {
+                _mint(to[i], quantity);
             }
         }
     }
@@ -424,6 +435,50 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     modifier onlyValidRoyaltyBPS(uint16 bps) {
         if (bps > _MAX_BPS) revert InvalidRoyaltyBPS();
+        _;
+    }
+
+    /**
+     * @dev Ensures that `totalQuantity` can be minted.
+     * @param totalQuantity The total number of tokens to mint.
+     */
+    modifier requireMintable(uint256 totalQuantity) {
+        unchecked {
+            uint256 currentTotalMinted = _totalMinted();
+            // Check if there are enough tokens to mint.
+            // We use version v4.2+ of ERC721A, which `_mint` will revert with out-of-gas
+            // error via a loop if `totalQuantity` is large enough to cause an overflow in uint256.
+            if (currentTotalMinted + totalQuantity > editionMaxMintable) {
+                // Won't underflow as `editionMaxMintable` cannot be decreased
+                // below `_totalMinted()`. See {reduceEditionMaxMintable}.
+                uint256 available = editionMaxMintable - currentTotalMinted;
+                revert ExceedsEditionAvailableSupply(uint32(available));
+            }
+        }
+        _;
+    }
+
+    /**
+     * @dev Ensures that the `quantity` does not exceed `ADDRESS_BATCH_MINT_LIMIT`.
+     * @param quantity The number of tokens minted per address.
+     */
+    modifier requireWithinAddressBatchMintLimit(uint256 quantity) {
+        if (quantity > ADDRESS_BATCH_MINT_LIMIT) revert ExceedsAddressBatchMintLimit();
+        _;
+    }
+
+    /**
+     * @dev Updates the mint randomness.
+     */
+    modifier updatesMintRandomness() {
+        unchecked {
+            if (_totalMinted() <= mintRandomnessTokenThreshold) {
+                if (block.timestamp <= mintRandomnessTimeThreshold) {
+                    // Won't underflow, as block number is non-zero.
+                    mintRandomness = bytes9(blockhash(block.number - 1));
+                }
+            }
+        }
         _;
     }
 
