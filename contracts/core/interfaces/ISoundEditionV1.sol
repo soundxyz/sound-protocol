@@ -336,9 +336,16 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp`
      *      have been surpassed.
      *      Used for game mechanics like the Sound Golden Egg.
+     *      Returns 0 before revealed.
      * @return The latest value.
      */
-    function mintRandomness() external view returns (bytes9);
+    function mintRandomness() external view returns (uint256);
+
+    /**
+     * @dev Returns whether the `mintRandomness` has been revealed (i.e. finalized).
+     * @return The latest value.
+     */
+    function mintRandomnessRevealed() external view returns (bool);
 
     /**
      * @dev Returns the royalty basis points.

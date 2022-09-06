@@ -296,16 +296,22 @@ contract SoundEdition_mint is TestConfig {
     function test_airdropSetsMintRandomness() external {
         SoundEditionV1 edition = createGenericEdition();
 
+        uint256 timeThreshold = block.timestamp + 10;
+        edition.setMintRandomnessTokenThreshold(1);
+        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
+
+        vm.warp(timeThreshold);
+
         address[] memory to = new address[](3);
         to[0] = address(10000000);
         to[1] = address(10000001);
         to[2] = address(10000002);
 
-        bytes9 mintRandomnessBefore = edition.mintRandomness();
+        assertTrue(edition.mintRandomness() == 0);
+
         edition.airdrop(to, 1);
-        bytes9 mintRandomnessAfter = edition.mintRandomness();
-        // Super unlikely to be the same.
-        assertTrue(mintRandomnessBefore != mintRandomnessAfter);
+
+        assertTrue(edition.mintRandomness() != 0);
     }
 
     function test_airdropRevertsIfNotAuthorized(address nonAdminOrOwner) public {

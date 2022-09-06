@@ -115,7 +115,7 @@ contract GoldenEggMetadataTests is TestConfig {
             block.timestamp >= mintRandomnessTimeThreshold;
 
         uint256 expectedGoldenEggId = mintRandomnessTokenThreshold == 0 ? 0 : isRandomnessLocked
-            ? (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1
+            ? (edition.mintRandomness() % mintRandomnessTokenThreshold) + 1
             : 0;
 
         assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);

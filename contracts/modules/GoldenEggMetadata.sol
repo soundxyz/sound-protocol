@@ -31,14 +31,12 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
             return 0;
         }
 
-        if (
-            edition.totalMinted() == edition.editionMaxMintable() ||
-            (edition.totalMinted() >= mintRandomnessTokenThreshold &&
-                block.timestamp >= edition.mintRandomnessTimeThreshold())
-        ) {
+        uint256 mintRandomness = edition.mintRandomness();
+
+        if (mintRandomness != 0) {
             // Calculate number between 1 and mintRandomnessTokenThreshold.
             // mintRandomness is set during edition.mint() & corresponds to the blockhash.
-            tokenId = (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1;
+            tokenId = (mintRandomness % mintRandomnessTokenThreshold) + 1;
         }
     }
 }

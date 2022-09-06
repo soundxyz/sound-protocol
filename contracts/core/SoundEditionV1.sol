@@ -127,7 +127,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp` have been surpassed.
      *      Used for game mechanics like the Sound Golden Egg.
      */
-    bytes9 public mintRandomness;
+    bytes9 private _mintRandomness;
 
     /**
      * @dev The royalty fee in basis points.
@@ -348,6 +348,23 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
+    function mintRandomness() public view returns (uint256) {
+        return mintRandomnessRevealed() ? uint256(keccak256(abi.encode(_mintRandomness, address(this)))) : 0;
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function mintRandomnessRevealed() public view returns (bool) {
+        uint256 currentTotalMinted = _totalMinted();
+        return
+            currentTotalMinted == editionMaxMintable ||
+            (currentTotalMinted >= mintRandomnessTokenThreshold && block.timestamp >= mintRandomnessTimeThreshold);
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function nextTokenId() external view returns (uint256) {
         return _nextTokenId();
     }
@@ -475,11 +492,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     modifier updatesMintRandomness() {
         unchecked {
-            if (_totalMinted() <= mintRandomnessTokenThreshold) {
-                if (block.timestamp <= mintRandomnessTimeThreshold) {
-                    // Won't underflow, as block number is non-zero.
-                    mintRandomness = bytes9(blockhash(block.number - 1));
-                }
+            if (!mintRandomnessRevealed()) {
+                // Won't underflow, as block number is non-zero.
+                _mintRandomness = bytes9(
+                    keccak256(abi.encode(blockhash(block.number - 1), _mintRandomness, _nextTokenId()))
+                );
             }
         }
         _;
