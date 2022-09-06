@@ -86,8 +86,11 @@ abstract contract BaseMinter is IMinterModule {
         uint128 mintId,
         uint32 startTime,
         uint32 endTime
-    ) public virtual onlyEditionOwnerOrAdmin(edition) {
-        _setTimeRange(edition, mintId, startTime, endTime);
+    ) public virtual onlyEditionOwnerOrAdmin(edition) onlyValidTimeRange(startTime, endTime) {
+        _baseData[edition][mintId].startTime = startTime;
+        _baseData[edition][mintId].endTime = endTime;
+
+        emit TimeRangeSet(edition, mintId, startTime, endTime);
     }
 
     /**
@@ -251,26 +254,6 @@ abstract contract BaseMinter is IMinterModule {
         _nextMintId = mintId + 1;
 
         emit MintConfigCreated(edition, msg.sender, mintId, startTime, endTime, affiliateFeeBPS);
-    }
-
-    /**
-     * @dev Sets the time range for an edition mint.
-     * Note: If calling from a child contract, the child is responsible for access control.
-     * @param edition The edition address.
-     * @param mintId The ID for the mint instance.
-     * @param startTime The start time of the mint.
-     * @param endTime The end time of the mint.
-     */
-    function _setTimeRange(
-        address edition,
-        uint128 mintId,
-        uint32 startTime,
-        uint32 endTime
-    ) internal onlyValidTimeRange(startTime, endTime) {
-        _baseData[edition][mintId].startTime = startTime;
-        _baseData[edition][mintId].endTime = endTime;
-
-        emit TimeRangeSet(edition, mintId, startTime, endTime);
     }
 
     /**

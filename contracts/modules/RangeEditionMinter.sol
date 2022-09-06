@@ -125,8 +125,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.closingTime = closingTime;
 
-        // This calls _beforeSetTimeRange, which does the closingTime validation.
-        _setTimeRange(edition, mintId, startTime, endTime);
+        // This calls the overriden `setTimeRange`, which will check that
+        // `startTime < closingTime < endTime`.
+        RangeEditionMinter.setTimeRange(edition, mintId, startTime, endTime);
 
         emit ClosingTimeSet(edition, mintId, closingTime);
     }
@@ -141,9 +142,10 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 endTime
     ) public override(BaseMinter, IMinterModule) onlyEditionOwnerOrAdmin(edition) {
         EditionMintData storage data = _editionMintData[edition][mintId];
+
         if (!(startTime < data.closingTime && data.closingTime < endTime)) revert InvalidTimeRange();
 
-        _setTimeRange(edition, mintId, startTime, endTime);
+        BaseMinter.setTimeRange(edition, mintId, startTime, endTime);
     }
 
     /**
