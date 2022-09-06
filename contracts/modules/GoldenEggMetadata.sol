@@ -32,8 +32,9 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
         }
 
         if (
-            edition.totalMinted() >= mintRandomnessTokenThreshold ||
-            block.timestamp >= edition.mintRandomnessTimeThreshold()
+            edition.totalMinted() == edition.editionMaxMintable() ||
+            (edition.totalMinted() >= mintRandomnessTokenThreshold &&
+                block.timestamp >= edition.mintRandomnessTimeThreshold())
         ) {
             // Calculate number between 1 and mintRandomnessTokenThreshold.
             // mintRandomness is set during edition.mint() & corresponds to the blockhash.
