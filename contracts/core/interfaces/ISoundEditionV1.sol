@@ -105,6 +105,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     error ExceedsAddressBatchMintLimit();
 
+    /**
+     * @dev The mint randomness has already been revealed.
+     */
+    error MintRandomnessAlreadyRevealed();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================

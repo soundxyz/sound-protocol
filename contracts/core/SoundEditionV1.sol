@@ -331,6 +331,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         external
         onlyRolesOrOwner(ADMIN_ROLE)
     {
+        if (mintRandomnessRevealed()) revert MintRandomnessAlreadyRevealed();
+
         if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
 
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
@@ -338,6 +340,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
     /// @inheritdoc ISoundEditionV1
     function setRandomnessTimeThreshold(uint32 mintRandomnessTimeThreshold_) external onlyRolesOrOwner(ADMIN_ROLE) {
+        if (mintRandomnessRevealed()) revert MintRandomnessAlreadyRevealed();
+
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
     }
 
