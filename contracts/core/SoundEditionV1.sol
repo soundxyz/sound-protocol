@@ -495,14 +495,18 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev Updates the mint randomness.
      */
     modifier updatesMintRandomness() {
-        unchecked {
-            if (!mintRandomnessRevealed()) {
-                // Won't underflow, as block number is non-zero.
-                _mintRandomness = bytes9(
-                    keccak256(abi.encode(blockhash(block.number - 1), _mintRandomness, _nextTokenId()))
-                );
+        if (!mintRandomnessRevealed()) {
+            bytes32 randomness = _mintRandomness;
+            uint256 currentNextTokenId = _nextTokenId();
+            assembly {
+                let o := add(1, and(mulmod(currentNextTokenId, 16807, 0x7fffffff), 255))
+                mstore(0x00, blockhash(sub(number(), o)))
+                mstore(0x20, or(randomness, currentNextTokenId))
+                randomness := keccak256(0x00, 0x40)
             }
+            _mintRandomness = bytes9(randomness);
         }
+
         _;
     }
 
