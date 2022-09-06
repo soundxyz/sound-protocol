@@ -327,6 +327,36 @@ contract SoundEdition_mint is TestConfig {
         edition.airdrop(to, 1);
     }
 
+    function test_setMintRandomnessTokenThresholdRevertsIfRevealed() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        uint256 timeThreshold = block.timestamp + 10;
+        edition.setMintRandomnessTokenThreshold(1);
+        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
+
+        vm.warp(timeThreshold);
+
+        edition.mint(address(this), 1);
+
+        vm.expectRevert(ISoundEditionV1.MintRandomnessAlreadyRevealed.selector);
+        edition.setMintRandomnessTokenThreshold(1);
+    }
+
+    function test_setMintRandomnessTimeThresholdRevertsIfRevealed() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        uint256 timeThreshold = block.timestamp + 10;
+        edition.setMintRandomnessTokenThreshold(1);
+        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
+
+        vm.warp(timeThreshold);
+
+        edition.mint(address(this), 1);
+
+        vm.expectRevert(ISoundEditionV1.MintRandomnessAlreadyRevealed.selector);
+        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
+    }
+
     function test_mintWithQuantityOverLimitReverts() public {
         SoundEditionV1 edition = createGenericEdition();
         uint256 limit = edition.ADDRESS_BATCH_MINT_LIMIT();
