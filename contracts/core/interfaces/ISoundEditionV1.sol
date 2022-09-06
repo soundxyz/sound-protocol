@@ -251,7 +251,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *
      * @param mintRandomnessTokenThreshold The token quantity to be set.
      */
-    function setMintRandomnessLock(uint32 mintRandomnessTokenThreshold) external;
+    function setMintRandomnessTokenThreshold(uint32 mintRandomnessTokenThreshold) external;
 
     /**
      * @dev Sets the timestamp, after which `mintRandomness` gets locked.
@@ -261,7 +261,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *
      * @param mintRandomnessTimeThreshold_ The randomness timestamp to be set.
      */
-    function setRandomnessLockedTimestamp(uint32 mintRandomnessTimeThreshold_) external;
+    function setRandomnessTimeThreshold(uint32 mintRandomnessTimeThreshold_) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
