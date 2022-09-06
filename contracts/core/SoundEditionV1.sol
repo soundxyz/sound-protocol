@@ -500,7 +500,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             uint256 currentNextTokenId = _nextTokenId();
             assembly {
                 // Pick a psuedorandom block from the previous 256 blocks for the blockhash.
-                let o := add(1, and(mulmod(currentNextTokenId, 16807, 0x7fffffff), 255))
+                // See: https://en.wikipedia.org/wiki/Lehmer_random_number_generator
+                let o := add(1, and(mulmod(currentNextTokenId, 48271, 0x7fffffff), 255))
                 // Store the blockhash, the current `randomness` and the `currentNextTokenId`
                 // into the scratch space.
                 mstore(0x00, blockhash(sub(number(), o)))
