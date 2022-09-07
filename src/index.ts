@@ -1,6 +1,6 @@
-import interfaceIds from "./interfaceIds.json";
-import stagingDeployment from "./staging.json";
-import previewDeployment from "./preview.json";
+import interfaceIds from "./json/interfaceIds.json";
+import stagingDeployment from "./json/staging.json";
+import previewDeployment from "./json/preview.json";
 
 const contractAddresses = {
     staging: {

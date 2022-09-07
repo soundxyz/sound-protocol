@@ -21,7 +21,7 @@ await ensureDir("dist");
 
 await Promise.all([
     copy("LICENSE", "dist/LICENSE"),
-    copy("src", "dist/src"),
+    copy("src", "dist"),
     writeFile(
         "dist/package.json",
         JSON.stringify(
@@ -30,16 +30,21 @@ await Promise.all([
                 version: pkg.version,
                 author: pkg.author,
                 homepage: pkg.homepage,
-                main: "src/index.js",
-                types: "src/index.d.ts",
+                main: "index.js",
+                types: "index.d.ts",
                 dependencies: pkg.dependencies,
                 license: pkg.license,
                 repository: pkg.repository,
                 exports: {
                     ".": {
-                        types: "./src/index.d.ts",
-                        require: "./src/index.js",
-                        import: "./src/index.mjs",
+                        types: "./index.d.ts",
+                        require: "./index.js",
+                        import: "./index.mjs",
+                    },
+                    "./typechain": {
+                        types: "./typechain/index.d.ts",
+                        require: "./typechain/index.js",
+                        import: "./typechain/index.mjs",
                     },
                     "./*": {
                         types: "./*.d.ts",
@@ -56,9 +61,9 @@ await Promise.all([
 
 await buildCode({
     clean: false,
-    entryPoints: ["src/**/*.ts"],
+    entryPoints: ["src/**/*.ts", "typechain/**/*.ts"],
     format: "interop",
-    outDir: "dist/src",
+    outDir: "dist",
     target: "node14",
     sourcemap: false,
     rollup: {
