@@ -501,12 +501,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             bytes32 randomness = _mintRandomness;
             assembly {
                 // Pick a psuedorandom block from the previous 256 blocks for the blockhash.
-                let o := add(1, byte(0, randomness))
                 // Store the blockhash, the current `randomness` and the `currentNextTokenId`
                 // into the scratch space.
-                mstore(0x00, blockhash(sub(number(), o)))
+                mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
                 mstore(0x20, xor(randomness, coinbase()))
-                // Compute the randomness by hashing the scratch space.
+                // Compute the new randomness by hashing the scratch space.
                 randomness := keccak256(0x00, 0x40)
             }
             _mintRandomness = bytes9(randomness);
