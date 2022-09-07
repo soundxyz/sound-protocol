@@ -11,8 +11,7 @@ if (!SOUND_ENV) {
 
 const chainId = SOUND_ENV == "staging" || SOUND_ENV == "preview" ? 5 : 1;
 
-const buffer = await readFile(`broadcast/Deploy.s.sol/${chainId}/run-latest.json`);
-const parsedData = JSON.parse(buffer.toString());
+const parsedData = await readFile(`broadcast/Deploy.s.sol/${chainId}/run-latest.json`, "utf8").then(value => JSON.parse(value));
 
 const addresses = {};
 
