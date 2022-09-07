@@ -13,6 +13,8 @@ await rm("dist", {
     recursive: true,
 });
 
+await copy("typechain", "src/typechain");
+
 const tsc = execaCommand("tsc -p tsconfig.build.json", {
     stdio: "inherit",
 });
@@ -21,7 +23,6 @@ await ensureDir("dist");
 
 await Promise.all([
     copy("LICENSE", "dist/LICENSE"),
-    copy("src", "dist"),
     writeFile(
         "dist/package.json",
         JSON.stringify(
@@ -31,10 +32,12 @@ await Promise.all([
                 author: pkg.author,
                 homepage: pkg.homepage,
                 main: "index.js",
+                module: "index.mjs",
                 types: "index.d.ts",
                 dependencies: pkg.dependencies,
                 license: pkg.license,
                 repository: pkg.repository,
+                sideEffects: false,
                 exports: {
                     ".": {
                         types: "./index.d.ts",
@@ -61,7 +64,7 @@ await Promise.all([
 
 await buildCode({
     clean: false,
-    entryPoints: ["src/**/*.ts", "typechain/**/*.ts"],
+    entryPoints: ["src"],
     format: "interop",
     outDir: "dist",
     target: "node14",
@@ -69,11 +72,14 @@ await buildCode({
     rollup: {
         exports: "auto",
     },
-    external(source) {
-        return source.endsWith(".json");
-    },
-}),
-    await tsc;
+});
+
+await tsc;
+
+await rm("src/typechain", {
+    recursive: true,
+    force: true,
+});
 
 function getDefault<T>(v: T | { default?: T }) {
     return (("default" in v ? v.default : v) || v) as T;
