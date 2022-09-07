@@ -24,19 +24,16 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
      * @inheritdoc IGoldenEggMetadata
      */
     function getGoldenEggTokenId(ISoundEditionV1 edition) public view returns (uint256 tokenId) {
-        uint32 mintRandomnessTokenThreshold = edition.mintRandomnessTokenThreshold();
-
-        // If mintRandomnessTokenThreshold is zero, mintRandomness will always be zero.
-        if (mintRandomnessTokenThreshold == 0) {
-            return 0;
-        }
-
+        uint256 totalMinted = edition.totalMinted();
         uint256 mintRandomness = edition.mintRandomness();
 
+        // If the `mintRandomness` is zero, it means that it has not been revealed,
+        // and the `tokenId` should be zero, which is non-existent for our editions,
+        // which start from 1.
         if (mintRandomness != 0) {
             // Calculate number between 1 and mintRandomnessTokenThreshold.
             // mintRandomness is set during edition.mint() & corresponds to the blockhash.
-            tokenId = (mintRandomness % mintRandomnessTokenThreshold) + 1;
+            tokenId = (mintRandomness % totalMinted) + 1;
         }
     }
 }

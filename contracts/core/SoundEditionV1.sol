@@ -364,7 +364,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function mintRandomnessRevealed() public view returns (bool) {
         uint256 currentTotalMinted = _totalMinted();
         return
+            // No more can be minted. The `editionMaxMintable` cannot be increased.
             currentTotalMinted == editionMaxMintable ||
+            // The number of tokens minted has exceeded a minimum threshold AND
+            // the current time has exceeded a minimum threshold.
+            // This logic is used for range editions, where the golden egg is to be only revealed
+            // when the sale closes after it has exceeded a minimum limit after a certain time.
             (currentTotalMinted >= mintRandomnessTokenThreshold && block.timestamp >= mintRandomnessTimeThreshold);
     }
 
