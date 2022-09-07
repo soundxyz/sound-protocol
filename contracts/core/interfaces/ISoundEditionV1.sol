@@ -110,6 +110,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     error MintRandomnessAlreadyRevealed();
 
+    /**
+     * @dev No addresses to airdrop.
+     */
+    error NoAddressesToAirdrop();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================

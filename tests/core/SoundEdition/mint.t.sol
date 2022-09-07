@@ -293,6 +293,15 @@ contract SoundEdition_mint is TestConfig {
         edition.airdrop(to, quantity);
     }
 
+    function test_airdropRevertsForNoAddresses() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        address[] memory to;
+
+        vm.expectRevert(ISoundEditionV1.NoAddressesToAirdrop.selector);
+        edition.airdrop(to, 1);
+    }
+
     function test_airdropSetsMintRandomness() external {
         SoundEditionV1 edition = createGenericEdition();
 

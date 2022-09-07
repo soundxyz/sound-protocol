@@ -212,6 +212,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         updatesMintRandomness
         returns (uint256 fromTokenId)
     {
+        if (to.length == 0) revert NoAddressesToAirdrop();
+
         fromTokenId = _nextTokenId();
 
         // Won't overflow, as `to.length` is bounded by the block max gas limit.
