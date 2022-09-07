@@ -36,7 +36,7 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
         if (mintRandomness != 0) {
             // Calculate number between 1 and mintRandomnessTokenThreshold.
             // mintRandomness is set during edition.mint() & corresponds to the blockhash.
-            tokenId = (mintRandomness % mintRandomnessTokenThreshold) + 1;
+            tokenId = (mintRandomness % edition.totalMinted()) + 1;
         }
     }
 }
