@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.16;
 
-import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
+import { MerkleProofLib } from "solady/utils/MerkleProofLib.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
@@ -92,7 +92,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         data.totalMinted = _incrementTotalMinted(data.totalMinted, requestedQuantity, data.maxMintable);
 
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        bool valid = MerkleProof.verify(merkleProof, data.merkleRootHash, leaf);
+        bool valid = MerkleProofLib.verify(merkleProof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
         unchecked {
