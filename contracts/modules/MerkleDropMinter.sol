@@ -125,8 +125,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         unchecked {
-            // Won't overflow, as `price` is 96 bits, and `quantity` is 32 bits.
-            return _editionMintData[edition][mintId].price * quantity;
+            // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.
+            return uint128(uint256(_editionMintData[edition][mintId].price) * uint256(quantity));
         }
     }
 
