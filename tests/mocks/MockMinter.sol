@@ -12,7 +12,7 @@ struct MintInfo {
 }
 
 contract MockMinter is BaseMinter {
-    uint128 private _currentPrice;
+    uint96 private _currentPrice;
 
     constructor(ISoundFeeRegistry feeRegistry_) BaseMinter(feeRegistry_) {}
 
@@ -44,7 +44,9 @@ contract MockMinter is BaseMinter {
         address, /* minter */
         uint32 quantity
     ) public view virtual override(BaseMinter) returns (uint128) {
-        return _currentPrice * quantity;
+        unchecked {
+            return uint128(_currentPrice) * uint128(quantity);
+        }
     }
 
     function mintInfo(address edition, uint128 mintId) public view returns (MintInfo memory) {
