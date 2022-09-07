@@ -504,7 +504,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 // Store the blockhash, the current `randomness` and the `currentNextTokenId`
                 // into the scratch space.
                 mstore(0x00, blockhash(sub(number(), o)))
-                mstore(0x20, or(randomness, coinbase()))
+                mstore(0x20, xor(randomness, coinbase()))
                 // Compute the randomness by hashing the scratch space.
                 randomness := keccak256(0x00, 0x40)
             }
