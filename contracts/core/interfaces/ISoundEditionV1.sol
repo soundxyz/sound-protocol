@@ -352,7 +352,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mintRandomness() external view returns (uint256);
 
     /**
-     * @dev Returns whether the `mintRandomness` has been revealed (i.e. finalized).
+     * @dev Returns whether the `mintRandomness` has been locked and revealed.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      * @return The latest value.
      */
     function mintRandomnessRevealed() external view returns (bool);

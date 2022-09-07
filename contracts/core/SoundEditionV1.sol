@@ -108,12 +108,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint32 public editionMaxMintable;
 
     /**
-     * @dev The token count after which `mintRandomness` gets locked.
+     * @dev The token count after which `mintRandomness` gets locked and revealed.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      */
     uint32 public mintRandomnessTokenThreshold;
 
     /**
-     * @dev The timestamp after which `mintRandomness` gets locked.
+     * @dev The timestamp after which `mintRandomness` gets locked and revealed.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      */
     uint32 public mintRandomnessTimeThreshold;
 
