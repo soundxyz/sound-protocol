@@ -3,7 +3,6 @@ cache
 out*
 typechain
 dist
-interfaceIds.json
 
 # Ignores development broadcast logs
 /broadcast/*

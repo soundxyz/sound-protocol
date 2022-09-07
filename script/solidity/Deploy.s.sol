@@ -35,7 +35,6 @@ contract Deploy is Script {
         // Deploy edition implementation (& initialize it for security)
         SoundEditionV1 editionImplementation = new SoundEditionV1();
         editionImplementation.initialize(
-            address(0), // owner
             "SoundEditionV1", // name
             "SOUND", // symbol
             IMetadataModule(address(0)),
