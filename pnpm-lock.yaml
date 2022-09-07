@@ -19,6 +19,7 @@ specifiers:
   changesets-github-release: ^0.1.0
   concurrently: ^7.3.0
   danger: ^11.1.1
+  dotenv: ^16.0.2
   esbuild: ^0.15.5
   eslint: ^5.16.0
   eslint-scope: ^4.0.3
@@ -60,6 +61,7 @@ devDependencies:
   changesets-github-release: 0.1.0
   concurrently: 7.3.0
   danger: 11.1.1
+  dotenv: 16.0.2
   esbuild: 0.15.5
   eslint: 5.16.0
   eslint-scope: 4.0.3
@@ -1613,6 +1615,11 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       esutils: 2.0.3
+    dev: true
+
+  /dotenv/16.0.2:
+    resolution: {integrity: sha512-JvpYKUmzQhYoIFgK2MOnF3bciIZoItIIoryihy0rIA+H4Jy0FmgyKYAHCTN98P5ybGSJcIFbh6QKeJdtZd1qhA==}
+    engines: {node: '>=12'}
     dev: true
 
   /eastasianwidth/0.2.0:
