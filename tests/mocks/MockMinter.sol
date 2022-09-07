@@ -45,7 +45,8 @@ contract MockMinter is BaseMinter {
         uint32 quantity
     ) public view virtual override(BaseMinter) returns (uint128) {
         unchecked {
-            return uint128(_currentPrice) * uint128(quantity);
+            // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.
+            return uint128(uint256(_currentPrice) * uint256(quantity));
         }
     }
 
