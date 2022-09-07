@@ -511,8 +511,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 // Store the blockhash, the current `randomness` and the `coinbase()`
                 // into the scratch space.
                 mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
-                // `randomness` is left-aligned, and `coinbase()` is right-aligned.
-                mstore(0x20, xor(randomness, coinbase()))
+                // `randomness` is left-aligned.
+                // `coinbase()` is right-aligned.
+                // `difficulty()` is right-aligned.
+                // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
+                // is implemented, the randomness will be determined by the beacon chain.
+                mstore(0x20, xor(randomness, xor(coinbase(), difficulty())))
                 // Compute the new `randomness` by hashing the scratch space.
                 randomness := keccak256(0x00, 0x40)
             }
