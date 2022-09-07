@@ -7,7 +7,7 @@ const allowedEnv = ["preview", "staging", "mainnet"] as const;
 const SOUND_ENV = process.env.SOUND_ENV as typeof allowedEnv[number] | undefined;
 
 if (!SOUND_ENV || !allowedEnv.includes(SOUND_ENV)) {
-    console.log("Must specify SOUND_ENV: preview | staging | mainnet");
+    console.log("Must specify SOUND_ENV: " + allowedEnv.join(" | "));
     process.exit(1);
 }
 
