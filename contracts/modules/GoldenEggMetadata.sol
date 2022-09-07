@@ -29,7 +29,7 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
 
         // If the `mintRandomness` is zero, it means that it has not been revealed,
         // and the `tokenId` should be zero, which is non-existent for our editions,
-        // which start from 1.
+        // which token IDs start from 1.
         if (mintRandomness != 0) {
             // Calculate number between 1 and mintRandomnessTokenThreshold.
             // mintRandomness is set during edition.mint() & corresponds to the blockhash.
