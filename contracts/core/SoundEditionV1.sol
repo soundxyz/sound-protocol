@@ -500,7 +500,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (!mintRandomnessRevealed()) {
             bytes32 randomness = _mintRandomness;
             assembly {
-                // Pick a psuedorandom block from the previous 256 blocks for the blockhash.
+                // Pick any of the last 256 blocks psuedorandomly for the blockhash.
                 // Store the blockhash, the current `randomness` and the `currentNextTokenId`
                 // into the scratch space.
                 mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
