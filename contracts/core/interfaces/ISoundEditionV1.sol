@@ -344,11 +344,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function metadataModule() external view returns (IMetadataModule);
 
     /**
-     * @dev Returns the randomness based on latest block hash, which is stored upon each mint
-     *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp`
-     *      have been surpassed.
+     * @dev Returns the randomness based on latest block hash, which is stored upon each mint.
+     *      unless {mintRandomnessRevealed} is true.
      *      Used for game mechanics like the Sound Golden Egg.
      *      Returns 0 before revealed.
+     *      WARNING: The mint randomness should NOT be used for any reward of significant monetary
+     *      value, due to it being computed via a purely on-chain psuedorandom mechanism.
      * @return The latest value.
      */
     function mintRandomness() external view returns (uint256);
