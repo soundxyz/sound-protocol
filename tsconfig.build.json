@@ -6,10 +6,10 @@
         "declaration": true,
         "emitDeclarationOnly": true,
         "outDir": "dist",
-        "rootDir": ".",
+        "rootDir": "src",
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
         "skipLibCheck": true
     },
-    "include": ["typechain"]
+    "include": ["src"]
 }
