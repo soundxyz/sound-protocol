@@ -348,7 +348,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *      unless {mintRandomnessRevealed} is true.
      *      Used for game mechanics like the Sound Golden Egg.
      *      Returns 0 before revealed.
-     *      WARNING: The mint randomness should NOT be used for any reward of significant monetary
+     *      WARNING: This value should NOT be used for any reward of significant monetary
      *      value, due to it being computed via a purely on-chain psuedorandom mechanism.
      * @return The latest value.
      */
