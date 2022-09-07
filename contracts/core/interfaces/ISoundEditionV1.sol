@@ -324,13 +324,15 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function editionMaxMintable() external view returns (uint32);
 
     /**
-     * @dev Returns the token count after which randomness gets locked.
+     * @dev Returns the token count after which `mintRandomness` gets locked.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      * @return The configured value.
      */
     function mintRandomnessTokenThreshold() external view returns (uint32);
 
     /**
-     * @dev Returns the timestamp after which randomness gets locked.
+     * @dev Returns the timestamp after which `mintRandomness` gets locked.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      * @return The configured value.
      */
     function mintRandomnessTimeThreshold() external view returns (uint32);
