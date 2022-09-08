@@ -9,12 +9,14 @@ status: Draft
 
 Sound Protocol 2.0 enables creators to permissionlessly deploy gas-efficient minimal, non-upgradeable [721a](https://www.azuki.com/erc721a) proxies from a factory contract. The protocol enables support for customizing auction formats, payments, & metadata.
 
-## CORE CONTRACTS
+## Core Contracts & Interfaces
 
 ### `SoundCreatorV1.sol`
 
--   Upgradeable via [UUPSUpgradeable](https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable)
 -   Deploys [minimal proxies (clones)](https://eips.ethereum.org/EIPS/eip-1167) of `SoundEditionV1.sol` & initializes them with customizable configurations.
+
+### `SoundEditionV1.sol`
+
 -   Logic contract for the minimal proxies deployed from SoundCreatorV1.
 -   Extended version of the [721a implementation](https://www.azuki.com/erc721a) with:
     -   `ERC721AQueryableUpgradeable` - adds convenient query functions
@@ -49,6 +51,14 @@ Features:
         -   Owner-defined admins must have `ADMIN_ROLE`.
 -   Golden egg - see `GoldenEggMetadataModule.sol` section.
 
+### `IMinterModule.sol`
+
+-   Interface that all minter modules must implement.
+
+### `IMetadataModule.sol`
+
+-   Interface that all metadata modules must implement.
+
 ### `SoundFeeRegistry.sol`
 
 -   A contract that exposes a Sound recipient address & protocol fee used by minter modules to pay a portion of primary sales to Sound.xyz for its services.
@@ -66,6 +76,7 @@ Features:
 
 ### Minter modules
 
+-   Minter modules must implement `IMinterModule.sol`
 -   Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
 -   Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.editionMaxMintable`. It is up to the artist to initialize the `editionMaxMintable` with a value high enough to accomodate all current & future mints.
 -   Affiliate fee: Third parties can collect an affiliate fee by setting an address when minting. The fee is set by the artist when initializing the mint instance. Example use-case: a music blog that exposes a UI to mint songs it is promoting.
