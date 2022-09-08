@@ -9,7 +9,8 @@
         "rootDir": "src",
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "incremental": false
     },
     "include": ["src"]
 }
