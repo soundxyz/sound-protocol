@@ -104,6 +104,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         EditionMintData storage data = _editionMintData[edition][mintId];
 
+        // Just in case someone tries to use a signature on a `mintId` that has not been created.
+        if (data.signer == address(0)) revert SignerIsZeroAddress();
+
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
         _validateSignatureAndClaim(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
@@ -216,9 +219,6 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 signedQuantity,
         address affiliate
     ) private {
-        // Just in case.
-        if (expectedSigner == address(0)) revert SignerIsZeroAddress();
-
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
