@@ -49,7 +49,11 @@ nexus.ts
 pgdata
 generated
 typechain
+out*
 
 # misc
 yarn.lock
 pnpm-lock.yaml
+lib
+dist
+broadcast
