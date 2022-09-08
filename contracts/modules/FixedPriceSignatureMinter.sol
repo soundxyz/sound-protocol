@@ -216,6 +216,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 signedQuantity,
         address affiliate
     ) private {
+        // Just in case.
+        if (expectedSigner == address(0)) revert SignerIsZeroAddress();
+
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
