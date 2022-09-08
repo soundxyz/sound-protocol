@@ -111,12 +111,15 @@ contract GoldenEggMetadataTests is TestConfig {
         vm.warp(mintTime);
         minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, mintQuantity, address(0));
 
-        bool isRandomnessLocked = mintQuantity >= mintRandomnessTokenThreshold &&
-            block.timestamp >= mintRandomnessTimeThreshold;
-
-        uint256 expectedGoldenEggId = mintRandomnessTokenThreshold == 0 ? 0 : isRandomnessLocked
-            ? (uint256(uint72(edition.mintRandomness())) % mintRandomnessTokenThreshold) + 1
-            : 0;
+        uint256 expectedGoldenEggId;
+        uint256 mintRandomness = edition.mintRandomness();
+        uint256 totalMinted = edition.totalMinted();
+        if (mintRandomness != 0) {
+            expectedGoldenEggId = (mintRandomness % totalMinted) + 1;
+            assertTrue(edition.mintRandomnessRevealed());
+        } else {
+            assertFalse(edition.mintRandomnessRevealed());
+        }
 
         assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
     }

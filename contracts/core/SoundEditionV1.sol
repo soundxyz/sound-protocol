@@ -108,12 +108,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint32 public editionMaxMintable;
 
     /**
-     * @dev The token count after which `mintRandomness` gets locked.
+     * @dev The token count after which `mintRandomness` gets locked and revealed.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      */
     uint32 public mintRandomnessTokenThreshold;
 
     /**
-     * @dev The timestamp after which `mintRandomness` gets locked.
+     * @dev The timestamp after which `mintRandomness` gets locked and revealed.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      */
     uint32 public mintRandomnessTimeThreshold;
 
@@ -127,7 +129,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp` have been surpassed.
      *      Used for game mechanics like the Sound Golden Egg.
      */
-    bytes9 public mintRandomness;
+    bytes9 private _mintRandomness;
 
     /**
      * @dev The royalty fee in basis points.
@@ -212,6 +214,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         updatesMintRandomness
         returns (uint256 fromTokenId)
     {
+        if (to.length == 0) revert NoAddressesToAirdrop();
+
         fromTokenId = _nextTokenId();
 
         // Won't overflow, as `to.length` is bounded by the block max gas limit.
@@ -331,6 +335,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         external
         onlyRolesOrOwner(ADMIN_ROLE)
     {
+        if (mintRandomnessRevealed()) revert MintRandomnessAlreadyRevealed();
+
         if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
 
         mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
@@ -338,12 +344,36 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
     /// @inheritdoc ISoundEditionV1
     function setRandomnessTimeThreshold(uint32 mintRandomnessTimeThreshold_) external onlyRolesOrOwner(ADMIN_ROLE) {
+        if (mintRandomnessRevealed()) revert MintRandomnessAlreadyRevealed();
+
         mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
     }
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function mintRandomness() public view returns (uint256) {
+        return mintRandomnessRevealed() ? uint256(keccak256(abi.encode(_mintRandomness, address(this)))) : 0;
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function mintRandomnessRevealed() public view returns (bool) {
+        uint256 currentTotalMinted = _totalMinted();
+        return
+            // No more can be minted. The `editionMaxMintable` cannot be increased.
+            currentTotalMinted == editionMaxMintable ||
+            // The number of tokens minted has exceeded a minimum threshold AND
+            // the current time has exceeded a minimum threshold.
+            // This logic is used for range editions, where the golden egg is to be only revealed
+            // when the sale closes after it has exceeded a minimum limit after a certain time.
+            (currentTotalMinted >= mintRandomnessTokenThreshold && block.timestamp >= mintRandomnessTimeThreshold);
+    }
 
     /**
      * @inheritdoc ISoundEditionV1
@@ -474,13 +504,23 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev Updates the mint randomness.
      */
     modifier updatesMintRandomness() {
-        unchecked {
-            if (_totalMinted() <= mintRandomnessTokenThreshold) {
-                if (block.timestamp <= mintRandomnessTimeThreshold) {
-                    // Won't underflow, as block number is non-zero.
-                    mintRandomness = bytes9(blockhash(block.number - 1));
-                }
+        if (!mintRandomnessRevealed()) {
+            bytes32 randomness = _mintRandomness;
+            assembly {
+                // Pick any of the last 256 blocks psuedorandomly for the blockhash.
+                // Store the blockhash, the current `randomness` and the `coinbase()`
+                // into the scratch space.
+                mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
+                // `randomness` is left-aligned.
+                // `coinbase()` is right-aligned.
+                // `difficulty()` is right-aligned.
+                // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
+                // is implemented, the randomness will be determined by the beacon chain.
+                mstore(0x20, xor(randomness, xor(coinbase(), difficulty())))
+                // Compute the new `randomness` by hashing the scratch space.
+                randomness := keccak256(0x00, 0x40)
             }
+            _mintRandomness = bytes9(randomness);
         }
         _;
     }
