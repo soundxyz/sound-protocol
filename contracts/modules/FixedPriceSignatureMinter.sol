@@ -105,6 +105,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
         // Just in case.
+        // For an uninitialized mint, `data.maxMintable` will be zero, which will not allow any mints.
+        // But we include this check, just in case the condition is removed in the future.
         if (data.signer == address(0)) revert SignerIsZeroAddress();
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
