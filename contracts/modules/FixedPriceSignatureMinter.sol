@@ -104,7 +104,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        // Just in case someone tries to use a signature on a `mintId` that has not been created.
+        // Just in case.
         if (data.signer == address(0)) revert SignerIsZeroAddress();
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
