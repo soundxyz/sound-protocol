@@ -315,6 +315,41 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         );
     }
 
+    function test_mintForNonExistentMintIdReverts() public {
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        uint32 quantity = 2;
+        uint32 signedQuantity = quantity;
+        address buyer = getFundedAccount(1);
+
+        bytes memory sig = _getSignature(
+            buyer,
+            address(minter),
+            MINT_ID,
+            CLAIM_TICKET_0,
+            signedQuantity,
+            NULL_AFFILIATE
+        );
+
+        MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
+
+        assertEq(data.totalMinted, 0);
+
+        uint128 nonExistentMintId = MINT_ID + 1;
+
+        vm.prank(buyer);
+        vm.expectRevert(IFixedPriceSignatureMinter.SignerIsZeroAddress.selector);
+        minter.mint{ value: PRICE * quantity }(
+            address(edition),
+            nonExistentMintId,
+            quantity,
+            signedQuantity,
+            NULL_AFFILIATE,
+            sig,
+            CLAIM_TICKET_0
+        );
+    }
+
     function test_mintUpdatesValuesAndMintsCorrectly() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
