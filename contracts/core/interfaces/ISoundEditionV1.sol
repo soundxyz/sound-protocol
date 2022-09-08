@@ -105,6 +105,16 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     error ExceedsAddressBatchMintLimit();
 
+    /**
+     * @dev The mint randomness has already been revealed.
+     */
+    error MintRandomnessAlreadyRevealed();
+
+    /**
+     * @dev No addresses to airdrop.
+     */
+    error NoAddressesToAirdrop();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
@@ -314,13 +324,15 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function editionMaxMintable() external view returns (uint32);
 
     /**
-     * @dev Returns the token count after which randomness gets locked.
+     * @dev Returns the token count after which `mintRandomness` gets locked.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      * @return The configured value.
      */
     function mintRandomnessTokenThreshold() external view returns (uint32);
 
     /**
-     * @dev Returns the timestamp after which randomness gets locked.
+     * @dev Returns the timestamp after which `mintRandomness` gets locked.
+     *      See {mintRandomnessRevealed} for the reveal condition.
      * @return The configured value.
      */
     function mintRandomnessTimeThreshold() external view returns (uint32);
@@ -332,13 +344,21 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function metadataModule() external view returns (IMetadataModule);
 
     /**
-     * @dev Returns the randomness based on latest block hash, which is stored upon each mint
-     *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp`
-     *      have been surpassed.
+     * @dev Returns the randomness based on latest block hash, which is stored upon each mint.
+     *      unless {mintRandomnessRevealed} is true.
      *      Used for game mechanics like the Sound Golden Egg.
+     *      Returns 0 before revealed.
+     *      WARNING: This value should NOT be used for any reward of significant monetary
+     *      value, due to it being computed via a purely on-chain psuedorandom mechanism.
      * @return The latest value.
      */
-    function mintRandomness() external view returns (bytes9);
+    function mintRandomness() external view returns (uint256);
+
+    /**
+     * @dev Returns whether the `mintRandomness` has been locked and revealed.
+     * @return The latest value.
+     */
+    function mintRandomnessRevealed() external view returns (bool);
 
     /**
      * @dev Returns the royalty basis points.
