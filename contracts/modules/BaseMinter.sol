@@ -299,7 +299,9 @@ abstract contract BaseMinter is IMinterModule {
             if (affiliated) {
                 // Compute the affiliate fee.
                 // Won't overflow, as `remainingPayment` is 128 bits, and `affiliateFeeBPS` is 16 bits.
-                affiliateFee = (remainingPayment * baseData.affiliateFeeBPS) / _MAX_BPS;
+                affiliateFee = uint128(
+                    (uint256(remainingPayment) * uint256(baseData.affiliateFeeBPS)) / uint256(_MAX_BPS)
+                );
                 // Deduct the affiliate fee from the remaining payment.
                 // Won't underflow as `affiliateFee <= remainingPayment`.
                 remainingPayment -= affiliateFee;
