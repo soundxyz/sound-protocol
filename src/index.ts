@@ -17,6 +17,6 @@ const interfaceIds = {
     IFixedPriceSignatureMinter: "0x110099e0",
     IMerkleDropMinter: "0x84b6980c",
     IRangeEditionMinter: "0xc73d6ffa",
-};
+} as const;
 
 export { interfaceIds, contractAddresses };
