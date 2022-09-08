@@ -16,7 +16,7 @@
         "extract-addresses": "bob-tsm script/js/extract-addresses.ts",
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json",
         "postinstall": "forge install",
-        "prepack": "rm -rf out out-2 dist typechain && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm typechain && bob-tsm build.ts",
+        "prepack": "rm -rf out out-2 dist typechain && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm gen:ids && pnpm typechain && bob-tsm build.ts",
         "prepare": "husky install",
         "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol script/**/*.sol",
         "postpublish": "gh-release",
