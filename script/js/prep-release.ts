@@ -5,7 +5,7 @@ import { requireEnv } from "require-env-variable";
 
 type ObjectOfStrings = Record<string, string>;
 
-const { SOUND_ENV, SOUND_TYPE } = requireEnv("SOUND_ENV", "SOUND_TYPE");
+const { SOUND_ENV, CREATOR_TYPE } = requireEnv("SOUND_ENV", "CREATOR_TYPE");
 
 const allowedEnv = ["preview", "staging", "mainnet"];
 const allowedSoundTypes = ["single", "album"];
@@ -13,8 +13,8 @@ const allowedSoundTypes = ["single", "album"];
 if (!allowedEnv.includes(SOUND_ENV)) {
     throw new Error(`Invalid SOUND_ENV: ${SOUND_ENV}`);
 }
-if (!allowedSoundTypes.includes(SOUND_TYPE)) {
-    throw new Error(`Invalid SOUND_TYPE: ${SOUND_TYPE}`);
+if (!allowedSoundTypes.includes(CREATOR_TYPE)) {
+    throw new Error(`Invalid CREATOR_TYPE: ${CREATOR_TYPE}`);
 }
 
 const chainId = SOUND_ENV == "staging" || SOUND_ENV == "preview" ? 5 : 1;
@@ -30,7 +30,7 @@ async function buildAddressJsonFile() {
 
     const addresses = parsedData.transactions.reduce<ObjectOfStrings>((acc, tx) => {
         // If contract name exists but this wasn't a function call, then it's a contract deployment.
-        if (tx.contractName && !tx.function) {
+        if (tx.contractName && tx.contractName !== "SoundEditionV1" && !tx.function) {
             acc[camelize(tx.contractName)] = tx.contractAddress;
         }
 
@@ -41,8 +41,8 @@ async function buildAddressJsonFile() {
     const formattedAddresses = await readFile(filePath, "utf8").then<ObjectOfStrings>(JSON.parse);
 
     for (const [key, value] of Object.entries(addresses)) {
-        if (key === "soundCreatorV1" || key === "soundEditionV1") {
-            formattedAddresses[SOUND_TYPE][key] = value;
+        if (key === "soundCreatorV1") {
+            formattedAddresses[key][CREATOR_TYPE] = value;
         } else {
             formattedAddresses[key] = value;
         }

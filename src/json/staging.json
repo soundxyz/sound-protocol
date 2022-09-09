@@ -4,12 +4,8 @@
     "fixedPriceSignatureMinter": "0xc8ba2e8ab4512a6f51a15d5e2338bc26bc66d2f9",
     "merkleDropMinter": "0x033417f35d5413877372dee452a1bae13b9b3294",
     "rangeEditionMinter": "0x800d253f81590e7afbaae0489ebd1e8056c3f85a",
-    "album": {
-        "soundEditionV1": "0x8ac1aca3fbaa0154a8c2ad5de5b2d9368a80e46d",
-        "soundCreatorV1": "0x6ec3352d53ed95ad661d5b0f4e2566569e420693"
-    },
-    "single": {
-        "soundEditionV1": "0x99ac3c348da425c59f1fc6cb5f0b4f6305bbae61",
-        "soundCreatorV1": "0x1f11f80f6378d2d4d905c205809cfe5460b14d8e"
+    "soundCreatorV1": {
+        "album": "0x6ec3352d53ed95ad661d5b0f4e2566569e420693",
+        "single": "0x1f11f80f6378d2d4d905c205809cfe5460b14d8e"
     }
 }
