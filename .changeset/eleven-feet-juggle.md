@@ -2,4 +2,4 @@
 "@soundxyz/sound-protocol": patch
 ---
 
-Fixes interfaceIds
+Ensures we generate interfaceIds before publishing, and export them as string constants.

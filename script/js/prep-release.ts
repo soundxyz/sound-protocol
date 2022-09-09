@@ -53,7 +53,7 @@ async function buildInterfaceIdsFile() {
 
     const filePath = `src/interfaceIds.ts`;
     await ensureFile(filePath);
-    await writeFile(filePath, `export const interfaceIds = ${JSON.stringify(JSON.parse(json))} as const`, {});
+    await writeFile(filePath, `export const interfaceIds = ${JSON.stringify(JSON.parse(json))} as const`, "utf-8");
 }
 
 await buildAddressJsonFile();
