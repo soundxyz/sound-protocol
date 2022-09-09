@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.16;
 
+import "forge-std/console.sol";
 import { Script } from "forge-std/Script.sol";
 import { ERC1967Proxy } from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -20,17 +21,21 @@ contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
 
-        // Deploy the SoundFeeRegistry
-        SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(SOUND_GNOSIS_SAFE_MAINNET, PLATFORM_FEE_BPS);
+        bool deployAll = vm.envBool("DEPLOY_ALL");
 
-        // Make the gnosis safe the owner of SoundFeeRegistry
-        soundFeeRegistry.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
+        if (deployAll) {
+            // Deploy the SoundFeeRegistry
+            SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(SOUND_GNOSIS_SAFE_MAINNET, PLATFORM_FEE_BPS);
 
-        // Deploy modules
-        new GoldenEggMetadata();
-        new FixedPriceSignatureMinter(soundFeeRegistry);
-        new MerkleDropMinter(soundFeeRegistry);
-        new RangeEditionMinter(soundFeeRegistry);
+            // Make the gnosis safe the owner of SoundFeeRegistry
+            soundFeeRegistry.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
+
+            // Deploy modules
+            new GoldenEggMetadata();
+            new FixedPriceSignatureMinter(soundFeeRegistry);
+            new MerkleDropMinter(soundFeeRegistry);
+            new RangeEditionMinter(soundFeeRegistry);
+        }
 
         // Deploy edition implementation (& initialize it for security)
         SoundEditionV1 editionImplementation = new SoundEditionV1();

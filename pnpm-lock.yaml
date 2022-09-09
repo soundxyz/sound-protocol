@@ -33,6 +33,7 @@ specifiers:
   prettier: 2.7.1
   prettier-linter-helpers: ^1.0.0
   prettier-plugin-solidity: 1.0.0-dev.23
+  require-env-variable: ^4.0.1
   semver: ^7.3.7
   solhint: 3.3.7
   solhint-plugin-prettier: 0.0.5
@@ -74,6 +75,7 @@ devDependencies:
   prettier: 2.7.1
   prettier-linter-helpers: 1.0.0
   prettier-plugin-solidity: 1.0.0-dev.23_prettier@2.7.1
+  require-env-variable: 4.0.1
   semver: 7.3.7
   solhint: 3.3.7
   solhint-plugin-prettier: 0.0.5_yhaj7swsoth43i54pjwisbu4t4
@@ -3706,6 +3708,10 @@ packages:
   /require-directory/2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
+    dev: true
+
+  /require-env-variable/4.0.1:
+    resolution: {integrity: sha512-2GCxnZqKSNIC9Ag9O38CF/HkWdd7kDNKzTuSxdIVMYa0WMZIntEBTeGY9b4IPy64FciEjyvh1iL2IWh2PERB0w==}
     dev: true
 
   /require-from-string/2.0.2:

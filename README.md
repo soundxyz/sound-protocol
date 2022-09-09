@@ -88,18 +88,11 @@ Create a .env in the root with:
 ```
 PRIVATE_KEY=...
 ETHERSCAN_KEY=...
-# Make one of these for every network
 GOERLI_RPC_URL=...
 ```
 
-Then run:
+You will also need to specify if you want to deploy _all_ the contracts or only the SoundEditionV1 & SoundCreatorV1, via `DEPLOY_ALL` env variable. ex:
 
 ```
-pnpm deploy:goerli
-```
-
-According to the foundry docs, we _should_ be able to verify on etherscan by appending this to the above command: ` --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv`, but that doesn't seem to work. Instead, we can verify each contract individually. Ex:
-
-```
-forge verify-contract --chain-id 5 --num-of-optimizations 200 --compiler-version v0.8.15 0x4613283c53669847c40eb0cf7946f1fb30b1f030 contracts/modules/Metadata/GoldenEggMetadataModule.sol:GoldenEggMetadataModule
+DEPLOY_ALL=true pnpm deploy:goerli
 ```
