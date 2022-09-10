@@ -117,7 +117,7 @@ contract SoundCreatorTests is TestConfig {
         soundCreator.setEditionImplementation(address(0));
     }
 
-    function test_createSoundAndMints(
+    function test_createSoundEdition(
         uint96 price0,
         uint96 price1,
         uint96 price2,
@@ -137,7 +137,7 @@ contract SoundCreatorTests is TestConfig {
         // Deploy the implementation of the edition.
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
-        address soundEditionAddress = soundCreator.soundEditionAddress(address(this), salt);
+        address soundEditionAddress = soundCreator.expectedEditionAddress(address(this), salt);
 
         // Populate the contracts:
         // First, we have to call the {grantRoles} on the `soundEditionAddress`.
@@ -150,7 +150,7 @@ contract SoundCreatorTests is TestConfig {
         contracts[5] = address(rangeMinter);
 
         // Populate the data:
-        // First, we have to call the {grantRoles} on the `soundEditionAddress`.
+        // First, we have to call the {grantRoles} on the `expectedEditionAddress`.
         data[0] = abi.encodeWithSelector(
             editionImplementation.grantRoles.selector,
             address(signatureMinter),
@@ -230,15 +230,15 @@ contract SoundCreatorTests is TestConfig {
         assertEq(soundEdition.owner(), address(this));
     }
 
-    function test_createSoundAndMints() public {
+    function test_createSoundEdition() public {
         uint96 price0 = 308712640125698797;
         uint96 price1 = 208712640125698797;
         uint96 price2 = 108712640125698797;
         bytes32 salt = keccak256(bytes("SomeRandomString"));
-        test_createSoundAndMints(price0, price1, price2, salt);
+        test_createSoundEdition(price0, price1, price2, salt);
     }
 
-    function test_createSoundAndMintsRevertForArrayLengthsMismatch(
+    function test_createSoundEditionRevertForArrayLengthsMismatch(
         uint8 contractsLength,
         uint8 dataLength,
         bytes32 salt
@@ -252,9 +252,9 @@ contract SoundCreatorTests is TestConfig {
         _createSoundEditionWithCalls(salt, contracts, data);
     }
 
-    function test_createSoundAndMintsRevertForArrayLengthsMismatch() public {
+    function test_createSoundEditionRevertForArrayLengthsMismatch() public {
         bytes32 salt = keccak256(bytes("SomeRandomString"));
-        test_createSoundAndMintsRevertForArrayLengthsMismatch(0, 1, salt);
+        test_createSoundEditionRevertForArrayLengthsMismatch(0, 1, salt);
     }
 
     // For avoiding the stack too deep error.
@@ -263,7 +263,7 @@ contract SoundCreatorTests is TestConfig {
         address[] memory contracts,
         bytes[] memory data
     ) internal returns (bytes[] memory results) {
-        results = soundCreator.createSoundAndMints(
+        results = soundCreator.createSoundEdition(
             salt,
             abi.encodeWithSelector(
                 SoundEditionV1.initialize.selector,

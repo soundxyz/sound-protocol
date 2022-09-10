@@ -56,7 +56,7 @@ interface ISoundCreatorV1 {
      * @return results The results of calling the contracts.
      *                 Use `abi.decode` to decode them.
      */
-    function createSoundAndMints(
+    function createSoundEdition(
         bytes32 salt,
         bytes calldata initData,
         address[] calldata contracts,
@@ -85,9 +85,9 @@ interface ISoundCreatorV1 {
 
     /**
      * @dev Returns the deterministic address for the sound edition clone.
-     * @param by   The caller of the {createSoundAndMints} function.
+     * @param by   The caller of the {createSoundEdition} function.
      * @param salt The salt, generated on the client side.
      * @return The computed value.
      */
-    function soundEditionAddress(address by, bytes32 salt) external view returns (address);
+    function expectedEditionAddress(address by, bytes32 salt) external view returns (address);
 }

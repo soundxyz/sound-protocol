@@ -67,7 +67,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
     /**
      * @inheritdoc ISoundCreatorV1
      */
-    function createSoundAndMints(
+    function createSoundEdition(
         bytes32 salt,
         bytes calldata initData,
         address[] calldata contracts,
@@ -129,7 +129,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
     /**
      * @inheritdoc ISoundCreatorV1
      */
-    function soundEditionAddress(address by, bytes32 salt) external view returns (address) {
+    function expectedEditionAddress(address by, bytes32 salt) external view returns (address) {
         return Clones.predictDeterministicAddress(soundEditionImplementation, _saltedSalt(by, salt), address(this));
     }
 
@@ -220,7 +220,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
      * @dev Returns the salted salt.
      *      To prevent griefing and accidental collisions from clients that don't
      *      generate their salt properly.
-     * @param by   The caller of the {createSoundAndMints} function.
+     * @param by   The caller of the {createSoundEdition} function.
      * @param salt The salt, generated on the client side.
      * @return result The computed value.
      */

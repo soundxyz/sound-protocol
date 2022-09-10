@@ -81,7 +81,7 @@ interface IMinterModule is IERC165 {
      * @param platformFee        The cut paid to the platform.
      * @param affiliateFee       The cut paid to the affiliate.
      * @param affiliate          The affiliate's address.
-     * @param affiliated         Whether the affiliate is affiliated.
+     * @param affiliated         Whether the given affiliate is a valid affiliate.
      */
     event Minted(
         address indexed edition,
