@@ -30,7 +30,7 @@ async function buildAddressJsonFile() {
 
     const addresses = parsedData.transactions.reduce<ObjectOfStrings>((acc, tx) => {
         // If contract name exists but this wasn't a function call, then it's a contract deployment.
-        if (tx.contractName && tx.contractName !== "SoundEditionV1" && !tx.function) {
+        if (tx.contractName && !tx.function) {
             acc[camelize(tx.contractName)] = tx.contractAddress;
         }
 
@@ -42,7 +42,7 @@ async function buildAddressJsonFile() {
 
     for (const [key, value] of Object.entries(addresses)) {
         if (key === "soundCreatorV1") {
-            formattedAddresses[key][CREATOR_TYPE] = value;
+            formattedAddresses[key][CREATOR_TYPE as string] = value;
         } else {
             formattedAddresses[key] = value;
         }
