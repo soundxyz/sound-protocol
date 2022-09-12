@@ -31,7 +31,7 @@ interface IMinterModule is IERC165 {
     /**
      * @dev Emitted when the mint instance for an `edition` is created.
      * @param edition The edition address.
-     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param mintId The mint ID, a global incrementing identifier used within the minter
      * @param startTime The start time of the mint.
      * @param endTime The end time of the mint.
      * @param affiliateFeeBPS The affiliate fee in basis points.
@@ -168,7 +168,7 @@ interface IMinterModule is IERC165 {
      * - The caller must be the edition's owner or admin.
      *
      * @param edition The edition address.
-     * @param mintId The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param mintId The mint ID, a global incrementing identifier used within the minter
      * @param startTime The start time of the mint.
      * @param endTime The end time of the mint.
      */
