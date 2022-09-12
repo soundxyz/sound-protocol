@@ -360,13 +360,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function editionMaxMintable() public view returns (uint32) {
-        uint32 _editionMaxMintable;
         if (block.timestamp < editionClosingTime) {
-            _editionMaxMintable = editionMaxMintableUpper;
+            return editionMaxMintableUpper;
         } else {
-            _editionMaxMintable = editionMaxMintableLower;
+            return editionMaxMintableLower;
         }
-        return _editionMaxMintable;
     }
 
     /**

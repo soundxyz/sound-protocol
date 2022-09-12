@@ -333,7 +333,7 @@ contract SoundEdition_mint is TestConfig {
         edition.airdrop(to, 1);
     }
 
-    function test_setMintRandomnessTokenThresholdRevertsIfRevealed() public {
+    function test_setEditionMaxMintableRangeRevertsIfMintHasConcluded() public {
         SoundEditionV1 edition = createGenericEdition();
 
         uint256 timeThreshold = block.timestamp + 10;
@@ -348,7 +348,25 @@ contract SoundEdition_mint is TestConfig {
         edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
     }
 
-    function test_setMintRandomnessTimeThresholdRevertsIfRevealed() public {
+    function test_setEditionMaxMintableRangeRevertsIfInvalidRange() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        uint32 editionMaxMintableLower = 2;
+        uint32 editionMaxMintableUpper = 1;
+
+        // Checks reverts if the lower bound exceeds the upper bound.
+        vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
+        edition.setEditionMaxMintableRange(editionMaxMintableLower, editionMaxMintableUpper);
+
+        // Change the upper bound.
+        edition.setEditionMaxMintableRange(0, editionMaxMintableUpper);
+
+        // Checks reverts if the upper bound exceeds the previous upper bound.
+        vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
+        edition.setEditionMaxMintableRange(0, editionMaxMintableUpper + 1);
+    }
+
+    function test_setEditionClosingTimeRevertsIfMintHasConcluded() public {
         SoundEditionV1 edition = createGenericEdition();
 
         uint256 timeThreshold = block.timestamp + 10;
