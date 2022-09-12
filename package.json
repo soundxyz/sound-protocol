@@ -1,6 +1,6 @@
 {
     "name": "@soundxyz/sound-protocol",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "homepage": "https://github.com/soundxyz/sound-protocol#readme",
     "repository": {
         "type": "git",
@@ -11,14 +11,14 @@
     "scripts": {
         "build": "forge build",
         "deploy:goerli": "source .env && forge script script/solidity/Deploy.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast",
-        "deploy:preview": "SOUND_ENV=preview pnpm gen:ids && pnpm deploy:goerli && pnpm extract-addresses",
-        "deploy:staging": "SOUND_ENV=staging pnpm gen:ids && pnpm deploy:goerli && pnpm extract-addresses",
-        "extract-addresses": "bob-tsm script/js/extract-addresses.ts",
+        "deploy:preview": "SOUND_ENV=preview pnpm gen:ids && pnpm deploy:goerli && pnpm prep-release",
+        "deploy:staging": "SOUND_ENV=staging pnpm gen:ids && pnpm deploy:goerli && pnpm prep-release",
+        "prep-release": "bob-tsm script/js/prep-release.ts && pnpm prettier:write",
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json",
         "postinstall": "forge install",
-        "prepack": "rm -rf out out-2 dist typechain && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm typechain && bob-tsm build.ts",
+        "prepack": "rm -rf out out-2 dist typechain && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm gen:ids && pnpm typechain && bob-tsm build.ts",
         "prepare": "husky install",
-        "prettier:write": "prettier --write contracts/**/*.sol tests/**/*.sol script/**/*.sol",
+        "prettier:write": "prettier --write **/*.{js,ts,json,sol}",
         "postpublish": "gh-release",
         "release:canary": "(node script/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
         "slither": "slither . --config-file slither.config.json",
