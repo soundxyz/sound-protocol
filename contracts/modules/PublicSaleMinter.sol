@@ -81,11 +81,6 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 _maxMintable = _getMaxMintable(ISoundEditionV1(edition), data);
-
-        // Require that the increased `totalMinted()` value does not exceed `maxMintable`.
-        _incrementTotalMinted(uint32(ISoundEditionV1(edition).totalMinted()), quantity, _maxMintable);
-
         unchecked {
             uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
             // Check the additional quantity does not exceed the set maximum.
@@ -98,6 +93,30 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
         }
 
         _mint(edition, mintId, quantity, affiliate);
+    }
+
+    /**
+     * @inheritdoc IPublicSaleMinter
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].price = price;
+        emit PriceSet(edition, mintId, price);
+    }
+
+    /**
+     * @inheritdoc IPublicSaleMinter
+     */
+    function setMaxMintablePerAccount(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintablePerAccount
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
+        emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
     }
 
     // =============================================================
@@ -150,23 +169,5 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
      */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IPublicSaleMinter).interfaceId;
-    }
-
-    // =============================================================
-    //                  INTERNAL / PRIVATE HELPERS
-    // =============================================================
-
-    /**
-     * @dev Gets the current maximum mintable quantity.
-     * @param edition The sound edition.
-     * @param data    The edition mint data.
-     * @return The computed value.
-     */
-    function _getMaxMintable(ISoundEditionV1 edition, EditionMintData storage data) internal view returns (uint32) {
-        if (block.timestamp < edition.mintRandomnessTimeThreshold()) {
-            return edition.editionMaxMintable();
-        } else {
-            return edition.mintRandomnessTokenThreshold();
-        }
     }
 }

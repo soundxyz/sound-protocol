@@ -39,6 +39,20 @@ contract PublicSaleMinterTests is TestConfig {
         uint32 maxMintablePerAccount
     );
 
+    // prettier-ignore
+    event PriceSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint96 price
+    );
+
+    // prettier-ignore
+    event MaxMintablePerAccountSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 maxMintablePerAccount
+    );
+
     event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
@@ -224,62 +238,20 @@ contract PublicSaleMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
     }
 
-    function test_mintRevertsForSoldOut(uint32 quantityToBuyBeforeClosing, uint32 quantityToBuyAfterClosing) public {
+    function test_setPrice(uint96 price) public {
         (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
 
-        quantityToBuyBeforeClosing = uint32((quantityToBuyBeforeClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
-        quantityToBuyAfterClosing = uint32((quantityToBuyAfterClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
-
-        uint32 totalMinted;
-
-        if (quantityToBuyBeforeClosing > MAX_MINTABLE_UPPER) {
-            vm.expectRevert(
-                abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, MAX_MINTABLE_UPPER - totalMinted)
-            );
-        } else {
-            totalMinted = quantityToBuyBeforeClosing;
-        }
-        vm.warp(START_TIME);
-        minter.mint{ value: quantityToBuyBeforeClosing * PRICE }(
-            address(edition),
-            MINT_ID,
-            quantityToBuyBeforeClosing,
-            address(0)
-        );
-
-        if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
-            uint32 available = MAX_MINTABLE_LOWER > totalMinted ? MAX_MINTABLE_LOWER - totalMinted : 0;
-            vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, available));
-        }
-        vm.warp(CLOSING_TIME);
-        minter.mint{ value: quantityToBuyAfterClosing * PRICE }(
-            address(edition),
-            MINT_ID,
-            quantityToBuyAfterClosing,
-            address(0)
-        );
+        vm.expectEmit(true, true, true, true);
+        emit PriceSet(address(edition), MINT_ID, price);
+        minter.setPrice(address(edition), MINT_ID, price);
     }
 
-    function test_mintRevertsForSoldOut() public {
-        test_mintRevertsForSoldOut(1, 1);
-        test_mintRevertsForSoldOut(MAX_MINTABLE_UPPER, MAX_MINTABLE_LOWER);
-        test_mintRevertsForSoldOut(MAX_MINTABLE_LOWER, MAX_MINTABLE_UPPER);
-    }
+    function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
+        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
 
-    function test_mintBeforeAndAfterClosingTimeBaseCase() public {
-        uint32 quantity = 1;
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(quantity);
-        uint32 maxMintableLower = 0;
-        uint32 maxMintableUpper = 1;
-        edition.setMintRandomnessTokenThreshold(maxMintableLower);
-        edition.setMintRandomnessTokenThreshold(maxMintableUpper);
-
-        vm.warp(START_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
-
-        vm.warp(CLOSING_TIME);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, maxMintableLower));
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
+        vm.expectEmit(true, true, true, true);
+        emit MaxMintablePerAccountSet(address(edition), MINT_ID, maxMintablePerAccount);
+        minter.setMaxMintablePerAccount(address(edition), MINT_ID, maxMintablePerAccount);
     }
 
     function test_supportsInterface() public {
