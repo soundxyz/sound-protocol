@@ -10,7 +10,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /*
  * @title PublicSaleMinter
- * @notice Module for range edition mints of Sound editions.
+ * @notice Module for unpermissioned mints of Sound editions.
  * @author Sound.xyz
  */
 contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
