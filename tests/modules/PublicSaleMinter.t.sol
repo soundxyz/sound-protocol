@@ -141,7 +141,7 @@ contract PublicSaleMinterTests is TestConfig {
 
         PublicSaleMinter minter = new PublicSaleMinter(feeRegistry);
 
-        vm.expectEmit(false, false, false, true);
+        vm.expectEmit(true, true, true, true);
 
         emit PublicSaleMintCreated(address(edition), MINT_ID, PRICE, START_TIME, END_TIME, AFFILIATE_FEE_BPS, 0);
 
@@ -224,16 +224,16 @@ contract PublicSaleMinterTests is TestConfig {
         vm.warp(START_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
-        vm.warp(END_TIME + 1);
-        vm.expectRevert(
-            abi.encodeWithSelector(IMinterModule.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
-        );
+        vm.warp(CUTOFF_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
         vm.warp(END_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
-        vm.warp(CUTOFF_TIME);
+        vm.warp(END_TIME + 1);
+        vm.expectRevert(
+            abi.encodeWithSelector(IMinterModule.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
+        );
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
     }
 
