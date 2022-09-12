@@ -28,7 +28,7 @@ contract MockMinter is BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
-        uint32 quantity,
+        uint24 quantity,
         address affiliate
     ) external payable {
         _mint(edition, mintId, quantity, affiliate);
@@ -42,7 +42,7 @@ contract MockMinter is BaseMinter {
         address, /* edition */
         uint128, /* mintId */
         address, /* minter */
-        uint32 quantity
+        uint24 quantity
     ) public view virtual override(BaseMinter) returns (uint128) {
         unchecked {
             // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.

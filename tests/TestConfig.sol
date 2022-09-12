@@ -19,7 +19,7 @@ contract TestConfig is Test {
     address constant FUNDING_RECIPIENT = address(99);
     uint16 constant ROYALTY_BPS = 100;
     address public constant ARTIST_ADMIN = address(8888888888);
-    uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
+    uint24 constant EDITION_MAX_MINTABLE = type(uint24).max;
     uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
     address constant SOUND_FEE_ADDRESS = address(2222222222);
     uint16 constant PLATFORM_FEE_BPS = 200;

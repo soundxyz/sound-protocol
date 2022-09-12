@@ -50,9 +50,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 closingTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint32 maxMintableLower,
-        uint32 maxMintableUpper,
-        uint32 maxMintablePerAccount
+        uint24 maxMintableLower,
+        uint24 maxMintableUpper,
+        uint24 maxMintablePerAccount
     ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint128 mintId) {
         if (!(maxMintableLower <= maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
@@ -86,12 +86,12 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
-        uint32 quantity,
+        uint24 quantity,
         address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        uint32 _maxMintable = _getMaxMintable(data);
+        uint24 _maxMintable = _getMaxMintable(data);
 
         // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
@@ -154,8 +154,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     function setMaxMintableRange(
         address edition,
         uint128 mintId,
-        uint32 maxMintableLower,
-        uint32 maxMintableUpper
+        uint24 maxMintableLower,
+        uint24 maxMintableUpper
     ) public onlyEditionOwnerOrAdmin(edition) {
         if (!(maxMintableLower <= maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
 
@@ -177,7 +177,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         address edition,
         uint128 mintId,
         address, /* minter */
-        uint32 quantity
+        uint24 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         unchecked {
             // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.
@@ -246,8 +246,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      * @param data The edition mint data.
      * @return The computed value.
      */
-    function _getMaxMintable(EditionMintData storage data) internal view returns (uint32) {
-        uint32 _maxMintable;
+    function _getMaxMintable(EditionMintData storage data) internal view returns (uint24) {
+        uint24 _maxMintable;
         if (block.timestamp < data.closingTime) {
             _maxMintable = data.maxMintableUpper;
         } else {
