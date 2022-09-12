@@ -55,10 +55,17 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     event RoyaltySet(uint16 bps);
 
     /**
-     * @dev Emitted when the edition's maximum mintable token quantity is set.
-     * @param newMax The new maximum mintable token quantity.
+     * @dev Emitted when the edition's maximum mintable token quantity range is set.
+     * @param editionMaxMintableLower_ The lower limit of the maximum number of tokens that can be minted.
+     * @param editionMaxMintableUpper_ The upper limit of the maximum number of tokens that can be minted.
      */
-    event EditionMaxMintableSet(uint32 newMax);
+    event EditionMaxMintableRangeSet(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_);
+
+    /**
+     * @dev Emitted when the edition's closing time set.
+     * @param editionClosingTime_ The timestamp.
+     */
+    event EditionClosingTimeSet(uint32 editionClosingTime_);
 
     // =============================================================
     //                            ERRORS
@@ -96,6 +103,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     error InvalidFundingRecipient();
 
     /**
+     * @dev The `editionMaxMintableLower` must not be greater than `editionMaxMintableUpper`.
+     */
+    error InvalidEditionMaxMintableRange();
+
+    /**
      * @dev The `editionMaxMintable` has already been reached.
      */
     error MaximumHasAlreadyBeenReached();
@@ -114,6 +126,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @dev No addresses to airdrop.
      */
     error NoAddressesToAirdrop();
+
+    /**
+     * @dev The mint has already concluded.
+     */
+    error MintHasConcluded();
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -244,34 +261,26 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function setRoyalty(uint16 bps) external;
 
     /**
-     * @dev Reduces the maximum mintable quantity for the edition.
+     * @dev Sets the edition max mintable range.
      *
      * Calling conditions:
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
-     * @param newMax The maximum mintable quantity to be set.
+     * @param editionMaxMintableLower_ The lower limit of the maximum number of tokens that can be minted.
+     * @param editionMaxMintableUpper_ The upper limit of the maximum number of tokens that can be minted.
      */
-    function reduceEditionMaxMintable(uint32 newMax) external;
+    function setEditionMaxMintableRange(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_) external;
 
     /**
-     * @dev Sets a minted token count, after which `mintRandomness` gets locked.
+     * @dev Sets the timestamp after which, the `editionMaxMintable` drops
+     *      from `editionMaxMintableUpper` to `editionMaxMintableLower.
      *
      * Calling conditions:
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
-     * @param mintRandomnessTokenThreshold The token quantity to be set.
+     * @param editionClosingTime_ The timestamp.
      */
-    function setMintRandomnessTokenThreshold(uint32 mintRandomnessTokenThreshold) external;
-
-    /**
-     * @dev Sets the timestamp, after which `mintRandomness` gets locked.
-     *
-     * Calling conditions:
-     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
-     *
-     * @param mintRandomnessTimeThreshold_ The randomness timestamp to be set.
-     */
-    function setRandomnessTimeThreshold(uint32 mintRandomnessTimeThreshold_) external;
+    function setEditionClosingTime(uint32 editionClosingTime_) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
@@ -324,18 +333,23 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function editionMaxMintable() external view returns (uint32);
 
     /**
-     * @dev Returns the token count after which `mintRandomness` gets locked.
-     *      See {mintRandomnessRevealed} for the reveal condition.
+     * @dev Returns the upper bound for the maximum tokens that can be minted for this edition.
      * @return The configured value.
      */
-    function mintRandomnessTokenThreshold() external view returns (uint32);
+    function editionMaxMintableUpper() external view returns (uint32);
 
     /**
-     * @dev Returns the timestamp after which `mintRandomness` gets locked.
-     *      See {mintRandomnessRevealed} for the reveal condition.
+     * @dev Returns the lower bound for the maximum tokens that can be minted for this edition.
      * @return The configured value.
      */
-    function mintRandomnessTimeThreshold() external view returns (uint32);
+    function editionMaxMintableLower() external view returns (uint32);
+
+    /**
+     * @dev Returns the timestamp after which `editionMaxMintable` drops from
+     *      `editionMaxMintableUpper` to `editionMaxMintableLower`.
+     * @return The configured value.
+     */
+    function editionClosingTime() external view returns (uint32);
 
     /**
      * @dev Returns the address of the metadata module.
@@ -345,7 +359,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Returns the randomness based on latest block hash, which is stored upon each mint.
-     *      unless {mintRandomnessRevealed} is true.
+     *      unless {mintConcluded} is true.
      *      Used for game mechanics like the Sound Golden Egg.
      *      Returns 0 before revealed.
      *      WARNING: This value should NOT be used for any reward of significant monetary
@@ -355,10 +369,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mintRandomness() external view returns (uint256);
 
     /**
-     * @dev Returns whether the `mintRandomness` has been locked and revealed.
+     * @dev Returns whether the mint has been concluded.
      * @return The latest value.
      */
-    function mintRandomnessRevealed() external view returns (bool);
+    function mintConcluded() external view returns (bool);
 
     /**
      * @dev Returns the royalty basis points.

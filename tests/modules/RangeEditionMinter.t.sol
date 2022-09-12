@@ -109,13 +109,7 @@ contract RangeEditionMinterTests is TestConfig {
             vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
             hasRevert = true;
         } else if (!(maxMintableLower <= maxMintableUpper)) {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IRangeEditionMinter.InvalidMaxMintableRange.selector,
-                    maxMintableLower,
-                    maxMintableUpper
-                )
-            );
+            vm.expectRevert(IRangeEditionMinter.InvalidMaxMintableRange.selector);
             hasRevert = true;
         } else if (affiliateFeeBPS > minter.MAX_BPS()) {
             vm.expectRevert(IMinterModule.InvalidAffiliateFeeBPS.selector);
@@ -418,13 +412,7 @@ contract RangeEditionMinterTests is TestConfig {
         bool hasRevert;
 
         if (!(maxMintableLower <= maxMintableUpper)) {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IRangeEditionMinter.InvalidMaxMintableRange.selector,
-                    maxMintableLower,
-                    maxMintableUpper
-                )
-            );
+            vm.expectRevert(IRangeEditionMinter.InvalidMaxMintableRange.selector);
             hasRevert = true;
         }
 

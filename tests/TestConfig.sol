@@ -60,9 +60,9 @@ contract TestConfig is Test {
         string memory contractURI,
         address fundingRecipient,
         uint16 royaltyBPS,
-        uint32 editionMaxMintable,
-        uint32 mintRandomnessTokenThreshold,
-        uint32 mintRandomnessTimeThreshold
+        uint32 editionMaxMintableLower,
+        uint32 editionMaxMintableUpper,
+        uint32 editionClosingTime
     ) public returns (address) {
         bytes memory initData = abi.encodeWithSelector(
             SoundEditionV1.initialize.selector,
@@ -73,9 +73,9 @@ contract TestConfig is Test {
             contractURI,
             fundingRecipient,
             royaltyBPS,
-            editionMaxMintable,
-            mintRandomnessTokenThreshold,
-            mintRandomnessTimeThreshold
+            editionMaxMintableLower,
+            editionMaxMintableUpper,
+            editionClosingTime
         );
 
         address[] memory contracts;

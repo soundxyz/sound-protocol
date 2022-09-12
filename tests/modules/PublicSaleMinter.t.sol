@@ -61,9 +61,8 @@ contract PublicSaleMinterTests is TestConfig {
     {
         edition = createGenericEdition();
 
-        edition.reduceEditionMaxMintable(MAX_MINTABLE_UPPER);
-        edition.setMintRandomnessTokenThreshold(MAX_MINTABLE_LOWER);
-        edition.setRandomnessTimeThreshold(CLOSING_TIME);
+        edition.setEditionMaxMintableRange(MAX_MINTABLE_LOWER, MAX_MINTABLE_UPPER);
+        edition.setEditionClosingTime(CLOSING_TIME);
 
         minter = new PublicSaleMinter(feeRegistry);
 

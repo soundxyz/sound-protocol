@@ -97,11 +97,9 @@ interface IRangeEditionMinter is IMinterModule {
     // =============================================================
 
     /**
-     * The following condition must hold: `maxMintableLower` < `maxMintableUpper`.
-     * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
+     * @dev The `maxMintableLower` must not be greater than `maxMintableUpper`.
      */
-    error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
+    error InvalidMaxMintableRange();
 
     /**
      * @dev The number of tokens minted has exceeded the number allowed for each account.
