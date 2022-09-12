@@ -5,8 +5,6 @@ on:
       - master
 jobs:
   publish:
-    # TODO: remove this line when ready to start publishing
-    if: ${{ false }} 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
