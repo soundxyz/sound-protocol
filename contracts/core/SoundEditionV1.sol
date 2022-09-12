@@ -34,6 +34,7 @@ import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/exten
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
@@ -314,15 +315,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         uint32 currentTotalMinted = uint32(_totalMinted());
 
-        // `editionMaxMintableLower_ = max(editionMaxMintableLower_, currentTotalMinted)`.
-        if (editionMaxMintableLower_ < currentTotalMinted) {
-            editionMaxMintableLower_ = currentTotalMinted;
-        }
+        editionMaxMintableLower_ = uint32(FixedPointMathLib.max(editionMaxMintableLower_, currentTotalMinted));
 
-        // `editionMaxMintableUpper_ = max(editionMaxMintableUpper_, currentTotalMinted)`.
-        if (editionMaxMintableUpper_ < currentTotalMinted) {
-            editionMaxMintableUpper_ = currentTotalMinted;
-        }
+        editionMaxMintableUpper_ = uint32(FixedPointMathLib.max(editionMaxMintableUpper_, currentTotalMinted));
 
         // If the lower bound is larger than the upper bound, revert.
         if (editionMaxMintableLower_ > editionMaxMintableUpper_) revert InvalidEditionMaxMintableRange();
@@ -363,12 +358,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (block.timestamp < editionCutoffTime) {
             return editionMaxMintableUpper;
         } else {
-            uint256 lower = editionMaxMintableLower;
-            uint256 currentTotalMinted = _totalMinted();
-            if (lower < currentTotalMinted) {
-                lower = currentTotalMinted;
-            }
-            return uint32(lower);
+            return uint32(FixedPointMathLib.max(editionMaxMintableLower, _totalMinted()));
         }
     }
 
@@ -499,10 +489,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             if (currentTotalMinted + totalQuantity > currentEditionMaxMintable) {
                 // Won't underflow as `editionMaxMintableUpper` cannot be decreased
                 // below `_totalMinted()`. See {setEditionMaxMintableRange}.
-                uint256 available;
-                if (currentEditionMaxMintable > currentTotalMinted) {
-                    available = currentEditionMaxMintable - currentTotalMinted;
-                }
+                // `zeroFloorSub(x, y)` is `max(x - y, 0)`.
+                uint256 available = FixedPointMathLib.zeroFloorSub(currentEditionMaxMintable, currentTotalMinted);
                 revert ExceedsEditionAvailableSupply(uint32(available));
             }
         }
