@@ -103,21 +103,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     address public fundingRecipient;
 
     /**
-     * @dev The max mintable quantity for the edition.
+     * @dev The upper bound of the max mintable quantity for the edition.
      */
-    uint32 public editionMaxMintable;
+    uint32 public editionMaxMintableUpper;
 
     /**
-     * @dev The token count after which `mintRandomness` gets locked and revealed.
-     *      See {mintRandomnessRevealed} for the reveal condition.
+     * @dev The lower bound for the maximum tokens that can be minted for this edition.
      */
-    uint32 public mintRandomnessTokenThreshold;
+    uint32 public editionMaxMintableLower;
 
     /**
-     * @dev The timestamp after which `mintRandomness` gets locked and revealed.
-     *      See {mintRandomnessRevealed} for the reveal condition.
+     * @dev The timestamp after which `editionMaxMintable` drops from
+     *      `editionMaxMintableUpper` to `max(_totalMinted(), editionMaxMintableLower)`.
      */
-    uint32 public mintRandomnessTimeThreshold;
+    uint32 public editionCutoffTime;
 
     /**
      * @dev Metadata module used for `tokenURI` if it is set.
@@ -156,9 +155,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         string memory contractURI_,
         address fundingRecipient_,
         uint16 royaltyBPS_,
-        uint32 editionMaxMintable_,
-        uint32 mintRandomnessTokenThreshold_,
-        uint32 mintRandomnessTimeThreshold_
+        uint32 editionMaxMintableLower_,
+        uint32 editionMaxMintableUpper_,
+        uint32 editionCutoffTime_
     ) public onlyValidRoyaltyBPS(royaltyBPS_) {
         // Prevent double initialization.
         // We can "cheat" here and avoid the initializer modifer to save a SSTORE,
@@ -166,6 +165,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (_nextTokenId() != 0) revert Unauthorized();
 
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
+
+        if (editionMaxMintableLower_ > editionMaxMintableUpper_) revert InvalidEditionMaxMintableRange();
 
         _initializeNameAndSymbol(name_, symbol_);
         ERC721AStorage.layout()._currentIndex = _startTokenId();
@@ -176,14 +177,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         contractURI = contractURI_;
 
         fundingRecipient = fundingRecipient_;
-        editionMaxMintable = editionMaxMintable_ > 0 ? editionMaxMintable_ : type(uint32).max;
-        mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
-        mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
+        editionMaxMintableUpper = editionMaxMintableUpper_;
+        editionMaxMintableLower = editionMaxMintableLower_;
+        editionCutoffTime = editionCutoffTime_;
 
         metadataModule = metadataModule_;
         royaltyBPS = royaltyBPS_;
-
-        emit EditionMaxMintableSet(editionMaxMintable);
     }
 
     /**
@@ -307,46 +306,43 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function reduceEditionMaxMintable(uint32 newMax) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (_totalMinted() == editionMaxMintable) {
-            revert MaximumHasAlreadyBeenReached();
-        }
-
-        // Only allow reducing below current max.
-        if (newMax >= editionMaxMintable) {
-            revert InvalidAmount();
-        }
-
-        // If attempting to set below current total minted, set it to current total.
-        // Otherwise, set it to the provided value.
-        if (newMax < _totalMinted()) {
-            editionMaxMintable = uint32(_totalMinted());
-        } else {
-            editionMaxMintable = newMax;
-        }
-
-        emit EditionMaxMintableSet(editionMaxMintable);
-    }
-
-    /**
-     * @inheritdoc ISoundEditionV1
-     */
-    function setMintRandomnessTokenThreshold(uint32 mintRandomnessTokenThreshold_)
+    function setEditionMaxMintableRange(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_)
         external
         onlyRolesOrOwner(ADMIN_ROLE)
     {
-        if (mintRandomnessRevealed()) revert MintRandomnessAlreadyRevealed();
+        if (mintConcluded()) revert MintHasConcluded();
 
-        if (mintRandomnessTokenThreshold_ < _totalMinted()) revert InvalidRandomnessLock();
+        uint32 currentTotalMinted = uint32(_totalMinted());
 
-        mintRandomnessTokenThreshold = mintRandomnessTokenThreshold_;
+        // `editionMaxMintableLower_ = max(editionMaxMintableLower_, currentTotalMinted)`.
+        if (editionMaxMintableLower_ < currentTotalMinted) {
+            editionMaxMintableLower_ = currentTotalMinted;
+        }
+
+        // `editionMaxMintableUpper_ = max(editionMaxMintableUpper_, currentTotalMinted)`.
+        if (editionMaxMintableUpper_ < currentTotalMinted) {
+            editionMaxMintableUpper_ = currentTotalMinted;
+        }
+
+        // If the lower bound is larger than the upper bound, revert.
+        if (editionMaxMintableLower_ > editionMaxMintableUpper_) revert InvalidEditionMaxMintableRange();
+
+        // If the upper bound is larger than the current stored value, revert.
+        if (editionMaxMintableUpper_ > editionMaxMintableUpper) revert InvalidEditionMaxMintableRange();
+
+        editionMaxMintableLower = editionMaxMintableLower_;
+        editionMaxMintableUpper = editionMaxMintableUpper_;
+
+        emit EditionMaxMintableRangeSet(editionMaxMintableLower, editionMaxMintableUpper);
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setRandomnessTimeThreshold(uint32 mintRandomnessTimeThreshold_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (mintRandomnessRevealed()) revert MintRandomnessAlreadyRevealed();
+    function setEditionCutoffTime(uint32 editionCutoffTime_) external onlyRolesOrOwner(ADMIN_ROLE) {
+        if (mintConcluded()) revert MintHasConcluded();
 
-        mintRandomnessTimeThreshold = mintRandomnessTimeThreshold_;
+        editionCutoffTime = editionCutoffTime_;
+
+        emit EditionCutoffTimeSet(editionCutoffTime_);
     }
 
     // =============================================================
@@ -357,22 +353,30 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function mintRandomness() public view returns (uint256) {
-        return mintRandomnessRevealed() ? uint256(keccak256(abi.encode(_mintRandomness, address(this)))) : 0;
+        return mintConcluded() ? uint256(keccak256(abi.encode(_mintRandomness, address(this)))) : 0;
     }
 
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function mintRandomnessRevealed() public view returns (bool) {
-        uint256 currentTotalMinted = _totalMinted();
-        return
-            // No more can be minted. The `editionMaxMintable` cannot be increased.
-            currentTotalMinted == editionMaxMintable ||
-            // The number of tokens minted has exceeded a minimum threshold AND
-            // the current time has exceeded a minimum threshold.
-            // This logic is used for range editions, where the golden egg is to be only revealed
-            // when the sale closes after it has exceeded a minimum limit after a certain time.
-            (currentTotalMinted >= mintRandomnessTokenThreshold && block.timestamp >= mintRandomnessTimeThreshold);
+    function editionMaxMintable() public view returns (uint32) {
+        if (block.timestamp < editionCutoffTime) {
+            return editionMaxMintableUpper;
+        } else {
+            uint256 lower = editionMaxMintableLower;
+            uint256 currentTotalMinted = _totalMinted();
+            if (lower < currentTotalMinted) {
+                lower = currentTotalMinted;
+            }
+            return uint32(lower);
+        }
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function mintConcluded() public view returns (bool) {
+        return _totalMinted() == editionMaxMintable();
     }
 
     /**
@@ -472,19 +476,33 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
+     * @dev Ensures that the `editionMaxMintableLower` is not greater than  `editionMaxMintableUpper`.
+     * @param editionMaxMintableLower_ The lower limit of the maximum number of tokens that can be minted.
+     * @param editionMaxMintableUpper_ The upper limit of the maximum number of tokens that can be minted.
+     */
+    modifier onlyValidEditionMaxMintableRange(uint32 editionMaxMintableUpper_, uint32 editionMaxMintableLower_) {
+        if (editionMaxMintableLower > editionMaxMintableUpper) revert InvalidEditionMaxMintableRange();
+        _;
+    }
+
+    /**
      * @dev Ensures that `totalQuantity` can be minted.
      * @param totalQuantity The total number of tokens to mint.
      */
     modifier requireMintable(uint256 totalQuantity) {
         unchecked {
             uint256 currentTotalMinted = _totalMinted();
+            uint256 currentEditionMaxMintable = editionMaxMintable();
             // Check if there are enough tokens to mint.
             // We use version v4.2+ of ERC721A, which `_mint` will revert with out-of-gas
             // error via a loop if `totalQuantity` is large enough to cause an overflow in uint256.
-            if (currentTotalMinted + totalQuantity > editionMaxMintable) {
-                // Won't underflow as `editionMaxMintable` cannot be decreased
-                // below `_totalMinted()`. See {reduceEditionMaxMintable}.
-                uint256 available = editionMaxMintable - currentTotalMinted;
+            if (currentTotalMinted + totalQuantity > currentEditionMaxMintable) {
+                // Won't underflow as `editionMaxMintableUpper` cannot be decreased
+                // below `_totalMinted()`. See {setEditionMaxMintableRange}.
+                uint256 available;
+                if (currentEditionMaxMintable > currentTotalMinted) {
+                    available = currentEditionMaxMintable - currentTotalMinted;
+                }
                 revert ExceedsEditionAvailableSupply(uint32(available));
             }
         }
@@ -504,7 +522,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev Updates the mint randomness.
      */
     modifier updatesMintRandomness() {
-        if (!mintRandomnessRevealed()) {
+        if (!mintConcluded()) {
             bytes32 randomness = _mintRandomness;
             assembly {
                 // Pick any of the last 256 blocks psuedorandomly for the blockhash.

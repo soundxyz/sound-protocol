@@ -14,7 +14,7 @@ contract PublicSaleMinterTests is TestConfig {
 
     uint32 constant START_TIME = 100;
 
-    uint32 constant CLOSING_TIME = 200;
+    uint32 constant CUTOFF_TIME = 200;
 
     uint32 constant END_TIME = 300;
 
@@ -61,9 +61,8 @@ contract PublicSaleMinterTests is TestConfig {
     {
         edition = createGenericEdition();
 
-        edition.reduceEditionMaxMintable(MAX_MINTABLE_UPPER);
-        edition.setMintRandomnessTokenThreshold(MAX_MINTABLE_LOWER);
-        edition.setRandomnessTimeThreshold(CLOSING_TIME);
+        edition.setEditionMaxMintableRange(MAX_MINTABLE_LOWER, MAX_MINTABLE_UPPER);
+        edition.setEditionCutoffTime(CUTOFF_TIME);
 
         minter = new PublicSaleMinter(feeRegistry);
 
@@ -234,7 +233,7 @@ contract PublicSaleMinterTests is TestConfig {
         vm.warp(END_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
 
-        vm.warp(CLOSING_TIME);
+        vm.warp(CUTOFF_TIME);
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
     }
 
