@@ -18,7 +18,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     using ECDSA for bytes32;
 
     uint96 constant PRICE = 1;
-    uint32 constant MAX_MINTABLE = 5;
+    uint24 constant MAX_MINTABLE = 5;
     uint256 constant SIGNER_PRIVATE_KEY = 1;
     uint128 constant MINT_ID = 0;
     uint32 constant START_TIME = 0;
@@ -26,8 +26,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     uint16 constant AFFILIATE_FEE_BPS = 0;
     address constant NULL_AFFILIATE = address(0);
     uint32 constant CLAIM_TICKET_0 = 0;
-    uint32 constant QUANTITY_1 = 1;
-    uint32 constant SIGNED_QUANTITY_1 = 1;
+    uint24 constant QUANTITY_1 = 1;
+    uint24 constant SIGNED_QUANTITY_1 = 1;
 
     // prettier-ignore
     event FixedPriceSignatureMintCreated(
@@ -35,7 +35,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         uint128 indexed mintId,
         uint96 price,
         address signer,
-        uint32 maxMintable,
+        uint24 maxMintable,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBps
@@ -50,7 +50,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         address minter,
         uint128 mintId,
         uint32 claimTicket,
-        uint32 signedQuantity,
+        uint24 signedQuantity,
         address affiliate
     ) internal returns (bytes memory) {
         bytes32 digest = keccak256(
@@ -194,8 +194,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_mintWithUnderpaidReverts() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-        uint32 quantity = 2;
-        uint32 signedQuantity = quantity;
+        uint24 quantity = 2;
+        uint24 signedQuantity = quantity;
 
         address buyer = getFundedAccount(1);
         bytes memory sig = _getSignature(
@@ -224,8 +224,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 claimTicket = 0;
-        uint32 quantity = MAX_MINTABLE + 1;
-        uint32 signedQuantity = quantity;
+        uint24 quantity = MAX_MINTABLE + 1;
+        uint24 signedQuantity = quantity;
 
         address buyer = getFundedAccount(1);
         bytes memory sig1 = _getSignature(buyer, address(minter), MINT_ID, claimTicket, signedQuantity, NULL_AFFILIATE);
@@ -318,8 +318,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_mintForNonExistentMintIdReverts() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-        uint32 quantity = 2;
-        uint32 signedQuantity = quantity;
+        uint24 quantity = 2;
+        uint24 signedQuantity = quantity;
         address buyer = getFundedAccount(1);
 
         bytes memory sig = _getSignature(
@@ -353,8 +353,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_mintUpdatesValuesAndMintsCorrectly() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-        uint32 quantity = 2;
-        uint32 signedQuantity = quantity;
+        uint24 quantity = 2;
+        uint24 signedQuantity = quantity;
         address buyer = getFundedAccount(1);
 
         bytes memory sig = _getSignature(
@@ -391,8 +391,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_multipleMintsFromSameBuyer() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-        uint32 quantity = 1;
-        uint32 signedQuantity = 2;
+        uint24 quantity = 1;
+        uint24 signedQuantity = 2;
         uint32 claimTicket1 = 0;
         uint32 claimTicket2 = 1;
         address buyer = getFundedAccount(1);
@@ -581,7 +581,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         uint32[] memory tokensPerBuyer = new uint32[](1);
         tokensPerBuyer[0] = 1;
 
-        uint32 numOfTokensToBuy = 10;
+        uint24 numOfTokensToBuy = 10;
 
         uint32[] memory claimTickets = new uint32[](numOfTokensToBuy * 2);
 
@@ -593,7 +593,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             address(edition),
             PRICE,
             _signerAddress(),
-            type(uint32).max, // max mintable
+            type(uint24).max, // max mintable
             START_TIME,
             END_TIME,
             AFFILIATE_FEE_BPS
@@ -668,7 +668,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;
-        uint32 expectedPrice = 1234071;
+        uint96 expectedPrice = 1234071;
 
         minter.createEditionMint(
             address(edition),
@@ -688,7 +688,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
         assertEq(_signerAddress(), mintData.signer);
-        assertEq(type(uint32).max, mintData.maxMintablePerAccount);
+        assertEq(type(uint24).max, mintData.maxMintablePerAccount);
         assertEq(MAX_MINTABLE, mintData.maxMintable);
         assertEq(0, mintData.totalMinted);
     }
@@ -740,8 +740,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_mintWithMoreThanSignedQuantityReverts() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
-        uint32 quantity = 2;
-        uint32 signedQuantity = 2;
+        uint24 quantity = 2;
+        uint24 signedQuantity = 2;
 
         address buyer = getFundedAccount(1);
         bytes memory sig = _getSignature(

@@ -12,9 +12,9 @@ struct EditionMintData {
     // Whitelist signer address.
     address signer;
     // The maximum number of tokens that can can be minted for this sale.
-    uint32 maxMintable;
+    uint24 maxMintable;
     // The total number of tokens minted so far for this sale.
-    uint32 totalMinted;
+    uint24 totalMinted;
 }
 
 /**
@@ -26,9 +26,9 @@ struct MintInfo {
     uint16 affiliateFeeBPS;
     bool mintPaused;
     uint96 price;
-    uint32 maxMintable;
-    uint32 maxMintablePerAccount;
-    uint32 totalMinted;
+    uint24 maxMintable;
+    uint24 maxMintablePerAccount;
+    uint24 totalMinted;
     address signer;
 }
 
@@ -57,7 +57,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint128 indexed mintId,
         uint96 price,
         address signer,
-        uint32 maxMintable,
+        uint24 maxMintable,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
@@ -106,7 +106,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         address edition,
         uint96 price,
         address signer,
-        uint32 maxMintable_,
+        uint24 maxMintable_,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
@@ -124,8 +124,8 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     function mint(
         address edition,
         uint128 mintId,
-        uint32 quantity,
-        uint32 signedQuantity,
+        uint24 quantity,
+        uint24 signedQuantity,
         address affiliate,
         bytes calldata signature,
         uint32 claimTicket
