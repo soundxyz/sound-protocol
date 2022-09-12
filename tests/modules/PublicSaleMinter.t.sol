@@ -113,7 +113,7 @@ contract PublicSaleMinterTests is TestConfig {
         }
 
         if (!hasRevert) {
-            vm.expectEmit(false, false, false, true);
+            vm.expectEmit(true, true, true, true);
             emit PublicSaleMintCreated(
                 address(edition),
                 MINT_ID,
