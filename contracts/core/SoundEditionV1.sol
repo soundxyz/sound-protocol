@@ -114,7 +114,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
     /**
      * @dev The timestamp after which `editionMaxMintable` drops from
-     *      `editionMaxMintableUpper` to `editionMaxMintableLower`.
+     *      `editionMaxMintableUpper` to `max(_totalMinted(), editionMaxMintableLower)`.
      */
     uint32 public editionCutoffTime;
 
@@ -363,7 +363,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (block.timestamp < editionCutoffTime) {
             return editionMaxMintableUpper;
         } else {
-            return editionMaxMintableLower;
+            uint256 lower = editionMaxMintableLower;
+            uint256 currentTotalMinted = _totalMinted();
+            if (lower < currentTotalMinted) {
+                lower = currentTotalMinted;
+            }
+            return uint32(lower);
         }
     }
 
@@ -371,7 +376,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function mintConcluded() public view returns (bool) {
-        return _totalMinted() >= editionMaxMintable();
+        return _totalMinted() == editionMaxMintable();
     }
 
     /**
