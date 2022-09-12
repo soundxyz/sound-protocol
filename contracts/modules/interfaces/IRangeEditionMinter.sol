@@ -12,7 +12,7 @@ struct EditionMintData {
     // The timestamp (in seconds since unix epoch) after which the
     // max amount of tokens mintable will drop from
     // `maxMintableUpper` to `maxMintableLower`.
-    uint32 closingTime;
+    uint32 cutoffTime;
     // The total number of tokens minted. Includes permissioned mints.
     uint32 totalMinted;
     // The lower limit of the maximum number of tokens that can be minted.
@@ -36,7 +36,7 @@ struct MintInfo {
     uint32 maxMintableLower;
     uint32 maxMintablePerAccount;
     uint32 totalMinted;
-    uint32 closingTime;
+    uint32 cutoffTime;
 }
 
 /**
@@ -55,7 +55,7 @@ interface IRangeEditionMinter is IMinterModule {
      * @param mintId           The mint ID.
      * @param price            Sale price in ETH for minting a single token in `edition`.
      * @param startTime        Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime      The timestamp (in seconds since unix epoch) after which the
+     * @param cutoffTime       The timestamp (in seconds since unix epoch) after which the
      *                         max amount of tokens mintable will drop from
      *                         `maxMintableUpper` to `maxMintableLower`.
      * @param endTime          End timestamp of sale (in seconds since unix epoch).
@@ -68,7 +68,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint128 indexed mintId,
         uint96 price,
         uint32 startTime,
-        uint32 closingTime,
+        uint32 cutoffTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
         uint32 maxMintableLower,
@@ -76,7 +76,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintablePerAccount
     );
 
-    event ClosingTimeSet(address indexed edition, uint128 indexed mintId, uint32 closingTime);
+    event CutoffTimeSet(address indexed edition, uint128 indexed mintId, uint32 cutoffTime);
 
     /**
      * @dev Emitted when the max mintable range is updated.
@@ -115,7 +115,7 @@ interface IRangeEditionMinter is IMinterModule {
      * @param edition                Address of the song edition contract we are minting for.
      * @param price                  Sale price in ETH for minting a single token in `edition`.
      * @param startTime              Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime            The timestamp (in seconds since unix epoch) after which the
+     * @param cutoffTime             The timestamp (in seconds since unix epoch) after which the
      *                               max amount of tokens mintable will drop from
      *                               `maxMintableUpper` to `maxMintableLower`.
      * @param endTime                End timestamp of sale (in seconds since unix epoch).
@@ -129,7 +129,7 @@ interface IRangeEditionMinter is IMinterModule {
         address edition,
         uint96 price,
         uint32 startTime,
-        uint32 closingTime,
+        uint32 cutoffTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
         uint32 maxMintableLower,
@@ -141,7 +141,7 @@ interface IRangeEditionMinter is IMinterModule {
      * @dev Sets the time range.
      * @param edition     Address of the song edition contract we are minting for.
      * @param startTime   Start timestamp of sale (in seconds since unix epoch).
-     * @param closingTime The timestamp (in seconds since unix epoch) after which the
+     * @param cutoffTime  The timestamp (in seconds since unix epoch) after which the
      *                    max amount of tokens mintable will drop from
      *                    `maxMintableUpper` to `maxMintableLower`.
      * @param endTime     End timestamp of sale (in seconds since unix epoch).
@@ -150,7 +150,7 @@ interface IRangeEditionMinter is IMinterModule {
         address edition,
         uint128 mintId,
         uint32 startTime,
-        uint32 closingTime,
+        uint32 cutoffTime,
         uint32 endTime
     ) external;
 

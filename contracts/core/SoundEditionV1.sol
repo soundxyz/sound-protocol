@@ -116,7 +116,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev The timestamp after which `editionMaxMintable` drops from
      *      `editionMaxMintableUpper` to `editionMaxMintableLower`.
      */
-    uint32 public editionClosingTime;
+    uint32 public editionCutoffTime;
 
     /**
      * @dev Metadata module used for `tokenURI` if it is set.
@@ -157,7 +157,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         uint16 royaltyBPS_,
         uint32 editionMaxMintableLower_,
         uint32 editionMaxMintableUpper_,
-        uint32 editionClosingTime_
+        uint32 editionCutoffTime_
     ) public onlyValidRoyaltyBPS(royaltyBPS_) {
         // Prevent double initialization.
         // We can "cheat" here and avoid the initializer modifer to save a SSTORE,
@@ -179,7 +179,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         fundingRecipient = fundingRecipient_;
         editionMaxMintableUpper = editionMaxMintableUpper_;
         editionMaxMintableLower = editionMaxMintableLower_;
-        editionClosingTime = editionClosingTime_;
+        editionCutoffTime = editionCutoffTime_;
 
         metadataModule = metadataModule_;
         royaltyBPS = royaltyBPS_;
@@ -337,12 +337,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /// @inheritdoc ISoundEditionV1
-    function setEditionClosingTime(uint32 editionClosingTime_) external onlyRolesOrOwner(ADMIN_ROLE) {
+    function setEditionCutoffTime(uint32 editionCutoffTime_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (mintConcluded()) revert MintHasConcluded();
 
-        editionClosingTime = editionClosingTime_;
+        editionCutoffTime = editionCutoffTime_;
 
-        emit EditionClosingTimeSet(editionClosingTime_);
+        emit EditionCutoffTimeSet(editionCutoffTime_);
     }
 
     // =============================================================
@@ -360,7 +360,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function editionMaxMintable() public view returns (uint32) {
-        if (block.timestamp < editionClosingTime) {
+        if (block.timestamp < editionCutoffTime) {
             return editionMaxMintableUpper;
         } else {
             return editionMaxMintableLower;

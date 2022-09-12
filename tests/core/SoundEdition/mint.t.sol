@@ -304,7 +304,7 @@ contract SoundEdition_mint is TestConfig {
 
         uint256 timeThreshold = block.timestamp + 10;
         edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
-        edition.setEditionClosingTime(uint32(timeThreshold));
+        edition.setEditionCutoffTime(uint32(timeThreshold));
 
         address[] memory to = new address[](3);
         to[0] = address(10000000);
@@ -338,7 +338,7 @@ contract SoundEdition_mint is TestConfig {
 
         uint256 timeThreshold = block.timestamp + 10;
         edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
-        edition.setEditionClosingTime(uint32(timeThreshold));
+        edition.setEditionCutoffTime(uint32(timeThreshold));
 
         vm.warp(timeThreshold);
 
@@ -366,19 +366,19 @@ contract SoundEdition_mint is TestConfig {
         edition.setEditionMaxMintableRange(0, editionMaxMintableUpper + 1);
     }
 
-    function test_setEditionClosingTimeRevertsIfMintHasConcluded() public {
+    function test_setEditionCutoffTimeRevertsIfMintHasConcluded() public {
         SoundEditionV1 edition = createGenericEdition();
 
         uint256 timeThreshold = block.timestamp + 10;
         edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
-        edition.setEditionClosingTime(uint32(timeThreshold));
+        edition.setEditionCutoffTime(uint32(timeThreshold));
 
         vm.warp(timeThreshold);
 
         edition.mint(address(this), 1);
 
         vm.expectRevert(ISoundEditionV1.MintHasConcluded.selector);
-        edition.setEditionClosingTime(uint32(timeThreshold));
+        edition.setEditionCutoffTime(uint32(timeThreshold));
     }
 
     function test_mintWithQuantityOverLimitReverts() public {

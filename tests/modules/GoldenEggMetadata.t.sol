@@ -66,9 +66,9 @@ contract GoldenEggMetadataTests is TestConfig {
         );
     }
 
-    function test_getGoldenEggTokenId(uint32 editionClosingTime, uint32 mintQuantity) external {
+    function test_getGoldenEggTokenId(uint32 editionCutoffTime, uint32 mintQuantity) external {
         vm.assume(mintQuantity > 0 && mintQuantity < 10);
-        vm.assume(editionClosingTime > block.timestamp);
+        vm.assume(editionCutoffTime > block.timestamp);
 
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
 
@@ -83,7 +83,7 @@ contract GoldenEggMetadataTests is TestConfig {
                 ROYALTY_BPS,
                 0,
                 MAX_MINTABLE_UPPER,
-                editionClosingTime // mintRandomnessTimeThreshold
+                editionCutoffTime // mintRandomnessTimeThreshold
             )
         );
 
@@ -105,7 +105,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, mintQuantity, address(0));
 
-        vm.warp(editionClosingTime);
+        vm.warp(editionCutoffTime);
 
         uint256 expectedGoldenEggId;
         uint256 mintRandomness = edition.mintRandomness();
@@ -168,7 +168,7 @@ contract GoldenEggMetadataTests is TestConfig {
         // Mint one more to bring us to maxMintableLower
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, address(0));
 
-        // Warp to closing time, which is set to randomnessLockedTimeThreshold
+        // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CLOSING_TIME);
         goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
@@ -208,7 +208,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         edition.setEditionMaxMintableRange(quantity, MAX_MINTABLE_UPPER);
 
-        // Warp to closing time, which is set to randomnessLockedTimeThreshold
+        // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CLOSING_TIME);
         goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
@@ -234,7 +234,7 @@ contract GoldenEggMetadataTests is TestConfig {
         vm.prank(admin);
         edition.setEditionMaxMintableRange(quantity, MAX_MINTABLE_UPPER);
 
-        // Warp to closing time, which is set to randomnessLockedTimeThreshold
+        // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CLOSING_TIME);
         goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
@@ -253,7 +253,7 @@ contract GoldenEggMetadataTests is TestConfig {
         address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
-        edition.setEditionClosingTime(666);
+        edition.setEditionCutoffTime(666);
     }
 
     // Test when owner lowering mintRandomnessTimeThreshold, it generates the golden egg
@@ -270,9 +270,9 @@ contract GoldenEggMetadataTests is TestConfig {
         // golden egg not generated
         assertEq(goldenEggTokenId, 0);
 
-        edition.setEditionClosingTime(CLOSING_TIME);
+        edition.setEditionCutoffTime(CLOSING_TIME);
 
-        // Warp to closing time, which is set to randomnessLockedTimeThreshold
+        // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CLOSING_TIME);
         goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
@@ -298,9 +298,9 @@ contract GoldenEggMetadataTests is TestConfig {
         assertEq(goldenEggTokenId, 0);
 
         vm.prank(admin);
-        edition.setEditionClosingTime(CLOSING_TIME);
+        edition.setEditionCutoffTime(CLOSING_TIME);
 
-        // Warp to closing time, which is set to randomnessLockedTimeThreshold
+        // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CLOSING_TIME);
         goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");

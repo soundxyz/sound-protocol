@@ -62,10 +62,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     event EditionMaxMintableRangeSet(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_);
 
     /**
-     * @dev Emitted when the edition's closing time set.
-     * @param editionClosingTime_ The timestamp.
+     * @dev Emitted when the edition's cutoff time set.
+     * @param editionCutoffTime_ The timestamp.
      */
-    event EditionClosingTimeSet(uint32 editionClosingTime_);
+    event EditionCutoffTimeSet(uint32 editionCutoffTime_);
 
     // =============================================================
     //                            ERRORS
@@ -278,9 +278,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * Calling conditions:
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
-     * @param editionClosingTime_ The timestamp.
+     * @param editionCutoffTime_ The timestamp.
      */
-    function setEditionClosingTime(uint32 editionClosingTime_) external;
+    function setEditionCutoffTime(uint32 editionCutoffTime_) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
@@ -349,7 +349,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *      `editionMaxMintableUpper` to `editionMaxMintableLower`.
      * @return The configured value.
      */
-    function editionClosingTime() external view returns (uint32);
+    function editionCutoffTime() external view returns (uint32);
 
     /**
      * @dev Returns the address of the metadata module.
