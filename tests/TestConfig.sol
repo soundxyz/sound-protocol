@@ -20,7 +20,8 @@ contract TestConfig is Test {
     uint16 constant ROYALTY_BPS = 100;
     address public constant ARTIST_ADMIN = address(8888888888);
     uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
-    uint32 constant RANDOMNESS_LOCKED_TIMESTAMP = 200;
+    uint32 constant EDITION_CUTOFF_TIME = 200;
+    bool constant MINT_RANDOMNESS_ENABLED = true;
     address constant SOUND_FEE_ADDRESS = address(2222222222);
     uint16 constant PLATFORM_FEE_BPS = 200;
     uint256 constant MAX_BPS = 10_000;
@@ -62,7 +63,8 @@ contract TestConfig is Test {
         uint16 royaltyBPS,
         uint32 editionMaxMintableLower,
         uint32 editionMaxMintableUpper,
-        uint32 editionClosingTime
+        uint32 editionClosingTime,
+        bool mintRandomnessEnabled
     ) public returns (address) {
         bytes memory initData = abi.encodeWithSelector(
             SoundEditionV1.initialize.selector,
@@ -75,7 +77,8 @@ contract TestConfig is Test {
             royaltyBPS,
             editionMaxMintableLower,
             editionMaxMintableUpper,
-            editionClosingTime
+            editionClosingTime,
+            mintRandomnessEnabled
         );
 
         address[] memory contracts;
@@ -99,7 +102,8 @@ contract TestConfig is Test {
                     ROYALTY_BPS,
                     EDITION_MAX_MINTABLE,
                     EDITION_MAX_MINTABLE,
-                    RANDOMNESS_LOCKED_TIMESTAMP
+                    EDITION_CUTOFF_TIME,
+                    MINT_RANDOMNESS_ENABLED
                 )
             );
     }

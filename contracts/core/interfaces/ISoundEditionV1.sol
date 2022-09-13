@@ -138,16 +138,19 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Initializes the contract.
-     * @param name_                         Name of the collection.
-     * @param symbol_                       Symbol of the collection.
-     * @param metadataModule_               Address of metadata module, address(0x00) if not used.
-     * @param baseURI_                      Base URI.
-     * @param contractURI_                  Contract URI for OpenSea storefront.
-     * @param fundingRecipient_             Address that receives primary and secondary royalties.
-     * @param royaltyBPS_                   Royalty amount in bps (basis points).
-     * @param editionMaxMintable_           The maximum amount of tokens mintable for this edition.
-     * @param mintRandomnessTokenThreshold_ Token supply after which randomness gets locked.
-     * @param mintRandomnessTimeThreshold_  Timestamp after which randomness gets locked.
+     * @param name_                    Name of the collection.
+     * @param symbol_                  Symbol of the collection.
+     * @param metadataModule_          Address of metadata module, address(0x00) if not used.
+     * @param baseURI_                 Base URI.
+     * @param contractURI_             Contract URI for OpenSea storefront.
+     * @param fundingRecipient_        Address that receives primary and secondary royalties.
+     * @param royaltyBPS_              Royalty amount in bps (basis points).
+     * @param editionMaxMintableLower_ The lower bound of the max mintable quantity for the edition.
+     * @param editionMaxMintableUpper_ The upper bound of the max mintable quantity for the edition.
+     * @param editionCutoffTime_       The timestamp after which `editionMaxMintable` drops from
+     *                                 `editionMaxMintableUpper` to
+     *                                 `max(_totalMinted(), editionMaxMintableLower)`.
+     * @param mintRandomnessEnabled_   Whether the mintRandomness is enabled.
      */
     function initialize(
         string memory name_,
@@ -157,9 +160,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory contractURI_,
         address fundingRecipient_,
         uint16 royaltyBPS_,
-        uint32 editionMaxMintable_,
-        uint32 mintRandomnessTokenThreshold_,
-        uint32 mintRandomnessTimeThreshold_
+        uint32 editionMaxMintableLower_,
+        uint32 editionMaxMintableUpper_,
+        uint32 editionCutoffTime_,
+        bool mintRandomnessEnabled_
     ) external;
 
     /**

@@ -42,9 +42,10 @@ contract Deploy is Script {
             "contractURI",
             address(1), // fundingRecipient
             0, // royaltyBPS
-            0, // editionMaxMintable
-            0, // mintRandomnessTokenThreshold
-            0 // mintRandomnessTimeThreshold
+            0, // editionMaxMintableLower
+            0, // editionMaxMintableUpper
+            0, // editionCutoffTime
+            true // mintRandomnessEnabled
         );
 
         // Deploy the SoundCreator

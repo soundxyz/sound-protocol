@@ -64,7 +64,8 @@ contract MintControllerBaseTests is TestConfig {
                 ROYALTY_BPS,
                 editionMaxMintable,
                 editionMaxMintable,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                EDITION_CUTOFF_TIME,
+                MINT_RANDOMNESS_ENABLED
             )
         );
 

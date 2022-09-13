@@ -129,7 +129,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp` have been surpassed.
      *      Used for game mechanics like the Sound Golden Egg.
      */
-    bytes9 private _mintRandomness;
+    bytes8 private _mintRandomness;
 
     /**
      * @dev The royalty fee in basis points.
@@ -140,6 +140,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev Indicates if the `baseURI` is mutable.
      */
     bool public isMetadataFrozen;
+
+    /**
+     * @dev Indicates if the `mintRandomness` is enabled.
+     */
+    bool public mintRandomnessEnabled;
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -158,7 +163,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         uint16 royaltyBPS_,
         uint32 editionMaxMintableLower_,
         uint32 editionMaxMintableUpper_,
-        uint32 editionCutoffTime_
+        uint32 editionCutoffTime_,
+        bool mintRandomnessEnabled_
     ) public onlyValidRoyaltyBPS(royaltyBPS_) {
         // Prevent double initialization.
         // We can "cheat" here and avoid the initializer modifer to save a SSTORE,
@@ -181,6 +187,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         editionMaxMintableUpper = editionMaxMintableUpper_;
         editionMaxMintableLower = editionMaxMintableLower_;
         editionCutoffTime = editionCutoffTime_;
+        mintRandomnessEnabled = mintRandomnessEnabled_;
 
         metadataModule = metadataModule_;
         royaltyBPS = royaltyBPS_;
@@ -510,23 +517,25 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev Updates the mint randomness.
      */
     modifier updatesMintRandomness() {
-        if (!mintConcluded()) {
-            bytes32 randomness = _mintRandomness;
-            assembly {
-                // Pick any of the last 256 blocks psuedorandomly for the blockhash.
-                // Store the blockhash, the current `randomness` and the `coinbase()`
-                // into the scratch space.
-                mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
-                // `randomness` is left-aligned.
-                // `coinbase()` is right-aligned.
-                // `difficulty()` is right-aligned.
-                // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
-                // is implemented, the randomness will be determined by the beacon chain.
-                mstore(0x20, xor(randomness, xor(coinbase(), difficulty())))
-                // Compute the new `randomness` by hashing the scratch space.
-                randomness := keccak256(0x00, 0x40)
+        if (mintRandomnessEnabled) {
+            if (!mintConcluded()) {
+                bytes32 randomness = _mintRandomness;
+                assembly {
+                    // Pick any of the last 256 blocks psuedorandomly for the blockhash.
+                    // Store the blockhash, the current `randomness` and the `coinbase()`
+                    // into the scratch space.
+                    mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
+                    // `randomness` is left-aligned.
+                    // `coinbase()` is right-aligned.
+                    // `difficulty()` is right-aligned.
+                    // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
+                    // is implemented, the randomness will be determined by the beacon chain.
+                    mstore(0x20, xor(randomness, xor(coinbase(), difficulty())))
+                    // Compute the new `randomness` by hashing the scratch space.
+                    randomness := keccak256(0x00, 0x40)
+                }
+                _mintRandomness = bytes8(randomness);
             }
-            _mintRandomness = bytes9(randomness);
         }
         _;
     }

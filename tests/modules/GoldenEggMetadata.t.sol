@@ -25,7 +25,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
     uint32 constant MINT_ID = 0;
 
-    function _createEdition(uint32 randomnessLockedTimeThreshold)
+    function _createEdition(uint32 editionCutoffTime)
         internal
         returns (
             SoundEditionV1 edition,
@@ -47,7 +47,8 @@ contract GoldenEggMetadataTests is TestConfig {
                 ROYALTY_BPS,
                 MAX_MINTABLE_LOWER,
                 MAX_MINTABLE_UPPER,
-                randomnessLockedTimeThreshold
+                editionCutoffTime,
+                MINT_RANDOMNESS_ENABLED
             )
         );
 
@@ -81,9 +82,10 @@ contract GoldenEggMetadataTests is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                0,
+                0, // maxMintableLower
                 MAX_MINTABLE_UPPER,
-                editionCutoffTime // mintRandomnessTimeThreshold
+                editionCutoffTime, // mintRandomnessTimeThreshold
+                MINT_RANDOMNESS_ENABLED
             )
         );
 

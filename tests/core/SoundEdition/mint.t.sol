@@ -38,9 +38,10 @@ contract SoundEdition_mint is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                0,
+                0, // editionMaxMintableLower
                 editionMaxMintableUpper,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                EDITION_CUTOFF_TIME,
+                MINT_RANDOMNESS_ENABLED
             )
         );
 
@@ -135,7 +136,8 @@ contract SoundEdition_mint is TestConfig {
                 ROYALTY_BPS,
                 editionMaxMintableLower,
                 editionMaxMintableUpper,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                EDITION_CUTOFF_TIME,
+                MINT_RANDOMNESS_ENABLED
             )
         );
 
@@ -172,7 +174,8 @@ contract SoundEdition_mint is TestConfig {
                 ROYALTY_BPS,
                 editionMaxMintableLower,
                 editionMaxMintableUpper,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                EDITION_CUTOFF_TIME,
+                MINT_RANDOMNESS_ENABLED
             )
         );
 

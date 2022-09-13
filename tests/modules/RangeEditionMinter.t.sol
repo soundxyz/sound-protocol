@@ -95,9 +95,10 @@ contract RangeEditionMinterTests is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                MAX_MINTABLE_UPPER,
                 EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                EDITION_MAX_MINTABLE,
+                EDITION_CUTOFF_TIME,
+                MINT_RANDOMNESS_ENABLED
             )
         );
 
