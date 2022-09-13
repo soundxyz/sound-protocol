@@ -14,6 +14,8 @@ import { stdError } from "forge-std/Test.sol";
 contract SoundEdition_mint is TestConfig {
     event EditionMaxMintableRangeSet(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_);
 
+    event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
+
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
@@ -334,6 +336,61 @@ contract SoundEdition_mint is TestConfig {
         vm.prank(nonAdminOrOwner);
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
         edition.airdrop(to, 1);
+    }
+
+    function test_setMintRandomessEnabled(bool mintRandomnessEnabled0, bool mintRandomnessEnabled1) public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        vm.expectEmit(true, true, true, true);
+        emit MintRandomnessEnabledSet(mintRandomnessEnabled0);
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled0);
+
+        assertEq(edition.mintRandomnessEnabled(), mintRandomnessEnabled0);
+
+        vm.expectEmit(true, true, true, true);
+        emit MintRandomnessEnabledSet(mintRandomnessEnabled1);
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled1);
+
+        assertEq(edition.mintRandomnessEnabled(), mintRandomnessEnabled1);
+    }
+
+    function test_setMintRandomessEnabled() public {
+        test_setMintRandomessEnabled(true, false);
+        test_setMintRandomessEnabled(false, true);
+    }
+
+    function test_setMintRandomessEnabledRevertsWhenThereAreMints(uint32 quantity, bool mintRandomnessEnabled) public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        edition.mint(address(this), bound(quantity, 1, 10));
+
+        vm.expectRevert(ISoundEditionV1.MintsAlreadyExist.selector);
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled);
+    }
+
+    function test_setMintRandomessEnabledRevertsWhenThereAreMints() public {
+        test_setMintRandomessEnabledRevertsWhenThereAreMints(1, true);
+        test_setMintRandomessEnabledRevertsWhenThereAreMints(1, false);
+    }
+
+    function test_mintRandomessEnabledUpdatesRandomness(bool mintRandomnessEnabled) public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        uint256 timeThreshold = block.timestamp + 10;
+        edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
+        edition.setEditionCutoffTime(uint32(timeThreshold));
+
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled);
+
+        edition.mint(address(this), 1);
+
+        vm.warp(timeThreshold);
+
+        if (mintRandomnessEnabled) {
+            assertTrue(edition.mintRandomness() != 0);
+        } else {
+            assertTrue(edition.mintRandomness() == 0);
+        }
     }
 
     function test_setEditionMaxMintableRangeRevertsIfMintHasConcluded() public {

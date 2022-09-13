@@ -67,6 +67,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     event EditionCutoffTimeSet(uint32 editionCutoffTime_);
 
+    /**
+     * @dev Emitted when the `mintRandomnessEnabled` is set.
+     * @param mintRandomnessEnabled_ The boolean value.
+     */
+    event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
+
     // =============================================================
     //                            ERRORS
     // =============================================================
@@ -131,6 +137,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @dev The mint has already concluded.
      */
     error MintHasConcluded();
+
+    /**
+     * @dev Cannot perform the operation after a token has been minted.
+     */
+    error MintsAlreadyExist();
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -286,6 +297,16 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     function setEditionCutoffTime(uint32 editionCutoffTime_) external;
 
+    /**
+     * @dev Sets whether the `mintRandomness` is enabled.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
+     * @param mintRandomnessEnabled_ The boolean value.
+     */
+    function setMintRandomnessEnabled(bool mintRandomnessEnabled_) external;
+
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
@@ -371,6 +392,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The latest value.
      */
     function mintRandomness() external view returns (uint256);
+
+    /**
+     * @dev Returns whether the `mintRandomness` has been enabled.
+     * @return The configured value.
+     */
+    function mintRandomnessEnabled() external view returns (bool);
 
     /**
      * @dev Returns whether the mint has been concluded.

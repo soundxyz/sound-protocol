@@ -77,6 +77,16 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
+    /**
+     * @dev The boolean flag on whether the metadata is frozen.
+     */
+    uint8 private constant _METADATA_FROZEN_FLAG = 1 << 0;
+
+    /**
+     * @dev The boolean flag on whether the `mintRandomness` is enabled.
+     */
+    uint8 private constant _MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
+
     // =============================================================
     //                            STORAGE
     // =============================================================
@@ -129,7 +139,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp` have been surpassed.
      *      Used for game mechanics like the Sound Golden Egg.
      */
-    bytes8 private _mintRandomness;
+    bytes9 private _mintRandomness;
 
     /**
      * @dev The royalty fee in basis points.
@@ -137,14 +147,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint16 public royaltyBPS;
 
     /**
-     * @dev Indicates if the `baseURI` is mutable.
+     * @dev Packed boolean flags.
      */
-    bool public isMetadataFrozen;
-
-    /**
-     * @dev Indicates if the `mintRandomness` is enabled.
-     */
-    bool public mintRandomnessEnabled;
+    uint8 private _flags;
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -187,7 +192,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         editionMaxMintableUpper = editionMaxMintableUpper_;
         editionMaxMintableLower = editionMaxMintableLower_;
         editionCutoffTime = editionCutoffTime_;
-        mintRandomnessEnabled = mintRandomnessEnabled_;
+
+        _flags = mintRandomnessEnabled_ ? _MINT_RANDOMNESS_ENABLED_FLAG : 0;
 
         metadataModule = metadataModule_;
         royaltyBPS = royaltyBPS_;
@@ -258,7 +264,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function setMetadataModule(IMetadataModule metadataModule_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen) revert MetadataIsFrozen();
+        if (isMetadataFrozen()) revert MetadataIsFrozen();
         metadataModule = metadataModule_;
 
         emit MetadataModuleSet(metadataModule_);
@@ -268,7 +274,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen) revert MetadataIsFrozen();
+        if (isMetadataFrozen()) revert MetadataIsFrozen();
         baseURI = baseURI_;
 
         emit BaseURISet(baseURI_);
@@ -278,7 +284,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen) revert MetadataIsFrozen();
+        if (isMetadataFrozen()) revert MetadataIsFrozen();
         contractURI = contractURI_;
 
         emit ContractURISet(contractURI_);
@@ -288,9 +294,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen) revert MetadataIsFrozen();
+        if (isMetadataFrozen()) revert MetadataIsFrozen();
 
-        isMetadataFrozen = true;
+        _flags |= _METADATA_FROZEN_FLAG;
         emit MetadataFrozen(metadataModule, baseURI, contractURI);
     }
 
@@ -338,13 +344,28 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         emit EditionMaxMintableRangeSet(editionMaxMintableLower, editionMaxMintableUpper);
     }
 
-    /// @inheritdoc ISoundEditionV1
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function setEditionCutoffTime(uint32 editionCutoffTime_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (mintConcluded()) revert MintHasConcluded();
 
         editionCutoffTime = editionCutoffTime_;
 
         emit EditionCutoffTimeSet(editionCutoffTime_);
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function setMintRandomnessEnabled(bool mintRandomnessEnabled_) external onlyRolesOrOwner(ADMIN_ROLE) {
+        if (_totalMinted() != 0) revert MintsAlreadyExist();
+
+        if (mintRandomnessEnabled() != mintRandomnessEnabled_) {
+            _flags ^= _MINT_RANDOMNESS_ENABLED_FLAG;
+        }
+
+        emit MintRandomnessEnabledSet(mintRandomnessEnabled_);
     }
 
     // =============================================================
@@ -355,7 +376,10 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function mintRandomness() public view returns (uint256) {
-        return mintConcluded() ? uint256(keccak256(abi.encode(_mintRandomness, address(this)))) : 0;
+        if (mintConcluded() && mintRandomnessEnabled()) {
+            return uint256(keccak256(abi.encode(_mintRandomness, address(this))));
+        }
+        return 0;
     }
 
     /**
@@ -367,6 +391,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         } else {
             return uint32(FixedPointMathLib.max(editionMaxMintableLower, _totalMinted()));
         }
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function isMetadataFrozen() public view returns (bool) {
+        return _flags & _METADATA_FROZEN_FLAG != 0;
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function mintRandomnessEnabled() public view returns (bool) {
+        return _flags & _MINT_RANDOMNESS_ENABLED_FLAG != 0;
     }
 
     /**
@@ -517,25 +555,23 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev Updates the mint randomness.
      */
     modifier updatesMintRandomness() {
-        if (mintRandomnessEnabled) {
-            if (!mintConcluded()) {
-                bytes32 randomness = _mintRandomness;
-                assembly {
-                    // Pick any of the last 256 blocks psuedorandomly for the blockhash.
-                    // Store the blockhash, the current `randomness` and the `coinbase()`
-                    // into the scratch space.
-                    mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
-                    // `randomness` is left-aligned.
-                    // `coinbase()` is right-aligned.
-                    // `difficulty()` is right-aligned.
-                    // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
-                    // is implemented, the randomness will be determined by the beacon chain.
-                    mstore(0x20, xor(randomness, xor(coinbase(), difficulty())))
-                    // Compute the new `randomness` by hashing the scratch space.
-                    randomness := keccak256(0x00, 0x40)
-                }
-                _mintRandomness = bytes8(randomness);
+        if (mintRandomnessEnabled() && !mintConcluded()) {
+            bytes32 randomness = _mintRandomness;
+            assembly {
+                // Pick any of the last 256 blocks psuedorandomly for the blockhash.
+                // Store the blockhash, the current `randomness` and the `coinbase()`
+                // into the scratch space.
+                mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
+                // `randomness` is left-aligned.
+                // `coinbase()` is right-aligned.
+                // `difficulty()` is right-aligned.
+                // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
+                // is implemented, the randomness will be determined by the beacon chain.
+                mstore(0x20, xor(randomness, xor(coinbase(), difficulty())))
+                // Compute the new `randomness` by hashing the scratch space.
+                randomness := keccak256(0x00, 0x40)
             }
+            _mintRandomness = bytes9(randomness);
         }
         _;
     }
