@@ -30,6 +30,7 @@ contract MintControllerBaseTests is TestConfig {
     event Minted(
         address indexed edition,
         uint128 indexed mintId,
+        address indexed buyer,
         uint32 fromTokenId,
         uint32 quantity,
         uint128 requiredEtherValue,
@@ -426,6 +427,7 @@ contract MintControllerBaseTests is TestConfig {
         emit Minted(
             address(edition),
             mintId,
+            address(this),
             fromTokenId,
             quantity,
             uint128(requiredEtherValue),
