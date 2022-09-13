@@ -51,8 +51,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint24 maxMintable,
-        uint24 maxMintablePerAccount
+        uint32 maxMintable,
+        uint32 maxMintablePerAccount
     ) public returns (uint128 mintId) {
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
@@ -81,7 +81,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
-        uint24 requestedQuantity,
+        uint32 requestedQuantity,
         bytes32[] calldata merkleProof,
         address affiliate
     ) public payable {
@@ -122,7 +122,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         address edition,
         uint128 mintId,
         address, /* minter */
-        uint24 quantity
+        uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         unchecked {
             // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.

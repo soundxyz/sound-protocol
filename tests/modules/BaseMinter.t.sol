@@ -30,8 +30,8 @@ contract MintControllerBaseTests is TestConfig {
     event Minted(
         address indexed edition,
         uint128 indexed mintId,
-        uint24 fromTokenId,
-        uint24 quantity,
+        uint32 fromTokenId,
+        uint32 quantity,
         uint128 requiredEtherValue,
         uint128 platformFee,
         uint128 affiliateFee,
@@ -51,7 +51,7 @@ contract MintControllerBaseTests is TestConfig {
         minter = new MockMinter(feeRegistry);
     }
 
-    function _createEdition(uint24 editionMaxMintable) internal returns (SoundEditionV1 edition) {
+    function _createEdition(uint32 editionMaxMintable) internal returns (SoundEditionV1 edition) {
         edition = SoundEditionV1(
             createSound(
                 SONG_NAME,
@@ -151,7 +151,7 @@ contract MintControllerBaseTests is TestConfig {
         uint96 price = 1;
         minter.setPrice(price);
 
-        uint24 quantity = 2;
+        uint32 quantity = 2;
 
         address buyer = getFundedAccount(123456789);
 
@@ -173,7 +173,7 @@ contract MintControllerBaseTests is TestConfig {
         uint96 price = 1;
         minter.setPrice(price);
 
-        uint24 quantity = 2;
+        uint32 quantity = 2;
 
         address buyer = getFundedAccount(123456789);
 
@@ -230,7 +230,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_cantMintPastEditionMaxMintable() external {
         minter.setPrice(0);
 
-        uint24 maxSupply = 50;
+        uint32 maxSupply = 50;
         SoundEditionV1 edition1 = _createEdition(maxSupply);
 
         uint128 mintId1 = minter.createEditionMint(address(edition1), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
@@ -296,7 +296,7 @@ contract MintControllerBaseTests is TestConfig {
         uint16 affiliateFeeBPS = 10;
         uint16 platformFeeBPS = 10;
         uint96 price = 1 ether;
-        uint24 quantity = 2;
+        uint32 quantity = 2;
 
         test_mintAndWithdrawlWithAffiliateAndPlatformFee(
             affiliateIsZeroAddress,
@@ -338,7 +338,7 @@ contract MintControllerBaseTests is TestConfig {
         affiliateFeeBPS = affiliateFeeBPS % minter.MAX_BPS();
         _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
 
-        uint24 quantity = 1;
+        uint32 quantity = 1;
         uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity);
 
         address affiliate = getFundedAccount(123456789);
@@ -365,7 +365,7 @@ contract MintControllerBaseTests is TestConfig {
         platformFeeBPS = platformFeeBPS % minter.MAX_BPS();
         feeRegistry.setPlatformFeeBPS(platformFeeBPS);
 
-        uint24 quantity = 1;
+        uint32 quantity = 1;
         uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity);
 
         address affiliate = getFundedAccount(123456789);
@@ -389,7 +389,7 @@ contract MintControllerBaseTests is TestConfig {
         uint16 affiliateFeeBPS,
         uint16 platformFeeBPS,
         uint96 price,
-        uint24 quantity
+        uint32 quantity
     ) public {
         price = price % 1e19;
         quantity = 1 + (quantity % 8);
@@ -421,7 +421,7 @@ contract MintControllerBaseTests is TestConfig {
             expectedAffiliateFees = ((requiredEtherValue - expectedPlatformFees) * affiliateFeeBPS) / minter.MAX_BPS();
         }
         // Expect an event.
-        uint24 fromTokenId = uint24(edition.nextTokenId());
+        uint32 fromTokenId = uint32(edition.nextTokenId());
         vm.expectEmit(true, true, true, true);
         emit Minted(
             address(edition),

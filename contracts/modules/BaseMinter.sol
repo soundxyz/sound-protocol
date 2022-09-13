@@ -184,7 +184,7 @@ abstract contract BaseMinter is IMinterModule {
         address edition,
         uint128 mintId,
         address minter,
-        uint24 quantity
+        uint32 quantity
     ) public view virtual override returns (uint128);
 
     // =============================================================
@@ -269,7 +269,7 @@ abstract contract BaseMinter is IMinterModule {
     function _mint(
         address edition,
         uint128 mintId,
-        uint24 quantity,
+        uint32 quantity,
         address affiliate
     ) internal {
         BaseData storage baseData = _baseData[edition][mintId];
@@ -313,7 +313,7 @@ abstract contract BaseMinter is IMinterModule {
 
         /* ------------------------- MINT --------------------------- */
 
-        uint24 fromTokenId = uint24(ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity));
+        uint32 fromTokenId = uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity));
 
         // Emit the event.
         emit Minted(
@@ -368,15 +368,15 @@ abstract contract BaseMinter is IMinterModule {
      * @return `totalMinted` + `quantity`.
      */
     function _incrementTotalMinted(
-        uint24 totalMinted,
-        uint24 quantity,
-        uint24 maxMintable
-    ) internal pure returns (uint24) {
+        uint32 totalMinted,
+        uint32 quantity,
+        uint32 maxMintable
+    ) internal pure returns (uint32) {
         unchecked {
             // Won't overflow as both are 32 bits.
             uint256 sum = uint256(totalMinted) + uint256(quantity);
             if (sum > maxMintable) {
-                uint24 available;
+                uint32 available;
                 // Note that the `maxMintable` may vary and drop over time
                 // and cause `totalMinted` to be greater than `maxMintable`.
                 if (maxMintable > totalMinted) {
@@ -384,7 +384,7 @@ abstract contract BaseMinter is IMinterModule {
                 }
                 revert ExceedsAvailableSupply(available);
             }
-            return uint24(sum);
+            return uint32(sum);
         }
     }
 }

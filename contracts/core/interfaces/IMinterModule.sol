@@ -86,8 +86,8 @@ interface IMinterModule is IERC165 {
     event Minted(
         address indexed edition,
         uint128 indexed mintId,
-        uint24 fromTokenId,
-        uint24 quantity,
+        uint32 fromTokenId,
+        uint32 quantity,
         uint128 requiredEtherValue,
         uint128 platformFee,
         uint128 affiliateFee,
@@ -110,7 +110,7 @@ interface IMinterModule is IERC165 {
      * @dev The number minted has exceeded the max mintable amount.
      * @param available The number of tokens remaining available for mint.
      */
-    error ExceedsAvailableSupply(uint24 available);
+    error ExceedsAvailableSupply(uint32 available);
 
     /**
      * @dev The mint is not opened.
@@ -243,7 +243,7 @@ interface IMinterModule is IERC165 {
         address edition,
         uint128 mintId,
         address minter,
-        uint24 quantity
+        uint32 quantity
     ) external view returns (uint128);
 
     /**

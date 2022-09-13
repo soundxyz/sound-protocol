@@ -20,13 +20,13 @@ contract RangeEditionMinterTests is TestConfig {
 
     uint16 constant AFFILIATE_FEE_BPS = 0;
 
-    uint24 constant MAX_MINTABLE_LOWER = 5;
+    uint32 constant MAX_MINTABLE_LOWER = 5;
 
-    uint24 constant MAX_MINTABLE_UPPER = 10;
+    uint32 constant MAX_MINTABLE_UPPER = 10;
 
     uint128 constant MINT_ID = 0;
 
-    uint24 constant MAX_MINTABLE_PER_ACCOUNT = 0;
+    uint32 constant MAX_MINTABLE_PER_ACCOUNT = 0;
 
     // prettier-ignore
     event RangeEditionMintCreated(
@@ -37,9 +37,9 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 closingTime,
         uint32 endTime,
         uint16 affiliateFeeBps,
-        uint24 maxMintableLower,
-        uint24 maxMintableUpper,
-        uint24 maxMintablePerAccount
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper,
+        uint32 maxMintablePerAccount
     );
 
     event ClosingTimeSet(address indexed edition, uint128 indexed mintId, uint32 closingTime);
@@ -47,13 +47,13 @@ contract RangeEditionMinterTests is TestConfig {
     event MaxMintableRangeSet(
         address indexed edition,
         uint128 indexed mintId,
-        uint24 maxMintableLower,
-        uint24 maxMintableUpper
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper
     );
 
     event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
-    function _createEditionAndMinter(uint24 _maxMintablePerAccount)
+    function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
         returns (SoundEditionV1 edition, RangeEditionMinter minter)
     {
@@ -82,9 +82,9 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 closingTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint24 maxMintableLower,
-        uint24 maxMintableUpper,
-        uint24 maxMintablePerAccount
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper,
+        uint32 maxMintablePerAccount
     ) public {
         SoundEditionV1 edition = SoundEditionV1(
             createSound(
@@ -157,7 +157,7 @@ contract RangeEditionMinterTests is TestConfig {
             assertEq(mintInfo.startTime, startTime);
             assertEq(mintInfo.closingTime, closingTime);
             assertEq(mintInfo.endTime, endTime);
-            assertEq(mintInfo.totalMinted, uint24(0));
+            assertEq(mintInfo.totalMinted, uint32(0));
             assertEq(mintInfo.maxMintableLower, maxMintableLower);
             assertEq(mintInfo.maxMintableUpper, maxMintableUpper);
         }
@@ -223,13 +223,13 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint24).max);
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.warp(START_TIME);
 
         address caller = getFundedAccount(1);
 
-        uint24 quantity = 2;
+        uint32 quantity = 2;
 
         MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
 
@@ -246,7 +246,7 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintRevertForUnderpaid() public {
-        uint24 quantity = 2;
+        uint32 quantity = 2;
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(quantity);
 
         vm.warp(START_TIME);
@@ -264,9 +264,9 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintRevertsForMintNotOpen() public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint24).max);
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
 
-        uint24 quantity = 1;
+        uint32 quantity = 1;
 
         vm.warp(START_TIME - 1);
         vm.expectRevert(
@@ -290,13 +290,13 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, quantity, address(0));
     }
 
-    function test_mintRevertsForSoldOut(uint24 quantityToBuyBeforeClosing, uint24 quantityToBuyAfterClosing) public {
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint24).max);
+    function test_mintRevertsForSoldOut(uint32 quantityToBuyBeforeClosing, uint32 quantityToBuyAfterClosing) public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
 
-        quantityToBuyBeforeClosing = uint24((quantityToBuyBeforeClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
-        quantityToBuyAfterClosing = uint24((quantityToBuyAfterClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
+        quantityToBuyBeforeClosing = uint32((quantityToBuyBeforeClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
+        quantityToBuyAfterClosing = uint32((quantityToBuyAfterClosing % uint256(MAX_MINTABLE_UPPER * 2)) + 1);
 
-        uint24 totalMinted;
+        uint32 totalMinted;
 
         if (quantityToBuyBeforeClosing > MAX_MINTABLE_UPPER) {
             vm.expectRevert(
@@ -314,7 +314,7 @@ contract RangeEditionMinterTests is TestConfig {
         );
 
         if (totalMinted + quantityToBuyAfterClosing > MAX_MINTABLE_LOWER) {
-            uint24 available = MAX_MINTABLE_LOWER > totalMinted ? MAX_MINTABLE_LOWER - totalMinted : 0;
+            uint32 available = MAX_MINTABLE_LOWER > totalMinted ? MAX_MINTABLE_LOWER - totalMinted : 0;
             vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, available));
         }
         vm.warp(CLOSING_TIME);
@@ -333,10 +333,10 @@ contract RangeEditionMinterTests is TestConfig {
     }
 
     function test_mintBeforeAndAfterClosingTimeBaseCase() public {
-        uint24 quantity = 1;
+        uint32 quantity = 1;
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(quantity);
-        uint24 maxMintableLower = 0;
-        uint24 maxMintableUpper = 1;
+        uint32 maxMintableLower = 0;
+        uint32 maxMintableUpper = 1;
         minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
 
         vm.warp(START_TIME);
@@ -412,7 +412,7 @@ contract RangeEditionMinterTests is TestConfig {
         }
     }
 
-    function test_setMaxMintableRange(uint24 maxMintableLower, uint24 maxMintableUpper) public {
+    function test_setMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper) public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(0);
 
         bool hasRevert;
@@ -469,8 +469,8 @@ contract RangeEditionMinterTests is TestConfig {
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;
-        uint96 expectedPrice = 1234071;
-        uint24 expectedMaxAllowedPerWallet = 937;
+        uint32 expectedPrice = 1234071;
+        uint32 expectedMaxAllowedPerWallet = 937;
 
         minter.createEditionMint(
             address(edition),
