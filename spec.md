@@ -44,6 +44,9 @@ Features:
     -   `SoundEditionV1.editionMaxMintable` - maximum number of tokens that can be minted for the edition.
         -   Can be initialized with any value up to `type(uint32).max`.
         -   Can be reduced by owner or admins after initialization down to any point above or equal to the current token count.
+    -   The maximum number of tokens that can be minted is constrained by `editionMaxMintable`.
+        -   Before `editionCutoffTime`, this value is `editionMaxMintableUpper`.
+        -   After (inclusive) `editionCutoffTime`, this value is the maximum of `editionMaxMintableLower` and `totalMinted()`.
 -   Access control
     -   Implements [solady `OwnableRoles`](https://github.com/Vectorized/solady/blob/main/src/auth/OwnableRoles.sol).
     -   Roles can be granted & revoked for addresses. ex:
@@ -88,6 +91,9 @@ Features:
         -   The signature is unique by `edition` address, `buyer` address, `mintId`, single-use `claimTicket`, a `signedQuantity` enforcing an upper limit for the transaction, and `affiliate` address.
     -   `RangeEditionMinter`
         -   Mints either a fixed quantity or a quantity [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30) based on time bounds.
+        -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.
+    -   `PublicSaleMinter`
+        -   Mints tokens at a fixed price.
         -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.
     -   `MerkleDropMinter`
         -   Enables a predefined list of recipients to mint tokens at a fixed price.
