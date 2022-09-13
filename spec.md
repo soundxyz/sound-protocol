@@ -92,7 +92,6 @@ Features:
     -   `MerkleDropMinter`
         -   Enables a predefined list of recipients to mint tokens at a fixed price.
         -   The price can be zero.
-        -   The eligible token quantity for each recipient can be unique.
         -   Each whitelisted user can claim their eligible amount in multiple transactions.
         -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.
 
