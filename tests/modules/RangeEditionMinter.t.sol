@@ -457,7 +457,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;
-        uint32 expectedPrice = 1234071;
+        uint96 expectedPrice = 1234071;
         uint32 expectedMaxAllowedPerWallet = 937;
 
         minter.createEditionMint(

@@ -184,7 +184,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;
-        uint32 expectedMaxMintable = 39730302;
+        uint32 expectedMaxMintable = 3973030;
         uint32 expectedMaxPerWallet = 397;
 
         uint128 mintId = minter.createEditionMint(
