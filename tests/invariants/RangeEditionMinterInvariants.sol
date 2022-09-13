@@ -73,7 +73,7 @@ contract RangeEditionMinterUpdater {
         minter.setTimeRange(address(edition), MINT_ID, startTime, closingTime, endTime);
     }
 
-    function setMaxMintableRange(uint24 maxMintableLower, uint24 maxMintableUpper) public {
+    function setMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper) public {
         minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
     }
 }

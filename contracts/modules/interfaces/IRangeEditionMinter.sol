@@ -14,13 +14,13 @@ struct EditionMintData {
     // `maxMintableUpper` to `maxMintableLower`.
     uint32 closingTime;
     // The total number of tokens minted. Includes permissioned mints.
-    uint24 totalMinted;
+    uint32 totalMinted;
     // The lower limit of the maximum number of tokens that can be minted.
-    uint24 maxMintableLower;
+    uint32 maxMintableLower;
     // The upper limit of the maximum number of tokens that can be minted.
-    uint24 maxMintableUpper;
+    uint32 maxMintableUpper;
     // The maximum number of tokens that a wallet can mint.
-    uint24 maxMintablePerAccount;
+    uint32 maxMintablePerAccount;
 }
 
 /**
@@ -32,10 +32,10 @@ struct MintInfo {
     uint16 affiliateFeeBPS;
     bool mintPaused;
     uint96 price;
-    uint24 maxMintableUpper;
-    uint24 maxMintableLower;
-    uint24 maxMintablePerAccount;
-    uint24 totalMinted;
+    uint32 maxMintableUpper;
+    uint32 maxMintableLower;
+    uint32 maxMintablePerAccount;
+    uint32 totalMinted;
     uint32 closingTime;
 }
 
@@ -71,9 +71,9 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 closingTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint24 maxMintableLower,
-        uint24 maxMintableUpper,
-        uint24 maxMintablePerAccount
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper,
+        uint32 maxMintablePerAccount
     );
 
     event ClosingTimeSet(address indexed edition, uint128 indexed mintId, uint32 closingTime);
@@ -88,8 +88,8 @@ interface IRangeEditionMinter is IMinterModule {
     event MaxMintableRangeSet(
         address indexed edition,
         uint128 indexed mintId,
-        uint24 maxMintableLower,
-        uint24 maxMintableUpper
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper
     );
 
     // =============================================================
@@ -101,7 +101,7 @@ interface IRangeEditionMinter is IMinterModule {
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
      * @param maxMintableUpper The upper limit of the maximum number of tokens that can be minted.
      */
-    error InvalidMaxMintableRange(uint24 maxMintableLower, uint24 maxMintableUpper);
+    error InvalidMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper);
 
     /**
      * @dev The number of tokens minted has exceeded the number allowed for each account.
@@ -134,9 +134,9 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 closingTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint24 maxMintableLower,
-        uint24 maxMintableUpper,
-        uint24 maxMintablePerAccount_
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper,
+        uint32 maxMintablePerAccount_
     ) external returns (uint128 mintId);
 
     /*
@@ -165,8 +165,8 @@ interface IRangeEditionMinter is IMinterModule {
     function setMaxMintableRange(
         address edition,
         uint128 mintId,
-        uint24 maxMintableLower,
-        uint24 maxMintableUpper
+        uint32 maxMintableLower,
+        uint32 maxMintableUpper
     ) external;
 
     /*
@@ -177,7 +177,7 @@ interface IRangeEditionMinter is IMinterModule {
     function mint(
         address edition,
         uint128 mintId,
-        uint24 quantity,
+        uint32 quantity,
         address affiliate
     ) external payable;
 

@@ -35,9 +35,9 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function _createEditionAndMinter(
-        uint24 _price,
-        uint24 _maxMintable,
-        uint24 _maxMintablePerAccount
+        uint32 _price,
+        uint32 _maxMintable,
+        uint32 _maxMintablePerAccount
     )
         internal
         returns (
@@ -66,7 +66,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_canMintMultipleTimesLessThanMaxMintablePerAccount() public {
-        uint24 maxPerAccount = 2;
+        uint32 maxPerAccount = 2;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
@@ -79,7 +79,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
 
-        uint24 requestedQuantity = 1;
+        uint32 requestedQuantity = 1;
         vm.prank(accounts[1]);
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
         user1Balance = edition.balanceOf(accounts[1]);
@@ -93,8 +93,8 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimMoreThanMaxMintablePerAccount() public {
-        uint24 maxPerAccount = 1;
-        uint24 requestedQuantity = 2;
+        uint32 maxPerAccount = 1;
+        uint32 requestedQuantity = 2;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
@@ -110,8 +110,8 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_cannotClaimMoreThanMaxMintable() public {
-        uint24 maxPerAccount = 3;
-        uint24 requestedQuantity = 3;
+        uint32 maxPerAccount = 3;
+        uint32 requestedQuantity = 3;
 
         (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
@@ -132,13 +132,13 @@ contract MerkleDropMinterTests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        uint24 requestedQuantity = 1;
+        uint32 requestedQuantity = 1;
         vm.expectRevert(IMerkleDropMinter.InvalidMerkleProof.selector);
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
     function test_canGetMintedTallyForAccount() public {
-        uint24 maxMintablePerAccount = 1;
+        uint32 maxMintablePerAccount = 1;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
@@ -149,7 +149,7 @@ contract MerkleDropMinterTests is TestConfig {
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
 
-        uint24 requestedQuantity = maxMintablePerAccount;
+        uint32 requestedQuantity = maxMintablePerAccount;
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
 
         uint256 mintedTally = minter.mintedTallies(address(edition), mintId, accounts[0]);
@@ -184,8 +184,8 @@ contract MerkleDropMinterTests is TestConfig {
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;
-        uint24 expectedMaxMintable = 3973030;
-        uint24 expectedMaxPerWallet = 397;
+        uint32 expectedMaxMintable = 39730302;
+        uint32 expectedMaxPerWallet = 397;
 
         uint128 mintId = minter.createEditionMint(
             address(edition),

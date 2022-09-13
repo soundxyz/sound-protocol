@@ -19,9 +19,9 @@ contract GoldenEggMetadataTests is TestConfig {
 
     uint16 constant AFFILIATE_FEE_BPS = 0;
 
-    uint24 constant MAX_MINTABLE_LOWER = 42;
+    uint32 constant MAX_MINTABLE_LOWER = 42;
 
-    uint24 constant MAX_MINTABLE_UPPER = 69;
+    uint32 constant MAX_MINTABLE_UPPER = 69;
 
     uint32 constant MINT_ID = 0;
 
@@ -62,7 +62,7 @@ contract GoldenEggMetadataTests is TestConfig {
             AFFILIATE_FEE_BPS,
             MAX_MINTABLE_LOWER,
             MAX_MINTABLE_UPPER,
-            type(uint24).max // maxMintablePerAccount
+            type(uint32).max // maxMintablePerAccount
         );
     }
 
@@ -70,7 +70,7 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 mintRandomnessTokenThreshold,
         uint32 mintRandomnessTimeThreshold,
         uint32 mintTime,
-        uint24 mintQuantity
+        uint32 mintQuantity
     ) external {
         vm.assume(mintQuantity > 0 && mintQuantity < 50);
         vm.assume(mintTime < END_TIME);
@@ -146,7 +146,7 @@ contract GoldenEggMetadataTests is TestConfig {
             CLOSING_TIME
         );
 
-        uint24 quantity = MAX_MINTABLE_UPPER;
+        uint32 quantity = MAX_MINTABLE_UPPER;
 
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
@@ -158,7 +158,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
     // Test if tokenURI returns goldenEgg uri, when both randomnessLocked conditions have been met
     function test_getTokenURIAfterRandomnessLocked() external {
-        uint24 quantity = MAX_MINTABLE_LOWER - 1;
+        uint32 quantity = MAX_MINTABLE_LOWER - 1;
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition(
             CLOSING_TIME
         );
@@ -188,7 +188,7 @@ contract GoldenEggMetadataTests is TestConfig {
     function test_setMintRandomnessRevertsForNonOwner() external {
         (SoundEditionV1 edition, RangeEditionMinter minter, ) = _createEdition(CLOSING_TIME);
 
-        uint24 quantity = MAX_MINTABLE_LOWER - 1;
+        uint32 quantity = MAX_MINTABLE_LOWER - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         address caller = getFundedAccount(1);
@@ -201,7 +201,7 @@ contract GoldenEggMetadataTests is TestConfig {
     function test_setMintRandomnessRevertsForLowValue() external {
         (SoundEditionV1 edition, RangeEditionMinter minter, ) = _createEdition(CLOSING_TIME);
 
-        uint24 quantity = MAX_MINTABLE_LOWER - 1;
+        uint32 quantity = MAX_MINTABLE_LOWER - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         vm.expectRevert(ISoundEditionV1.InvalidRandomnessLock.selector);
@@ -214,7 +214,7 @@ contract GoldenEggMetadataTests is TestConfig {
             CLOSING_TIME
         );
 
-        uint24 quantity = MAX_MINTABLE_LOWER - 1;
+        uint32 quantity = MAX_MINTABLE_LOWER - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
@@ -239,7 +239,7 @@ contract GoldenEggMetadataTests is TestConfig {
         address admin = address(789);
         edition.grantRoles(admin, edition.ADMIN_ROLE());
 
-        uint24 quantity = MAX_MINTABLE_LOWER - 1;
+        uint32 quantity = MAX_MINTABLE_LOWER - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
@@ -278,7 +278,7 @@ contract GoldenEggMetadataTests is TestConfig {
             randomnessTimeThreshold
         );
 
-        uint24 quantity = MAX_MINTABLE_LOWER;
+        uint32 quantity = MAX_MINTABLE_LOWER;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
@@ -305,7 +305,7 @@ contract GoldenEggMetadataTests is TestConfig {
         address admin = address(789);
         edition.grantRoles(admin, edition.ADMIN_ROLE());
 
-        uint24 quantity = MAX_MINTABLE_LOWER;
+        uint32 quantity = MAX_MINTABLE_LOWER;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
