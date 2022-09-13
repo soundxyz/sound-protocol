@@ -27,7 +27,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      */
     bytes32 public constant MINT_TYPEHASH =
         keccak256(
-            "EditionInfo(address buyer,uint128 mintId,uint32 claimTicket,uint24 quantityLimit,address affiliate)"
+            "EditionInfo(address buyer,uint128 mintId,uint32 claimTicket,uint32 quantityLimit,address affiliate)"
         );
 
     // =============================================================
@@ -63,7 +63,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address edition,
         uint96 price,
         address signer,
-        uint24 maxMintable,
+        uint32 maxMintable,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS
@@ -94,8 +94,8 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
-        uint24 quantity,
-        uint24 signedQuantity,
+        uint32 quantity,
+        uint32 signedQuantity,
         address affiliate,
         bytes calldata signature,
         uint32 claimTicket
@@ -127,7 +127,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         address edition,
         uint128 mintId,
         address, /* minter */
-        uint24 quantity
+        uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         unchecked {
             // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.
@@ -149,7 +149,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
             baseData.mintPaused,
             mintData.price,
             mintData.maxMintable,
-            type(uint24).max, // maxMintablePerAccount
+            type(uint32).max, // maxMintablePerAccount
             mintData.totalMinted,
             mintData.signer
         );
@@ -218,7 +218,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 claimTicket,
         address edition,
         uint128 mintId,
-        uint24 signedQuantity,
+        uint32 signedQuantity,
         address affiliate
     ) private {
         bytes32 digest = keccak256(

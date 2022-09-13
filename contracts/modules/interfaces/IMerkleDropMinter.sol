@@ -12,11 +12,11 @@ struct EditionMintData {
     // The price at which each token will be sold, in ETH.
     uint96 price;
     // The maximum number of tokens that can can be minted for this sale.
-    uint24 maxMintable;
+    uint32 maxMintable;
     // The maximum number of tokens that a wallet can mint.
-    uint24 maxMintablePerAccount;
+    uint32 maxMintablePerAccount;
     // The total number of tokens minted so far for this sale.
-    uint24 totalMinted;
+    uint32 totalMinted;
 }
 
 /**
@@ -28,9 +28,9 @@ struct MintInfo {
     uint16 affiliateFeeBPS;
     bool mintPaused;
     uint96 price;
-    uint24 maxMintable;
-    uint24 maxMintablePerAccount;
-    uint24 totalMinted;
+    uint32 maxMintable;
+    uint32 maxMintablePerAccount;
+    uint32 totalMinted;
     bytes32 merkleRootHash;
 }
 
@@ -64,8 +64,8 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint24 maxMintable,
-        uint24 maxMintablePerAccount
+        uint32 maxMintable,
+        uint32 maxMintablePerAccount
     );
 
     /**
@@ -73,7 +73,7 @@ interface IMerkleDropMinter is IMinterModule {
      * @param recipient The address of the account that claimed the tokens.
      * @param quantity  The quantity of tokens claimed.
      */
-    event DropClaimed(address recipient, uint24 quantity);
+    event DropClaimed(address recipient, uint32 quantity);
 
     // =============================================================
     //                            ERRORS
@@ -112,8 +112,8 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint24 maxMintable_,
-        uint24 maxMintablePerAccount_
+        uint32 maxMintable_,
+        uint32 maxMintablePerAccount_
     ) external returns (uint128 mintId);
 
     /**
@@ -124,7 +124,7 @@ interface IMerkleDropMinter is IMinterModule {
     function mint(
         address edition,
         uint128 mintId,
-        uint24 requestedQuantity,
+        uint32 requestedQuantity,
         bytes32[] calldata merkleProof,
         address affiliate
     ) external payable;
