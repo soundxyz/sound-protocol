@@ -313,13 +313,13 @@ abstract contract BaseMinter is IMinterModule {
 
         /* ------------------------- MINT --------------------------- */
 
-        uint32 fromTokenId = uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity));
-
         // Emit the event.
         emit Minted(
             edition,
             mintId,
-            fromTokenId,
+            msg.sender,
+            // Need to put this call here to avoid stack-too-deep error (it returns fromTokenId)
+            uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity)),
             quantity,
             requiredEtherValue,
             platformFee,
