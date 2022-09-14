@@ -536,10 +536,16 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             // We use version v4.2+ of ERC721A, which `_mint` will revert with out-of-gas
             // error via a loop if `totalQuantity` is large enough to cause an overflow in uint256.
             if (currentTotalMinted + totalQuantity > currentEditionMaxMintable) {
-                // Won't underflow as `editionMaxMintableUpper` cannot be decreased
-                // below `_totalMinted()`. See {setEditionMaxMintableRange}.
-                // `zeroFloorSub(x, y)` is `max(x - y, 0)`.
-                uint256 available = FixedPointMathLib.zeroFloorSub(currentEditionMaxMintable, currentTotalMinted);
+                // Won't underflow.
+                //
+                // `currentEditionMaxMintable`, which is `_totalMinted()`,
+                // will return either `editionMaxMintableUpper`
+                // or `max(editionMaxMintableLower, _totalMinted())`.
+                //
+                // We have the following invariants:
+                // - `editionMaxMintableUpper >= _totalMinted()`
+                // - `max(editionMaxMintableLower, _totalMinted()) == _totalMinted()`
+                uint256 available = currentEditionMaxMintable - currentTotalMinted;
                 revert ExceedsEditionAvailableSupply(uint32(available));
             }
         }
