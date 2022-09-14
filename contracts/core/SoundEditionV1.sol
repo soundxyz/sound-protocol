@@ -655,6 +655,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
     /**
      * @dev Helper function for storing a URI that may be an arweave URI.
+     * Efficiently stores arweave CIDs by converting them into a single bytes32 word.
      * @param uri      The URI storage reference.
      * @param value    The string representation of the URI.
      * @param isUpdate Whether this is called in an update.
@@ -702,7 +703,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @dev Helper function for retrieving the a URI.
+     * @dev Helper function for retrieving a URI stored with {_setURI}.
      * @param uri The URI storage reference.
      */
     function _loadURI(URIStorage storage uri) internal view returns (string memory) {
