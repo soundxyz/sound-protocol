@@ -395,6 +395,7 @@ contract MintControllerBaseTests is TestConfig {
         uint32 quantity,
         address buyer
     ) public {
+        vm.assume(buyer != address(0));
         price = price % 1e19;
         quantity = 1 + (quantity % 8);
 
