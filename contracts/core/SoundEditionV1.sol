@@ -663,22 +663,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                     // Resize the length of the `copy`,
                     // such that it only contains the CID.
                     mstore(copy, 43)
-                    // Replace '-' with '+', and '_' with '/'.
-                    let i := add(copy, 0x20)
-                    let end := add(i, 43)
-                    // prettier-ignore
-                    for {} 1 {} {
-                        switch byte(0, mload(i)) 
-                        case 45 { // '-' => '+'.
-                            mstore8(i, 43) 
-                        }
-                        case 95 { // '_' => '/'.
-                            mstore8(i, 47)
-                        }
-                        i := add(i, 1)
-                        // prettier-ignore
-                        if iszero(lt(i, end)) { break }
-                    }
                 }
             }
         }
@@ -711,34 +695,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             mstore(decoded, 0x20)
             mstore(add(decoded, 0x20), cid)
         }
-        string memory encoded = Base64.encode(decoded);
-        assembly {
-            // Replace '+' with '-', and '/' with '_'.
-            let i := add(encoded, 0x20)
-            let end := add(i, 43)
-            // prettier-ignore
-            for {} 1 {} {
-                switch byte(0, mload(i)) 
-                case 43 { // '+' => '-'.
-                    mstore8(i, 45) 
-                }
-                case 47 { // '/' => '_'.
-                    mstore8(i, 95)
-                }
-                i := add(i, 1)
-                // prettier-ignore
-                if iszero(lt(i, end)) { break }
-            }
-            // Strip the padding.
-            mstore(encoded, 43)
-        }
+        string memory encoded = Base64.encode(decoded, true, true);
+
         return string.concat("ar://", encoded, "/");
     }
-
-    // /**
-    //  * @dev Helper function for retrieving the baseURI.
-    //  */
-    // function _getContractURI() internal view returns (string memory) {
-
-    // }
 }

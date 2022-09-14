@@ -13,8 +13,6 @@ import { TestConfig } from "../../TestConfig.sol";
 import { Base64 } from "solady/utils/Base64.sol";
 import { LibString } from "solady/utils/LibString.sol";
 
-import "forge-std/Test.sol";
-
 contract SoundEdition_metadata is TestConfig {
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
     event BaseURISet(string baseURI_);
@@ -203,8 +201,6 @@ contract SoundEdition_metadata is TestConfig {
         vm.expectEmit(false, false, false, true);
         emit BaseURISet(newBaseURI);
         soundEdition.setBaseURI(newBaseURI);
-
-        console.log(soundEdition.baseURI());
 
         assertEq(soundEdition.baseURI(), newBaseURI);
     }
