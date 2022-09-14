@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.2.1
+
+### Patch Changes
+
+-   40a783f: Adds buyer address to IMinterModule.Minted event
+
 ## 0.2.0
 
 ### Minor Changes
