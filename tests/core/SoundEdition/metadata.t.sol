@@ -13,6 +13,8 @@ import { TestConfig } from "../../TestConfig.sol";
 import { Base64 } from "solady/utils/Base64.sol";
 import { LibString } from "solady/utils/LibString.sol";
 
+import "forge-std/Test.sol";
+
 contract SoundEdition_metadata is TestConfig {
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
     event BaseURISet(string baseURI_);
@@ -179,18 +181,17 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setBaseURIArweaveNoTrailingSlash(bytes32 randomness) public {
+        vm.assume(randomness != bytes32(0));
+
         MockSoundEditionV1 soundEdition = _createEdition();
 
-        string memory newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness))));
-        newBaseURI = LibString.replace(newBaseURI, "+", "-");
-        newBaseURI = LibString.replace(newBaseURI, "/", "_");
-        newBaseURI = LibString.replace(newBaseURI, "=", "");
+        string memory newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)));
 
         vm.expectEmit(false, false, false, true);
         emit BaseURISet(newBaseURI);
         soundEdition.setBaseURI(newBaseURI);
 
-        assertEq(soundEdition.baseURI(), newBaseURI);
+        assertEq(soundEdition.baseURI(), string.concat(newBaseURI, "/"));
     }
 
     function test_setBaseURIArweaveWithTrailingSlash() public {
@@ -206,12 +207,15 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setBaseURIArweaveWithTrailingSlash(bytes32 randomness) public {
+        vm.assume(randomness != bytes32(0));
+
         MockSoundEditionV1 soundEdition = _createEdition();
 
-        string memory newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness))), "/");
-        newBaseURI = LibString.replace(newBaseURI, "+", "-");
-        newBaseURI = LibString.replace(newBaseURI, "/", "_");
-        newBaseURI = LibString.replace(newBaseURI, "=", "");
+        string memory newBaseURI = string.concat(
+            "ar://",
+            string(Base64.encode(abi.encode(randomness), true, true)),
+            "/"
+        );
 
         vm.expectEmit(false, false, false, true);
         emit BaseURISet(newBaseURI);
