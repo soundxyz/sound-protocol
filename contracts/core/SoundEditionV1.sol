@@ -676,6 +676,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 if eq(and(mload(add(5, value)), 0xffffffffff), 0x61723a2f2f) {
                     isArweave := 1
                     // Copy `value`.
+                    // First, grab the free memory pointer.
                     arweaveURICopy := mload(0x40)
                     // Allocate 3 memory slots.
                     // 1 slot for the length, 2 slots for the bytes.
@@ -710,16 +711,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @param uri The URI storage reference.
      */
     function _loadURI(URIStorage storage uri) internal view returns (string memory) {
-        bytes32 cid = uri.arweave;
-        if (cid == bytes32(0)) {
+        bytes32 arweaveCID = uri.arweave;
+        if (arweaveCID == bytes32(0)) {
             return uri.regular;
         }
         bytes memory decoded;
         assembly {
+            // Copy `arweaveCID`.
+            // First, grab the free memory pointer.
             decoded := mload(0x40)
-            mstore(0x40, add(decoded, 0x40)) // Allocate 2 slots.
-            mstore(decoded, 0x20)
-            mstore(add(decoded, 0x20), cid)
+            // Allocate 2 slots.
+            // 1 slot for the length, 1 slot for the bytes.
+            mstore(0x40, add(decoded, 0x40))
+            mstore(decoded, 0x20) // Set the length (32 bytes).
+            mstore(add(decoded, 0x20), arweaveCID) // Set the bytes.
         }
         string memory encoded = Base64.encode(decoded, true, true);
 
