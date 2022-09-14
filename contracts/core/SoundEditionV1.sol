@@ -665,7 +665,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         string memory value,
         bool isUpdate
     ) internal {
-        string memory copy;
+        string memory arweaveURICopy;
         bool isArweave;
         assembly {
             // Example: "ar://Hjtz2YLeVyXQkGxKTNcIYfWkKnHioDvfICulzQIAt3E"
@@ -676,25 +676,28 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 if eq(and(mload(add(5, value)), 0xffffffffff), 0x61723a2f2f) {
                     isArweave := 1
                     // Copy `value`.
-                    copy := mload(0x40)
-                    mstore(0x40, add(copy, 0x60)) // Allocate 3 slots.
-                    mstore(add(copy, 0x20), mload(add(value, 0x20)))
-                    mstore(add(copy, 0x40), mload(add(value, 0x40)))
-                    // Make the `copy` skip the first 5 bytes.
-                    copy := add(5, copy)
-                    // Resize the length of the `copy`,
+                    arweaveURICopy := mload(0x40)
+                    // Allocate 3 memory slots.
+                    // 1 slot for the length, 2 slots for the bytes.
+                    mstore(0x40, add(arweaveURICopy, 0x60))
+                    // Copy the 2 slots containing the bytes.
+                    mstore(add(arweaveURICopy, 0x20), mload(add(value, 0x20)))
+                    mstore(add(arweaveURICopy, 0x40), mload(add(value, 0x40)))
+                    // Make the `arweaveURICopy` skip the first 5 bytes.
+                    arweaveURICopy := add(5, arweaveURICopy)
+                    // Sets the length of the `arweaveURICopy` to 43,
                     // such that it only contains the CID.
-                    mstore(copy, 43)
+                    mstore(arweaveURICopy, 43)
                 }
             }
         }
         if (isArweave) {
-            bytes memory decoded = Base64.decode(copy);
-            bytes32 cid;
+            bytes memory decodedCIDBytes = Base64.decode(arweaveURICopy);
+            bytes32 arweaveCID;
             assembly {
-                cid := mload(add(decoded, 0x20))
+                arweaveCID := mload(add(decodedCIDBytes, 0x20))
             }
-            uri.arweave = cid;
+            uri.arweave = arweaveCID;
             if (isUpdate) delete uri.regular;
         } else {
             uri.regular = value;
