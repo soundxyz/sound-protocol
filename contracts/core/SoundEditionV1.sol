@@ -638,7 +638,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @dev Helper function for initializing the baseURI.
+     * @dev Helper function for setting the baseURI.
      * @param baseURI_ The base URI.
      * @param isUpdate Whether this is called in an update.
      */
@@ -734,4 +734,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         }
         return string.concat("ar://", encoded, "/");
     }
+
+    // /**
+    //  * @dev Helper function for retrieving the baseURI.
+    //  */
+    // function _getContractURI() internal view returns (string memory) {
+
+    // }
 }

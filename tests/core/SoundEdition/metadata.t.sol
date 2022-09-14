@@ -10,6 +10,8 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { MockSoundEditionV1 } from "../../mocks/MockSoundEditionV1.sol";
 import { MockMetadataModule } from "../../mocks/MockMetadataModule.sol";
 import { TestConfig } from "../../TestConfig.sol";
+import { Base64 } from "solady/utils/Base64.sol";
+import { LibString } from "solady/utils/LibString.sol";
 
 import "forge-std/Test.sol";
 
@@ -178,6 +180,21 @@ contract SoundEdition_metadata is TestConfig {
         assertEq(soundEdition.baseURI(), string.concat(newBaseURI, "/"));
     }
 
+    function test_setBaseURIArweaveNoTrailingSlash(bytes32 randomness) public {
+        MockSoundEditionV1 soundEdition = _createEdition();
+
+        string memory newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness))));
+        newBaseURI = LibString.replace(newBaseURI, "+", "-");
+        newBaseURI = LibString.replace(newBaseURI, "/", "_");
+        newBaseURI = LibString.replace(newBaseURI, "=", "");
+
+        vm.expectEmit(false, false, false, true);
+        emit BaseURISet(newBaseURI);
+        soundEdition.setBaseURI(newBaseURI);
+
+        assertEq(soundEdition.baseURI(), newBaseURI);
+    }
+
     function test_setBaseURIArweaveWithTrailingSlash() public {
         MockSoundEditionV1 soundEdition = _createEdition();
 
@@ -188,6 +205,21 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition.setBaseURI(newBaseURI);
 
         console.log(soundEdition.baseURI());
+
+        assertEq(soundEdition.baseURI(), newBaseURI);
+    }
+
+    function test_setBaseURIArweaveWithTrailingSlash(bytes32 randomness) public {
+        MockSoundEditionV1 soundEdition = _createEdition();
+
+        string memory newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness))), "/");
+        newBaseURI = LibString.replace(newBaseURI, "+", "-");
+        newBaseURI = LibString.replace(newBaseURI, "/", "_");
+        newBaseURI = LibString.replace(newBaseURI, "=", "");
+
+        vm.expectEmit(false, false, false, true);
+        emit BaseURISet(newBaseURI);
+        soundEdition.setBaseURI(newBaseURI);
 
         assertEq(soundEdition.baseURI(), newBaseURI);
     }
