@@ -36,25 +36,18 @@ import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC298
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
-import { Base64 } from "solady/utils/Base64.sol";
-import { LibString } from "solady/utils/LibString.sol";
 
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
+
+import { ArweaveURILib } from "./utils/ArweaveURILib.sol";
 
 /**
  * @title SoundEditionV1
  * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
 contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
-    // =============================================================
-    //                            STRUCTS
-    // =============================================================
-
-    struct URIStorage {
-        bytes32 arweave;
-        string regular;
-    }
+    using ArweaveURILib for ArweaveURILib.URI;
 
     // =============================================================
     //                           CONSTANTS
@@ -111,12 +104,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @dev The metadata's base URI.
      */
-    URIStorage private _baseURIStorage;
+    ArweaveURILib.URI private _baseURIStorage;
 
     /**
      * @dev The contract base URI.
      */
-    URIStorage private _contractURIStorage;
+    ArweaveURILib.URI private _contractURIStorage;
 
     /**
      * @dev The destination for ETH withdrawals.
@@ -195,8 +188,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         _initializeOwner(msg.sender);
 
-        _setURI(_baseURIStorage, baseURI_, false);
-        _setURI(_contractURIStorage, contractURI_, false);
+        _baseURIStorage.initialize(baseURI_);
+        _contractURIStorage.initialize(contractURI_);
 
         fundingRecipient = fundingRecipient_;
         editionMaxMintableUpper = editionMaxMintableUpper_;
@@ -285,7 +278,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen()) revert MetadataIsFrozen();
-        _setURI(_baseURIStorage, baseURI_, true);
+        _baseURIStorage.update(baseURI_);
 
         emit BaseURISet(baseURI_);
     }
@@ -295,7 +288,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen()) revert MetadataIsFrozen();
-        _setURI(_contractURIStorage, contractURI_, true);
+        _contractURIStorage.update(contractURI_);
 
         emit ContractURISet(contractURI_);
     }
@@ -504,14 +497,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function baseURI() public view returns (string memory) {
-        return _loadURI(_baseURIStorage);
+        return _baseURIStorage.load();
     }
 
     /**
      * @inheritdoc ISoundEditionV1
      */
     function contractURI() public view returns (string memory) {
-        return _loadURI(_contractURIStorage);
+        return _contractURIStorage.load();
     }
 
     // =============================================================
@@ -651,85 +644,5 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 symbol_ = ERC721AStorage.layout()._symbol;
             }
         }
-    }
-
-    /**
-     * @dev Helper function for storing a URI that may be an arweave URI.
-     * Efficiently stores arweave CIDs by converting them into a single bytes32 word.
-     * The arweave CID is a base64 encoded sha-256 output (32 bytes when decoded).
-     * See: https://docs.arweave.org/developers/server/http-api
-     * @param uri      The URI storage reference.
-     * @param value    The string representation of the URI.
-     * @param isUpdate Whether this is called in an update.
-     */
-    function _setURI(
-        URIStorage storage uri,
-        string memory value,
-        bool isUpdate
-    ) internal {
-        string memory arweaveURICopy;
-        bool isArweave;
-        assembly {
-            // Example: "ar://Hjtz2YLeVyXQkGxKTNcIYfWkKnHioDvfICulzQIAt3E"
-            let n := mload(value)
-            // If the URI is length 48 or 49 (due to a trailing slash).
-            if or(eq(n, 48), eq(n, 49)) {
-                // If starts with "ar://".
-                if eq(and(mload(add(5, value)), 0xffffffffff), 0x61723a2f2f) {
-                    isArweave := 1
-                    // Copy `value`.
-                    // First, grab the free memory pointer.
-                    arweaveURICopy := mload(0x40)
-                    // Allocate 3 memory slots.
-                    // 1 slot for the length, 2 slots for the bytes.
-                    mstore(0x40, add(arweaveURICopy, 0x60))
-                    // Copy the 2 slots containing the bytes.
-                    mstore(add(arweaveURICopy, 0x20), mload(add(value, 0x20)))
-                    mstore(add(arweaveURICopy, 0x40), mload(add(value, 0x40)))
-                    // Make the `arweaveURICopy` skip the first 5 bytes.
-                    arweaveURICopy := add(5, arweaveURICopy)
-                    // Sets the length of the `arweaveURICopy` to 43,
-                    // such that it only contains the CID.
-                    mstore(arweaveURICopy, 43)
-                }
-            }
-        }
-        if (isArweave) {
-            bytes memory decodedCIDBytes = Base64.decode(arweaveURICopy);
-            bytes32 arweaveCID;
-            assembly {
-                arweaveCID := mload(add(decodedCIDBytes, 0x20))
-            }
-            uri.arweave = arweaveCID;
-            if (isUpdate) delete uri.regular;
-        } else {
-            uri.regular = value;
-            if (isUpdate) delete uri.arweave;
-        }
-    }
-
-    /**
-     * @dev Helper function for retrieving a URI stored with {_setURI}.
-     * @param uri The URI storage reference.
-     */
-    function _loadURI(URIStorage storage uri) internal view returns (string memory) {
-        bytes32 arweaveCID = uri.arweave;
-        if (arweaveCID == bytes32(0)) {
-            return uri.regular;
-        }
-        bytes memory decoded;
-        assembly {
-            // Copy `arweaveCID`.
-            // First, grab the free memory pointer.
-            decoded := mload(0x40)
-            // Allocate 2 slots.
-            // 1 slot for the length, 1 slot for the bytes.
-            mstore(0x40, add(decoded, 0x40))
-            mstore(decoded, 0x20) // Set the length (32 bytes).
-            mstore(add(decoded, 0x20), arweaveCID) // Set the bytes.
-        }
-        string memory encoded = Base64.encode(decoded, true, true);
-
-        return string.concat("ar://", encoded, "/");
     }
 }
