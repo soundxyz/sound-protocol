@@ -168,64 +168,61 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition.setBaseURI(newBaseURI);
     }
 
-    function test_setBaseURIArweaveNoTrailingSlash() public {
-        MockSoundEditionV1 soundEdition = _createEdition();
+    function test_initializeBaseURIArweave(uint256 randomness, bool withTrailingSlash) public {
+        vm.assume(randomness != 0);
 
-        string memory newBaseURI = "ar://Hjtz2YLeVyXQkGx-TNcIYfWkKnHioDv_ICulzQIAt3E";
+        string memory newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)));
+        string memory expectedURI = string.concat(newBaseURI, "/");
 
-        vm.expectEmit(false, false, false, true);
-        emit BaseURISet(newBaseURI);
-        soundEdition.setBaseURI(newBaseURI);
+        if (withTrailingSlash) {
+            newBaseURI = expectedURI;
+        }
 
-        assertEq(soundEdition.baseURI(), string.concat(newBaseURI, "/"));
+        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+            createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                IMetadataModule(address(0)),
+                newBaseURI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                EDITION_CUTOFF_TIME,
+                MINT_RANDOMNESS_ENABLED
+            )
+        );
+
+        assertEq(soundEdition.baseURI(), expectedURI);
     }
 
-    function test_setBaseURIArweaveNoTrailingSlash(bytes32 randomness) public {
-        vm.assume(randomness != bytes32(0));
+    function test_setBaseURIArweave(uint256 randomness, bool withTrailingSlash) public {
+        vm.assume(randomness != 0);
 
         MockSoundEditionV1 soundEdition = _createEdition();
 
         string memory newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)));
+        string memory expectedURI = string.concat(newBaseURI, "/");
+
+        if (withTrailingSlash) {
+            newBaseURI = expectedURI;
+        }
 
         vm.expectEmit(false, false, false, true);
         emit BaseURISet(newBaseURI);
         soundEdition.setBaseURI(newBaseURI);
 
-        assertEq(soundEdition.baseURI(), string.concat(newBaseURI, "/"));
+        assertEq(soundEdition.baseURI(), expectedURI);
     }
 
-    function test_setBaseURIArweaveWithTrailingSlash() public {
-        MockSoundEditionV1 soundEdition = _createEdition();
-
-        string memory newBaseURI = "ar://Hjtz2YLeVyXQkGx-TNcIYfWkKnHioDv_ICulzQIAt3E/";
-
-        vm.expectEmit(false, false, false, true);
-        emit BaseURISet(newBaseURI);
-        soundEdition.setBaseURI(newBaseURI);
-
-        assertEq(soundEdition.baseURI(), newBaseURI);
+    function test_setBaseURIArweave() public {
+        test_setBaseURIArweave(1, false);
+        test_setBaseURIArweave(2, true);
     }
 
-    function test_setBaseURIArweaveWithTrailingSlash(bytes32 randomness) public {
-        vm.assume(randomness != bytes32(0));
-
-        MockSoundEditionV1 soundEdition = _createEdition();
-
-        string memory newBaseURI = string.concat(
-            "ar://",
-            string(Base64.encode(abi.encode(randomness), true, true)),
-            "/"
-        );
-
-        vm.expectEmit(false, false, false, true);
-        emit BaseURISet(newBaseURI);
-        soundEdition.setBaseURI(newBaseURI);
-
-        assertEq(soundEdition.baseURI(), newBaseURI);
-    }
-
-    function test_setBaseURIArweaveAndRegular(bytes32 randomness) public {
-        vm.assume(randomness != bytes32(0));
+    function test_setBaseURIArweaveAndRegular(uint256 randomness) public {
+        vm.assume(randomness != 0);
 
         MockSoundEditionV1 soundEdition = _createEdition();
 
@@ -234,7 +231,7 @@ contract SoundEdition_metadata is TestConfig {
         for (uint256 i; i < 10; ++i) {
             newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)), "/");
 
-            if (uint256(randomness) & 1 == 0) {
+            if (randomness & 1 == 0) {
                 newBaseURI = string.concat(
                     "https://example.xyz/",
                     string(Base64.encode(bytes(newBaseURI), true, true)),
@@ -248,7 +245,7 @@ contract SoundEdition_metadata is TestConfig {
 
             assertEq(soundEdition.baseURI(), newBaseURI);
 
-            randomness = keccak256(abi.encode(randomness, block.timestamp));
+            randomness = uint256(keccak256(abi.encode(randomness, block.timestamp)));
         }
     }
 
@@ -381,6 +378,93 @@ contract SoundEdition_metadata is TestConfig {
         vm.expectEmit(false, false, false, true);
         emit MetadataModuleSet(newMetadataModule);
         soundEdition.setMetadataModule(newMetadataModule);
+    }
+
+    function test_initializeContractURIArweave(uint256 randomness, bool withTrailingSlash) public {
+        vm.assume(randomness != 0);
+
+        string memory newContractURI = string.concat(
+            "ar://",
+            string(Base64.encode(abi.encode(randomness), true, true))
+        );
+        string memory expectedURI = string.concat(newContractURI, "/");
+
+        if (withTrailingSlash) {
+            newContractURI = expectedURI;
+        }
+
+        MockSoundEditionV1 soundEdition = MockSoundEditionV1(
+            createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                IMetadataModule(address(0)),
+                BASE_URI,
+                newContractURI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                EDITION_MAX_MINTABLE,
+                EDITION_MAX_MINTABLE,
+                EDITION_CUTOFF_TIME,
+                MINT_RANDOMNESS_ENABLED
+            )
+        );
+
+        assertEq(soundEdition.contractURI(), expectedURI);
+    }
+
+    function test_setContractURIArweave(uint256 randomness, bool withTrailingSlash) public {
+        vm.assume(randomness != 0);
+
+        MockSoundEditionV1 soundEdition = _createEdition();
+
+        string memory newContractURI = string.concat(
+            "ar://",
+            string(Base64.encode(abi.encode(randomness), true, true))
+        );
+        string memory expectedURI = string.concat(newContractURI, "/");
+
+        if (withTrailingSlash) {
+            newContractURI = expectedURI;
+        }
+
+        vm.expectEmit(false, false, false, true);
+        emit ContractURISet(newContractURI);
+        soundEdition.setContractURI(newContractURI);
+
+        assertEq(soundEdition.contractURI(), expectedURI);
+    }
+
+    function test_setContractURIArweave() public {
+        test_setContractURIArweave(1, false);
+        test_setContractURIArweave(2, true);
+    }
+
+    function test_setContractURIArweaveAndRegular(uint256 randomness) public {
+        vm.assume(randomness != 0);
+
+        MockSoundEditionV1 soundEdition = _createEdition();
+
+        string memory newContractURI;
+
+        for (uint256 i; i < 10; ++i) {
+            newContractURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)), "/");
+
+            if (randomness & 1 == 0) {
+                newContractURI = string.concat(
+                    "https://example.xyz/",
+                    string(Base64.encode(bytes(newContractURI), true, true)),
+                    "/"
+                );
+            }
+
+            vm.expectEmit(false, false, false, true);
+            emit BaseURISet(newContractURI);
+            soundEdition.setBaseURI(newContractURI);
+
+            assertEq(soundEdition.baseURI(), newContractURI);
+
+            randomness = uint256(keccak256(abi.encode(randomness, block.timestamp)));
+        }
     }
 
     // ================================
