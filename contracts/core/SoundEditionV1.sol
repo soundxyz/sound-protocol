@@ -655,7 +655,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                     isArweave := 1
                     // Copy `_baseURI`.
                     copy := mload(0x40)
-                    mstore(0x40, add(copy, 0x60)) // Allocate 3 slots. 1 for the
+                    mstore(0x40, add(copy, 0x60)) // Allocate 3 slots.
                     mstore(add(copy, 0x20), mload(add(baseURI_, 0x20)))
                     mstore(add(copy, 0x40), mload(add(baseURI_, 0x40)))
                     // Make the `copy` skip the first 5 bytes.
@@ -707,8 +707,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         bytes memory decoded;
         assembly {
             decoded := mload(0x40)
-            mstore(0x40, add(decoded, 0x40))
-            mstore(decoded, 32)
+            mstore(0x40, add(decoded, 0x40)) // Allocate 2 slots.
+            mstore(decoded, 0x20)
             mstore(add(decoded, 0x20), cid)
         }
         string memory encoded = Base64.encode(decoded);
