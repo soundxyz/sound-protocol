@@ -75,6 +75,7 @@ interface IMinterModule is IERC165 {
      * @param edition            The edition address.
      * @param mintId             The mint ID, to distinguish beteen multiple mints for
      *                           the same edition.
+     * @param buyer              The buyer address.
      * @param fromTokenId        The first token ID of the batch.
      * @param quantity           The size of the batch.
      * @param requiredEtherValue Total amount of Ether required for payment.
@@ -86,6 +87,7 @@ interface IMinterModule is IERC165 {
     event Minted(
         address indexed edition,
         uint128 indexed mintId,
+        address indexed buyer,
         uint32 fromTokenId,
         uint32 quantity,
         uint128 requiredEtherValue,

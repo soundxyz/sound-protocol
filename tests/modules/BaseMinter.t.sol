@@ -30,6 +30,7 @@ contract MintControllerBaseTests is TestConfig {
     event Minted(
         address indexed edition,
         uint128 indexed mintId,
+        address indexed buyer,
         uint32 fromTokenId,
         uint32 quantity,
         uint128 requiredEtherValue,
@@ -304,7 +305,8 @@ contract MintControllerBaseTests is TestConfig {
             affiliateFeeBPS,
             platformFeeBPS,
             price,
-            quantity
+            quantity,
+            address(this)
         );
 
         affiliateIsZeroAddress = false;
@@ -316,7 +318,8 @@ contract MintControllerBaseTests is TestConfig {
             affiliateFeeBPS,
             platformFeeBPS,
             price,
-            quantity
+            quantity,
+            address(this)
         );
     }
 
@@ -389,8 +392,10 @@ contract MintControllerBaseTests is TestConfig {
         uint16 affiliateFeeBPS,
         uint16 platformFeeBPS,
         uint96 price,
-        uint32 quantity
+        uint32 quantity,
+        address buyer
     ) public {
+        vm.assume(buyer != address(0));
         price = price % 1e19;
         quantity = 1 + (quantity % 8);
 
@@ -426,6 +431,7 @@ contract MintControllerBaseTests is TestConfig {
         emit Minted(
             address(edition),
             mintId,
+            buyer,
             fromTokenId,
             quantity,
             uint128(requiredEtherValue),
@@ -435,6 +441,8 @@ contract MintControllerBaseTests is TestConfig {
             affiliated
         );
 
+        vm.deal(buyer, requiredEtherValue);
+        vm.prank(buyer);
         minter.mint{ value: requiredEtherValue }(address(edition), mintId, quantity, affiliate);
 
         _test_withdrawAffiliateFeesAccrued(affiliate, expectedAffiliateFees);
