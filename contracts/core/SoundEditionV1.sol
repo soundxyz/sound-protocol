@@ -36,6 +36,8 @@ import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC298
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { Base64 } from "solady/utils/Base64.sol";
+import { LibString } from "solady/utils/LibString.sol";
 
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
@@ -98,9 +100,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     bytes32 private _shortNameAndSymbol;
 
     /**
-     * @dev The metadata's base URI.
+     * @dev The metadata's base URI (for Arweave CIDs).
      */
-    string public baseURI;
+    bytes32 private _baseURIArweaveCID;
+
+    /**
+     * @dev The metadata's base URI (for regular URIs).
+     */
+    string private _baseURIRegular;
 
     /**
      * @dev The contract URI to be used by Opensea.
@@ -185,7 +192,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         _initializeOwner(msg.sender);
 
-        baseURI = baseURI_;
+        _setBaseURI(baseURI_, false);
         contractURI = contractURI_;
 
         fundingRecipient = fundingRecipient_;
@@ -275,7 +282,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen()) revert MetadataIsFrozen();
-        baseURI = baseURI_;
+        _setBaseURI(baseURI_, true);
 
         emit BaseURISet(baseURI_);
     }
@@ -297,7 +304,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (isMetadataFrozen()) revert MetadataIsFrozen();
 
         _flags |= _METADATA_FROZEN_FLAG;
-        emit MetadataFrozen(metadataModule, baseURI, contractURI);
+        emit MetadataFrozen(metadataModule, baseURI(), contractURI);
     }
 
     /**
@@ -443,7 +450,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             return metadataModule.tokenURI(tokenId);
         }
 
-        string memory baseURI_ = baseURI;
+        string memory baseURI_ = baseURI();
         return bytes(baseURI_).length != 0 ? string.concat(baseURI_, _toString(tokenId)) : "";
     }
 
@@ -488,6 +495,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function symbol() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         (, string memory symbol_) = _loadNameAndSymbol();
         return symbol_;
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function baseURI() public view returns (string memory) {
+        return _loadBaseURI();
     }
 
     // =============================================================
@@ -621,5 +635,103 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 symbol_ = ERC721AStorage.layout()._symbol;
             }
         }
+    }
+
+    /**
+     * @dev Helper function for initializing the baseURI.
+     * @param baseURI_ The base URI.
+     * @param isUpdate Whether this is called in an update.
+     */
+    function _setBaseURI(string memory baseURI_, bool isUpdate) internal {
+        string memory copy;
+        bool isArweave;
+        assembly {
+            // Example: "ar://Hjtz2YLeVyXQkGxKTNcIYfWkKnHioDvfICulzQIAt3E"
+            let n := mload(baseURI_)
+            // If the URI is length 48 or 49 (due to a trailing slash).
+            if or(eq(n, 48), eq(n, 49)) {
+                // If starts with "ar://".
+                if eq(and(mload(add(5, baseURI_)), 0xffffffffff), 0x61723a2f2f) {
+                    isArweave := 1
+                    // Copy `_baseURI`.
+                    copy := mload(0x40)
+                    mstore(0x40, add(copy, 0x60)) // Allocate 3 slots. 1 for the
+                    mstore(add(copy, 0x20), mload(add(baseURI_, 0x20)))
+                    mstore(add(copy, 0x40), mload(add(baseURI_, 0x40)))
+                    // Make the `copy` skip the first 5 bytes.
+                    copy := add(5, copy)
+                    // Resize the length of the `copy`,
+                    // such that it only contains the CID.
+                    mstore(copy, 43)
+                    // Replace '-' with '+', and '_' with '/'.
+                    let i := add(copy, 0x20)
+                    let end := add(i, 43)
+                    // prettier-ignore
+                    for {} 1 {} {
+                        switch byte(0, mload(i)) 
+                        case 45 { // '-' => '+'.
+                            mstore8(i, 43) 
+                        }
+                        case 95 { // '_' => '/'.
+                            mstore8(i, 47)
+                        }
+                        i := add(i, 1)
+                        // prettier-ignore
+                        if iszero(lt(i, end)) { break }
+                    }
+                }
+            }
+        }
+        if (isArweave) {
+            bytes memory decoded = Base64.decode(copy);
+            bytes32 cid;
+            assembly {
+                cid := mload(add(decoded, 0x20))
+            }
+            _baseURIArweaveCID = cid;
+            if (isUpdate) delete _baseURIRegular;
+        } else {
+            _baseURIRegular = baseURI_;
+            if (isUpdate) delete _baseURIArweaveCID;
+        }
+    }
+
+    /**
+     * @dev Helper function for retrieving the baseURI.
+     */
+    function _loadBaseURI() internal view returns (string memory) {
+        bytes32 cid = _baseURIArweaveCID;
+        if (cid == bytes32(0)) {
+            return _baseURIRegular;
+        }
+        bytes memory decoded;
+        assembly {
+            decoded := mload(0x40)
+            mstore(0x40, add(decoded, 0x40))
+            mstore(decoded, 32)
+            mstore(add(decoded, 0x20), cid)
+        }
+        string memory encoded = Base64.encode(decoded);
+        assembly {
+            // Replace '-' with '+', and '_' with '/'.
+            let i := add(encoded, 0x20)
+            let end := add(i, 43)
+            // prettier-ignore
+            for {} 1 {} {
+                switch byte(0, mload(i)) 
+                case 43 { // '+' => '-'.
+                    mstore8(i, 45) 
+                }
+                case 47 { // '/' => '_'.
+                    mstore8(i, 95)
+                }
+                i := add(i, 1)
+                // prettier-ignore
+                if iszero(lt(i, end)) { break }
+            }
+            // Strip the padding.
+            mstore(encoded, 43)
+        }
+        return string.concat("ar://", encoded, "/");
     }
 }

@@ -11,6 +11,8 @@ import { MockSoundEditionV1 } from "../../mocks/MockSoundEditionV1.sol";
 import { MockMetadataModule } from "../../mocks/MockMetadataModule.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
+import "forge-std/Test.sol";
+
 contract SoundEdition_metadata is TestConfig {
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
     event BaseURISet(string baseURI_);
@@ -162,6 +164,32 @@ contract SoundEdition_metadata is TestConfig {
         vm.expectEmit(false, false, false, true);
         emit BaseURISet(newBaseURI);
         soundEdition.setBaseURI(newBaseURI);
+    }
+
+    function test_setBaseURIArweaveNoTrailingSlash() public {
+        MockSoundEditionV1 soundEdition = _createEdition();
+
+        string memory newBaseURI = "ar://Hjtz2YLeVyXQkGx-TNcIYfWkKnHioDv_ICulzQIAt3E";
+
+        vm.expectEmit(false, false, false, true);
+        emit BaseURISet(newBaseURI);
+        soundEdition.setBaseURI(newBaseURI);
+
+        assertEq(soundEdition.baseURI(), string.concat(newBaseURI, "/"));
+    }
+
+    function test_setBaseURIArweaveWithTrailingSlash() public {
+        MockSoundEditionV1 soundEdition = _createEdition();
+
+        string memory newBaseURI = "ar://Hjtz2YLeVyXQkGx-TNcIYfWkKnHioDv_ICulzQIAt3E/";
+
+        vm.expectEmit(false, false, false, true);
+        emit BaseURISet(newBaseURI);
+        soundEdition.setBaseURI(newBaseURI);
+
+        console.log(soundEdition.baseURI());
+
+        assertEq(soundEdition.baseURI(), newBaseURI);
     }
 
     // ================================
