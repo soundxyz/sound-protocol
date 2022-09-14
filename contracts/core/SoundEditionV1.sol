@@ -511,16 +511,6 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @dev Ensures that the `editionMaxMintableLower` is not greater than  `editionMaxMintableUpper`.
-     * @param editionMaxMintableLower_ The lower limit of the maximum number of tokens that can be minted.
-     * @param editionMaxMintableUpper_ The upper limit of the maximum number of tokens that can be minted.
-     */
-    modifier onlyValidEditionMaxMintableRange(uint32 editionMaxMintableUpper_, uint32 editionMaxMintableLower_) {
-        if (editionMaxMintableLower > editionMaxMintableUpper) revert InvalidEditionMaxMintableRange();
-        _;
-    }
-
-    /**
      * @dev Ensures that `totalQuantity` can be minted.
      * @param totalQuantity The total number of tokens to mint.
      */
