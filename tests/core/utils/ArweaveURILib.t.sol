@@ -12,9 +12,8 @@ contract ArweaveURILibTest is TestConfig {
     ArweaveURILib.URI public uriStorage;
 
     function test_initializeURIArweave(uint256 randomness, bool withTrailingSlash) public {
-        delete uriStorage;
-
         vm.assume(randomness != 0);
+        delete uriStorage;
 
         string memory newURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)));
         string memory expectedURI = string.concat(newURI, "/");
@@ -39,9 +38,8 @@ contract ArweaveURILibTest is TestConfig {
     }
 
     function test_updateURIArweave(uint256 randomness, bool withTrailingSlash) public {
-        delete uriStorage;
-
         vm.assume(randomness != 0);
+        delete uriStorage;
 
         string memory newURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)));
         string memory expectedURI = string.concat(newURI, "/");
@@ -67,6 +65,7 @@ contract ArweaveURILibTest is TestConfig {
 
     function test_setBaseURIArweaveAndRegular(uint256 randomness) public {
         vm.assume(randomness != 0);
+        delete uriStorage;
 
         string memory newURI;
 
