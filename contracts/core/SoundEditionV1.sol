@@ -713,7 +713,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         }
         string memory encoded = Base64.encode(decoded);
         assembly {
-            // Replace '-' with '+', and '_' with '/'.
+            // Replace '+' with '-', and '/' with '_'.
             let i := add(encoded, 0x20)
             let end := add(i, 43)
             // prettier-ignore
