@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.3.0
+
+### Minor Changes
+
+-   c7bb268: Fixes prepack script & deploys latest contracts on staging/preview
+
 ## 0.2.1
 
 ### Patch Changes
