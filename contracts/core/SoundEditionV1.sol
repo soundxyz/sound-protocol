@@ -656,6 +656,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @dev Helper function for storing a URI that may be an arweave URI.
      * Efficiently stores arweave CIDs by converting them into a single bytes32 word.
+     * The arweave CID is a base64 encoded sha-256 output (32-bytes when decoded).
+     * See: https://docs.arweave.org/developers/server/http-api
      * @param uri      The URI storage reference.
      * @param value    The string representation of the URI.
      * @param isUpdate Whether this is called in an update.
