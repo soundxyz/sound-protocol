@@ -28,6 +28,16 @@ contract ArweaveURILibTest is TestConfig {
         assertEq(uriStorage.load(), expectedURI);
     }
 
+    function test_initializeURIArweave() public {
+        unchecked {
+            for (uint256 i = 1; i != 8; ++i) {
+                uint256 randomness = uint256(keccak256(abi.encode(i)));
+                test_initializeURIArweave(randomness, true);
+                test_initializeURIArweave(randomness, false);
+            }
+        }
+    }
+
     function test_updateURIArweave(uint256 randomness, bool withTrailingSlash) public {
         delete uriStorage;
 
@@ -46,8 +56,13 @@ contract ArweaveURILibTest is TestConfig {
     }
 
     function test_updateURIArweave() public {
-        test_updateURIArweave(1, false);
-        test_updateURIArweave(2, true);
+        unchecked {
+            for (uint256 i = 1; i != 8; ++i) {
+                uint256 randomness = uint256(keccak256(abi.encode(i)));
+                test_updateURIArweave(randomness, true);
+                test_updateURIArweave(randomness, false);
+            }
+        }
     }
 
     function test_setBaseURIArweaveAndRegular(uint256 randomness) public {
@@ -67,6 +82,15 @@ contract ArweaveURILibTest is TestConfig {
             assertEq(uriStorage.load(), newURI);
 
             randomness = uint256(keccak256(abi.encode(randomness, block.timestamp)));
+        }
+    }
+
+    function test_setBaseURIArweaveAndRegular() public {
+        unchecked {
+            for (uint256 i = 1; i != 16; ++i) {
+                uint256 randomness = uint256(keccak256(abi.encode(i)));
+                test_setBaseURIArweaveAndRegular(randomness);
+            }
         }
     }
 }
