@@ -15,7 +15,7 @@
         "deploy:staging": "SOUND_ENV=staging pnpm gen:ids && pnpm deploy:goerli && SOUND_ENV=staging pnpm prep-release",
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json",
         "postinstall": "forge install",
-        "prepack": "rm -rf out out-2 dist typechain && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm gen:ids && pnpm typechain && bob-tsm build.ts",
+        "prepack": "rm -rf out out-2 dist typechain && pnpm gen:ids && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm typechain && bob-tsm build.ts",
         "prep-release": "bob-tsm script/js/prep-release.ts && pnpm prettier:write",
         "prepare": "husky install",
         "prettier:write": "prettier --write **/*.{js,ts,json,sol}",

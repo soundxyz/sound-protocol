@@ -1,9 +1,9 @@
 {
-  "soundFeeRegistry": "0x4c4f4bf1f54f24e9960b68d85cb09e3589033f4b",
-  "goldenEggMetadata": "0xa491a953d19c03c03b6d82e8a954b0ea7ea9e988",
-  "fixedPriceSignatureMinter": "0x8e0f942bcc2d369eddf66eb3b93562a236b90634",
-  "merkleDropMinter": "0xd7886065642086f668c98e945bdcad769b6f6965",
-  "rangeEditionMinter": "0x533f1a44bcf04bff6d8a3280c439e9578ff11cfb",
-  "soundEditionV1": "0xa1a480e350043977b079625dc4ad4c7b3e4cd27b",
-  "soundCreatorV1": "0x230b2008a030e84f153fa2add34806b8da755cba"
+  "soundFeeRegistry": "0x80a24562ded808ce605854be2d3c236ddbf43290",
+  "goldenEggMetadata": "0x4a0253f73124d19862c3cf8d90ca7b985c2df39e",
+  "fixedPriceSignatureMinter": "0x1839919b786eba24e5da43fc48e40f325206f087",
+  "merkleDropMinter": "0xdc70cc2ba1e895dcaed9cd9cfa56ff6c484f02b0",
+  "rangeEditionMinter": "0x1b0f09f21d60e9e8b52aa2981155d5e461bc3db7",
+  "soundEditionV1": "0xdedada005ded965ff2ee44b26f108117e664f9d3",
+  "soundCreatorV1": "0x67e1aa7ed4b72d4b8da885d3e7167f6f56b5ac30"
 }
