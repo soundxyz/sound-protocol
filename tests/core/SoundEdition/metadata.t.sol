@@ -224,6 +224,34 @@ contract SoundEdition_metadata is TestConfig {
         assertEq(soundEdition.baseURI(), newBaseURI);
     }
 
+    function test_setBaseURIArweaveAndRegular(bytes32 randomness) public {
+        vm.assume(randomness != bytes32(0));
+
+        MockSoundEditionV1 soundEdition = _createEdition();
+
+        string memory newBaseURI;
+
+        for (uint256 i; i < 10; ++i) {
+            newBaseURI = string.concat("ar://", string(Base64.encode(abi.encode(randomness), true, true)), "/");
+
+            if (uint256(randomness) & 1 == 0) {
+                newBaseURI = string.concat(
+                    "https://example.xyz/",
+                    string(Base64.encode(bytes(newBaseURI), true, true)),
+                    "/"
+                );
+            }
+
+            vm.expectEmit(false, false, false, true);
+            emit BaseURISet(newBaseURI);
+            soundEdition.setBaseURI(newBaseURI);
+
+            assertEq(soundEdition.baseURI(), newBaseURI);
+
+            randomness = keccak256(abi.encode(randomness, block.timestamp));
+        }
+    }
+
     // ================================
     // setContractURI()
     // ================================
