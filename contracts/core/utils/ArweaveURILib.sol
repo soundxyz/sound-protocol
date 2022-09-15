@@ -57,38 +57,34 @@ library ArweaveURILib {
         string memory value,
         bool isUpdate
     ) internal {
-        string memory arweaveURICopy;
+        uint256 valueLength;
         bool isArweave;
         assembly {
             // Example: "ar://Hjtz2YLeVyXQkGxKTNcIYfWkKnHioDvfICulzQIAt3E"
-            let n := mload(value)
+            valueLength := mload(value)
             // If the URI is length 48 or 49 (due to a trailing slash).
-            if or(eq(n, 48), eq(n, 49)) {
+            if or(eq(valueLength, 48), eq(valueLength, 49)) {
                 // If starts with "ar://".
-                if eq(and(mload(add(5, value)), 0xffffffffff), 0x61723a2f2f) {
+                if eq(and(mload(add(value, 5)), 0xffffffffff), 0x61723a2f2f) {
                     isArweave := 1
-                    // Copy `value`.
-                    // First, grab the free memory pointer.
-                    arweaveURICopy := mload(0x40)
-                    // Allocate 3 memory slots.
-                    // 1 slot for the length, 2 slots for the bytes.
-                    mstore(0x40, add(arweaveURICopy, 0x60))
-                    // Copy the 2 slots containing the bytes.
-                    mstore(add(arweaveURICopy, 0x20), mload(add(value, 0x20)))
-                    mstore(add(arweaveURICopy, 0x40), mload(add(value, 0x40)))
-                    // Make the `arweaveURICopy` skip the first 5 bytes.
-                    arweaveURICopy := add(5, arweaveURICopy)
-                    // Sets the length of the `arweaveURICopy` to 43,
+                    value := add(value, 5)
+                    // Sets the length of the `value` to 43,
                     // such that it only contains the CID.
-                    mstore(arweaveURICopy, 43)
+                    mstore(value, 43)
                 }
             }
         }
         if (isArweave) {
-            bytes memory decodedCIDBytes = Base64.decode(arweaveURICopy);
+            bytes memory decodedCIDBytes = Base64.decode(value);
             bytes32 arweaveCID;
             assembly {
                 arweaveCID := mload(add(decodedCIDBytes, 0x20))
+                // Restore the "ar://".
+                mstore(value, 0x61723a2f2f)
+                // Restore the original position of the `value` pointer.
+                value := sub(value, 5)
+                // Restore the original length.
+                mstore(value, valueLength)
             }
             uri.arweave = arweaveCID;
             if (isUpdate) delete uri.regular;
@@ -136,8 +132,6 @@ library ArweaveURILib {
             mstore(decoded, 0x20) // Set the length (32 bytes).
             mstore(add(decoded, 0x20), arweaveCID) // Set the bytes.
         }
-        string memory encoded = Base64.encode(decoded, true, true);
-
-        return string.concat("ar://", encoded, "/");
+        return string.concat("ar://", Base64.encode(decoded, true, true), "/");
     }
 }
