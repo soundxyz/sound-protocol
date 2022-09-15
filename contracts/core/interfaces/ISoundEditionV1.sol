@@ -73,6 +73,40 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
 
+    /**
+     * @dev Emitted upon initialization.
+     * @param edition_                 The address of the edition.
+     * @param name_                    Name of the collection.
+     * @param symbol_                  Symbol of the collection.
+     * @param metadataModule_          Address of metadata module, address(0x00) if not used.
+     * @param baseURI_                 Base URI.
+     * @param contractURI_             Contract URI for OpenSea storefront.
+     * @param fundingRecipient_        Address that receives primary and secondary royalties.
+     * @param royaltyBPS_              Royalty amount in bps (basis points).
+     * @param editionMaxMintableLower_ The lower bound of the max mintable quantity for the edition.
+     * @param editionMaxMintableUpper_ The upper bound of the max mintable quantity for the edition.
+     * @param editionCutoffTime_       The timestamp after which `editionMaxMintable` drops from
+     *                                 `editionMaxMintableUpper` to
+     *                                 `max(_totalMinted(), editionMaxMintableLower)`.
+     * @param flags_                   The bitwise OR result of the initialization flags.
+     *                                 See: {METADATA_IS_FROZEN_FLAG}
+     *                                 See: {MINT_RANDOMNESS_ENABLED_FLAG}
+     */
+    event SoundEditionInitialized(
+        address indexed edition_,
+        string name_,
+        string symbol_,
+        IMetadataModule metadataModule_,
+        string baseURI_,
+        string contractURI_,
+        address fundingRecipient_,
+        uint16 royaltyBPS_,
+        uint32 editionMaxMintableLower_,
+        uint32 editionMaxMintableUpper_,
+        uint32 editionCutoffTime_,
+        uint8 flags_
+    );
+
     // =============================================================
     //                            ERRORS
     // =============================================================

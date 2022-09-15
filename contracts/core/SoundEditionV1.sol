@@ -200,6 +200,21 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         metadataModule = metadataModule_;
         royaltyBPS = royaltyBPS_;
+
+        emit SoundEditionInitialized(
+            address(this),
+            name_,
+            symbol_,
+            metadataModule_,
+            baseURI_,
+            contractURI_,
+            fundingRecipient_,
+            royaltyBPS_,
+            editionMaxMintableLower_,
+            editionMaxMintableUpper_,
+            editionCutoffTime_,
+            flags_
+        );
     }
 
     /**
