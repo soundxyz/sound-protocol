@@ -10,6 +10,10 @@ import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
 
 contract TestConfig is Test {
+    // From ISoundEditionVI.
+    uint8 public constant METADATA_IS_FROZEN_FLAG = 1 << 0;
+    uint8 public constant MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
+
     // Artist contract creation vars
     string constant SONG_NAME = "Never Gonna Give You Up";
     string constant SONG_SYMBOL = "NEVER";
@@ -21,7 +25,7 @@ contract TestConfig is Test {
     address public constant ARTIST_ADMIN = address(8888888888);
     uint32 constant EDITION_MAX_MINTABLE = type(uint32).max;
     uint32 constant EDITION_CUTOFF_TIME = 200;
-    bool constant MINT_RANDOMNESS_ENABLED = true;
+    uint8 constant FLAGS = MINT_RANDOMNESS_ENABLED_FLAG;
     address constant SOUND_FEE_ADDRESS = address(2222222222);
     uint16 constant PLATFORM_FEE_BPS = 200;
     uint256 constant MAX_BPS = 10_000;
@@ -64,7 +68,7 @@ contract TestConfig is Test {
         uint32 editionMaxMintableLower,
         uint32 editionMaxMintableUpper,
         uint32 editionClosingTime,
-        bool mintRandomnessEnabled
+        uint8 flags
     ) public returns (address) {
         bytes memory initData = abi.encodeWithSelector(
             SoundEditionV1.initialize.selector,
@@ -78,7 +82,7 @@ contract TestConfig is Test {
             editionMaxMintableLower,
             editionMaxMintableUpper,
             editionClosingTime,
-            mintRandomnessEnabled
+            flags
         );
 
         address[] memory contracts;
@@ -103,7 +107,7 @@ contract TestConfig is Test {
                     EDITION_MAX_MINTABLE,
                     EDITION_MAX_MINTABLE,
                     EDITION_CUTOFF_TIME,
-                    MINT_RANDOMNESS_ENABLED
+                    FLAGS
                 )
             );
     }

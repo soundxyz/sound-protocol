@@ -84,12 +84,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @dev The boolean flag on whether the metadata is frozen.
      */
-    uint8 private constant _METADATA_FROZEN_FLAG = 1 << 0;
+    uint8 public constant METADATA_IS_FROZEN_FLAG = 1 << 0;
 
     /**
      * @dev The boolean flag on whether the `mintRandomness` is enabled.
      */
-    uint8 private constant _MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
+    uint8 public constant MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
 
     // =============================================================
     //                            STORAGE
@@ -172,7 +172,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         uint32 editionMaxMintableLower_,
         uint32 editionMaxMintableUpper_,
         uint32 editionCutoffTime_,
-        bool mintRandomnessEnabled_
+        uint8 flags_
     ) external onlyValidRoyaltyBPS(royaltyBPS_) {
         // Prevent double initialization.
         // We can "cheat" here and avoid the initializer modifer to save a SSTORE,
@@ -196,7 +196,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         editionMaxMintableLower = editionMaxMintableLower_;
         editionCutoffTime = editionCutoffTime_;
 
-        _flags = mintRandomnessEnabled_ ? _MINT_RANDOMNESS_ENABLED_FLAG : 0;
+        _flags = flags_;
 
         metadataModule = metadataModule_;
         royaltyBPS = royaltyBPS_;
@@ -298,7 +298,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
-        _flags |= _METADATA_FROZEN_FLAG;
+        _flags |= METADATA_IS_FROZEN_FLAG;
         emit MetadataFrozen(metadataModule, baseURI(), contractURI());
     }
 
@@ -366,7 +366,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (_totalMinted() != 0) revert MintsAlreadyExist();
 
         if (mintRandomnessEnabled() != mintRandomnessEnabled_) {
-            _flags ^= _MINT_RANDOMNESS_ENABLED_FLAG;
+            _flags ^= MINT_RANDOMNESS_ENABLED_FLAG;
         }
 
         emit MintRandomnessEnabledSet(mintRandomnessEnabled_);
@@ -401,14 +401,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function isMetadataFrozen() public view returns (bool) {
-        return _flags & _METADATA_FROZEN_FLAG != 0;
+        return _flags & METADATA_IS_FROZEN_FLAG != 0;
     }
 
     /**
      * @inheritdoc ISoundEditionV1
      */
     function mintRandomnessEnabled() public view returns (bool) {
-        return _flags & _MINT_RANDOMNESS_ENABLED_FLAG != 0;
+        return _flags & MINT_RANDOMNESS_ENABLED_FLAG != 0;
     }
 
     /**
@@ -533,7 +533,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     modifier onlyMetadataNotFrozen() {
         // Inlined to save gas.
-        if (_flags & _METADATA_FROZEN_FLAG != 0) revert MetadataIsFrozen();
+        if (_flags & METADATA_IS_FROZEN_FLAG != 0) revert MetadataIsFrozen();
         _;
     }
 

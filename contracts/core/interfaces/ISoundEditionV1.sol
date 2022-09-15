@@ -161,7 +161,9 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param editionCutoffTime_       The timestamp after which `editionMaxMintable` drops from
      *                                 `editionMaxMintableUpper` to
      *                                 `max(_totalMinted(), editionMaxMintableLower)`.
-     * @param mintRandomnessEnabled_   Whether the mintRandomness is enabled.
+     * @param flags_                   The bitwise OR result of the initialization flags.
+     *                                 See: {METADATA_IS_FROZEN_FLAG}
+     *                                 See: {MINT_RANDOMNESS_ENABLED_FLAG}
      */
     function initialize(
         string memory name_,
@@ -174,7 +176,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         uint32 editionMaxMintableLower_,
         uint32 editionMaxMintableUpper_,
         uint32 editionCutoffTime_,
-        bool mintRandomnessEnabled_
+        uint8 flags_
     ) external;
 
     /**
@@ -200,8 +202,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * - The caller must be the owner of the contract, or have the
      *   `ADMIN_ROLE`, which can be granted via {grantRole}.
      *
-     * @param to       Address to mint to.
-     * @param quantity Number of tokens to mint.
+     * @param to           Address to mint to.
+     * @param quantity     Number of tokens to mint.
      * @return fromTokenId The first token ID minted.
      */
     function airdrop(address[] calldata to, uint256 quantity) external returns (uint256 fromTokenId);
@@ -331,6 +333,18 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The constant value.
      */
     function ADDRESS_BATCH_MINT_LIMIT() external pure returns (uint256);
+
+    /**
+     * @dev Returns the bit flag to freeze the metadata on initialization.
+     * @return The constant value.
+     */
+    function METADATA_IS_FROZEN_FLAG() external pure returns (uint8);
+
+    /**
+     * @dev Returns the bit flag to enable the mint randomness feature on initialization.
+     * @return The constant value.
+     */
+    function MINT_RANDOMNESS_ENABLED_FLAG() external pure returns (uint8);
 
     /**
      * @dev Returns the base token URI for the collection.

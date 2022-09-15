@@ -45,7 +45,7 @@ contract Deploy is Script {
             0, // editionMaxMintableLower
             0, // editionMaxMintableUpper
             0, // editionCutoffTime
-            true // mintRandomnessEnabled
+            editionImplementation.MINT_RANDOMNESS_ENABLED_FLAG() // flags
         );
 
         // Deploy the SoundCreator

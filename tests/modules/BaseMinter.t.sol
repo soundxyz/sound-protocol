@@ -65,7 +65,7 @@ contract MintControllerBaseTests is TestConfig {
                 editionMaxMintable,
                 editionMaxMintable,
                 EDITION_CUTOFF_TIME,
-                MINT_RANDOMNESS_ENABLED
+                FLAGS
             )
         );
 

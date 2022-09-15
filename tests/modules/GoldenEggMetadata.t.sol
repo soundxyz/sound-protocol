@@ -48,7 +48,7 @@ contract GoldenEggMetadataTests is TestConfig {
                 MAX_MINTABLE_LOWER,
                 MAX_MINTABLE_UPPER,
                 editionCutoffTime,
-                MINT_RANDOMNESS_ENABLED
+                FLAGS
             )
         );
 
@@ -85,7 +85,7 @@ contract GoldenEggMetadataTests is TestConfig {
                 0, // maxMintableLower
                 MAX_MINTABLE_UPPER,
                 editionCutoffTime, // mintRandomnessTimeThreshold
-                MINT_RANDOMNESS_ENABLED
+                FLAGS
             )
         );
 

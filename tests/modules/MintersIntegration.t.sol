@@ -82,7 +82,7 @@ contract MintersIntegration is TestConfig {
                 EDITION_MAX_MINTABLE,
                 EDITION_MAX_MINTABLE,
                 EDITION_CUTOFF_TIME,
-                MINT_RANDOMNESS_ENABLED
+                FLAGS
             )
         );
         feeRegistry.setPlatformFeeBPS(0);

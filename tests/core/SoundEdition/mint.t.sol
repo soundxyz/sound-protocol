@@ -43,7 +43,7 @@ contract SoundEdition_mint is TestConfig {
                 0, // editionMaxMintableLower
                 editionMaxMintableUpper,
                 EDITION_CUTOFF_TIME,
-                MINT_RANDOMNESS_ENABLED
+                FLAGS
             )
         );
 
@@ -139,7 +139,7 @@ contract SoundEdition_mint is TestConfig {
                 editionMaxMintableLower,
                 editionMaxMintableUpper,
                 EDITION_CUTOFF_TIME,
-                MINT_RANDOMNESS_ENABLED
+                FLAGS
             )
         );
 
@@ -177,7 +177,7 @@ contract SoundEdition_mint is TestConfig {
                 editionMaxMintableLower,
                 editionMaxMintableUpper,
                 EDITION_CUTOFF_TIME,
-                MINT_RANDOMNESS_ENABLED
+                FLAGS
             )
         );
 
