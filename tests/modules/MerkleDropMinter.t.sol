@@ -14,13 +14,39 @@ import { TestConfig } from "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
+
     uint32 public constant END_TIME = 200;
+
     uint16 public constant AFFILIATE_FEE_BPS = 0;
 
     address[] accounts = [getFundedAccount(1), getFundedAccount(2), getFundedAccount(3)];
+
     bytes32[] leaves;
+
     bytes32 public root;
+
     Merkle public m;
+
+    // prettier-ignore
+    event PriceSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint96 price
+    );
+
+    // prettier-ignore
+    event MaxMintablePerAccountSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 maxMintablePerAccount
+    );
+
+    // prettier-ignore
+    event MerkleRootHashSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        bytes32 merkleRootHash
+    );
 
     function setUpMerkleTree() public {
         // Initialize
@@ -154,6 +180,44 @@ contract MerkleDropMinterTests is TestConfig {
 
         uint256 mintedTally = minter.mintedTallies(address(edition), mintId, accounts[0]);
         assertEq(mintedTally, 1);
+    }
+
+    function test_setPrice(uint96 price) public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 0);
+
+        vm.expectEmit(true, true, true, true);
+        emit PriceSet(address(edition), mintId, price);
+        minter.setPrice(address(edition), mintId, price);
+
+        assertEq(minter.mintInfo(address(edition), mintId).price, price);
+    }
+
+    function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 0);
+
+        vm.expectEmit(true, true, true, true);
+        emit MaxMintablePerAccountSet(address(edition), mintId, maxMintablePerAccount);
+        minter.setMaxMintablePerAccount(address(edition), mintId, maxMintablePerAccount);
+
+        assertEq(minter.mintInfo(address(edition), mintId).maxMintablePerAccount, maxMintablePerAccount);
+    }
+
+    function test_setMerkleRootHash(bytes32 merkleRootHash) public {
+        vm.assume(merkleRootHash != bytes32(0));
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 0);
+
+        vm.expectEmit(true, true, true, true);
+        emit MerkleRootHashSet(address(edition), mintId, merkleRootHash);
+        minter.setMerkleRootHash(address(edition), mintId, merkleRootHash);
+
+        assertEq(minter.mintInfo(address(edition), mintId).merkleRootHash, merkleRootHash);
+    }
+
+    function test_setEmptyMerkleRootHashReverts() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 0);
+
+        vm.expectRevert(IMerkleDropMinter.MerkleRootHashEmpty.selector);
+        minter.setMerkleRootHash(address(edition), mintId, bytes32(0));
     }
 
     function test_supportsInterface() public {

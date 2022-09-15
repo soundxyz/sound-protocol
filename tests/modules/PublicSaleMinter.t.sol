@@ -53,7 +53,13 @@ contract PublicSaleMinterTests is TestConfig {
         uint32 maxMintablePerAccount
     );
 
-    event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
+    // prettier-ignore
+    event TimeRangeSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 startTime,
+        uint32 endTime
+    );
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
@@ -244,6 +250,8 @@ contract PublicSaleMinterTests is TestConfig {
         vm.expectEmit(true, true, true, true);
         emit PriceSet(address(edition), MINT_ID, price);
         minter.setPrice(address(edition), MINT_ID, price);
+
+        assertEq(minter.mintInfo(address(edition), MINT_ID).price, price);
     }
 
     function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
@@ -252,6 +260,8 @@ contract PublicSaleMinterTests is TestConfig {
         vm.expectEmit(true, true, true, true);
         emit MaxMintablePerAccountSet(address(edition), MINT_ID, maxMintablePerAccount);
         minter.setMaxMintablePerAccount(address(edition), MINT_ID, maxMintablePerAccount);
+
+        assertEq(minter.mintInfo(address(edition), MINT_ID).maxMintablePerAccount, maxMintablePerAccount);
     }
 
     function test_supportsInterface() public {
