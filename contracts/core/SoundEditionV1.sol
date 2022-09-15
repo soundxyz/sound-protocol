@@ -40,11 +40,15 @@ import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
+import { ArweaveURILib } from "./utils/ArweaveURILib.sol";
+
 /**
  * @title SoundEditionV1
  * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
 contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
+    using ArweaveURILib for ArweaveURILib.URI;
+
     // =============================================================
     //                           CONSTANTS
     // =============================================================
@@ -100,13 +104,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @dev The metadata's base URI.
      */
-    string public baseURI;
+    ArweaveURILib.URI private _baseURIStorage;
 
     /**
-     * @dev The contract URI to be used by Opensea.
-     *      See: https://docs.opensea.io/docs/contract-level-metadata
+     * @dev The contract base URI.
      */
-    string public contractURI;
+    ArweaveURILib.URI private _contractURIStorage;
 
     /**
      * @dev The destination for ETH withdrawals.
@@ -130,7 +133,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     uint32 public editionCutoffTime;
 
     /**
-     * @dev Metadata module used for `tokenURI` if it is set.
+     * @dev Metadata module used for `tokenURI` and `contractURI` if it is set.
      */
     IMetadataModule public metadataModule;
 
@@ -185,8 +188,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         _initializeOwner(msg.sender);
 
-        baseURI = baseURI_;
-        contractURI = contractURI_;
+        _baseURIStorage.initialize(baseURI_);
+        _contractURIStorage.initialize(contractURI_);
 
         fundingRecipient = fundingRecipient_;
         editionMaxMintableUpper = editionMaxMintableUpper_;
@@ -275,7 +278,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen()) revert MetadataIsFrozen();
-        baseURI = baseURI_;
+        _baseURIStorage.update(baseURI_);
 
         emit BaseURISet(baseURI_);
     }
@@ -285,7 +288,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (isMetadataFrozen()) revert MetadataIsFrozen();
-        contractURI = contractURI_;
+        _contractURIStorage.update(contractURI_);
 
         emit ContractURISet(contractURI_);
     }
@@ -297,7 +300,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         if (isMetadataFrozen()) revert MetadataIsFrozen();
 
         _flags |= _METADATA_FROZEN_FLAG;
-        emit MetadataFrozen(metadataModule, baseURI, contractURI);
+        emit MetadataFrozen(metadataModule, baseURI(), contractURI());
     }
 
     /**
@@ -443,7 +446,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             return metadataModule.tokenURI(tokenId);
         }
 
-        string memory baseURI_ = baseURI;
+        string memory baseURI_ = baseURI();
         return bytes(baseURI_).length != 0 ? string.concat(baseURI_, _toString(tokenId)) : "";
     }
 
@@ -488,6 +491,20 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function symbol() public view override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         (, string memory symbol_) = _loadNameAndSymbol();
         return symbol_;
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function baseURI() public view returns (string memory) {
+        return _baseURIStorage.load();
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function contractURI() public view returns (string memory) {
+        return _contractURIStorage.load();
     }
 
     // =============================================================
