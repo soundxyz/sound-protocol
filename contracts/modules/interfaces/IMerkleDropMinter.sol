@@ -116,7 +116,7 @@ interface IMerkleDropMinter is IMinterModule {
     /**
      * @dev The merkle root hash is empty.
      */
-    error MerkleRootHashEmpty();
+    error MerkleRootHashIsEmpty();
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS

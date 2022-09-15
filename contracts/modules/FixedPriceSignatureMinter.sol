@@ -116,6 +116,31 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         _mint(edition, mintId, quantity, affiliate);
     }
 
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].price = price;
+        emit PriceSet(edition, mintId, price);
+    }
+
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
+    function setSigner(
+        address edition,
+        uint128 mintId,
+        address signer
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        if (signer == address(0)) revert SignerIsZeroAddress();
+        _editionMintData[edition][mintId].signer = signer;
+        emit SignerSet(edition, mintId, signer);
+    }
+
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
