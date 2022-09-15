@@ -229,7 +229,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_setCreateWithMerkleRootHashReverts() public {
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1 edition, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 1);
 
         vm.expectRevert(IMerkleDropMinter.MerkleRootHashIsEmpty.selector);
 
