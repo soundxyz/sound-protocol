@@ -42,8 +42,28 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintablePerAccount
     );
 
-    event CutoffTimeSet(address indexed edition, uint128 indexed mintId, uint32 cutoffTime);
+    // prettier-ignore
+    event PriceSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint96 price
+    );
 
+    // prettier-ignore
+    event MaxMintablePerAccountSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 maxMintablePerAccount
+    );
+
+    // prettier-ignore
+    event CutoffTimeSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 cutoffTime
+    );
+
+    // prettier-ignore
     event MaxMintableRangeSet(
         address indexed edition,
         uint128 indexed mintId,
@@ -51,7 +71,13 @@ contract RangeEditionMinterTests is TestConfig {
         uint32 maxMintableUpper
     );
 
-    event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
+    // prettier-ignore
+    event TimeRangeSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 startTime,
+        uint32 endTime
+    );
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
@@ -429,6 +455,26 @@ contract RangeEditionMinterTests is TestConfig {
             assertEq(data.maxMintableLower, maxMintableLower);
             assertEq(data.maxMintableUpper, maxMintableUpper);
         }
+    }
+
+    function test_setPrice(uint96 price) public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
+
+        vm.expectEmit(true, true, true, true);
+        emit PriceSet(address(edition), MINT_ID, price);
+        minter.setPrice(address(edition), MINT_ID, price);
+
+        assertEq(minter.mintInfo(address(edition), MINT_ID).price, price);
+    }
+
+    function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(type(uint32).max);
+
+        vm.expectEmit(true, true, true, true);
+        emit MaxMintablePerAccountSet(address(edition), MINT_ID, maxMintablePerAccount);
+        minter.setMaxMintablePerAccount(address(edition), MINT_ID, maxMintablePerAccount);
+
+        assertEq(minter.mintInfo(address(edition), MINT_ID).maxMintablePerAccount, maxMintablePerAccount);
     }
 
     function test_supportsInterface() public {

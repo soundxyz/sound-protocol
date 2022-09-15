@@ -166,6 +166,30 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
     }
 
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].price = price;
+        emit PriceSet(edition, mintId, price);
+    }
+
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
+    function setMaxMintablePerAccount(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintablePerAccount
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
+        emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
+    }
+
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
