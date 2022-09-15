@@ -331,15 +331,17 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
 
         uint32 currentTotalMinted = uint32(_totalMinted());
 
-        editionMaxMintableLower_ = uint32(FixedPointMathLib.max(editionMaxMintableLower_, currentTotalMinted));
+        if (currentTotalMinted != 0) {
+            editionMaxMintableLower_ = uint32(FixedPointMathLib.max(editionMaxMintableLower_, currentTotalMinted));
 
-        editionMaxMintableUpper_ = uint32(FixedPointMathLib.max(editionMaxMintableUpper_, currentTotalMinted));
+            editionMaxMintableUpper_ = uint32(FixedPointMathLib.max(editionMaxMintableUpper_, currentTotalMinted));
+
+            // If the upper bound is larger than the current stored value, revert.
+            if (editionMaxMintableUpper_ > editionMaxMintableUpper) revert InvalidEditionMaxMintableRange();
+        }
 
         // If the lower bound is larger than the upper bound, revert.
         if (editionMaxMintableLower_ > editionMaxMintableUpper_) revert InvalidEditionMaxMintableRange();
-
-        // If the upper bound is larger than the current stored value, revert.
-        if (editionMaxMintableUpper_ > editionMaxMintableUpper) revert InvalidEditionMaxMintableRange();
 
         editionMaxMintableLower = editionMaxMintableLower_;
         editionMaxMintableUpper = editionMaxMintableUpper_;

@@ -217,12 +217,18 @@ contract SoundEdition_mint is TestConfig {
 
         edition.setEditionMaxMintableRange(0, 10);
 
-        // Attempt to increase max mintable above current max - should fail
-        vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
-        edition.setEditionMaxMintableRange(0, 11);
+        // We can freely set the range, as long no tokens have been minted.
+        edition.setEditionMaxMintableRange(3, 100);
+        edition.setEditionMaxMintableRange(1, 2);
+        edition.setEditionMaxMintableRange(0, 10);
 
         // Mint some tokens
         edition.mint(address(this), 5);
+
+        // Attempt to increase max mintable above current max - should fail,
+        // as we have already minted tokens.
+        vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
+        edition.setEditionMaxMintableRange(0, 11);
 
         // Attempt to lower max mintable below current minted count - should set to current minted count
         edition.setEditionMaxMintableRange(0, 4);
@@ -411,15 +417,23 @@ contract SoundEdition_mint is TestConfig {
     function test_setEditionMaxMintableRangeRevertsIfInvalidRange() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        uint32 editionMaxMintableLower = 2;
-        uint32 editionMaxMintableUpper = 1;
+        // We can freely set the range, as long no tokens have been minted.
+        edition.setEditionMaxMintableRange(1, 9);
+        edition.setEditionMaxMintableRange(122, 122);
+        edition.setEditionMaxMintableRange(111, 1111);
+        edition.setEditionMaxMintableRange(1, 11);
 
-        // Checks reverts if the lower bound exceeds the upper bound.
+        uint32 editionMaxMintableLower = 5;
+        uint32 editionMaxMintableUpper = 3;
+
+        // However, we cannot the lower bound to be greater than the upper bound.
         vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
         edition.setEditionMaxMintableRange(editionMaxMintableLower, editionMaxMintableUpper);
 
         // Change the upper bound.
         edition.setEditionMaxMintableRange(0, editionMaxMintableUpper);
+
+        edition.mint(address(this), 1);
 
         // Checks reverts if the upper bound exceeds the previous upper bound.
         vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
