@@ -55,6 +55,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintablePerAccount
     ) public onlyValidCombinedTimeRange(startTime, cutoffTime, endTime) returns (uint128 mintId) {
         if (maxMintableLower > maxMintableUpper) revert InvalidMaxMintableRange();
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
 
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
@@ -164,6 +165,31 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.maxMintableUpper = maxMintableUpper;
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
+    }
+
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].price = price;
+        emit PriceSet(edition, mintId, price);
+    }
+
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
+    function setMaxMintablePerAccount(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintablePerAccount
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
+        _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
+        emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
     }
 
     // =============================================================

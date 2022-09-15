@@ -63,6 +63,22 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint16 affiliateFeeBPS
     );
 
+    /**
+     * @dev Emitted when the `price` is changed for (`edition`, `mintId`).
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId  The mint ID.
+     * @param price   Sale price in ETH for minting a single token in `edition`.
+     */
+    event PriceSet(address indexed edition, uint128 indexed mintId, uint96 price);
+
+    /**
+     * @dev Emitted when the `signer` is changed for (`edition`, `mintId`).
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId  The mint ID.
+     * @param signer  The address of the signer that authorizes mints.
+     */
+    event SignerSet(address indexed edition, uint128 indexed mintId, address signer);
+
     // =============================================================
     //                            ERRORS
     // =============================================================
@@ -130,6 +146,30 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         bytes calldata signature,
         uint32 claimTicket
     ) external payable;
+
+    /*
+     * @dev Sets the `price` for (`edition`, `mintId`).
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId  The mint ID.
+     * @param price   Sale price in ETH for minting a single token in `edition`.
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) external;
+
+    /*
+     * @dev Sets the `maxMintablePerAccount` for (`edition`, `mintId`).
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId  The mint ID.
+     * @param signer  The address of the signer that authorizes mints.
+     */
+    function setSigner(
+        address edition,
+        uint128 mintId,
+        address signer
+    ) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL READ FUNCTIONS

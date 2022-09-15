@@ -54,6 +54,9 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint32 maxMintable,
         uint32 maxMintablePerAccount
     ) public returns (uint128 mintId) {
+        if (merkleRootHash == bytes32(0)) revert MerkleRootHashIsEmpty();
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
+
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -109,6 +112,45 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         _mint(edition, mintId, requestedQuantity, affiliate);
 
         emit DropClaimed(msg.sender, requestedQuantity);
+    }
+
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].price = price;
+        emit PriceSet(edition, mintId, price);
+    }
+
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
+    function setMaxMintablePerAccount(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintablePerAccount
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
+        _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
+        emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
+    }
+
+    /*
+     * @inheritdoc IMerkleDropMinter
+     */
+    function setMerkleRootHash(
+        address edition,
+        uint128 mintId,
+        bytes32 merkleRootHash
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        if (merkleRootHash == bytes32(0)) revert MerkleRootHashIsEmpty();
+
+        _editionMintData[edition][mintId].merkleRootHash = merkleRootHash;
+        emit MerkleRootHashSet(edition, mintId, merkleRootHash);
     }
 
     // =============================================================
