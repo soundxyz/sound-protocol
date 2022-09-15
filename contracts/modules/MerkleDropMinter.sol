@@ -55,6 +55,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint32 maxMintablePerAccount
     ) public returns (uint128 mintId) {
         if (merkleRootHash == bytes32(0)) revert MerkleRootHashIsEmpty();
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
 
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
@@ -133,6 +134,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         uint128 mintId,
         uint32 maxMintablePerAccount
     ) public onlyEditionOwnerOrAdmin(edition) {
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
         _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
         emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
     }

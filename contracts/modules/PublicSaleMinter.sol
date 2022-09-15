@@ -51,6 +51,8 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
         uint16 affiliateFeeBPS,
         uint32 maxMintablePerAccount
     ) public returns (uint128 mintId) {
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
+
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
@@ -114,6 +116,7 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
         uint128 mintId,
         uint32 maxMintablePerAccount
     ) public onlyEditionOwnerOrAdmin(edition) {
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
         _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
         emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
     }

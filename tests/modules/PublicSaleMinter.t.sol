@@ -26,7 +26,7 @@ contract PublicSaleMinterTests is TestConfig {
 
     uint128 constant MINT_ID = 0;
 
-    uint32 constant MAX_MINTABLE_PER_ACCOUNT = 0;
+    uint32 constant MAX_MINTABLE_PER_ACCOUNT = type(uint32).max;
 
     // prettier-ignore
     event PublicSaleMintCreated(
@@ -111,7 +111,10 @@ contract PublicSaleMinterTests is TestConfig {
 
         bool hasRevert;
 
-        if (!(startTime < endTime)) {
+        if (maxMintablePerAccount == 0) {
+            vm.expectRevert(IPublicSaleMinter.MaxMintablePerAccountIsZero.selector);
+            hasRevert = true;
+        } else if (!(startTime < endTime)) {
             vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
             hasRevert = true;
         } else if (affiliateFeeBPS > minter.MAX_BPS()) {
@@ -150,9 +153,17 @@ contract PublicSaleMinterTests is TestConfig {
 
         vm.expectEmit(true, true, true, true);
 
-        emit PublicSaleMintCreated(address(edition), MINT_ID, PRICE, START_TIME, END_TIME, AFFILIATE_FEE_BPS, 0);
+        emit PublicSaleMintCreated(
+            address(edition),
+            MINT_ID,
+            PRICE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            type(uint32).max
+        );
 
-        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, AFFILIATE_FEE_BPS, 0);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, AFFILIATE_FEE_BPS, type(uint32).max);
     }
 
     function test_mintWhenOverMaxMintablePerAccountReverts() public {
@@ -255,6 +266,7 @@ contract PublicSaleMinterTests is TestConfig {
     }
 
     function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
+        vm.assume(maxMintablePerAccount != 0);
         (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.expectEmit(true, true, true, true);
@@ -264,8 +276,22 @@ contract PublicSaleMinterTests is TestConfig {
         assertEq(minter.mintInfo(address(edition), MINT_ID).maxMintablePerAccount, maxMintablePerAccount);
     }
 
+    function test_setZeroMaxMintablePerAccountReverts() public {
+        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+
+        vm.expectRevert(IPublicSaleMinter.MaxMintablePerAccountIsZero.selector);
+        minter.setMaxMintablePerAccount(address(edition), MINT_ID, 0);
+    }
+
+    function test_createWithZeroMaxMintablePerAccountReverts() public {
+        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+
+        vm.expectRevert(IPublicSaleMinter.MaxMintablePerAccountIsZero.selector);
+        minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, AFFILIATE_FEE_BPS, 0);
+    }
+
     function test_supportsInterface() public {
-        (, PublicSaleMinter minter) = _createEditionAndMinter(0);
+        (, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
         bool supportsIPublicSaleMinter = minter.supportsInterface(type(IPublicSaleMinter).interfaceId);
@@ -277,7 +303,7 @@ contract PublicSaleMinterTests is TestConfig {
     }
 
     function test_moduleInterfaceId() public {
-        (, PublicSaleMinter minter) = _createEditionAndMinter(0);
+        (, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         assertTrue(type(IPublicSaleMinter).interfaceId == minter.moduleInterfaceId());
     }

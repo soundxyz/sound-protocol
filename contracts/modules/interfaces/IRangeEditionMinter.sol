@@ -122,6 +122,11 @@ interface IRangeEditionMinter is IMinterModule {
      */
     error ExceedsMaxPerAccount();
 
+    /**
+     * @dev The max mintable per account cannot be zero.
+     */
+    error MaxMintablePerAccountIsZero();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
