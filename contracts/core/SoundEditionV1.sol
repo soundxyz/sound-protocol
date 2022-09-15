@@ -173,7 +173,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         uint32 editionMaxMintableUpper_,
         uint32 editionCutoffTime_,
         bool mintRandomnessEnabled_
-    ) public onlyValidRoyaltyBPS(royaltyBPS_) {
+    ) external onlyValidRoyaltyBPS(royaltyBPS_) {
         // Prevent double initialization.
         // We can "cheat" here and avoid the initializer modifer to save a SSTORE,
         // since the `_nextTokenId()` is defined to always return 1.
@@ -206,7 +206,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function mint(address to, uint256 quantity)
-        public
+        external
         payable
         onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE)
         requireWithinAddressBatchMintLimit(quantity)
@@ -223,7 +223,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function airdrop(address[] calldata to, uint256 quantity)
-        public
+        external
         onlyRolesOrOwner(ADMIN_ROLE)
         requireWithinAddressBatchMintLimit(quantity)
         requireMintable(to.length * quantity)
@@ -543,13 +543,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             if (currentTotalMinted + totalQuantity > currentEditionMaxMintable) {
                 // Won't underflow.
                 //
-                // `currentEditionMaxMintable`, which is `_totalMinted()`,
+                // `currentTotalMinted`, which is `_totalMinted()`,
                 // will return either `editionMaxMintableUpper`
                 // or `max(editionMaxMintableLower, _totalMinted())`.
                 //
                 // We have the following invariants:
                 // - `editionMaxMintableUpper >= _totalMinted()`
-                // - `max(editionMaxMintableLower, _totalMinted()) == _totalMinted()`
+                // - `max(editionMaxMintableLower, _totalMinted()) >= _totalMinted()`
                 uint256 available = currentEditionMaxMintable - currentTotalMinted;
                 revert ExceedsEditionAvailableSupply(uint32(available));
             }
