@@ -266,8 +266,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function setMetadataModule(IMetadataModule metadataModule_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen()) revert MetadataIsFrozen();
+    function setMetadataModule(IMetadataModule metadataModule_)
+        external
+        onlyRolesOrOwner(ADMIN_ROLE)
+        onlyMetadataNotFrozen
+    {
         metadataModule = metadataModule_;
 
         emit MetadataModuleSet(metadataModule_);
@@ -276,8 +279,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen()) revert MetadataIsFrozen();
+    function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _baseURIStorage.update(baseURI_);
 
         emit BaseURISet(baseURI_);
@@ -286,8 +288,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen()) revert MetadataIsFrozen();
+    function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _contractURIStorage.update(contractURI_);
 
         emit ContractURISet(contractURI_);
@@ -296,9 +297,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (isMetadataFrozen()) revert MetadataIsFrozen();
-
+    function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _flags |= _METADATA_FROZEN_FLAG;
         emit MetadataFrozen(metadataModule, baseURI(), contractURI());
     }
@@ -526,6 +525,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     modifier onlyValidRoyaltyBPS(uint16 bps) {
         if (bps > _MAX_BPS) revert InvalidRoyaltyBPS();
+        _;
+    }
+
+    /**
+     * @dev Reverts if the metadata is frozen.
+     */
+    modifier onlyMetadataNotFrozen() {
+        // Inlined to save gas.
+        if (_flags & _METADATA_FROZEN_FLAG != 0) revert MetadataIsFrozen();
         _;
     }
 
