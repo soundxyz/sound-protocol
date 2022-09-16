@@ -12,7 +12,14 @@ import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract SoundCreatorTests is TestConfig {
-    event SoundEditionCreated(address indexed soundEdition, address indexed deployer);
+    event SoundEditionCreated(
+        address indexed soundEdition,
+        address indexed deployer,
+        address[] contracts,
+        bytes[] data,
+        bytes[] results
+    );
+
     event SoundEditionImplementationSet(address newImplementation);
 
     uint96 constant PRICE = 1 ether;
@@ -130,11 +137,17 @@ contract SoundCreatorTests is TestConfig {
         address[] memory contracts = new address[](6);
         bytes[] memory data = new bytes[](6);
 
+        FixedPriceSignatureMinter signatureMinter;
+        MerkleDropMinter merkleMinter;
+        RangeEditionMinter rangeMinter;
+
         // Deploy the registry and minters.
-        ISoundFeeRegistry feeRegistry = ISoundFeeRegistry(address(1));
-        FixedPriceSignatureMinter signatureMinter = new FixedPriceSignatureMinter(feeRegistry);
-        MerkleDropMinter merkleMinter = new MerkleDropMinter(feeRegistry);
-        RangeEditionMinter rangeMinter = new RangeEditionMinter(feeRegistry);
+        {
+            ISoundFeeRegistry feeRegistry = ISoundFeeRegistry(address(1));
+            signatureMinter = new FixedPriceSignatureMinter(feeRegistry);
+            merkleMinter = new MerkleDropMinter(feeRegistry);
+            rangeMinter = new RangeEditionMinter(feeRegistry);
+        }
 
         // Deploy the implementation of the edition.
         SoundEditionV1 editionImplementation = new SoundEditionV1();
@@ -153,59 +166,71 @@ contract SoundCreatorTests is TestConfig {
 
         // Populate the data:
         // First, we have to call the {grantRoles} on the `soundEditionAddress`.
-        data[0] = abi.encodeWithSelector(
-            editionImplementation.grantRoles.selector,
-            address(signatureMinter),
-            editionImplementation.MINTER_ROLE()
-        );
-        data[1] = abi.encodeWithSelector(
-            editionImplementation.grantRoles.selector,
-            address(merkleMinter),
-            editionImplementation.MINTER_ROLE()
-        );
-        data[2] = abi.encodeWithSelector(
-            editionImplementation.grantRoles.selector,
-            address(rangeMinter),
-            editionImplementation.MINTER_ROLE()
-        );
-        // Then, we have to call the {createEditionMint} on the minters.
-        data[3] = abi.encodeWithSelector(
-            signatureMinter.createEditionMint.selector,
-            soundEditionAddress,
-            price0,
-            SIGNER,
-            EDITION_MAX_MINTABLE,
-            START_TIME,
-            END_TIME,
-            AFFILIATE_FEE_BPS
-        );
-        data[4] = abi.encodeWithSelector(
-            merkleMinter.createEditionMint.selector,
-            soundEditionAddress,
-            bytes32(uint256(123456)), // Merkle root hash.
-            price1,
-            START_TIME,
-            END_TIME,
-            AFFILIATE_FEE_BPS,
-            EDITION_MAX_MINTABLE,
-            5 // Max mintable per account.
-        );
-        data[5] = abi.encodeWithSelector(
-            rangeMinter.createEditionMint.selector,
-            soundEditionAddress,
-            price2,
-            START_TIME,
-            START_TIME + 1, // Closing time
-            END_TIME,
-            AFFILIATE_FEE_BPS,
-            10, // Max mintable lower.
-            20, // Max mintable upper.
-            5 // Max mintable per account.
-        );
+        {
+            data[0] = abi.encodeWithSelector(
+                editionImplementation.grantRoles.selector,
+                address(signatureMinter),
+                editionImplementation.MINTER_ROLE()
+            );
+            data[1] = abi.encodeWithSelector(
+                editionImplementation.grantRoles.selector,
+                address(merkleMinter),
+                editionImplementation.MINTER_ROLE()
+            );
+            data[2] = abi.encodeWithSelector(
+                editionImplementation.grantRoles.selector,
+                address(rangeMinter),
+                editionImplementation.MINTER_ROLE()
+            );
+        }
 
-        // Check that the creation event is emitted.
-        vm.expectEmit(true, true, true, true);
-        emit SoundEditionCreated(soundEditionAddress, address(this));
+        // Then, we have to call the {createEditionMint} on the minters.
+        {
+            data[3] = abi.encodeWithSelector(
+                signatureMinter.createEditionMint.selector,
+                soundEditionAddress,
+                price0,
+                SIGNER,
+                EDITION_MAX_MINTABLE,
+                START_TIME,
+                END_TIME,
+                AFFILIATE_FEE_BPS
+            );
+            data[4] = abi.encodeWithSelector(
+                merkleMinter.createEditionMint.selector,
+                soundEditionAddress,
+                bytes32(uint256(123456)), // Merkle root hash.
+                price1,
+                START_TIME,
+                END_TIME,
+                AFFILIATE_FEE_BPS,
+                EDITION_MAX_MINTABLE,
+                5 // Max mintable per account.
+            );
+            data[5] = abi.encodeWithSelector(
+                rangeMinter.createEditionMint.selector,
+                soundEditionAddress,
+                price2,
+                START_TIME,
+                START_TIME + 1, // Closing time
+                END_TIME,
+                AFFILIATE_FEE_BPS,
+                10, // Max mintable lower.
+                20, // Max mintable upper.
+                5 // Max mintable per account.
+            );
+        }
+
+        {
+            bytes[] memory expectedResults = new bytes[](6);
+            expectedResults[3] = abi.encode(signatureMinter.nextMintId());
+            expectedResults[4] = abi.encode(merkleMinter.nextMintId());
+            expectedResults[5] = abi.encode(rangeMinter.nextMintId());
+
+            // Check that the creation event is emitted.
+            vm.expectEmit(true, true, true, true);
+            emit SoundEditionCreated(soundEditionAddress, address(this), contracts, data, expectedResults);
+        }
 
         // Call the create function.
         (, bytes[] memory results) = _createSoundEditionWithCalls(salt, contracts, data);

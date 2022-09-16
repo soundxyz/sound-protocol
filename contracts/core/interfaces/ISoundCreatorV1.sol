@@ -14,10 +14,19 @@ interface ISoundCreatorV1 {
 
     /**
      * @dev Emitted when an edition is created.
-     * @param soundEdition the address of the edition.
-     * @param deployer The address of the deployer.
+     * @param soundEdition The address of the edition.
+     * @param deployer     The address of the deployer.
+     * @param contracts    The list of contracts called.
+     * @param data         The list of calldata created via `abi.encodeWithSelector`
+     * @param results      The results of calling the contracts. Use `abi.decode` to decode them.
      */
-    event SoundEditionCreated(address indexed soundEdition, address indexed deployer);
+    event SoundEditionCreated(
+        address indexed soundEdition,
+        address indexed deployer,
+        address[] contracts,
+        bytes[] data,
+        bytes[] results
+    );
 
     /**
      * @dev Emitted when the edition implementation address is set.
