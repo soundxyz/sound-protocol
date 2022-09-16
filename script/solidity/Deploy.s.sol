@@ -12,6 +12,7 @@ import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
+import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 
 contract Deploy is Script {
     uint16 private constant PLATFORM_FEE_BPS = 500;
@@ -31,6 +32,7 @@ contract Deploy is Script {
         new FixedPriceSignatureMinter(soundFeeRegistry);
         new MerkleDropMinter(soundFeeRegistry);
         new RangeEditionMinter(soundFeeRegistry);
+        new EditionMaxMinter(soundFeeRegistry);
 
         // Deploy edition implementation (& initialize it for security)
         SoundEditionV1 editionImplementation = new SoundEditionV1();
