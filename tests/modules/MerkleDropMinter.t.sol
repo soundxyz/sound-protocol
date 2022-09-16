@@ -35,6 +35,13 @@ contract MerkleDropMinterTests is TestConfig {
     );
 
     // prettier-ignore
+    event MaxMintableSet(
+        address indexed edition,
+         uint128 indexed mintId, 
+         uint32 maxMintable
+    );
+
+    // prettier-ignore
     event MaxMintablePerAccountSet(
         address indexed edition,
         uint128 indexed mintId,
@@ -192,6 +199,25 @@ contract MerkleDropMinterTests is TestConfig {
         assertEq(minter.mintInfo(address(edition), mintId).price, price);
     }
 
+    function test_setMaxMintable(uint32 maxMintable) public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectEmit(true, true, true, true);
+        emit MaxMintableSet(address(edition), mintId, maxMintable);
+        minter.setMaxMintable(address(edition), mintId, maxMintable);
+
+        assertEq(minter.mintInfo(address(edition), mintId).maxMintable, maxMintable);
+    }
+
+    function test_setMaxMintableRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        address attacker = getFundedAccount(1);
+
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
+        vm.prank(attacker);
+        minter.setMaxMintable(address(edition), mintId, maxMintable);
+    }
+
     function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
         vm.assume(maxMintablePerAccount != 0);
         (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
@@ -201,6 +227,15 @@ contract MerkleDropMinterTests is TestConfig {
         minter.setMaxMintablePerAccount(address(edition), mintId, maxMintablePerAccount);
 
         assertEq(minter.mintInfo(address(edition), mintId).maxMintablePerAccount, maxMintablePerAccount);
+    }
+
+    function test_setMaxMintablePerAccountRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        address attacker = getFundedAccount(1);
+
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
+        vm.prank(attacker);
+        minter.setMaxMintablePerAccount(address(edition), mintId, maxMintable);
     }
 
     function test_setMaxMintablePerAccountWithZeroReverts() public {

@@ -139,6 +139,18 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
     }
 
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
+    function setMaxMintable(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintable
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].maxMintable = maxMintable;
+        emit MaxMintableSet(edition, mintId, maxMintable);
+    }
+
     /*
      * @inheritdoc IMerkleDropMinter
      */

@@ -84,6 +84,14 @@ interface IMerkleDropMinter is IMinterModule {
     event PriceSet(address indexed edition, uint128 indexed mintId, uint96 price);
 
     /**
+     * @dev Emitted when the `maxMintable` is changed for (`edition`, `mintId`).
+     * @param edition               Address of the song edition contract we are minting for.
+     * @param mintId                The mint ID.
+     * @param maxMintable The maximum number of tokens that can be minted on this schedule.
+     */
+    event MaxMintableSet(address indexed edition, uint128 indexed mintId, uint32 maxMintable);
+
+    /**
      * @dev Emitted when the `maxMintablePerAccount` is changed for (`edition`, `mintId`).
      * @param edition               Address of the song edition contract we are minting for.
      * @param mintId                The mint ID.
@@ -185,6 +193,18 @@ interface IMerkleDropMinter is IMinterModule {
         address edition,
         uint128 mintId,
         uint32 maxMintablePerAccount
+    ) external;
+
+    /*
+     * @dev Sets the `maxMintable` for (`edition`, `mintId`).
+     * @param edition               Address of the song edition contract we are minting for.
+     * @param mintId                The mint ID.
+     * @param maxMintable The maximum number of tokens that can be minted on this schedule.
+     */
+    function setMaxMintable(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintable
     ) external;
 
     /*

@@ -119,6 +119,18 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     /**
      * @inheritdoc IFixedPriceSignatureMinter
      */
+    function setMaxMintable(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintable
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].maxMintable = maxMintable;
+        emit MaxMintableSet(edition, mintId, maxMintable);
+    }
+
+    /**
+     * @inheritdoc IFixedPriceSignatureMinter
+     */
     function setPrice(
         address edition,
         uint128 mintId,
