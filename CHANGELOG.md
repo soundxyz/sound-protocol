@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.3
+
+### Patch Changes
+
+-   86202d8: Add maxMintableInfo to Edition and use in mintInfo of PublicSaleMinter
+
 ## 0.4.2
 
 ### Patch Changes
