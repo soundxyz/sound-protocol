@@ -37,7 +37,7 @@ contract Deploy is Script {
         editionImplementation.initialize(
             "SoundEditionV1", // name
             "SOUND", // symbol
-            IMetadataModule(address(0)),
+            address(0),
             "baseURI",
             "contractURI",
             address(1), // fundingRecipient

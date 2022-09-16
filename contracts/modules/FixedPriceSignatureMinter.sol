@@ -175,7 +175,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     /**
      * @inheritdoc IFixedPriceSignatureMinter
      */
-    function mintInfo(address edition, uint128 mintId) public view override returns (MintInfo memory) {
+    function mintInfo(address edition, uint128 mintId) external view override returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
