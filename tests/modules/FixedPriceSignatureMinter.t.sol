@@ -65,6 +65,13 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         address signer
     );
 
+    // prettier-ignore
+    event MaxMintableSet(
+        address indexed edition,
+         uint128 indexed mintId, 
+         uint32 maxMintable
+    );
+
     function _signerAddress() internal returns (address) {
         return vm.addr(SIGNER_PRIVATE_KEY);
     }
@@ -661,6 +668,25 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         bool[] memory results = minter.checkClaimTickets(address(edition), mintId, claimTickets);
 
         assertEq(abi.encode(results), abi.encode(expectedClaimedAndUnclaimed));
+    }
+
+    function test_setMaxMintable(uint32 maxMintable) public {
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+
+        vm.expectEmit(true, true, true, true);
+        emit MaxMintableSet(address(edition), MINT_ID, maxMintable);
+        minter.setMaxMintable(address(edition), MINT_ID, maxMintable);
+
+        assertEq(minter.mintInfo(address(edition), MINT_ID).maxMintable, maxMintable);
+    }
+
+    function test_setMaxMintableRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
+        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        address attacker = getFundedAccount(1);
+
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
+        vm.prank(attacker);
+        minter.setMaxMintable(address(edition), MINT_ID, maxMintable);
     }
 
     function test_setPrice(uint96 price) public {
