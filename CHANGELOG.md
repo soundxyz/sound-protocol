@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.1
+
+### Patch Changes
+
+-   25ac037: Add PublicSaleMinter interface
+
 ## 0.4.0
 
 ### Minor Changes
