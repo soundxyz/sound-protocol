@@ -139,7 +139,7 @@ contract SoundCreatorTests is TestConfig {
         // Deploy the implementation of the edition.
         SoundEditionV1 editionImplementation = new SoundEditionV1();
 
-        address soundEditionAddress = soundCreator.soundEditionAddress(address(this), salt);
+        (address soundEditionAddress, ) = soundCreator.soundEditionAddress(address(this), salt);
 
         // Populate the contracts:
         // First, we have to call the {grantRoles} on the `soundEditionAddress`.

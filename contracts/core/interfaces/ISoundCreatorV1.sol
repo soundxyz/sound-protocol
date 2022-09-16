@@ -87,7 +87,7 @@ interface ISoundCreatorV1 {
      * @dev Returns the deterministic address for the sound edition clone.
      * @param by   The caller of the {createSoundAndMints} function.
      * @param salt The salt, generated on the client side.
-     * @return The computed value.
+     * @return The computed value and whether the contract exists.
      */
-    function soundEditionAddress(address by, bytes32 salt) external view returns (address);
+    function soundEditionAddress(address by, bytes32 salt) external view returns (address, bool);
 }

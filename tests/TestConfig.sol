@@ -89,8 +89,8 @@ contract TestConfig is Test {
         bytes[] memory data;
 
         soundCreator.createSoundAndMints(bytes32(++_salt), initData, contracts, data);
-
-        return payable(soundCreator.soundEditionAddress(address(this), bytes32(_salt)));
+        (address addr, ) = soundCreator.soundEditionAddress(address(this), bytes32(_salt));
+        return payable(addr);
     }
 
     function createGenericEdition() public returns (SoundEditionV1) {

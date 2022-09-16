@@ -129,8 +129,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
     /**
      * @inheritdoc ISoundCreatorV1
      */
-    function soundEditionAddress(address by, bytes32 salt) external view returns (address) {
-        return Clones.predictDeterministicAddress(soundEditionImplementation, _saltedSalt(by, salt), address(this));
+    function soundEditionAddress(address by, bytes32 salt) external view returns (address addr, bool exists) {
+        addr = Clones.predictDeterministicAddress(soundEditionImplementation, _saltedSalt(by, salt), address(this));
+        exists = addr.code.length > 0;
     }
 
     // =============================================================
