@@ -26,7 +26,7 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
             address(edition),
             PRICE,
             START_TIME,
-            CLOSING_TIME,
+            CUTOFF_TIME,
             END_TIME,
             AFFILIATE_FEE_BPS,
             MAX_MINTABLE_LOWER,
@@ -48,9 +48,9 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
         MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
         uint32 startTime = mintInfo.startTime;
-        uint32 closingTime = mintInfo.closingTime;
+        uint32 cutoffTime = mintInfo.cutoffTime;
         uint32 endTime = mintInfo.endTime;
-        assertTrue(startTime < closingTime && closingTime < endTime);
+        assertTrue(startTime < cutoffTime && cutoffTime < endTime);
     }
 }
 
@@ -67,10 +67,10 @@ contract RangeEditionMinterUpdater {
 
     function setTimeRange(
         uint32 startTime,
-        uint32 closingTime,
+        uint32 cutoffTime,
         uint32 endTime
     ) public {
-        minter.setTimeRange(address(edition), MINT_ID, startTime, closingTime, endTime);
+        minter.setTimeRange(address(edition), MINT_ID, startTime, cutoffTime, endTime);
     }
 
     function setMaxMintableRange(uint32 maxMintableLower, uint32 maxMintableUpper) public {

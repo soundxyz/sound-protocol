@@ -75,6 +75,38 @@ interface IMerkleDropMinter is IMinterModule {
      */
     event DropClaimed(address recipient, uint32 quantity);
 
+    /**
+     * @dev Emitted when the `price` is changed for (`edition`, `mintId`).
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId  The mint ID.
+     * @param price   Sale price in ETH for minting a single token in `edition`.
+     */
+    event PriceSet(address indexed edition, uint128 indexed mintId, uint96 price);
+
+    /**
+     * @dev Emitted when the `maxMintable` is changed for (`edition`, `mintId`).
+     * @param edition               Address of the song edition contract we are minting for.
+     * @param mintId                The mint ID.
+     * @param maxMintable The maximum number of tokens that can be minted on this schedule.
+     */
+    event MaxMintableSet(address indexed edition, uint128 indexed mintId, uint32 maxMintable);
+
+    /**
+     * @dev Emitted when the `maxMintablePerAccount` is changed for (`edition`, `mintId`).
+     * @param edition               Address of the song edition contract we are minting for.
+     * @param mintId                The mint ID.
+     * @param maxMintablePerAccount The maximum number of tokens that can be minted per account.
+     */
+    event MaxMintablePerAccountSet(address indexed edition, uint128 indexed mintId, uint32 maxMintablePerAccount);
+
+    /**
+     * @dev Emitted when the `merkleRootHash` is changed for (`edition`, `mintId`).
+     * @param edition        Address of the song edition contract we are minting for.
+     * @param mintId         The mint ID.
+     * @param merkleRootHash The merkle root hash of the entries.
+     */
+    event MerkleRootHashSet(address indexed edition, uint128 indexed mintId, bytes32 merkleRootHash);
+
     // =============================================================
     //                            ERRORS
     // =============================================================
@@ -88,6 +120,16 @@ interface IMerkleDropMinter is IMinterModule {
      * @dev The number of tokens minted has exceeded the number allowed for each account.
      */
     error ExceedsMaxPerAccount();
+
+    /**
+     * @dev The merkle root hash is empty.
+     */
+    error MerkleRootHashIsEmpty();
+
+    /**
+     * @dev The max mintable per account cannot be zero.
+     */
+    error MaxMintablePerAccountIsZero();
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -128,6 +170,54 @@ interface IMerkleDropMinter is IMinterModule {
         bytes32[] calldata merkleProof,
         address affiliate
     ) external payable;
+
+    /*
+     * @dev Sets the `price` for (`edition`, `mintId`).
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId  The mint ID.
+     * @param price   Sale price in ETH for minting a single token in `edition`.
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) external;
+
+    /*
+     * @dev Sets the `maxMintablePerAccount` for (`edition`, `mintId`).
+     * @param edition               Address of the song edition contract we are minting for.
+     * @param mintId                The mint ID.
+     * @param maxMintablePerAccount The maximum number of tokens that can be minted by an account.
+     */
+    function setMaxMintablePerAccount(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintablePerAccount
+    ) external;
+
+    /*
+     * @dev Sets the `maxMintable` for (`edition`, `mintId`).
+     * @param edition               Address of the song edition contract we are minting for.
+     * @param mintId                The mint ID.
+     * @param maxMintable The maximum number of tokens that can be minted on this schedule.
+     */
+    function setMaxMintable(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintable
+    ) external;
+
+    /*
+     * @dev Sets the `merkleRootHash` for (`edition`, `mintId`).
+     * @param edition        Address of the song edition contract we are minting for.
+     * @param mintId         The mint ID.
+     * @param merkleRootHash The merkle root hash of the entries.
+     */
+    function setMerkleRootHash(
+        address edition,
+        uint128 mintId,
+        bytes32 merkleRootHash
+    ) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
