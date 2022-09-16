@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.7
+
+### Patch Changes
+
+-   6175acd: update preview and staging
+
 ## 0.4.6
 
 ### Patch Changes
