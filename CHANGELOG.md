@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.6
+
+### Patch Changes
+
+-   b70af1c: SoundEditionCreated emits full payload
+
 ## 0.4.5
 
 ### Patch Changes
