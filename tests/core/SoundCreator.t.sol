@@ -15,6 +15,7 @@ contract SoundCreatorTests is TestConfig {
     event SoundEditionCreated(
         address indexed soundEdition,
         address indexed deployer,
+        bytes initData,
         address[] contracts,
         bytes[] data,
         bytes[] results
@@ -229,7 +230,14 @@ contract SoundCreatorTests is TestConfig {
 
             // Check that the creation event is emitted.
             vm.expectEmit(true, true, true, true);
-            emit SoundEditionCreated(soundEditionAddress, address(this), contracts, data, expectedResults);
+            emit SoundEditionCreated(
+                soundEditionAddress,
+                address(this),
+                _makeInitData(),
+                contracts,
+                data,
+                expectedResults
+            );
         }
 
         // Call the create function.
@@ -284,14 +292,8 @@ contract SoundCreatorTests is TestConfig {
         test_createSoundAndMintsRevertForArrayLengthsMismatch(0, 1, salt);
     }
 
-    // For avoiding the stack too deep error.
-    function _createSoundEditionWithCalls(
-        bytes32 salt,
-        address[] memory contracts,
-        bytes[] memory data
-    ) internal returns (address soundEdition, bytes[] memory results) {
-        (soundEdition, results) = soundCreator.createSoundAndMints(
-            salt,
+    function _makeInitData() internal pure returns (bytes memory) {
+        return
             abi.encodeWithSelector(
                 SoundEditionV1.initialize.selector,
                 SONG_NAME,
@@ -305,9 +307,14 @@ contract SoundCreatorTests is TestConfig {
                 EDITION_MAX_MINTABLE,
                 EDITION_CUTOFF_TIME,
                 FLAGS
-            ),
-            contracts,
-            data
-        );
+            );
+    }
+
+    function _createSoundEditionWithCalls(
+        bytes32 salt,
+        address[] memory contracts,
+        bytes[] memory data
+    ) internal returns (address soundEdition, bytes[] memory results) {
+        (soundEdition, results) = soundCreator.createSoundAndMints(salt, _makeInitData(), contracts, data);
     }
 }

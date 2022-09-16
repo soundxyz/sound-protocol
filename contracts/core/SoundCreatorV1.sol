@@ -104,7 +104,7 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
 
         OwnableRoles(soundEdition).transferOwnership(msg.sender);
 
-        emit SoundEditionCreated(soundEdition, msg.sender, contracts, data, results);
+        emit SoundEditionCreated(soundEdition, msg.sender, initData, contracts, data, results);
     }
 
     /**
