@@ -1,5 +1,14 @@
 # @soundxyz/sound-protocol
 
+## 0.3.1
+
+### Patch Changes
+
+-   c86d481: createSoundAndMints returns the soundEdition address
+-   2b0f61f: Add temporal max quantity to Edition, add PublicSaleMinter
+-   c86d481: Return if soundEditionAddress exists
+-   c86d481: updating interfaces
+
 ## 0.3.0
 
 ### Minor Changes
