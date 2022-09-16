@@ -7,6 +7,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
+import { IPublicSaleMinter } from "@modules/interfaces/IPublicSaleMinter.sol";
 import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol";
 
 contract GetInterfaceId is Script {
@@ -25,6 +26,9 @@ contract GetInterfaceId is Script {
 
         console.log('", "IMerkleDropMinter": "');
         console.logBytes4(type(IMerkleDropMinter).interfaceId);
+
+        console.log('", "IPublicSaleMinter": "');
+        console.logBytes4(type(IPublicSaleMinter).interfaceId);
 
         console.log('", "IRangeEditionMinter": "');
         console.logBytes4(type(IRangeEditionMinter).interfaceId);
