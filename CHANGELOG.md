@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.0
+
+### Minor Changes
+
+-   efafbc7: Bump
+
 ## 0.3.1
 
 ### Patch Changes
