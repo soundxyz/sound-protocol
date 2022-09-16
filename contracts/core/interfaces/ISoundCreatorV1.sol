@@ -53,15 +53,16 @@ interface ISoundCreatorV1 {
      * @param contracts A list of contracts to call.
      * @param data      A list of calldata created via `abi.encodeWithSelector`
      *                  This must contain the same number of entries as `contracts`.
-     * @return results The results of calling the contracts.
-     *                 Use `abi.decode` to decode them.
+     * @return soundEdition Returns the address of the created contract.
+     * @return results      The results of calling the contracts.
+     *                      Use `abi.decode` to decode them.
      */
     function createSoundAndMints(
         bytes32 salt,
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] calldata data
-    ) external returns (bytes[] memory results);
+    ) external returns (address soundEdition, bytes[] memory results);
 
     /**
      * @dev Changes the SoundEdition implementation contract address.
@@ -87,7 +88,8 @@ interface ISoundCreatorV1 {
      * @dev Returns the deterministic address for the sound edition clone.
      * @param by   The caller of the {createSoundAndMints} function.
      * @param salt The salt, generated on the client side.
-     * @return The computed value.
+     * @return addr The computed address.
+     * @return exists Whether the contract exists.
      */
-    function soundEditionAddress(address by, bytes32 salt) external view returns (address);
+    function soundEditionAddress(address by, bytes32 salt) external view returns (address addr, bool exists);
 }
