@@ -308,48 +308,88 @@ contract PublicSaleMinterTests is TestConfig {
         assertTrue(type(IPublicSaleMinter).interfaceId == minter.moduleInterfaceId());
     }
 
-    function test_mintInfo() public {
-        SoundEditionV1 edition = createGenericEdition();
+    function test_mintInfo(
+        uint96 price,
+        uint32 startTime,
+        uint32 endTime,
+        uint16 affiliateFeeBPS,
+        uint32 maxMintablePerAccount,
+        uint32 editionMaxMintableLower,
+        uint32 editionMaxMintableUpper,
+        uint32 editionCutOffTime
+    ) public {
+        vm.assume(startTime < endTime);
+        vm.assume(editionMaxMintableLower <= editionMaxMintableUpper);
+
+        affiliateFeeBPS = uint16(affiliateFeeBPS % MAX_BPS);
+
+        uint32 quantity = 4;
+
+        if (maxMintablePerAccount < quantity) maxMintablePerAccount = quantity;
+        if (editionMaxMintableLower < quantity) editionMaxMintableLower = quantity;
+        if (editionMaxMintableUpper < quantity) editionMaxMintableUpper = quantity;
+
+        SoundEditionV1 edition = SoundEditionV1(
+            createSound(
+                SONG_NAME,
+                SONG_SYMBOL,
+                METADATA_MODULE,
+                BASE_URI,
+                CONTRACT_URI,
+                FUNDING_RECIPIENT,
+                ROYALTY_BPS,
+                editionMaxMintableLower,
+                editionMaxMintableUpper,
+                editionCutOffTime,
+                FLAGS
+            )
+        );
 
         PublicSaleMinter minter = new PublicSaleMinter(feeRegistry);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
-        uint32 expectedStartTime = 123;
-        uint32 expectedEndTime = 502370;
-        uint32 expectedPrice = 1234071;
-        uint16 affiliateFeeBPS = 111;
-        uint32 expectedMaxAllowedPerWallet = 937;
-
-        minter.createEditionMint(
-            address(edition),
-            expectedPrice,
-            expectedStartTime,
-            expectedEndTime,
-            affiliateFeeBPS,
-            expectedMaxAllowedPerWallet
-        );
+        minter.createEditionMint(address(edition), price, startTime, endTime, affiliateFeeBPS, maxMintablePerAccount);
 
         MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(expectedStartTime, mintInfo.startTime);
-        assertEq(expectedEndTime, mintInfo.endTime);
+        assertEq(startTime, mintInfo.startTime);
+        assertEq(endTime, mintInfo.endTime);
         assertEq(affiliateFeeBPS, mintInfo.affiliateFeeBPS);
         assertEq(false, mintInfo.mintPaused);
-        assertEq(expectedPrice, mintInfo.price);
-        assertEq(expectedMaxAllowedPerWallet, mintInfo.maxMintablePerAccount);
-        assertEq(EDITION_MAX_MINTABLE - 1, mintInfo.maxMintableLower);
-        assertEq(EDITION_MAX_MINTABLE, mintInfo.maxMintableUpper);
-        assertEq(EDITION_CUTOFF_TIME, mintInfo.cutoffTime);
+        assertEq(price, mintInfo.price);
+        assertEq(maxMintablePerAccount, mintInfo.maxMintablePerAccount);
+        assertEq(editionMaxMintableLower, mintInfo.maxMintableLower);
+        assertEq(editionMaxMintableUpper, mintInfo.maxMintableUpper);
+        assertEq(editionCutOffTime, mintInfo.cutoffTime);
 
         assertEq(0, edition.totalMinted());
 
         // Warp to start time & mint some tokens to test that totalMinted changed
-        vm.warp(expectedStartTime);
-        minter.mint{ value: mintInfo.price * 4 }(address(edition), MINT_ID, 4, address(0));
+        vm.warp(startTime);
+        vm.deal(address(this), uint256(mintInfo.price) * uint256(quantity));
+        minter.mint{ value: uint256(mintInfo.price) * uint256(quantity) }(
+            address(edition),
+            MINT_ID,
+            quantity,
+            address(0)
+        );
 
         mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(4, edition.totalMinted());
+        assertEq(quantity, edition.totalMinted());
+    }
+
+    function test_mintInfo() public {
+        test_mintInfo(
+            123123, /* price */
+            100, /* startTime */
+            200, /* endTime */
+            10, /* affiliateFeeBPS */
+            100, /* maxMintablePerAccount */
+            1111, /* editionMaxMintableLower */
+            2222, /* editionMaxMintableUpper */
+            150 /* editionCutOffTime*/
+        );
     }
 }
