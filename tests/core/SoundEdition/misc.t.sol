@@ -18,7 +18,7 @@ contract SoundEdition_misc is TestConfig {
         address indexed edition_,
         string name_,
         string symbol_,
-        IMetadataModule metadataModule_,
+        address metadataModule_,
         string baseURI_,
         string contractURI_,
         address fundingRecipient_,

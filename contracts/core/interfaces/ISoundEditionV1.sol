@@ -8,17 +8,49 @@ import { IERC165Upgradeable } from "openzeppelin-upgradeable/utils/introspection
 import { IMetadataModule } from "./IMetadataModule.sol";
 
 /**
- * @dev Data to calculate the maxMintable quantity at a given time
+ * @dev The information pertaining to this edition.
  */
-struct MaxMintableData {
+struct EditionInfo {
+    // Base URI for the tokenId.
+    string baseURI;
+    // Contract URI for OpenSea storefront.
+    string contractURI;
+    // Name of the collection.
+    string name;
+    // Symbol of the collection.
+    string symbol;
+    // Address of the
+    address fundingRecipient;
+    // The current max mintable amount;
+    uint32 editionMaxMintable;
     // The lower limit of the maximum number of tokens that can be minted.
-    uint32 maxMintableLower;
+    uint32 editionMaxMintableUpper;
     // The upper limit of the maximum number of tokens that can be minted.
-    uint32 maxMintableUpper;
+    uint32 editionMaxMintableLower;
     // The timestamp (in seconds since unix epoch) after which the
     // max amount of tokens mintable will drop from
     // `maxMintableUpper` to `maxMintableLower`.
-    uint32 cutoffTime;
+    uint32 editionCutoffTime;
+    // Address of metadata module, address(0x00) if not used.
+    address metadataModule;
+    // The current mint randomness value.
+    uint256 mintRandomness;
+    // The royalty BPS (basis points).
+    uint16 royaltyBPS;
+    // Whether the mint randomness is enabled.
+    bool mintRandomnessEnabled;
+    // Whether the mint has concluded.
+    bool mintConcluded;
+    // Whether the metadata has been frozen.
+    bool isMetadataFrozen;
+    // Next token ID to be minted.
+    uint256 nextTokenId;
+    // Total number of tokens burned.
+    uint256 totalBurned;
+    // Total number of tokens minted.
+    uint256 totalMinted;
+    // Total number of tokens currently in existence.
+    uint256 totalSupply;
 }
 
 /**
@@ -34,7 +66,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @dev Emitted when the metadata module is set.
      * @param metadataModule the address of the metadata module.
      */
-    event MetadataModuleSet(IMetadataModule metadataModule);
+    event MetadataModuleSet(address metadataModule);
 
     /**
      * @dev Emitted when the `baseURI` is set.
@@ -54,7 +86,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param baseURI        The base URI of the edition.
      * @param contractURI    The contract URI of the edition.
      */
-    event MetadataFrozen(IMetadataModule metadataModule, string baseURI, string contractURI);
+    event MetadataFrozen(address metadataModule, string baseURI, string contractURI);
 
     /**
      * @dev Emitted when the `fundingRecipient` is set.
@@ -110,7 +142,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         address indexed edition_,
         string name_,
         string symbol_,
-        IMetadataModule metadataModule_,
+        address metadataModule_,
         string baseURI_,
         string contractURI_,
         address fundingRecipient_,
@@ -216,7 +248,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function initialize(
         string memory name_,
         string memory symbol_,
-        IMetadataModule metadataModule_,
+        address metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
         address fundingRecipient_,
@@ -275,7 +307,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      *
      * @param metadataModule Address of metadata module.
      */
-    function setMetadataModule(IMetadataModule metadataModule) external;
+    function setMetadataModule(address metadataModule) external;
 
     /**
      * @dev Sets global base URI.
@@ -362,6 +394,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // =============================================================
 
     /**
+     * @dev Returns the edition info.
+     * @return editionInfo The latest value.
+     */
+    function editionInfo() external view returns (EditionInfo memory editionInfo);
+
+    /**
      * @dev Returns the minter role flag.
      * @return The constant value.
      */
@@ -439,16 +477,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function editionCutoffTime() external view returns (uint32);
 
     /**
-     * @dev Returns the data to calculate the maxMintable quantity at a given time
-     * @return MaxMintableData
-     */
-    function maxMintableInfo() external view returns (MaxMintableData memory);
-
-    /**
      * @dev Returns the address of the metadata module.
      * @return The configured value.
      */
-    function metadataModule() external view returns (IMetadataModule);
+    function metadataModule() external view returns (address);
 
     /**
      * @dev Returns the randomness based on latest block hash, which is stored upon each mint.
@@ -496,6 +528,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The latest value.
      */
     function totalMinted() external view returns (uint256);
+
+    /**
+     * @dev Returns the total amount of tokens burned.
+     * @return The latest value.
+     */
+    function totalBurned() external view returns (uint256);
 
     /**
      * @dev Informs other contracts which interfaces this contract supports.

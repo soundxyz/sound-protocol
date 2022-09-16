@@ -7,7 +7,7 @@ import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IPublicSaleMinter, EditionMintData, MintInfo } from "./interfaces/IPublicSaleMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { ISoundEditionV1, MaxMintableData } from "@core/interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1, EditionInfo } from "@core/interfaces/ISoundEditionV1.sol";
 
 /*
  * @title PublicSaleMinter
@@ -144,25 +144,21 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     /**
      * @inheritdoc IPublicSaleMinter
      */
-    function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory) {
+    function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory info) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
 
-        MaxMintableData memory maxMintableData = ISoundEditionV1(edition).maxMintableInfo();
+        EditionInfo memory editionInfo = ISoundEditionV1(edition).editionInfo();
 
-        MintInfo memory combinedMintData = MintInfo(
-            baseData.startTime,
-            baseData.endTime,
-            baseData.affiliateFeeBPS,
-            baseData.mintPaused,
-            mintData.price,
-            mintData.maxMintablePerAccount,
-            maxMintableData.maxMintableLower,
-            maxMintableData.maxMintableUpper,
-            maxMintableData.cutoffTime
-        );
-
-        return combinedMintData;
+        info.startTime = baseData.startTime;
+        info.endTime = baseData.endTime;
+        info.affiliateFeeBPS = baseData.affiliateFeeBPS;
+        info.mintPaused = baseData.mintPaused;
+        info.price = mintData.price;
+        info.maxMintablePerAccount = mintData.maxMintablePerAccount;
+        info.maxMintableLower = editionInfo.editionMaxMintableLower;
+        info.maxMintableUpper = editionInfo.editionMaxMintableUpper;
+        info.cutoffTime = editionInfo.editionCutoffTime;
     }
 
     /**

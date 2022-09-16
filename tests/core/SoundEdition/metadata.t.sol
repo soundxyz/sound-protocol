@@ -15,7 +15,7 @@ contract SoundEdition_metadata is TestConfig {
     event MetadataFrozen(IMetadataModule _metadataModule, string baseURI_, string _contractURI);
     event BaseURISet(string baseURI_);
     event ContractURISet(string _contractURI);
-    event MetadataModuleSet(IMetadataModule _metadataModule);
+    event MetadataModuleSet(address _metadataModule);
 
     function _createEdition() internal returns (MockSoundEditionV1 soundEdition) {
         // deploy new sound contract
@@ -23,7 +23,7 @@ contract SoundEdition_metadata is TestConfig {
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
-                IMetadataModule(address(0)),
+                address(0),
                 BASE_URI,
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
@@ -47,7 +47,7 @@ contract SoundEdition_metadata is TestConfig {
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
-                metadataModule,
+                address(metadataModule),
                 BASE_URI,
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
@@ -238,7 +238,7 @@ contract SoundEdition_metadata is TestConfig {
         address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
-        soundEdition.setMetadataModule(newMetadataModule);
+        soundEdition.setMetadataModule(address(newMetadataModule));
     }
 
     function test_setMetadataModuleRevertsWhenMetadataFrozen() public {
@@ -250,7 +250,7 @@ contract SoundEdition_metadata is TestConfig {
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
         vm.expectRevert(ISoundEditionV1.MetadataIsFrozen.selector);
-        soundEdition.setMetadataModule(newMetadataModule);
+        soundEdition.setMetadataModule(address(newMetadataModule));
     }
 
     function test_setMetadataModuleSuccess() public {
@@ -266,7 +266,7 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition1.mint(2);
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
-        soundEdition1.setMetadataModule(newMetadataModule);
+        soundEdition1.setMetadataModule(address(newMetadataModule));
 
         assertEq(soundEdition1.tokenURI(tokenId), expectedTokenURI);
 
@@ -280,7 +280,7 @@ contract SoundEdition_metadata is TestConfig {
         soundEdition2.mint(2);
 
         vm.prank(ARTIST_ADMIN);
-        soundEdition2.setMetadataModule(newMetadataModule);
+        soundEdition2.setMetadataModule(address(newMetadataModule));
 
         assertEq(soundEdition2.tokenURI(tokenId), expectedTokenURI);
     }
@@ -291,8 +291,8 @@ contract SoundEdition_metadata is TestConfig {
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
         vm.expectEmit(false, false, false, true);
-        emit MetadataModuleSet(newMetadataModule);
-        soundEdition.setMetadataModule(newMetadataModule);
+        emit MetadataModuleSet(address(newMetadataModule));
+        soundEdition.setMetadataModule(address(newMetadataModule));
     }
 
     // ================================

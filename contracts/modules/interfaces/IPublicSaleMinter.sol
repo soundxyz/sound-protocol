@@ -23,8 +23,8 @@ struct MintInfo {
     bool mintPaused;
     uint96 price;
     uint32 maxMintablePerAccount;
-    uint32 editionMaxMintableLower;
-    uint32 editionMaxMintableUpper;
+    uint32 maxMintableLower;
+    uint32 maxMintableUpper;
     uint32 cutoffTime;
 }
 

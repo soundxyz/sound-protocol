@@ -318,6 +318,7 @@ contract PublicSaleMinterTests is TestConfig {
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;
         uint32 expectedPrice = 1234071;
+        uint16 affiliateFeeBPS = 111;
         uint32 expectedMaxAllowedPerWallet = 937;
 
         minter.createEditionMint(
@@ -325,29 +326,29 @@ contract PublicSaleMinterTests is TestConfig {
             expectedPrice,
             expectedStartTime,
             expectedEndTime,
-            AFFILIATE_FEE_BPS,
+            affiliateFeeBPS,
             expectedMaxAllowedPerWallet
         );
 
-        MintInfo memory mintData = minter.mintInfo(address(edition), MINT_ID);
+        MintInfo memory mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
-        assertEq(expectedStartTime, mintData.startTime);
-        assertEq(expectedEndTime, mintData.endTime);
-        assertEq(0, mintData.affiliateFeeBPS);
-        assertEq(false, mintData.mintPaused);
-        assertEq(expectedPrice, mintData.price);
-        assertEq(expectedMaxAllowedPerWallet, mintData.maxMintablePerAccount);
-        assertEq(EDITION_MAX_MINTABLE - 1, mintData.editionMaxMintableLower);
-        assertEq(EDITION_MAX_MINTABLE, mintData.editionMaxMintableUpper);
-        assertEq(EDITION_CUTOFF_TIME, mintData.cutoffTime);
+        assertEq(expectedStartTime, mintInfo.startTime);
+        assertEq(expectedEndTime, mintInfo.endTime);
+        assertEq(affiliateFeeBPS, mintInfo.affiliateFeeBPS);
+        assertEq(false, mintInfo.mintPaused);
+        assertEq(expectedPrice, mintInfo.price);
+        assertEq(expectedMaxAllowedPerWallet, mintInfo.maxMintablePerAccount);
+        assertEq(EDITION_MAX_MINTABLE - 1, mintInfo.maxMintableLower);
+        assertEq(EDITION_MAX_MINTABLE, mintInfo.maxMintableUpper);
+        assertEq(EDITION_CUTOFF_TIME, mintInfo.cutoffTime);
 
         assertEq(0, edition.totalMinted());
 
         // Warp to start time & mint some tokens to test that totalMinted changed
         vm.warp(expectedStartTime);
-        minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, 4, address(0));
+        minter.mint{ value: mintInfo.price * 4 }(address(edition), MINT_ID, 4, address(0));
 
-        mintData = minter.mintInfo(address(edition), MINT_ID);
+        mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(4, edition.totalMinted());
     }

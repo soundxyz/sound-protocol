@@ -17,7 +17,7 @@ contract TestConfig is Test {
     // Artist contract creation vars
     string constant SONG_NAME = "Never Gonna Give You Up";
     string constant SONG_SYMBOL = "NEVER";
-    IMetadataModule constant METADATA_MODULE = IMetadataModule(address(390720730));
+    address constant METADATA_MODULE = address(390720730);
     string constant BASE_URI = "https://example.com/metadata/";
     string constant CONTRACT_URI = "https://example.com/storefront/";
     address constant FUNDING_RECIPIENT = address(99);
@@ -60,7 +60,7 @@ contract TestConfig is Test {
     function createSound(
         string memory name,
         string memory symbol,
-        IMetadataModule metadataModule,
+        address metadataModule,
         string memory baseURI,
         string memory contractURI,
         address fundingRecipient,
