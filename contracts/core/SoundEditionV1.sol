@@ -37,7 +37,7 @@ import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
-import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1, EditionInfo } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 import { ArweaveURILib } from "./utils/ArweaveURILib.sol";
@@ -135,7 +135,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @dev Metadata module used for `tokenURI` and `contractURI` if it is set.
      */
-    IMetadataModule public metadataModule;
+    address public metadataModule;
 
     /**
      * @dev The randomness based on latest block hash, which is stored upon each mint
@@ -164,7 +164,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function initialize(
         string memory name_,
         string memory symbol_,
-        IMetadataModule metadataModule_,
+        address metadataModule_,
         string memory baseURI_,
         string memory contractURI_,
         address fundingRecipient_,
@@ -281,11 +281,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function setMetadataModule(IMetadataModule metadataModule_)
-        external
-        onlyRolesOrOwner(ADMIN_ROLE)
-        onlyMetadataNotFrozen
-    {
+    function setMetadataModule(address metadataModule_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         metadataModule = metadataModule_;
 
         emit MetadataModuleSet(metadataModule_);
@@ -394,6 +390,31 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
+    function editionInfo() external view returns (EditionInfo memory info) {
+        info.baseURI = baseURI();
+        info.contractURI = contractURI();
+        info.name = name();
+        info.symbol = symbol();
+        info.fundingRecipient = fundingRecipient;
+        info.editionMaxMintable = editionMaxMintable();
+        info.editionMaxMintableUpper = editionMaxMintableUpper;
+        info.editionMaxMintableLower = editionMaxMintableLower;
+        info.editionCutoffTime = editionCutoffTime;
+        info.metadataModule = metadataModule;
+        info.mintRandomness = mintRandomness();
+        info.royaltyBPS = royaltyBPS;
+        info.mintRandomnessEnabled = mintRandomnessEnabled();
+        info.mintConcluded = mintConcluded();
+        info.isMetadataFrozen = isMetadataFrozen();
+        info.nextTokenId = nextTokenId();
+        info.totalMinted = totalMinted();
+        info.totalBurned = totalBurned();
+        info.totalSupply = totalSupply();
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function mintRandomness() public view returns (uint256) {
         if (mintConcluded() && mintRandomnessEnabled()) {
             return uint256(keccak256(abi.encode(_mintRandomness, address(this))));
@@ -436,15 +457,22 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function nextTokenId() external view returns (uint256) {
+    function nextTokenId() public view returns (uint256) {
         return _nextTokenId();
     }
 
     /**
      * @inheritdoc ISoundEditionV1
      */
-    function totalMinted() external view returns (uint256) {
+    function totalMinted() public view returns (uint256) {
         return _totalMinted();
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function totalBurned() public view returns (uint256) {
+        return _totalBurned();
     }
 
     /**
@@ -458,8 +486,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
-        if (address(metadataModule) != address(0)) {
-            return metadataModule.tokenURI(tokenId);
+        if (metadataModule != address(0)) {
+            return IMetadataModule(metadataModule).tokenURI(tokenId);
         }
 
         string memory baseURI_ = baseURI();

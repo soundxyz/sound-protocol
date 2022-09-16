@@ -18,7 +18,7 @@ contract SoundEdition_misc is TestConfig {
         address indexed edition_,
         string name_,
         string symbol_,
-        IMetadataModule metadataModule_,
+        address metadataModule_,
         string baseURI_,
         string contractURI_,
         address fundingRecipient_,
@@ -49,7 +49,7 @@ contract SoundEdition_misc is TestConfig {
             FLAGS
         );
 
-        SoundEditionV1 edition = SoundEditionV1(
+        SoundEditionV1(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,

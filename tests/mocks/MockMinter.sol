@@ -50,7 +50,7 @@ contract MockMinter is BaseMinter {
         }
     }
 
-    function mintInfo(address edition, uint128 mintId) public view returns (MintInfo memory) {
+    function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
 
         MintInfo memory combinedMintData = MintInfo(

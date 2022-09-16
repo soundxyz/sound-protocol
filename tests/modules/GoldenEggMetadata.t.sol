@@ -40,7 +40,7 @@ contract GoldenEggMetadataTests is TestConfig {
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
-                goldenEggModule,
+                address(goldenEggModule),
                 BASE_URI,
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
@@ -77,7 +77,7 @@ contract GoldenEggMetadataTests is TestConfig {
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
-                eggModule,
+                address(eggModule),
                 BASE_URI,
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
