@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.5
+
+### Patch Changes
+
+-   66e0d1e: Deploys latest to preview and staging
+
 ## 0.4.4
 
 ### Patch Changes
