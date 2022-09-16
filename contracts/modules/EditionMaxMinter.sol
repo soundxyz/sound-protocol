@@ -4,17 +4,17 @@ pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { IPublicSaleMinter, EditionMintData, MintInfo } from "./interfaces/IPublicSaleMinter.sol";
+import { IEditionMaxMinter, EditionMintData, MintInfo } from "./interfaces/IEditionMaxMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundEditionV1, EditionInfo } from "@core/interfaces/ISoundEditionV1.sol";
 
 /*
- * @title PublicSaleMinter
+ * @title EditionMaxMinter
  * @notice Module for unpermissioned mints of Sound editions.
  * @author Sound.xyz
  */
-contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
+contract EditionMaxMinter is IEditionMaxMinter, BaseMinter {
     // =============================================================
     //                            STORAGE
     // =============================================================
@@ -42,7 +42,7 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     // =============================================================
 
     /**
-     * @inheritdoc IPublicSaleMinter
+     * @inheritdoc IEditionMaxMinter
      */
     function createEditionMint(
         address edition,
@@ -61,7 +61,7 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
         data.maxMintablePerAccount = maxMintablePerAccount;
 
         // prettier-ignore
-        emit PublicSaleMintCreated(
+        emit EditionMaxMintCreated(
             edition,
             mintId,
             price,
@@ -73,7 +73,7 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IPublicSaleMinter
+     * @inheritdoc IEditionMaxMinter
      */
     function mint(
         address edition,
@@ -98,7 +98,7 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IPublicSaleMinter
+     * @inheritdoc IEditionMaxMinter
      */
     function setPrice(
         address edition,
@@ -110,7 +110,7 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IPublicSaleMinter
+     * @inheritdoc IEditionMaxMinter
      */
     function setMaxMintablePerAccount(
         address edition,
@@ -142,7 +142,7 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IPublicSaleMinter
+     * @inheritdoc IEditionMaxMinter
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory info) {
         BaseData memory baseData = _baseData[edition][mintId];
@@ -165,13 +165,13 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
-        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IPublicSaleMinter).interfaceId;
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IEditionMaxMinter).interfaceId;
     }
 
     /**
      * @inheritdoc IMinterModule
      */
     function moduleInterfaceId() public pure returns (bytes4) {
-        return type(IPublicSaleMinter).interfaceId;
+        return type(IEditionMaxMinter).interfaceId;
     }
 }

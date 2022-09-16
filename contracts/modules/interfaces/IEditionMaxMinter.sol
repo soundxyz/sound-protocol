@@ -4,7 +4,7 @@ pragma solidity ^0.8.16;
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
 /**
- * @dev Data unique to a public sale mint.
+ * @dev Data unique to a edition max mint.
  */
 struct EditionMintData {
     // The price at which each token will be sold, in ETH.
@@ -14,7 +14,7 @@ struct EditionMintData {
 }
 
 /**
- * @dev All the information about a public sale mint (combines EditionMintData with BaseData).
+ * @dev All the information about a edition max mint (combines EditionMintData with BaseData).
  */
 struct MintInfo {
     uint32 startTime;
@@ -29,17 +29,17 @@ struct MintInfo {
 }
 
 /**
- * @title IPublicSaleMinter
- * @dev Interface for the `PublicSaleMinter` module.
+ * @title IEditionMaxMinter
+ * @dev Interface for the `EditionMaxMinter` module.
  * @author Sound.xyz
  */
-interface IPublicSaleMinter is IMinterModule {
+interface IEditionMaxMinter is IMinterModule {
     // =============================================================
     //                            EVENTS
     // =============================================================
 
     /**
-     * @dev Emitted when a public sale is created.
+     * @dev Emitted when a edition max is created.
      * @param edition               Address of the song edition contract we are minting for.
      * @param mintId                The mint ID.
      * @param price                 Sale price in ETH for minting a single token in `edition`.
@@ -48,7 +48,7 @@ interface IPublicSaleMinter is IMinterModule {
      * @param affiliateFeeBPS       The affiliate fee in basis points.
      * @param maxMintablePerAccount The maximum number of tokens that can be minted per account.
      */
-    event PublicSaleMintCreated(
+    event EditionMaxMintCreated(
         address indexed edition,
         uint128 indexed mintId,
         uint96 price,
@@ -156,7 +156,7 @@ interface IPublicSaleMinter is IMinterModule {
     // =============================================================
 
     /**
-     * @dev Returns {IPublicSaleMinter.MintInfo} instance containing the full minter parameter set.
+     * @dev Returns {IEditionMaxMinter.MintInfo} instance containing the full minter parameter set.
      * @param edition The edition to get the mint instance for.
      * @param mintId  The ID of the mint instance.
      * @return mintInfo Information about this mint.

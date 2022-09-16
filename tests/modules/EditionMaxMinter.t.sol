@@ -3,13 +3,13 @@ pragma solidity ^0.8.16;
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { PublicSaleMinter } from "@modules/PublicSaleMinter.sol";
-import { IPublicSaleMinter, MintInfo } from "@modules/interfaces/IPublicSaleMinter.sol";
+import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
+import { IEditionMaxMinter, MintInfo } from "@modules/interfaces/IEditionMaxMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { TestConfig } from "../TestConfig.sol";
 
-contract PublicSaleMinterTests is TestConfig {
+contract EditionMaxMinterTests is TestConfig {
     uint96 constant PRICE = 1;
 
     uint32 constant START_TIME = 100;
@@ -29,7 +29,7 @@ contract PublicSaleMinterTests is TestConfig {
     uint32 constant MAX_MINTABLE_PER_ACCOUNT = type(uint32).max;
 
     // prettier-ignore
-    event PublicSaleMintCreated(
+    event EditionMaxMintCreated(
         address indexed edition,
         uint128 indexed mintId,
         uint96 price,
@@ -63,14 +63,14 @@ contract PublicSaleMinterTests is TestConfig {
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
-        returns (SoundEditionV1 edition, PublicSaleMinter minter)
+        returns (SoundEditionV1 edition, EditionMaxMinter minter)
     {
         edition = createGenericEdition();
 
         edition.setEditionMaxMintableRange(MAX_MINTABLE_LOWER, MAX_MINTABLE_UPPER);
         edition.setEditionCutoffTime(CUTOFF_TIME);
 
-        minter = new PublicSaleMinter(feeRegistry);
+        minter = new EditionMaxMinter(feeRegistry);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
@@ -107,12 +107,12 @@ contract PublicSaleMinterTests is TestConfig {
             )
         );
 
-        PublicSaleMinter minter = new PublicSaleMinter(feeRegistry);
+        EditionMaxMinter minter = new EditionMaxMinter(feeRegistry);
 
         bool hasRevert;
 
         if (maxMintablePerAccount == 0) {
-            vm.expectRevert(IPublicSaleMinter.MaxMintablePerAccountIsZero.selector);
+            vm.expectRevert(IEditionMaxMinter.MaxMintablePerAccountIsZero.selector);
             hasRevert = true;
         } else if (!(startTime < endTime)) {
             vm.expectRevert(IMinterModule.InvalidTimeRange.selector);
@@ -124,7 +124,7 @@ contract PublicSaleMinterTests is TestConfig {
 
         if (!hasRevert) {
             vm.expectEmit(true, true, true, true);
-            emit PublicSaleMintCreated(
+            emit EditionMaxMintCreated(
                 address(edition),
                 MINT_ID,
                 price,
@@ -149,11 +149,11 @@ contract PublicSaleMinterTests is TestConfig {
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1 edition = createGenericEdition();
 
-        PublicSaleMinter minter = new PublicSaleMinter(feeRegistry);
+        EditionMaxMinter minter = new EditionMaxMinter(feeRegistry);
 
         vm.expectEmit(true, true, true, true);
 
-        emit PublicSaleMintCreated(
+        emit EditionMaxMintCreated(
             address(edition),
             MINT_ID,
             PRICE,
@@ -167,18 +167,18 @@ contract PublicSaleMinterTests is TestConfig {
     }
 
     function test_mintWhenOverMaxMintablePerAccountReverts() public {
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(1);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(1);
         vm.warp(START_TIME);
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(IPublicSaleMinter.ExceedsMaxPerAccount.selector);
+        vm.expectRevert(IEditionMaxMinter.ExceedsMaxPerAccount.selector);
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2, address(0));
     }
 
     function test_mintWhenMintablePerAccountIsSetAndSatisfied() public {
         // Set max allowed per account to 2
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(2);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(2);
 
         // Ensure we can mint the max allowed of 2 tokens
         address caller = getFundedAccount(1);
@@ -192,7 +192,7 @@ contract PublicSaleMinterTests is TestConfig {
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.warp(START_TIME);
 
@@ -212,7 +212,7 @@ contract PublicSaleMinterTests is TestConfig {
 
     function test_mintRevertForUnderpaid() public {
         uint32 quantity = 2;
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(quantity);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(quantity);
 
         vm.warp(START_TIME);
 
@@ -229,7 +229,7 @@ contract PublicSaleMinterTests is TestConfig {
     }
 
     function test_mintRevertsForMintNotOpen() public {
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         uint32 quantity = 1;
 
@@ -256,7 +256,7 @@ contract PublicSaleMinterTests is TestConfig {
     }
 
     function test_setPrice(uint96 price) public {
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.expectEmit(true, true, true, true);
         emit PriceSet(address(edition), MINT_ID, price);
@@ -267,7 +267,7 @@ contract PublicSaleMinterTests is TestConfig {
 
     function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
         vm.assume(maxMintablePerAccount != 0);
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.expectEmit(true, true, true, true);
         emit MaxMintablePerAccountSet(address(edition), MINT_ID, maxMintablePerAccount);
@@ -277,35 +277,35 @@ contract PublicSaleMinterTests is TestConfig {
     }
 
     function test_setZeroMaxMintablePerAccountReverts() public {
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
-        vm.expectRevert(IPublicSaleMinter.MaxMintablePerAccountIsZero.selector);
+        vm.expectRevert(IEditionMaxMinter.MaxMintablePerAccountIsZero.selector);
         minter.setMaxMintablePerAccount(address(edition), MINT_ID, 0);
     }
 
     function test_createWithZeroMaxMintablePerAccountReverts() public {
-        (SoundEditionV1 edition, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
-        vm.expectRevert(IPublicSaleMinter.MaxMintablePerAccountIsZero.selector);
+        vm.expectRevert(IEditionMaxMinter.MaxMintablePerAccountIsZero.selector);
         minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, AFFILIATE_FEE_BPS, 0);
     }
 
     function test_supportsInterface() public {
-        (, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
-        bool supportsIPublicSaleMinter = minter.supportsInterface(type(IPublicSaleMinter).interfaceId);
+        bool supportsIEditionMaxMinter = minter.supportsInterface(type(IEditionMaxMinter).interfaceId);
         bool supports165 = minter.supportsInterface(type(IERC165).interfaceId);
 
         assertTrue(supports165);
-        assertTrue(supportsIPublicSaleMinter);
+        assertTrue(supportsIEditionMaxMinter);
         assertTrue(supportsIMinterModule);
     }
 
     function test_moduleInterfaceId() public {
-        (, PublicSaleMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
-        assertTrue(type(IPublicSaleMinter).interfaceId == minter.moduleInterfaceId());
+        assertTrue(type(IEditionMaxMinter).interfaceId == minter.moduleInterfaceId());
     }
 
     function test_mintInfo(
@@ -345,7 +345,7 @@ contract PublicSaleMinterTests is TestConfig {
             )
         );
 
-        PublicSaleMinter minter = new PublicSaleMinter(feeRegistry);
+        EditionMaxMinter minter = new EditionMaxMinter(feeRegistry);
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
