@@ -104,7 +104,7 @@ contract TestConfig is Test {
                     CONTRACT_URI,
                     FUNDING_RECIPIENT,
                     ROYALTY_BPS,
-                    EDITION_MAX_MINTABLE,
+                    EDITION_MAX_MINTABLE - 1,
                     EDITION_MAX_MINTABLE,
                     EDITION_CUTOFF_TIME,
                     FLAGS

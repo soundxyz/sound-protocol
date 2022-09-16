@@ -37,7 +37,7 @@ import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
-import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1, MaxMintableData } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 import { ArweaveURILib } from "./utils/ArweaveURILib.sol";
@@ -390,6 +390,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
+    function maxMintableInfo() external view returns (MaxMintableData memory maxMintableData) {
+        maxMintableData = MaxMintableData(editionMaxMintableLower, editionMaxMintableUpper, editionCutoffTime);
+    }
 
     /**
      * @inheritdoc ISoundEditionV1

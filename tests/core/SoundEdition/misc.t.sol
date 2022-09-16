@@ -49,7 +49,7 @@ contract SoundEdition_misc is TestConfig {
             FLAGS
         );
 
-        SoundEditionV1 edition = SoundEditionV1(
+        SoundEditionV1(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,

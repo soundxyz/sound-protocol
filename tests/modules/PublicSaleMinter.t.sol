@@ -337,6 +337,10 @@ contract PublicSaleMinterTests is TestConfig {
         assertEq(false, mintData.mintPaused);
         assertEq(expectedPrice, mintData.price);
         assertEq(expectedMaxAllowedPerWallet, mintData.maxMintablePerAccount);
+        assertEq(EDITION_MAX_MINTABLE - 1, mintData.editionMaxMintableLower);
+        assertEq(EDITION_MAX_MINTABLE, mintData.editionMaxMintableUpper);
+        assertEq(EDITION_CUTOFF_TIME, mintData.cutoffTime);
+
         assertEq(0, edition.totalMinted());
 
         // Warp to start time & mint some tokens to test that totalMinted changed

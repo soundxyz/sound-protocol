@@ -8,6 +8,20 @@ import { IERC165Upgradeable } from "openzeppelin-upgradeable/utils/introspection
 import { IMetadataModule } from "./IMetadataModule.sol";
 
 /**
+ * @dev Data to calculate the maxMintable quantity at a given time
+ */
+struct MaxMintableData {
+    // The lower limit of the maximum number of tokens that can be minted.
+    uint32 maxMintableLower;
+    // The upper limit of the maximum number of tokens that can be minted.
+    uint32 maxMintableUpper;
+    // The timestamp (in seconds since unix epoch) after which the
+    // max amount of tokens mintable will drop from
+    // `maxMintableUpper` to `maxMintableLower`.
+    uint32 cutoffTime;
+}
+
+/**
  * @title ISoundEditionV1
  * @notice The interface for Sound edition contracts.
  */
@@ -423,6 +437,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The configured value.
      */
     function editionCutoffTime() external view returns (uint32);
+
+    /**
+     * @dev Returns the data to calculate the maxMintable quantity at a given time
+     * @return MaxMintableData
+     */
+    function maxMintableInfo() external view returns (MaxMintableData memory);
 
     /**
      * @dev Returns the address of the metadata module.

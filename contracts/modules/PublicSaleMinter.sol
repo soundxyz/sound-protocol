@@ -7,6 +7,7 @@ import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IPublicSaleMinter, EditionMintData, MintInfo } from "./interfaces/IPublicSaleMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundEditionV1, MaxMintableData } from "@core/interfaces/ISoundEditionV1.sol";
 
 /*
  * @title PublicSaleMinter
@@ -143,9 +144,11 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     /**
      * @inheritdoc IPublicSaleMinter
      */
-    function mintInfo(address edition, uint128 mintId) public view returns (MintInfo memory) {
+    function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];
+
+        MaxMintableData memory maxMintableData = ISoundEditionV1(edition).maxMintableInfo();
 
         MintInfo memory combinedMintData = MintInfo(
             baseData.startTime,
@@ -153,7 +156,10 @@ contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
             baseData.affiliateFeeBPS,
             baseData.mintPaused,
             mintData.price,
-            mintData.maxMintablePerAccount
+            mintData.maxMintablePerAccount,
+            maxMintableData.maxMintableLower,
+            maxMintableData.maxMintableUpper,
+            maxMintableData.cutoffTime
         );
 
         return combinedMintData;

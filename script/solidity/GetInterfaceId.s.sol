@@ -11,7 +11,7 @@ import { IPublicSaleMinter } from "@modules/interfaces/IPublicSaleMinter.sol";
 import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol";
 
 contract GetInterfaceId is Script {
-    function run() external {
+    function run() external view {
         console.log("{");
 
         /* solhint-disable quotes */
