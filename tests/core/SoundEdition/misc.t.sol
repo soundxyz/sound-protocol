@@ -32,7 +32,7 @@ contract SoundEdition_misc is TestConfig {
     function test_createSoundEmitsEvent() public {
         vm.expectEmit(true, true, true, true);
 
-        address soundEditionAddress = soundCreator.soundEditionAddress(address(this), bytes32(_salt + 1));
+        (address soundEditionAddress, ) = soundCreator.soundEditionAddress(address(this), bytes32(_salt + 1));
 
         emit SoundEditionInitialized(
             soundEditionAddress,
