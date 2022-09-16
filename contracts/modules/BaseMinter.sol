@@ -7,6 +7,7 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 
 /**
  * @title Minter Base
@@ -376,12 +377,10 @@ abstract contract BaseMinter is IMinterModule {
             // Won't overflow as both are 32 bits.
             uint256 sum = uint256(totalMinted) + uint256(quantity);
             if (sum > maxMintable) {
-                uint32 available;
                 // Note that the `maxMintable` may vary and drop over time
                 // and cause `totalMinted` to be greater than `maxMintable`.
-                if (maxMintable > totalMinted) {
-                    available = maxMintable - totalMinted;
-                }
+                // The `zeroFloorSub` is equivalent to `max(0, x - y)`.
+                uint32 available = uint32(FixedPointMathLib.zeroFloorSub(maxMintable, totalMinted));
                 revert ExceedsAvailableSupply(available);
             }
             return uint32(sum);

@@ -25,7 +25,8 @@ contract SoundEdition_payments is TestConfig {
             royaltyBPS,
             EDITION_MAX_MINTABLE,
             EDITION_MAX_MINTABLE,
-            RANDOMNESS_LOCKED_TIMESTAMP
+            EDITION_CUTOFF_TIME,
+            FLAGS
         );
     }
 
@@ -41,7 +42,8 @@ contract SoundEdition_payments is TestConfig {
             ROYALTY_BPS,
             EDITION_MAX_MINTABLE,
             EDITION_MAX_MINTABLE,
-            RANDOMNESS_LOCKED_TIMESTAMP
+            EDITION_CUTOFF_TIME,
+            FLAGS
         );
     }
 

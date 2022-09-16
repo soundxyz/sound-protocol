@@ -2,34 +2,33 @@
 
 pragma solidity ^0.8.16;
 
-import { MerkleProofLib } from "solady/utils/MerkleProofLib.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { BaseMinter } from "@modules/BaseMinter.sol";
-import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
+import { IPublicSaleMinter, EditionMintData, MintInfo } from "./interfaces/IPublicSaleMinter.sol";
+import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 
-/**
- * @title MerkleDropMinter
- * @dev Module for minting Sound editions using a merkle tree of approved accounts.
+/*
+ * @title PublicSaleMinter
+ * @notice Module for unpermissioned mints of Sound editions.
  * @author Sound.xyz
  */
-contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
+contract PublicSaleMinter is IPublicSaleMinter, BaseMinter {
     // =============================================================
     //                            STORAGE
     // =============================================================
 
     /**
-     * @dev Edition mint data.
-     *      Maps `edition` => `mintId` => value.
+     * @dev Edition mint data
+     * edition => mintId => EditionMintData
      */
     mapping(address => mapping(uint128 => EditionMintData)) internal _editionMintData;
 
     /**
      * @dev Number of tokens minted by each buyer address
-     *      Maps: `edition` => `mintId` => `buyer` => value.
+     * edition => mintId => buyer => mintedTallies
      */
-    mapping(address => mapping(uint128 => mapping(address => uint256))) public mintedTallies;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
     // =============================================================
     //                          CONSTRUCTOR
@@ -42,80 +41,63 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     // =============================================================
 
     /**
-     * @inheritdoc IMerkleDropMinter
+     * @inheritdoc IPublicSaleMinter
      */
     function createEditionMint(
         address edition,
-        bytes32 merkleRootHash,
         uint96 price,
         uint32 startTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
-        uint32 maxMintable,
         uint32 maxMintablePerAccount
     ) public returns (uint128 mintId) {
-        if (merkleRootHash == bytes32(0)) revert MerkleRootHashIsEmpty();
         if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
 
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.merkleRootHash = merkleRootHash;
         data.price = price;
-        data.maxMintable = maxMintable;
         data.maxMintablePerAccount = maxMintablePerAccount;
+
         // prettier-ignore
-        emit MerkleDropMintCreated(
+        emit PublicSaleMintCreated(
             edition,
             mintId,
-            merkleRootHash,
             price,
             startTime,
             endTime,
             affiliateFeeBPS,
-            maxMintable,
             maxMintablePerAccount
         );
     }
 
     /**
-     * @inheritdoc IMerkleDropMinter
+     * @inheritdoc IPublicSaleMinter
      */
     function mint(
         address edition,
         uint128 mintId,
-        uint32 requestedQuantity,
-        bytes32[] calldata merkleProof,
+        uint32 quantity,
         address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        // Increase `totalMinted` by `requestedQuantity`.
-        // Require that the increased value does not exceed `maxMintable`.
-        data.totalMinted = _incrementTotalMinted(data.totalMinted, requestedQuantity, data.maxMintable);
-
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        bool valid = MerkleProofLib.verify(merkleProof, data.merkleRootHash, leaf);
-        if (!valid) revert InvalidMerkleProof();
-
         unchecked {
             uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-            // Check the additional requestedQuantity does not exceed the set maximum.
-            // If `requestedQuantity` is large enough to cause an overflow,
+            // Check the additional quantity does not exceed the set maximum.
+            // If `quantity` is large enough to cause an overflow,
             // `_mint` will give an out of gas error.
-            uint256 tally = userMintedBalance + requestedQuantity;
+            uint256 tally = userMintedBalance + quantity;
             if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
             // Update the minted tally for this account
             mintedTallies[edition][mintId][msg.sender] = tally;
         }
 
-        _mint(edition, mintId, requestedQuantity, affiliate);
-
-        emit DropClaimed(msg.sender, requestedQuantity);
+        _mint(edition, mintId, quantity, affiliate);
     }
 
     /**
-     * @inheritdoc IMerkleDropMinter
+     * @inheritdoc IPublicSaleMinter
      */
     function setPrice(
         address edition,
@@ -127,7 +109,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IMerkleDropMinter
+     * @inheritdoc IPublicSaleMinter
      */
     function setMaxMintablePerAccount(
         address edition,
@@ -137,32 +119,6 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
         _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
         emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
-    }
-
-    /**
-     * @inheritdoc IMerkleDropMinter
-     */
-    function setMaxMintable(
-        address edition,
-        uint128 mintId,
-        uint32 maxMintable
-    ) public onlyEditionOwnerOrAdmin(edition) {
-        _editionMintData[edition][mintId].maxMintable = maxMintable;
-        emit MaxMintableSet(edition, mintId, maxMintable);
-    }
-
-    /*
-     * @inheritdoc IMerkleDropMinter
-     */
-    function setMerkleRootHash(
-        address edition,
-        uint128 mintId,
-        bytes32 merkleRootHash
-    ) public onlyEditionOwnerOrAdmin(edition) {
-        if (merkleRootHash == bytes32(0)) revert MerkleRootHashIsEmpty();
-
-        _editionMintData[edition][mintId].merkleRootHash = merkleRootHash;
-        emit MerkleRootHashSet(edition, mintId, merkleRootHash);
     }
 
     // =============================================================
@@ -185,7 +141,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IMerkleDropMinter
+     * @inheritdoc IPublicSaleMinter
      */
     function mintInfo(address edition, uint128 mintId) public view returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
@@ -197,10 +153,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
             baseData.affiliateFeeBPS,
             baseData.mintPaused,
             mintData.price,
-            mintData.maxMintable,
-            mintData.maxMintablePerAccount,
-            mintData.totalMinted,
-            mintData.merkleRootHash
+            mintData.maxMintablePerAccount
         );
 
         return combinedMintData;
@@ -210,13 +163,13 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
-        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IMerkleDropMinter).interfaceId;
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IPublicSaleMinter).interfaceId;
     }
 
     /**
      * @inheritdoc IMinterModule
      */
     function moduleInterfaceId() public pure returns (bytes4) {
-        return type(IMerkleDropMinter).interfaceId;
+        return type(IPublicSaleMinter).interfaceId;
     }
 }

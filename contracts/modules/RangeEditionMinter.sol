@@ -47,20 +47,21 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         address edition,
         uint96 price,
         uint32 startTime,
-        uint32 closingTime,
+        uint32 cutoffTime,
         uint32 endTime,
         uint16 affiliateFeeBPS,
         uint32 maxMintableLower,
         uint32 maxMintableUpper,
         uint32 maxMintablePerAccount
-    ) public onlyValidRangeTimes(startTime, closingTime, endTime) returns (uint128 mintId) {
-        if (!(maxMintableLower <= maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+    ) public onlyValidCombinedTimeRange(startTime, cutoffTime, endTime) returns (uint128 mintId) {
+        if (maxMintableLower > maxMintableUpper) revert InvalidMaxMintableRange();
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
 
         mintId = _createEditionMint(edition, startTime, endTime, affiliateFeeBPS);
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.price = price;
-        data.closingTime = closingTime;
+        data.cutoffTime = cutoffTime;
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
         data.maxMintablePerAccount = maxMintablePerAccount;
@@ -71,7 +72,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             mintId,
             price,
             startTime,
-            closingTime,
+            cutoffTime,
             endTime,
             affiliateFeeBPS,
             maxMintableLower,
@@ -118,18 +119,18 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         address edition,
         uint128 mintId,
         uint32 startTime,
-        uint32 closingTime,
+        uint32 cutoffTime,
         uint32 endTime
-    ) public onlyEditionOwnerOrAdmin(edition) onlyValidRangeTimes(startTime, closingTime, endTime) {
-        // Set closingTime first, as its stored value gets validated later in the execution.
+    ) public onlyEditionOwnerOrAdmin(edition) onlyValidCombinedTimeRange(startTime, cutoffTime, endTime) {
+        // Set cutoffTime first, as its stored value gets validated later in the execution.
         EditionMintData storage data = _editionMintData[edition][mintId];
-        data.closingTime = closingTime;
+        data.cutoffTime = cutoffTime;
 
         // This calls the overriden `setTimeRange`, which will check that
-        // `startTime < closingTime < endTime`.
+        // `startTime < cutoffTime < endTime`.
         RangeEditionMinter.setTimeRange(edition, mintId, startTime, endTime);
 
-        emit ClosingTimeSet(edition, mintId, closingTime);
+        emit CutoffTimeSet(edition, mintId, cutoffTime);
     }
 
     /**
@@ -143,7 +144,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     ) public override(BaseMinter, IMinterModule) onlyEditionOwnerOrAdmin(edition) {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        if (!(startTime < data.closingTime && data.closingTime < endTime)) revert InvalidTimeRange();
+        if (!(startTime < data.cutoffTime && data.cutoffTime < endTime)) revert InvalidTimeRange();
 
         BaseMinter.setTimeRange(edition, mintId, startTime, endTime);
     }
@@ -157,13 +158,38 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint32 maxMintableLower,
         uint32 maxMintableUpper
     ) public onlyEditionOwnerOrAdmin(edition) {
-        if (!(maxMintableLower <= maxMintableUpper)) revert InvalidMaxMintableRange(maxMintableLower, maxMintableUpper);
+        if (maxMintableLower > maxMintableUpper) revert InvalidMaxMintableRange();
 
         EditionMintData storage data = _editionMintData[edition][mintId];
         data.maxMintableLower = maxMintableLower;
         data.maxMintableUpper = maxMintableUpper;
 
         emit MaxMintableRangeSet(edition, mintId, maxMintableLower, maxMintableUpper);
+    }
+
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
+    function setPrice(
+        address edition,
+        uint128 mintId,
+        uint96 price
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        _editionMintData[edition][mintId].price = price;
+        emit PriceSet(edition, mintId, price);
+    }
+
+    /**
+     * @inheritdoc IRangeEditionMinter
+     */
+    function setMaxMintablePerAccount(
+        address edition,
+        uint128 mintId,
+        uint32 maxMintablePerAccount
+    ) public onlyEditionOwnerOrAdmin(edition) {
+        if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
+        _editionMintData[edition][mintId].maxMintablePerAccount = maxMintablePerAccount;
+        emit MaxMintablePerAccountSet(edition, mintId, maxMintablePerAccount);
     }
 
     // =============================================================
@@ -202,7 +228,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             mintData.maxMintableLower,
             mintData.maxMintablePerAccount,
             mintData.totalMinted,
-            mintData.closingTime
+            mintData.cutoffTime
         );
 
         return combinedMintData;
@@ -227,17 +253,18 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
     // =============================================================
 
     /**
-     * @dev Restricts the start time to be less than the end time.
-     * @param startTime The start unix timestamp of the mint.
-     * @param endTime   The closing unix timestamp of the mint.
-     * @param endTime   The end unix timestamp of the mint.
+     * @dev Restricts the `startTime` to be less than `cutoffTime`,
+     *      and `cutoffTime` to be less than `endTime`.
+     * @param startTime   The start unix timestamp of the mint.
+     * @param cutoffTime  The cutoff unix timestamp of the mint.
+     * @param endTime     The end unix timestamp of the mint.
      */
-    modifier onlyValidRangeTimes(
+    modifier onlyValidCombinedTimeRange(
         uint32 startTime,
-        uint32 closingTime,
+        uint32 cutoffTime,
         uint32 endTime
-    ) virtual {
-        if (!(startTime < closingTime && closingTime < endTime)) revert InvalidTimeRange();
+    ) {
+        if (!(startTime < cutoffTime && cutoffTime < endTime)) revert InvalidTimeRange();
         _;
     }
 
@@ -248,7 +275,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      */
     function _getMaxMintable(EditionMintData storage data) internal view returns (uint32) {
         uint32 _maxMintable;
-        if (block.timestamp < data.closingTime) {
+        if (block.timestamp < data.cutoffTime) {
             _maxMintable = data.maxMintableUpper;
         } else {
             _maxMintable = data.maxMintableLower;

@@ -12,7 +12,9 @@ import { stdError } from "forge-std/Test.sol";
  * @dev Tests base minting functionality directly from edition.
  */
 contract SoundEdition_mint is TestConfig {
-    event EditionMaxMintableSet(uint32 newMax);
+    event EditionMaxMintableRangeSet(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_);
+
+    event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
 
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
@@ -27,7 +29,7 @@ contract SoundEdition_mint is TestConfig {
     }
 
     function test_adminMintCantMintPastMax() public {
-        uint32 maxQuantity = 50;
+        uint32 editionMaxMintableUpper = 50;
 
         SoundEditionV1 edition = SoundEditionV1(
             createSound(
@@ -38,13 +40,14 @@ contract SoundEdition_mint is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                maxQuantity,
-                EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                0, // editionMaxMintableLower
+                editionMaxMintableUpper,
+                EDITION_CUTOFF_TIME,
+                FLAGS
             )
         );
 
-        edition.mint(address(this), maxQuantity);
+        edition.mint(address(this), editionMaxMintableUpper);
 
         vm.expectRevert(abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, 0));
 
@@ -120,12 +123,9 @@ contract SoundEdition_mint is TestConfig {
         edition.burn(TOKEN2_ID);
     }
 
-    function test_reduceEditionMaxMintableSuccessViaOwner() external {
-        uint32 MAX_3 = 3;
-        uint32 MAX_2 = 2;
-
-        vm.expectEmit(false, false, false, true);
-        emit EditionMaxMintableSet(MAX_3);
+    function test_setEditionMaxMintableRangeSuccessViaOwner() external {
+        uint32 editionMaxMintableLower = 1;
+        uint32 editionMaxMintableUpper = 3;
 
         SoundEditionV1 edition = SoundEditionV1(
             createSound(
@@ -136,9 +136,10 @@ contract SoundEdition_mint is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                MAX_3,
-                EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                editionMaxMintableLower,
+                editionMaxMintableUpper,
+                EDITION_CUTOFF_TIME,
+                FLAGS
             )
         );
 
@@ -146,11 +147,12 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(address(this), 1);
 
         // Set new max mintable
-        vm.expectEmit(false, false, false, true);
-        emit EditionMaxMintableSet(MAX_2);
+        editionMaxMintableUpper -= 1;
+        vm.expectEmit(true, true, true, true);
+        emit EditionMaxMintableRangeSet(editionMaxMintableLower, editionMaxMintableUpper);
 
-        edition.reduceEditionMaxMintable(MAX_2);
-        assert(edition.editionMaxMintable() == MAX_2);
+        edition.setEditionMaxMintableRange(editionMaxMintableLower, editionMaxMintableUpper);
+        assertEq(edition.editionMaxMintableUpper(), editionMaxMintableUpper);
 
         // Mint another token
         edition.mint(address(this), 1);
@@ -159,12 +161,9 @@ contract SoundEdition_mint is TestConfig {
         assertEq(edition.totalMinted(), edition.editionMaxMintable());
     }
 
-    function test_reduceEditionMaxMintableSuccessViaAdmin() external {
-        uint32 MAX_3 = 3;
-        uint32 MAX_2 = 2;
-
-        vm.expectEmit(false, false, false, true);
-        emit EditionMaxMintableSet(MAX_3);
+    function test_setEditionMaxMintableRangeSuccessViaAdmin() external {
+        uint32 editionMaxMintableLower = 1;
+        uint32 editionMaxMintableUpper = 3;
 
         SoundEditionV1 edition = SoundEditionV1(
             createSound(
@@ -175,9 +174,10 @@ contract SoundEdition_mint is TestConfig {
                 CONTRACT_URI,
                 FUNDING_RECIPIENT,
                 ROYALTY_BPS,
-                MAX_3,
-                EDITION_MAX_MINTABLE,
-                RANDOMNESS_LOCKED_TIMESTAMP
+                editionMaxMintableLower,
+                editionMaxMintableUpper,
+                EDITION_CUTOFF_TIME,
+                FLAGS
             )
         );
 
@@ -188,12 +188,13 @@ contract SoundEdition_mint is TestConfig {
         edition.mint(address(this), 1);
 
         // Set new max mintable
-        vm.expectEmit(false, false, false, true);
-        emit EditionMaxMintableSet(MAX_2);
+        editionMaxMintableUpper -= 1;
+        vm.expectEmit(true, true, true, true);
+        emit EditionMaxMintableRangeSet(editionMaxMintableLower, editionMaxMintableUpper);
 
         vm.prank(admin);
-        edition.reduceEditionMaxMintable(MAX_2);
-        assert(edition.editionMaxMintable() == MAX_2);
+        edition.setEditionMaxMintableRange(editionMaxMintableLower, editionMaxMintableUpper);
+        assertEq(edition.editionMaxMintableUpper(), editionMaxMintableUpper);
 
         // Mint another token
         edition.mint(address(this), 1);
@@ -202,35 +203,41 @@ contract SoundEdition_mint is TestConfig {
         assertEq(edition.totalMinted(), edition.editionMaxMintable());
     }
 
-    function test_reduceEditionMaxMintableRevertsIfNotAuthorized(address attacker) external {
+    function test_setEditionMaxMintableRangeRevertsIfNotAuthorized(address attacker) external {
         SoundEditionV1 edition = createGenericEdition();
         vm.assume(attacker != address(this));
 
         vm.expectRevert(OwnableRoles.Unauthorized.selector);
         vm.prank(attacker);
-        edition.reduceEditionMaxMintable(1);
+        edition.setEditionMaxMintableRange(0, 0);
     }
 
-    function test_reduceEditionMaxMintableRevertsIfValueInvalid() external {
+    function test_setEditionMaxMintableRangeRevertsIfValueInvalid() external {
         SoundEditionV1 edition = createGenericEdition();
 
-        edition.reduceEditionMaxMintable(10);
+        edition.setEditionMaxMintableRange(0, 10);
 
-        // Attempt to increase max mintable above current max - should fail
-        vm.expectRevert(ISoundEditionV1.InvalidAmount.selector);
-        edition.reduceEditionMaxMintable(11);
+        // We can freely set the range, as long no tokens have been minted.
+        edition.setEditionMaxMintableRange(3, 100);
+        edition.setEditionMaxMintableRange(1, 2);
+        edition.setEditionMaxMintableRange(0, 10);
 
         // Mint some tokens
         edition.mint(address(this), 5);
 
-        // Attempt to lower max mintable below current minted count - should set to current minted count
-        edition.reduceEditionMaxMintable(4);
+        // Attempt to increase max mintable above current max - should fail,
+        // as we have already minted tokens.
+        vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
+        edition.setEditionMaxMintableRange(0, 11);
 
-        assert(edition.editionMaxMintable() == 5);
+        // Attempt to lower max mintable below current minted count - should set to current minted count
+        edition.setEditionMaxMintableRange(0, 4);
+
+        assertEq(edition.editionMaxMintableUpper(), 5);
 
         // Attempt to lower again - should revert
-        vm.expectRevert(ISoundEditionV1.MaximumHasAlreadyBeenReached.selector);
-        edition.reduceEditionMaxMintable(4);
+        vm.expectRevert(ISoundEditionV1.MintHasConcluded.selector);
+        edition.setEditionMaxMintableRange(0, 4);
     }
 
     function test_airdropSuccess() external {
@@ -273,8 +280,9 @@ contract SoundEdition_mint is TestConfig {
 
     function test_airdropRevertsIfExceedsEditionMaxMintable() external {
         SoundEditionV1 edition = createGenericEdition();
-        uint32 editionMaxMintable = 9;
-        edition.reduceEditionMaxMintable(editionMaxMintable);
+        uint32 editionMaxMintableLower = 0;
+        uint32 editionMaxMintableUpper = 9;
+        edition.setEditionMaxMintableRange(editionMaxMintableLower, editionMaxMintableUpper);
 
         address[] memory to = new address[](3);
         to[0] = address(10000000);
@@ -282,9 +290,9 @@ contract SoundEdition_mint is TestConfig {
         to[2] = address(10000002);
 
         uint256 quantity = 4;
-        // Reverts if the `quantity * to.length > editionMaxMintable`.
+        // Reverts if the `quantity * to.length > editionMaxMintableUpper`.
         vm.expectRevert(
-            abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, editionMaxMintable)
+            abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, editionMaxMintableUpper)
         );
         edition.airdrop(to, quantity);
 
@@ -306,10 +314,8 @@ contract SoundEdition_mint is TestConfig {
         SoundEditionV1 edition = createGenericEdition();
 
         uint256 timeThreshold = block.timestamp + 10;
-        edition.setMintRandomnessTokenThreshold(1);
-        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
-
-        vm.warp(timeThreshold);
+        edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
+        edition.setEditionCutoffTime(uint32(timeThreshold));
 
         address[] memory to = new address[](3);
         to[0] = address(10000000);
@@ -319,6 +325,8 @@ contract SoundEdition_mint is TestConfig {
         assertTrue(edition.mintRandomness() == 0);
 
         edition.airdrop(to, 1);
+
+        vm.warp(timeThreshold);
 
         assertTrue(edition.mintRandomness() != 0);
     }
@@ -336,34 +344,115 @@ contract SoundEdition_mint is TestConfig {
         edition.airdrop(to, 1);
     }
 
-    function test_setMintRandomnessTokenThresholdRevertsIfRevealed() public {
+    function test_setMintRandomessEnabled(bool mintRandomnessEnabled0, bool mintRandomnessEnabled1) public {
         SoundEditionV1 edition = createGenericEdition();
 
-        uint256 timeThreshold = block.timestamp + 10;
-        edition.setMintRandomnessTokenThreshold(1);
-        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
+        vm.expectEmit(true, true, true, true);
+        emit MintRandomnessEnabledSet(mintRandomnessEnabled0);
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled0);
 
-        vm.warp(timeThreshold);
+        assertEq(edition.mintRandomnessEnabled(), mintRandomnessEnabled0);
 
-        edition.mint(address(this), 1);
+        vm.expectEmit(true, true, true, true);
+        emit MintRandomnessEnabledSet(mintRandomnessEnabled1);
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled1);
 
-        vm.expectRevert(ISoundEditionV1.MintRandomnessAlreadyRevealed.selector);
-        edition.setMintRandomnessTokenThreshold(1);
+        assertEq(edition.mintRandomnessEnabled(), mintRandomnessEnabled1);
     }
 
-    function test_setMintRandomnessTimeThresholdRevertsIfRevealed() public {
+    function test_setMintRandomessEnabled() public {
+        test_setMintRandomessEnabled(true, false);
+        test_setMintRandomessEnabled(false, true);
+    }
+
+    function test_setMintRandomessEnabledRevertsWhenThereAreMints(uint32 quantity, bool mintRandomnessEnabled) public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        edition.mint(address(this), bound(quantity, 1, 10));
+
+        vm.expectRevert(ISoundEditionV1.MintsAlreadyExist.selector);
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled);
+    }
+
+    function test_setMintRandomessEnabledRevertsWhenThereAreMints() public {
+        test_setMintRandomessEnabledRevertsWhenThereAreMints(1, true);
+        test_setMintRandomessEnabledRevertsWhenThereAreMints(1, false);
+    }
+
+    function test_mintRandomessEnabledUpdatesRandomness(bool mintRandomnessEnabled) public {
         SoundEditionV1 edition = createGenericEdition();
 
         uint256 timeThreshold = block.timestamp + 10;
-        edition.setMintRandomnessTokenThreshold(1);
-        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
+        edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
+        edition.setEditionCutoffTime(uint32(timeThreshold));
+
+        edition.setMintRandomnessEnabled(mintRandomnessEnabled);
+
+        edition.mint(address(this), 1);
+
+        vm.warp(timeThreshold);
+
+        if (mintRandomnessEnabled) {
+            assertTrue(edition.mintRandomness() != 0);
+        } else {
+            assertTrue(edition.mintRandomness() == 0);
+        }
+    }
+
+    function test_setEditionMaxMintableRangeRevertsIfMintHasConcluded() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        uint256 timeThreshold = block.timestamp + 10;
+        edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
+        edition.setEditionCutoffTime(uint32(timeThreshold));
 
         vm.warp(timeThreshold);
 
         edition.mint(address(this), 1);
 
-        vm.expectRevert(ISoundEditionV1.MintRandomnessAlreadyRevealed.selector);
-        edition.setRandomnessTimeThreshold(uint32(timeThreshold));
+        vm.expectRevert(ISoundEditionV1.MintHasConcluded.selector);
+        edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
+    }
+
+    function test_setEditionMaxMintableRangeRevertsIfInvalidRange() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        // We can freely set the range, as long no tokens have been minted.
+        edition.setEditionMaxMintableRange(1, 9);
+        edition.setEditionMaxMintableRange(122, 122);
+        edition.setEditionMaxMintableRange(111, 1111);
+        edition.setEditionMaxMintableRange(1, 11);
+
+        uint32 editionMaxMintableLower = 5;
+        uint32 editionMaxMintableUpper = 3;
+
+        // However, we cannot the lower bound to be greater than the upper bound.
+        vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
+        edition.setEditionMaxMintableRange(editionMaxMintableLower, editionMaxMintableUpper);
+
+        // Change the upper bound.
+        edition.setEditionMaxMintableRange(0, editionMaxMintableUpper);
+
+        edition.mint(address(this), 1);
+
+        // Checks reverts if the upper bound exceeds the previous upper bound.
+        vm.expectRevert(ISoundEditionV1.InvalidEditionMaxMintableRange.selector);
+        edition.setEditionMaxMintableRange(0, editionMaxMintableUpper + 1);
+    }
+
+    function test_setEditionCutoffTimeRevertsIfMintHasConcluded() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        uint256 timeThreshold = block.timestamp + 10;
+        edition.setEditionMaxMintableRange(1, EDITION_MAX_MINTABLE);
+        edition.setEditionCutoffTime(uint32(timeThreshold));
+
+        vm.warp(timeThreshold);
+
+        edition.mint(address(this), 1);
+
+        vm.expectRevert(ISoundEditionV1.MintHasConcluded.selector);
+        edition.setEditionCutoffTime(uint32(timeThreshold));
     }
 
     function test_mintWithQuantityOverLimitReverts() public {

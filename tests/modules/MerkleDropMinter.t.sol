@@ -14,13 +14,46 @@ import { TestConfig } from "../TestConfig.sol";
 
 contract MerkleDropMinterTests is TestConfig {
     uint32 public constant START_TIME = 100;
+
     uint32 public constant END_TIME = 200;
+
     uint16 public constant AFFILIATE_FEE_BPS = 0;
 
     address[] accounts = [getFundedAccount(1), getFundedAccount(2), getFundedAccount(3)];
+
     bytes32[] leaves;
+
     bytes32 public root;
+
     Merkle public m;
+
+    // prettier-ignore
+    event PriceSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint96 price
+    );
+
+    // prettier-ignore
+    event MaxMintableSet(
+        address indexed edition,
+         uint128 indexed mintId, 
+         uint32 maxMintable
+    );
+
+    // prettier-ignore
+    event MaxMintablePerAccountSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        uint32 maxMintablePerAccount
+    );
+
+    // prettier-ignore
+    event MerkleRootHashSet(
+        address indexed edition,
+        uint128 indexed mintId,
+        bytes32 merkleRootHash
+    );
 
     function setUpMerkleTree() public {
         // Initialize
@@ -156,8 +189,99 @@ contract MerkleDropMinterTests is TestConfig {
         assertEq(mintedTally, 1);
     }
 
+    function test_setPrice(uint96 price) public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectEmit(true, true, true, true);
+        emit PriceSet(address(edition), mintId, price);
+        minter.setPrice(address(edition), mintId, price);
+
+        assertEq(minter.mintInfo(address(edition), mintId).price, price);
+    }
+
+    function test_setMaxMintable(uint32 maxMintable) public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectEmit(true, true, true, true);
+        emit MaxMintableSet(address(edition), mintId, maxMintable);
+        minter.setMaxMintable(address(edition), mintId, maxMintable);
+
+        assertEq(minter.mintInfo(address(edition), mintId).maxMintable, maxMintable);
+    }
+
+    function test_setMaxMintableRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        address attacker = getFundedAccount(1);
+
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
+        vm.prank(attacker);
+        minter.setMaxMintable(address(edition), mintId, maxMintable);
+    }
+
+    function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
+        vm.assume(maxMintablePerAccount != 0);
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectEmit(true, true, true, true);
+        emit MaxMintablePerAccountSet(address(edition), mintId, maxMintablePerAccount);
+        minter.setMaxMintablePerAccount(address(edition), mintId, maxMintablePerAccount);
+
+        assertEq(minter.mintInfo(address(edition), mintId).maxMintablePerAccount, maxMintablePerAccount);
+    }
+
+    function test_setMaxMintablePerAccountRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        address attacker = getFundedAccount(1);
+
+        vm.expectRevert(IMinterModule.Unauthorized.selector);
+        vm.prank(attacker);
+        minter.setMaxMintablePerAccount(address(edition), mintId, maxMintable);
+    }
+
+    function test_setMaxMintablePerAccountWithZeroReverts() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectRevert(IMerkleDropMinter.MaxMintablePerAccountIsZero.selector);
+        minter.setMaxMintablePerAccount(address(edition), mintId, 0);
+    }
+
+    function test_setMerkleRootHash(bytes32 merkleRootHash) public {
+        vm.assume(merkleRootHash != bytes32(0));
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectEmit(true, true, true, true);
+        emit MerkleRootHashSet(address(edition), mintId, merkleRootHash);
+        minter.setMerkleRootHash(address(edition), mintId, merkleRootHash);
+
+        assertEq(minter.mintInfo(address(edition), mintId).merkleRootHash, merkleRootHash);
+    }
+
+    function test_setEmptyMerkleRootHashReverts() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectRevert(IMerkleDropMinter.MerkleRootHashIsEmpty.selector);
+        minter.setMerkleRootHash(address(edition), mintId, bytes32(0));
+    }
+
+    function test_setCreateWithMerkleRootHashReverts() public {
+        (SoundEditionV1 edition, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 1);
+
+        vm.expectRevert(IMerkleDropMinter.MerkleRootHashIsEmpty.selector);
+
+        minter.createEditionMint(
+            address(edition),
+            bytes32(0),
+            0,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            EDITION_MAX_MINTABLE,
+            EDITION_MAX_MINTABLE
+        );
+    }
+
     function test_supportsInterface() public {
-        (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 0);
+        (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 1);
 
         bool supportsIMinterModule = minter.supportsInterface(type(IMinterModule).interfaceId);
         bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMinter).interfaceId);
@@ -169,7 +293,7 @@ contract MerkleDropMinterTests is TestConfig {
     }
 
     function test_moduleInterfaceId() public {
-        (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 0);
+        (, MerkleDropMinter minter, ) = _createEditionAndMinter(0, 0, 1);
 
         assertTrue(type(IMerkleDropMinter).interfaceId == minter.moduleInterfaceId());
     }
@@ -184,7 +308,7 @@ contract MerkleDropMinterTests is TestConfig {
 
         uint32 expectedStartTime = 123;
         uint32 expectedEndTime = 502370;
-        uint32 expectedMaxMintable = 39730302;
+        uint32 expectedMaxMintable = 3973030;
         uint32 expectedMaxPerWallet = 397;
 
         uint128 mintId = minter.createEditionMint(

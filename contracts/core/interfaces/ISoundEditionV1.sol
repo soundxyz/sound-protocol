@@ -55,10 +55,57 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     event RoyaltySet(uint16 bps);
 
     /**
-     * @dev Emitted when the edition's maximum mintable token quantity is set.
-     * @param newMax The new maximum mintable token quantity.
+     * @dev Emitted when the edition's maximum mintable token quantity range is set.
+     * @param editionMaxMintableLower_ The lower limit of the maximum number of tokens that can be minted.
+     * @param editionMaxMintableUpper_ The upper limit of the maximum number of tokens that can be minted.
      */
-    event EditionMaxMintableSet(uint32 newMax);
+    event EditionMaxMintableRangeSet(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_);
+
+    /**
+     * @dev Emitted when the edition's cutoff time set.
+     * @param editionCutoffTime_ The timestamp.
+     */
+    event EditionCutoffTimeSet(uint32 editionCutoffTime_);
+
+    /**
+     * @dev Emitted when the `mintRandomnessEnabled` is set.
+     * @param mintRandomnessEnabled_ The boolean value.
+     */
+    event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
+
+    /**
+     * @dev Emitted upon initialization.
+     * @param edition_                 The address of the edition.
+     * @param name_                    Name of the collection.
+     * @param symbol_                  Symbol of the collection.
+     * @param metadataModule_          Address of metadata module, address(0x00) if not used.
+     * @param baseURI_                 Base URI.
+     * @param contractURI_             Contract URI for OpenSea storefront.
+     * @param fundingRecipient_        Address that receives primary and secondary royalties.
+     * @param royaltyBPS_              Royalty amount in bps (basis points).
+     * @param editionMaxMintableLower_ The lower bound of the max mintable quantity for the edition.
+     * @param editionMaxMintableUpper_ The upper bound of the max mintable quantity for the edition.
+     * @param editionCutoffTime_       The timestamp after which `editionMaxMintable` drops from
+     *                                 `editionMaxMintableUpper` to
+     *                                 `max(_totalMinted(), editionMaxMintableLower)`.
+     * @param flags_                   The bitwise OR result of the initialization flags.
+     *                                 See: {METADATA_IS_FROZEN_FLAG}
+     *                                 See: {MINT_RANDOMNESS_ENABLED_FLAG}
+     */
+    event SoundEditionInitialized(
+        address indexed edition_,
+        string name_,
+        string symbol_,
+        IMetadataModule metadataModule_,
+        string baseURI_,
+        string contractURI_,
+        address fundingRecipient_,
+        uint16 royaltyBPS_,
+        uint32 editionMaxMintableLower_,
+        uint32 editionMaxMintableUpper_,
+        uint32 editionCutoffTime_,
+        uint8 flags_
+    );
 
     // =============================================================
     //                            ERRORS
@@ -96,6 +143,11 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     error InvalidFundingRecipient();
 
     /**
+     * @dev The `editionMaxMintableLower` must not be greater than `editionMaxMintableUpper`.
+     */
+    error InvalidEditionMaxMintableRange();
+
+    /**
      * @dev The `editionMaxMintable` has already been reached.
      */
     error MaximumHasAlreadyBeenReached();
@@ -115,22 +167,37 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     error NoAddressesToAirdrop();
 
+    /**
+     * @dev The mint has already concluded.
+     */
+    error MintHasConcluded();
+
+    /**
+     * @dev Cannot perform the operation after a token has been minted.
+     */
+    error MintsAlreadyExist();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
 
     /**
      * @dev Initializes the contract.
-     * @param name_                         Name of the collection.
-     * @param symbol_                       Symbol of the collection.
-     * @param metadataModule_               Address of metadata module, address(0x00) if not used.
-     * @param baseURI_                      Base URI.
-     * @param contractURI_                  Contract URI for OpenSea storefront.
-     * @param fundingRecipient_             Address that receives primary and secondary royalties.
-     * @param royaltyBPS_                   Royalty amount in bps (basis points).
-     * @param editionMaxMintable_           The maximum amount of tokens mintable for this edition.
-     * @param mintRandomnessTokenThreshold_ Token supply after which randomness gets locked.
-     * @param mintRandomnessTimeThreshold_  Timestamp after which randomness gets locked.
+     * @param name_                    Name of the collection.
+     * @param symbol_                  Symbol of the collection.
+     * @param metadataModule_          Address of metadata module, address(0x00) if not used.
+     * @param baseURI_                 Base URI.
+     * @param contractURI_             Contract URI for OpenSea storefront.
+     * @param fundingRecipient_        Address that receives primary and secondary royalties.
+     * @param royaltyBPS_              Royalty amount in bps (basis points).
+     * @param editionMaxMintableLower_ The lower bound of the max mintable quantity for the edition.
+     * @param editionMaxMintableUpper_ The upper bound of the max mintable quantity for the edition.
+     * @param editionCutoffTime_       The timestamp after which `editionMaxMintable` drops from
+     *                                 `editionMaxMintableUpper` to
+     *                                 `max(_totalMinted(), editionMaxMintableLower)`.
+     * @param flags_                   The bitwise OR result of the initialization flags.
+     *                                 See: {METADATA_IS_FROZEN_FLAG}
+     *                                 See: {MINT_RANDOMNESS_ENABLED_FLAG}
      */
     function initialize(
         string memory name_,
@@ -140,9 +207,10 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
         string memory contractURI_,
         address fundingRecipient_,
         uint16 royaltyBPS_,
-        uint32 editionMaxMintable_,
-        uint32 mintRandomnessTokenThreshold_,
-        uint32 mintRandomnessTimeThreshold_
+        uint32 editionMaxMintableLower_,
+        uint32 editionMaxMintableUpper_,
+        uint32 editionCutoffTime_,
+        uint8 flags_
     ) external;
 
     /**
@@ -168,8 +236,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * - The caller must be the owner of the contract, or have the
      *   `ADMIN_ROLE`, which can be granted via {grantRole}.
      *
-     * @param to       Address to mint to.
-     * @param quantity Number of tokens to mint.
+     * @param to           Address to mint to.
+     * @param quantity     Number of tokens to mint.
      * @return fromTokenId The first token ID minted.
      */
     function airdrop(address[] calldata to, uint256 quantity) external returns (uint256 fromTokenId);
@@ -244,34 +312,36 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function setRoyalty(uint16 bps) external;
 
     /**
-     * @dev Reduces the maximum mintable quantity for the edition.
+     * @dev Sets the edition max mintable range.
      *
      * Calling conditions:
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
-     * @param newMax The maximum mintable quantity to be set.
+     * @param editionMaxMintableLower_ The lower limit of the maximum number of tokens that can be minted.
+     * @param editionMaxMintableUpper_ The upper limit of the maximum number of tokens that can be minted.
      */
-    function reduceEditionMaxMintable(uint32 newMax) external;
+    function setEditionMaxMintableRange(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_) external;
 
     /**
-     * @dev Sets a minted token count, after which `mintRandomness` gets locked.
+     * @dev Sets the timestamp after which, the `editionMaxMintable` drops
+     *      from `editionMaxMintableUpper` to `editionMaxMintableLower.
      *
      * Calling conditions:
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
-     * @param mintRandomnessTokenThreshold The token quantity to be set.
+     * @param editionCutoffTime_ The timestamp.
      */
-    function setMintRandomnessTokenThreshold(uint32 mintRandomnessTokenThreshold) external;
+    function setEditionCutoffTime(uint32 editionCutoffTime_) external;
 
     /**
-     * @dev Sets the timestamp, after which `mintRandomness` gets locked.
+     * @dev Sets whether the `mintRandomness` is enabled.
      *
      * Calling conditions:
      * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
      *
-     * @param mintRandomnessTimeThreshold_ The randomness timestamp to be set.
+     * @param mintRandomnessEnabled_ The boolean value.
      */
-    function setRandomnessTimeThreshold(uint32 mintRandomnessTimeThreshold_) external;
+    function setMintRandomnessEnabled(bool mintRandomnessEnabled_) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
@@ -299,6 +369,18 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function ADDRESS_BATCH_MINT_LIMIT() external pure returns (uint256);
 
     /**
+     * @dev Returns the bit flag to freeze the metadata on initialization.
+     * @return The constant value.
+     */
+    function METADATA_IS_FROZEN_FLAG() external pure returns (uint8);
+
+    /**
+     * @dev Returns the bit flag to enable the mint randomness feature on initialization.
+     * @return The constant value.
+     */
+    function MINT_RANDOMNESS_ENABLED_FLAG() external pure returns (uint8);
+
+    /**
      * @dev Returns the base token URI for the collection.
      * @return The configured value.
      */
@@ -324,18 +406,23 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function editionMaxMintable() external view returns (uint32);
 
     /**
-     * @dev Returns the token count after which `mintRandomness` gets locked.
-     *      See {mintRandomnessRevealed} for the reveal condition.
+     * @dev Returns the upper bound for the maximum tokens that can be minted for this edition.
      * @return The configured value.
      */
-    function mintRandomnessTokenThreshold() external view returns (uint32);
+    function editionMaxMintableUpper() external view returns (uint32);
 
     /**
-     * @dev Returns the timestamp after which `mintRandomness` gets locked.
-     *      See {mintRandomnessRevealed} for the reveal condition.
+     * @dev Returns the lower bound for the maximum tokens that can be minted for this edition.
      * @return The configured value.
      */
-    function mintRandomnessTimeThreshold() external view returns (uint32);
+    function editionMaxMintableLower() external view returns (uint32);
+
+    /**
+     * @dev Returns the timestamp after which `editionMaxMintable` drops from
+     *      `editionMaxMintableUpper` to `editionMaxMintableLower`.
+     * @return The configured value.
+     */
+    function editionCutoffTime() external view returns (uint32);
 
     /**
      * @dev Returns the address of the metadata module.
@@ -345,7 +432,7 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Returns the randomness based on latest block hash, which is stored upon each mint.
-     *      unless {mintRandomnessRevealed} is true.
+     *      unless {mintConcluded} is true.
      *      Used for game mechanics like the Sound Golden Egg.
      *      Returns 0 before revealed.
      *      WARNING: This value should NOT be used for any reward of significant monetary
@@ -355,10 +442,16 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function mintRandomness() external view returns (uint256);
 
     /**
-     * @dev Returns whether the `mintRandomness` has been locked and revealed.
+     * @dev Returns whether the `mintRandomness` has been enabled.
+     * @return The configured value.
+     */
+    function mintRandomnessEnabled() external view returns (bool);
+
+    /**
+     * @dev Returns whether the mint has been concluded.
      * @return The latest value.
      */
-    function mintRandomnessRevealed() external view returns (bool);
+    function mintConcluded() external view returns (bool);
 
     /**
      * @dev Returns the royalty basis points.
