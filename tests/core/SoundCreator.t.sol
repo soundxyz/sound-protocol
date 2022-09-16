@@ -208,7 +208,7 @@ contract SoundCreatorTests is TestConfig {
         emit SoundEditionCreated(soundEditionAddress, address(this));
 
         // Call the create function.
-        bytes[] memory results = _createSoundEditionWithCalls(salt, contracts, data);
+        (, bytes[] memory results) = _createSoundEditionWithCalls(salt, contracts, data);
 
         // Cast it to `SoundEditionV1` for convenience.
         SoundEditionV1 soundEdition = SoundEditionV1(soundEditionAddress);
@@ -264,8 +264,8 @@ contract SoundCreatorTests is TestConfig {
         bytes32 salt,
         address[] memory contracts,
         bytes[] memory data
-    ) internal returns (bytes[] memory results) {
-        results = soundCreator.createSoundAndMints(
+    ) internal returns (address soundEdition, bytes[] memory results) {
+        (soundEdition, results) = soundCreator.createSoundAndMints(
             salt,
             abi.encodeWithSelector(
                 SoundEditionV1.initialize.selector,

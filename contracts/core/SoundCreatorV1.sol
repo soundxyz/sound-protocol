@@ -72,11 +72,9 @@ contract SoundCreatorV1 is ISoundCreatorV1, Ownable {
         bytes calldata initData,
         address[] calldata contracts,
         bytes[] calldata data
-    ) external returns (bytes[] memory results) {
+    ) external returns (address soundEdition, bytes[] memory results) {
         // Create Sound Edition proxy.
-        address soundEdition = payable(
-            Clones.cloneDeterministic(soundEditionImplementation, _saltedSalt(msg.sender, salt))
-        );
+        soundEdition = payable(Clones.cloneDeterministic(soundEditionImplementation, _saltedSalt(msg.sender, salt)));
 
         // Initialize proxy.
         assembly {
