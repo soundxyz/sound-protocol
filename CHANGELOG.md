@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.4
+
+### Patch Changes
+
+-   a43b305: Update interfaces
+
 ## 0.4.3
 
 ### Patch Changes
