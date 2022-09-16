@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 0.4.2
+
+### Patch Changes
+
+-   80b7963: Updating correct interfaceids file
+
 ## 0.4.1
 
 ### Patch Changes
