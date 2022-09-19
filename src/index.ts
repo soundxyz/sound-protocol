@@ -1,10 +1,10 @@
-import staging from "./json/staging.json";
-import preview from "./json/preview.json";
+import goerli from "./json/goerli.json";
+import mainnet from "./json/mainnet.json";
 import { interfaceIds } from "./interfaceIds";
 
 const contractAddresses = {
-    staging,
-    preview,
+    goerli,
+    mainnet,
 } as const;
 
 export { interfaceIds, contractAddresses };
