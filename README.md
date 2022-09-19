@@ -1,8 +1,13 @@
 # Sound Protocol
 
-### Specification
+## Specification
 
 See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec.
+
+## Deployments
+
+-   [mainnet]('/src/json/mainnet.json')
+-   [goerli]('/src/json/goerli.json')
 
 # Installation
 
