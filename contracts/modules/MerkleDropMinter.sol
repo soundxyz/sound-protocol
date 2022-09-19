@@ -99,11 +99,11 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         if (!valid) revert InvalidMerkleProof();
 
         unchecked {
-            uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+            uint256 userMintedTally = mintedTallies[edition][mintId][msg.sender];
             // Check the additional requestedQuantity does not exceed the set maximum.
             // If `requestedQuantity` is large enough to cause an overflow,
             // `_mint` will give an out of gas error.
-            uint256 tally = userMintedBalance + requestedQuantity;
+            uint256 tally = userMintedTally + requestedQuantity;
             if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
             // Update the minted tally for this account
             mintedTallies[edition][mintId][msg.sender] = tally;

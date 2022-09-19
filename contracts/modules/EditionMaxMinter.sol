@@ -84,11 +84,11 @@ contract EditionMaxMinter is IEditionMaxMinter, BaseMinter {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
         unchecked {
-            uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
+            uint256 userMintedTally = mintedTallies[edition][mintId][msg.sender];
             // Check the additional quantity does not exceed the set maximum.
             // If `quantity` is large enough to cause an overflow,
             // `_mint` will give an out of gas error.
-            uint256 tally = userMintedBalance + quantity;
+            uint256 tally = userMintedTally + quantity;
             if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
             // Update the minted tally for this account
             mintedTallies[edition][mintId][msg.sender] = tally;
