@@ -7,16 +7,16 @@ import { readFile, writeFile } from "fs/promises";
  * get published to npm.
  */
 
-const allowedEnv = ["preview", "staging", "mainnet"] as const;
+const supportedNetworks = ["goerli", "mainnet"] as const;
 
-const SOUND_ENV = process.env.SOUND_ENV as typeof allowedEnv[number] | undefined;
+const EVM_NETWORK = process.env.EVM_NETWORK as typeof supportedNetworks[number] | undefined;
 
-if (!SOUND_ENV || !allowedEnv.includes(SOUND_ENV)) {
-    console.log("Must specify SOUND_ENV: " + allowedEnv.join(" | "));
+if (!EVM_NETWORK || !supportedNetworks.includes(EVM_NETWORK)) {
+    console.log("Must specify EVM_NETWORK: " + supportedNetworks.join(" | "));
     process.exit(1);
 }
 
-const chainId = SOUND_ENV == "staging" || SOUND_ENV == "preview" ? 5 : 1;
+const chainId = EVM_NETWORK == "mainnet" ? 1 : 5;
 
 async function buildAddressJsonFile() {
     const parsedData = await readFile(`broadcast/Deploy.s.sol/${chainId}/run-latest.json`, "utf8").then<{
@@ -32,7 +32,7 @@ async function buildAddressJsonFile() {
         return acc;
     }, {});
 
-    const filePath = `src/json/${SOUND_ENV}.json`;
+    const filePath = `src/json/${EVM_NETWORK}.json`;
     await ensureFile(filePath);
     await writeFile(filePath, JSON.stringify(addresses, null, 2), {});
 
