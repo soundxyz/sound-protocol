@@ -86,11 +86,10 @@ This will produce the coverage report in `/coverage` folder. Note that `forge co
 Create a .env in the root with:
 
 ```
-GOERLI_RPC_URL=
-MAINNET_RPC_URL=
-PRIVATE_KEY=
-ETHERSCAN_KEY=
-OWNER=<address that will own the ownable contracts>
+PRIVATE_KEY=...
+ETHERSCAN_KEY=...
+# Make one of these for every network
+GOERLI_RPC_URL=...
 ```
 
 Then run:
