@@ -93,9 +93,29 @@ contract SoundCreatorTests is TestConfig {
 
         assertEq(address(soundCreator.owner()), address(this));
 
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         vm.prank(attacker);
         soundCreator.transferOwnership(attacker);
+    }
+
+    function test_twoStepOwnershipHandover(address newOwner) public {
+        vm.assume(newOwner != address(this));
+
+        assertEq(address(soundCreator.owner()), address(this));
+
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.prank(newOwner);
+        soundCreator.completeOwnershipHandover(newOwner);
+
+        vm.expectRevert(OwnableRoles.NoHandoverRequest.selector);
+        soundCreator.completeOwnershipHandover(newOwner);
+
+        vm.prank(newOwner);
+        soundCreator.requestOwnershipHandover();
+
+        soundCreator.completeOwnershipHandover(newOwner);
+
+        assertEq(address(soundCreator.owner()), newOwner);
     }
 
     function test_ownerCanSetNewImplementation(address newImplementation) public {
@@ -111,7 +131,7 @@ contract SoundCreatorTests is TestConfig {
     function test_attackerCantSetNewImplementation(address attacker) public {
         vm.assume(attacker != address(this));
 
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         vm.prank(attacker);
         soundCreator.setEditionImplementation(address(0));
     }

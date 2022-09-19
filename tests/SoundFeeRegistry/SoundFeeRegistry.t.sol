@@ -1,6 +1,7 @@
 pragma solidity ^0.8.16;
 
 import "../TestConfig.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundFeeRegistry, SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 
 contract SoundFeeRegistryTests is TestConfig {
@@ -34,7 +35,7 @@ contract SoundFeeRegistryTests is TestConfig {
     function test_setSoundFeeAddressRevertsForNonOwner() external {
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         feeRegistry.setSoundFeeAddress(address(10));
     }
 
@@ -60,7 +61,7 @@ contract SoundFeeRegistryTests is TestConfig {
     function test_setPlatformFeeBPSRevertsForNonOwner() external {
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(OwnableRoles.Unauthorized.selector);
         feeRegistry.setPlatformFeeBPS(10);
     }
 
