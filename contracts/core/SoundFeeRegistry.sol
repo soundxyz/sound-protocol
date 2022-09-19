@@ -93,7 +93,7 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     }
 
     /**
-     * @dev Restricts the platform fee numerator to not excced the `_MAX_BPS`.
+     * @dev Restricts the platform fee numerator to not exceed the `_MAX_BPS`.
      * @param platformFeeBPS_ Platform fee amount in bps (basis points).
      */
     modifier onlyValidPlatformFeeBPS(uint16 platformFeeBPS_) {
