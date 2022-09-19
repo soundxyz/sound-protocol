@@ -7,6 +7,7 @@ import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IRangeEditionMinter, EditionMintData, MintInfo } from "./interfaces/IRangeEditionMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 
 /*
  * @title RangeEditionMinter
@@ -23,12 +24,6 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
      * edition => mintId => EditionMintData
      */
     mapping(address => mapping(uint128 => EditionMintData)) internal _editionMintData;
-
-    /**
-     * @dev Number of tokens minted by each buyer address
-     * edition => mintId => buyer => mintedTallies
-     */
-    mapping(address => mapping(uint256 => mapping(address => uint256))) public mintedTallies;
 
     // =============================================================
     //                          CONSTRUCTOR
@@ -99,14 +94,9 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, _maxMintable);
 
         unchecked {
-            uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-            // Check the additional quantity does not exceed the set maximum.
-            // If `quantity` is large enough to cause an overflow,
-            // `_mint` will give an out of gas error.
-            uint256 tally = userMintedBalance + quantity;
-            if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
-            // Update the minted tally for this account
-            mintedTallies[edition][mintId][msg.sender] = tally;
+            // Check the additional requestedQuantity does not exceed the maximum mintable per account.
+            uint256 numberMinted = ISoundEditionV1(edition).numberMinted(msg.sender);
+            if (numberMinted + quantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
         }
 
         _mint(edition, mintId, quantity, affiliate);

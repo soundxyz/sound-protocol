@@ -476,4 +476,19 @@ contract SoundEdition_mint is TestConfig {
         // Airdrop with `quantity` right at the limit is ok.
         edition.airdrop(to, limit);
     }
+
+    function test_numberMintedReturnsExpectedValue() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        address owner = address(12345);
+        edition.transferOwnership(owner);
+
+        assertTrue(edition.numberMinted(owner) == 0);
+
+        vm.prank(owner);
+        uint32 quantity = 10;
+        edition.mint(owner, quantity);
+
+        assertTrue(edition.numberMinted(owner) == quantity);
+    }
 }

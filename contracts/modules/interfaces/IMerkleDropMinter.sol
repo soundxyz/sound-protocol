@@ -224,19 +224,6 @@ interface IMerkleDropMinter is IMinterModule {
     // =============================================================
 
     /**
-     * @dev Returns the amount of minted tokens for `account` in `mintData`.
-     * @param edition Address of the edition.
-     * @param mintId  Mint identifier.
-     * @param account Address of the account.
-     * @return tally The number of minted tokens for the account.
-     */
-    function mintedTallies(
-        address edition,
-        uint128 mintId,
-        address account
-    ) external view returns (uint256);
-
-    /**
      * @dev Returns IMerkleDropMinter.MintInfo instance containing the full minter parameter set.
      * @param edition The edition to get the mint instance for.
      * @param mintId The ID of the mint instance.
