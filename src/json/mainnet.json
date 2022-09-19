@@ -1,10 +1,10 @@
 {
-    "soundFeeRegistry": "",
-    "goldenEggMetadata": "",
-    "fixedPriceSignatureMinter": "",
-    "merkleDropMinter": "",
-    "rangeEditionMinter": "",
-    "editionMaxMinter": "",
-    "soundEditionV1": "",
-    "soundCreatorV1": ""
+  "soundFeeRegistry": "0x8f921211c9771baeb648ac7becb322a540298a4b",
+  "goldenEggMetadata": "0x3ca50e8da8c3d359fc934aea0161f5346ccb62a1",
+  "fixedPriceSignatureMinter": "0xc47306699611fc4c84744dcd7f458938b829506a",
+  "merkleDropMinter": "0xeae422887230c0ffb91fd8f708f5fdd354c92f2f",
+  "rangeEditionMinter": "0x65c25fadd9b88df5c8c101a3b99a5d614b708596",
+  "editionMaxMinter": "0xb1e015816c823f556d1eb921042bb09ed41db8a7",
+  "soundEditionV1": "0x8cfbfae570d673864cd61e1e4543eb7874ca35c2",
+  "soundCreatorV1": "0xaef3e8c8723d9c31863be8de54df2668ef7c4b89"
 }
