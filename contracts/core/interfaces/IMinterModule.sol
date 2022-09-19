@@ -48,7 +48,7 @@ interface IMinterModule is IERC165 {
     /**
      * @dev Emitted when the `paused` status of `edition` is updated.
      * @param edition The edition address.
-     * @param mintId  The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param mintId  The mint ID, to distinguish between multiple mints for the same edition.
      * @param paused  The new paused status.
      */
     event MintPausedSet(address indexed edition, uint128 mintId, bool paused);
@@ -56,7 +56,7 @@ interface IMinterModule is IERC165 {
     /**
      * @dev Emitted when the `paused` status of `edition` is updated.
      * @param edition   The edition address.
-     * @param mintId    The mint ID, to distinguish beteen multiple mints for the same edition.
+     * @param mintId    The mint ID, to distinguish between multiple mints for the same edition.
      * @param startTime The start time of the mint.
      * @param endTime   The end time of the mint.
      */
