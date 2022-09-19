@@ -6,7 +6,7 @@
         "type": "git",
         "url": "git+https://github.com/soundxyz/sound-protocol.git"
     },
-    "license": "GPL-3.0-or-later",
+    "license": "MIT",
     "author": "soundxyz",
     "scripts": {
         "build": "forge build",

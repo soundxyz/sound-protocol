@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
