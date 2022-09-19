@@ -16,16 +16,16 @@ import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 
 contract Deploy is Script {
     uint16 private constant PLATFORM_FEE_BPS = 500;
-    address OWNER = vm.envAddress("OWNER");
+    address SOUND_GNOSIS_SAFE_MAINNET = 0x858a92511485715Cfb754f397a7894b7724c7Abd;
 
     function run() external {
         vm.startBroadcast();
 
         // Deploy the SoundFeeRegistry
-        SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(OWNER, PLATFORM_FEE_BPS);
+        SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(SOUND_GNOSIS_SAFE_MAINNET, PLATFORM_FEE_BPS);
 
         // Make the gnosis safe the owner of SoundFeeRegistry
-        soundFeeRegistry.transferOwnership(OWNER);
+        soundFeeRegistry.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
 
         // Deploy modules
         new GoldenEggMetadata();
@@ -54,7 +54,7 @@ contract Deploy is Script {
         SoundCreatorV1 soundCreator = new SoundCreatorV1(address(editionImplementation));
 
         // Set creator ownership to gnosis safe
-        soundCreator.transferOwnership(OWNER);
+        soundCreator.transferOwnership(SOUND_GNOSIS_SAFE_MAINNET);
 
         vm.stopBroadcast();
     }
