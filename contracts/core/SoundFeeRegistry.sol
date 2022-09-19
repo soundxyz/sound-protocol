@@ -24,7 +24,7 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     // =============================================================
 
     /**
-     * @dev The sound protocol's address that receives platform fees.
+     * @dev The Sound protocol's address that receives platform fees.
      */
     address public override soundFeeAddress;
 
