@@ -471,6 +471,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @inheritdoc ISoundEditionV1
      */
+    function numberBurned(address owner) external view returns (uint256) {
+        return _numberBurned(owner);
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1
+     */
     function totalMinted() public view returns (uint256) {
         return _totalMinted();
     }

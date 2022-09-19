@@ -94,8 +94,10 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         if (!valid) revert InvalidMerkleProof();
 
         unchecked {
-            // Check the additional requestedQuantity does not exceed the maximum mintable per account.
+            // Check the additional `requestedQuantity` does not exceed the maximum mintable per account.
             uint256 numberMinted = ISoundEditionV1(edition).numberMinted(msg.sender);
+            // Won't overflow. The total number of tokens minted in `edition` won't exceed `type(uint32).max`,
+            // and `quantity` has 32 bits.
             if (numberMinted + requestedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
         }
 

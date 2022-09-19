@@ -111,6 +111,7 @@ contract SoundEdition_mint is TestConfig {
         edition.burn(TOKEN1_ID);
 
         assert(edition.balanceOf(address(this)) == 0);
+        assert(edition.numberBurned(address(this)) == ONE_TOKEN);
         assert(edition.totalSupply() == 0);
 
         // Mint another token and assert that the attacker can't burn

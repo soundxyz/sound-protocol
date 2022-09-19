@@ -94,8 +94,10 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, _maxMintable);
 
         unchecked {
-            // Check the additional requestedQuantity does not exceed the maximum mintable per account.
+            // Check the additional `requestedQuantity` does not exceed the maximum mintable per account.
             uint256 numberMinted = ISoundEditionV1(edition).numberMinted(msg.sender);
+            // Won't overflow. The total number of tokens minted in `edition` won't exceed `type(uint32).max`,
+            // and `quantity` has 32 bits.
             if (numberMinted + quantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
         }
 

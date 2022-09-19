@@ -525,10 +525,17 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Returns the number of tokens minted by `owner`.
-     *
      * @param owner Address to query for number minted.
+     * @return The latest value.
      */
     function numberMinted(address owner) external view returns (uint256);
+
+    /**
+     * @dev Returns the number of tokens burned by `owner`.
+     * @param owner Address to query for number burned.
+     * @return The latest value.
+     */
+    function numberBurned(address owner) external view returns (uint256);
 
     /**
      * @dev Returns the total amount of tokens minted.
