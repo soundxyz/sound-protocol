@@ -26,7 +26,7 @@ interface ISoundFeeRegistry {
     // =============================================================
 
     /**
-     * @dev The sound fee address must not be address(0).
+     * @dev The new `soundFeeAddress` must not be address(0).
      */
     error InvalidSoundFeeAddress();
 
