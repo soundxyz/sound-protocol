@@ -1,12 +1,12 @@
 {
-  "detectors_to_exclude": "timestamp,solc-version,external-function,assembly",
-  "filter_paths": "lib|tests",
-  "solc_remaps": [
-    "ERC721A-Upgradeable/=lib/ERC721A-Upgradeable/contracts/",
-    "forge-std/=lib/forge-std/src/",
-    "murky/=lib/murky/src/",
-    "openzeppelin/=lib/openzeppelin-contracts/contracts/",
-    "openzeppelin-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
-    "solady/=lib/solady/src/"
-  ]
+    "detectors_to_exclude": "timestamp,solc-version,external-function,assembly",
+    "filter_paths": "lib|tests",
+    "solc_remaps": [
+        "ERC721A-Upgradeable/=lib/ERC721A-Upgradeable/contracts/",
+        "forge-std/=lib/forge-std/src/",
+        "murky/=lib/murky/src/",
+        "openzeppelin/=lib/openzeppelin-contracts/contracts/",
+        "openzeppelin-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+        "solady/=lib/solady/src/"
+    ]
 }
