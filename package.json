@@ -10,8 +10,8 @@
     "author": "soundxyz",
     "scripts": {
         "build": "forge build",
-        "deploy:mainnet": "EVM_NETWORK=mainnet pnpm gen:ids && source .env && forge script script/solidity/Deploy.s.sol --fork-url $MAINNET_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=mainnet pnpm prep-release",
-        "deploy:goerli": "EVM_NETWORK=goerli pnpm gen:ids && source .env && forge script script/solidity/Deploy.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=goerli pnpm prep-release",
+        "deploy:mainnet": "source .env && forge script script/solidity/Deploy.s.sol --fork-url $MAINNET_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=mainnet pnpm prep-release",
+        "deploy:goerli": "source .env && forge script script/solidity/Deploy.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=goerli pnpm prep-release",
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json && bob-tsm script/js/buildInterfaceIdsFile.ts  && pnpm prettier:write",
         "postinstall": "forge install",
         "prepack": "rm -rf out out-2 dist typechain && pnpm gen:ids && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm run typechain && bob-tsm build.ts",
