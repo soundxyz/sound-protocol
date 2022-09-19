@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.16;
 
-import { Ownable } from "openzeppelin/access/Ownable.sol";
+import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 
 /**
  * @title SoundFeeRegistry
  * @author Sound.xyz
  */
-contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
+contract SoundFeeRegistry is ISoundFeeRegistry, OwnableRoles {
     // =============================================================
     //                           CONSTANTS
     // =============================================================
@@ -43,6 +43,8 @@ contract SoundFeeRegistry is ISoundFeeRegistry, Ownable {
     {
         soundFeeAddress = soundFeeAddress_;
         platformFeeBPS = platformFeeBPS_;
+
+        _initializeOwner(msg.sender);
     }
 
     // =============================================================
