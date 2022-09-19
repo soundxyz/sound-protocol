@@ -19,7 +19,7 @@ struct EditionInfo {
     string name;
     // Symbol of the collection.
     string symbol;
-    // Address of the
+    // Address that receives primary and secondary royalties.
     address fundingRecipient;
     // The current max mintable amount;
     uint32 editionMaxMintable;
@@ -289,12 +289,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     function airdrop(address[] calldata to, uint256 quantity) external returns (uint256 fromTokenId);
 
     /**
-     * @dev Withdraws collected ETH royalties to the fundingRecipient
+     * @dev Withdraws collected ETH royalties to the fundingRecipient.
      */
     function withdrawETH() external;
 
     /**
-     * @dev Withdraws collected ERC20 royalties to the fundingRecipient
+     * @dev Withdraws collected ERC20 royalties to the fundingRecipient.
      * @param tokens array of ERC20 tokens to withdraw
      */
     function withdrawERC20(address[] calldata tokens) external;

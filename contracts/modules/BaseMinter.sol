@@ -216,7 +216,7 @@ abstract contract BaseMinter is IMinterModule {
     }
 
     /**
-     * @dev Restricts the affiliate fee numerator to not excced the `MAX_BPS`.
+     * @dev Restricts the affiliate fee numerator to not exceed the `MAX_BPS`.
      */
     modifier onlyValidAffiliateFeeBPS(uint16 affiliateFeeBPS) virtual {
         if (affiliateFeeBPS > _MAX_BPS) revert InvalidAffiliateFeeBPS();
