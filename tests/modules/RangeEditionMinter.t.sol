@@ -230,20 +230,44 @@ contract RangeEditionMinterTests is TestConfig {
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2, address(0));
     }
 
+    function test_mintWhenOverMaxMintableDueToPreviousMintedReverts() public {
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(3);
+        vm.warp(START_TIME);
+
+        address caller = getFundedAccount(1);
+
+        // have 2 previously minted
+        address owner = address(12345);
+        edition.transferOwnership(owner);
+        vm.prank(owner);
+        edition.mint(caller, 2);
+
+        // attempting to mint 2 more reverts
+        vm.prank(caller);
+        vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerAccount.selector);
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2, address(0));
+    }
+
     function test_mintWhenMintablePerAccountIsSetAndSatisfied() public {
-        // Set max allowed per account to 2
-        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(2);
+        // Set max allowed per account to 3
+        (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(3);
+
+        address caller = getFundedAccount(1);
+
+        // Set 1 previous mint
+        address owner = address(12345);
+        edition.transferOwnership(owner);
+        vm.prank(owner);
+        edition.mint(caller, 1);
 
         // Ensure we can mint the max allowed of 2 tokens
-        address caller = getFundedAccount(1);
         vm.warp(START_TIME);
         vm.prank(caller);
         minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, 2, address(0));
 
-        assertEq(edition.balanceOf(caller), 2);
+        assertEq(edition.balanceOf(caller), 3);
 
-        MintInfo memory data = minter.mintInfo(address(edition), MINT_ID);
-        assertEq(data.totalMinted, 2);
+        assertEq(edition.totalMinted(), 3);
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {

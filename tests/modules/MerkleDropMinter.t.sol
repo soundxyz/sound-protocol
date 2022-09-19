@@ -170,25 +170,6 @@ contract MerkleDropMinterTests is TestConfig {
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
-    function test_canGetMintedTallyForAccount() public {
-        uint32 maxMintablePerAccount = 1;
-        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
-            0,
-            6,
-            maxMintablePerAccount
-        );
-        bytes32[] memory proof = m.getProof(leaves, 0);
-
-        vm.warp(START_TIME);
-        vm.prank(accounts[0]);
-
-        uint32 requestedQuantity = maxMintablePerAccount;
-        minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
-
-        uint256 mintedTally = minter.mintedTallies(address(edition), mintId, accounts[0]);
-        assertEq(mintedTally, 1);
-    }
-
     function test_setPrice(uint96 price) public {
         (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
 

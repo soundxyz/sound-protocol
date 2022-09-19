@@ -111,6 +111,7 @@ contract SoundEdition_mint is TestConfig {
         edition.burn(TOKEN1_ID);
 
         assert(edition.balanceOf(address(this)) == 0);
+        assert(edition.numberBurned(address(this)) == ONE_TOKEN);
         assert(edition.totalSupply() == 0);
 
         // Mint another token and assert that the attacker can't burn
@@ -475,5 +476,20 @@ contract SoundEdition_mint is TestConfig {
         edition.airdrop(to, limit + 1);
         // Airdrop with `quantity` right at the limit is ok.
         edition.airdrop(to, limit);
+    }
+
+    function test_numberMintedReturnsExpectedValue() public {
+        SoundEditionV1 edition = createGenericEdition();
+
+        address owner = address(12345);
+        edition.transferOwnership(owner);
+
+        assertTrue(edition.numberMinted(owner) == 0);
+
+        vm.prank(owner);
+        uint32 quantity = 10;
+        edition.mint(owner, quantity);
+
+        assertTrue(edition.numberMinted(owner) == quantity);
     }
 }
