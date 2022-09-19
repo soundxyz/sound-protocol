@@ -8,6 +8,7 @@ import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
 import { IMerkleDropMinter, EditionMintData, MintInfo } from "./interfaces/IMerkleDropMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
+import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 
 /**
  * @title MerkleDropMinter
@@ -24,12 +25,6 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
      *      Maps `edition` => `mintId` => value.
      */
     mapping(address => mapping(uint128 => EditionMintData)) internal _editionMintData;
-
-    /**
-     * @dev Number of tokens minted by each buyer address
-     *      Maps: `edition` => `mintId` => `buyer` => value.
-     */
-    mapping(address => mapping(uint128 => mapping(address => uint256))) public mintedTallies;
 
     // =============================================================
     //                          CONSTRUCTOR
@@ -99,14 +94,11 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         if (!valid) revert InvalidMerkleProof();
 
         unchecked {
-            uint256 userMintedBalance = mintedTallies[edition][mintId][msg.sender];
-            // Check the additional requestedQuantity does not exceed the set maximum.
-            // If `requestedQuantity` is large enough to cause an overflow,
-            // `_mint` will give an out of gas error.
-            uint256 tally = userMintedBalance + requestedQuantity;
-            if (tally > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
-            // Update the minted tally for this account
-            mintedTallies[edition][mintId][msg.sender] = tally;
+            // Check the additional `requestedQuantity` does not exceed the maximum mintable per account.
+            uint256 numberMinted = ISoundEditionV1(edition).numberMinted(msg.sender);
+            // Won't overflow. The total number of tokens minted in `edition` won't exceed `type(uint32).max`,
+            // and `quantity` has 32 bits.
+            if (numberMinted + requestedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
         }
 
         _mint(edition, mintId, requestedQuantity, affiliate);
