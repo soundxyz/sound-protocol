@@ -19,7 +19,7 @@ struct EditionInfo {
     string name;
     // Symbol of the collection.
     string symbol;
-    // Address of the intended funds recipient.
+    // Address that receives primary and secondary royalties.
     address fundingRecipient;
     // The current max mintable amount;
     uint32 editionMaxMintable;
