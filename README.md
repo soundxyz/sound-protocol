@@ -6,8 +6,8 @@ See [spec](./spec.md) for current protocol specification. For details on how to 
 
 ## Deployments
 
--   [mainnet]('/src/json/mainnet.json')
--   [goerli]('/src/json/goerli.json')
+-   [mainnet]('src/json/mainnet.json')
+-   [goerli]('src/json/goerli.json')
 
 # Installation
 
