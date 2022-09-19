@@ -11,7 +11,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 
 /**
  * @title IFixedPriceSignatureMinter
- * @dev Module for fixed-price, signature-authorizd mints of Sound editions.
+ * @dev Module for fixed-price, signature-authorized mints of Sound editions.
  * @author Sound.xyz
  */
 contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
