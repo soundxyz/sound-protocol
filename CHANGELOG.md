@@ -1,5 +1,12 @@
 # @soundxyz/sound-protocol
 
+## 0.5.1
+
+### Patch Changes
+
+-   73e2575: Updates interfaceIds
+-   8b9fd08: Add two step ownership transfer via OwnableRoles to Registry and Creator
+
 ## 0.5.0
 
 ### Minor Changes
