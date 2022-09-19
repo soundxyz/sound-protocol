@@ -1,5 +1,16 @@
 # @soundxyz/sound-protocol
 
+## 0.5.0
+
+### Minor Changes
+
+-   572cf0e: Removes preview & staging address files & updates scripts
+
+### Patch Changes
+
+-   572cf0e: Change to MIT License
+-   06dc842: Use \_numberMinted on edition instead of tally on minter
+
 ## 0.4.7
 
 ### Patch Changes
