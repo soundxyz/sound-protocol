@@ -135,7 +135,9 @@ contracts/
 
 ## Documentation
 
-A comprehensive documentation is currently in the works.
+A comprehensive documentation is currently in the works.  
+
+Please refer to the Natspec comments and [spec](./spec.md) for now for further details.
 
 ## Usage
 
