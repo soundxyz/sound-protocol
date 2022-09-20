@@ -2,6 +2,24 @@
 
 Sound Protocol is a generalized platform for flexible and efficient creation of NFT drops.
 
+## Table of Contents
+
+- [Sound Protocol](#sound-protocol)
+  - [Table of Contents](#table-of-contents)
+  - [Deployments](#deployments)
+  - [Specification](#specification)
+  - [Architecture](#architecture)
+  - [Diagram](#diagram)
+  - [Contracts](#contracts)
+  - [Documentation](#documentation)
+  - [Usage](#usage)
+    - [Prerequisites](#prerequisites)
+    - [Setup](#setup)
+    - [Testing](#testing)
+    - [Deploying](#deploying)
+  - [Bug Bounty](#bug-bounty)
+  - [License](#license)
+
 ## Deployments
 
 Deployed on goerli & mainnet:
@@ -47,13 +65,14 @@ The Sound Protocol comprises of several components:
   This contract can implement any kind of customized sales logic.  
   One or more `MinterContract`s can be used on the `SoundEdition` simultaneously.
 
-- **`MetadataContract`**
-
-  A contract which is called by the `SoundEdition` in the `tokenURI` function for customizable metadata logic.
-
 - **`fundingRecipient`**
 
   Can be a contract such as a [0xSplits](https://github.com/0xSplits/splits-contracts) wallet, or an Externally Owned Account (EOA).
+
+- **`MetadataContract`**
+
+  A contract which is called by the `SoundEdition` in the `tokenURI` function for customizable metadata logic.  
+  Optional, and defaults to regular.
   
 ## Diagram
 
@@ -117,7 +136,7 @@ contracts/
 
 A comprehensive documentation is currently in the works.
 
-## Installation
+## Usage
 
 ### Prerequisites
 
@@ -201,3 +220,11 @@ Then run:
 ```
 pnpm deploy:goerli
 ```
+
+## Bug Bounty
+
+Up to 10 ETH for any critical bugs that could result in loss of funds. Rewards will be given for smaller bugs or ideas.
+
+## License
+
+[MIT](LICENSE) Copyright 2022 Sound.xyz
