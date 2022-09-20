@@ -139,7 +139,7 @@ This section describes, from a security perspective, the expected behavior of th
     - The term "Buyer" is irrespective of price, as mint configurations can be set with price of zero.
 
 ### Trust model
-No contracts in the prevailing Sound Protocol are upgradeable, therefore trust assumptions are minimized. However, given that the protocol is be modular and permissionless, and give edition owners maximum flexibility, there are some important points to consider:
+No contracts in the prevailing Sound Protocol are upgradeable, therefore trust assumptions are minimized. However, given that the protocol is designed to be modular and permissionless, and is intended to give edition owners maximum flexibility, there are some important points to consider:
 - The `SoundEditionV1` owner and admins can change edition parameters after an edition has been deployed:
     - `fundingRecipient` - Account that receives ETH withdrawn from the edition. The funding recipient can be set to a contract address, the security of which is not guaranteed by the Sound Protocol. However, in this case the trust assumptions are limited to the artist and any other parties with whom they are splitting revenue.
     - `baseURI` - Location of the metadata of the edition, which can be changed if the metadata is not in a frozen state.
