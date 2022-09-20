@@ -15,8 +15,8 @@ import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 
 contract Deploy is Script {
-    uint16 private constant PLATFORM_FEE_BPS = 500;
-    address OWNER = vm.envAddress("OWNER");
+    uint16 private PLATFORM_FEE_BPS = uint16(vm.envUint("PLATFORM_FEE_BPS"));
+    address private OWNER = vm.envAddress("OWNER");
 
     function run() external {
         vm.startBroadcast();
