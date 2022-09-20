@@ -99,7 +99,7 @@ contracts/
 │   └── utils
 │       └── ArweaveURILib.sol * ─ "For efficient storage of Arweave URIs"
 └── modules
-    ├── BaseMinter.sol * ─ "Contains shared minting logic"
+    ├── BaseMinter.sol * ─ "Shared minting logic"
     ├── EditionMaxMinter.sol * ─ "Minimalistic minter"
     ├── FixedPriceSignatureMinter.sol * ─ "For permissioned mints via ECDSA signatures"
     ├── MerkleDropMinter.sol * ─ "For permissioned mints via Merkle proofs"
@@ -167,14 +167,6 @@ A comprehensive documentation is currently in the works.
     ```
     pnpm test:gas
     ```
-
-### Code conventions
-
-We generally follow OpenZeppelin's conventions:
-
--   Underscore `_before` private variables.
--   Underscore `after_` function arguments which shadow globals.
--   [Natspec](https://docs.soliditylang.org/en/develop/natspec-format.html) format for comments, using `@dev` for function descriptions.
 
 ### Testing
 
