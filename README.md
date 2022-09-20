@@ -51,7 +51,7 @@ The Sound Protocol comprises of several components:
 
   A contract which is called by the `SoundEdition` in the `tokenURI` function for customizable metadata logic.
 
-- **`PaymentContract`**
+- **`fundingRecipient`**
 
   Can be a contract such as a [0xSplits](https://github.com/0xSplits/splits-contracts) wallet, or an Externally Owned Account (EOA).
   
@@ -208,5 +208,4 @@ Then run:
 
 ```
 pnpm deploy:goerli
-
 ```
