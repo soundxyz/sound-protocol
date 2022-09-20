@@ -70,17 +70,17 @@ graph TD
     tokenURI
     end
 
-    tokenURI --> MetadataContract
+    tokenURI -.-> MetadataContract
     MinterContract --> mint
-    withdrawETH --> PaymentContract
-    withdrawERC20 --> PaymentContract
+    withdrawETH --> fundingRecipient
+    withdrawERC20 --> fundingRecipient
 ```
 
 ## Contracts
 
 The smart contracts are stored under the `contracts` directory.
 
-Files marked with an asterik (*) are specific to [sound.xyz](https://sound.xyz),  
+Files marked with an asterik (\*) are specific to [sound.xyz](https://sound.xyz),  
 but you can refer to them if you are building contracts to interact with them on-chain,   
 or building your own customized versions.
 
@@ -92,7 +92,7 @@ contracts/
 │   ├── SoundFeeRegistry.sol * ─ "Platform fee registry"
 │   ├── interfaces
 │   │   ├── IMetadataModule.sol ─ "Metadata module interface"
-│   │   ├── IMinterModule.sol * ─ "Generalized minter interface"
+│   │   ├── IMinterModule.sol ─ "Generalized minter interface"
 │   │   ├── ISoundCreatorV1.sol ─ "Factory interface"
 │   │   ├── ISoundEditionV1.sol ─ "NFT implementation interface"
 │   │   └── ISoundFeeRegistry.sol * ─ "Platform fee registry interface"
