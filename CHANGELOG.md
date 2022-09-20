@@ -1,5 +1,15 @@
 # @soundxyz/sound-protocol
 
+## 1.0.0
+
+### Major Changes
+
+-   4601b9a: Sound Protocol mainnet deployment ✨
+
+### Patch Changes
+
+-   3ec95f8: Readme cleanup
+
 ## 0.5.1
 
 ### Patch Changes
