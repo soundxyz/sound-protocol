@@ -2,7 +2,7 @@
 
 ## Specification
 
-See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec. Documenation coming soon.
+See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec. Documentation coming soon.
 
 ## Addresses
 
