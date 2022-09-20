@@ -58,9 +58,8 @@ The Sound Protocol comprises of several components:
 ## Diagram
 
 ```mermaid
-graph TD
+flowchart LR
     SoundCreatorV1 --> initialize
-    SoundCreatorV1 --> MinterContract
 
     subgraph SoundEditionV1
     initialize
@@ -71,7 +70,9 @@ graph TD
     end
 
     tokenURI -.-> MetadataContract
-    MinterContract --> mint
+    A[Minter A] --> mint
+    B[Minter B] --> mint
+    C[Minter C] --> mint
     withdrawETH --> fundingRecipient
     withdrawERC20 --> fundingRecipient
 ```
