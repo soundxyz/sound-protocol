@@ -1,10 +1,8 @@
 # Sound Protocol
 
-## Specification
+Sound Protocol is a generalized platform for flexible and efficient creation of NFT drops.
 
-See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec. Documentation coming soon.
-
-## Addresses
+## Deployments
 
 Deployed on goerli & mainnet:
 
@@ -20,6 +18,105 @@ Deployed on goerli & mainnet:
 | `SoundCreatorV1` | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
 
 ---
+
+## Specification
+
+See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec. Documentation coming soon.
+
+## Architecture
+
+The Sound Protocol comprises of several components: 
+
+- **`SoundEdition`**  
+
+  The NFT contract.
+
+  An [ERC721A](https://github.com/chiru-labs/ERC721A) contract deployed via the [minimal proxy clone](https://eips.ethereum.org/EIPS/eip-1167) pattern.
+
+  The `mint` function allows authorized minter contracts or administrators to batch mint NFTs  
+  (authorization is granted via the `MINTER_ROLE` or `ADMIN_ROLE`).
+
+- **`SoundCreator`** 
+
+  A factory that allows for a single transaction setup that:
+  1. Deploys and initializes `SoundEdition`.
+  2. Authorize one or more `MinterContract`s on `SoundEdition`.   
+  3. Configure one or more `MinterContract`s to mint on `SoundEdition`. 
+
+- **`MinterContract`**
+
+  A contract to call the `mint` function on `SoundEdition`.  
+  This contract can implement any kind of customized sales logic.  
+  One or more `MinterContract`s can be used on the `SoundEdition` simultaneously.
+
+- **`MetadataContract`**
+
+  A contract which is called by the `SoundEdition` in the `tokenURI` function for customizable metadata logic.
+
+- **`PaymentContract`**
+
+  Can be a contract such as a [0xSplits](https://github.com/0xSplits/splits-contracts) wallet, or an Externally Owned Account (EOA).
+
+## Contracts
+
+The smart contracts are stored under the `contracts` directory.
+
+Files marked with an asterik (*) are specific to [sound.xyz](https://sound.xyz),  
+but you can refer to them if you are building contracts to interact with them on-chain,   
+or building your own customized versions.
+
+```ml
+contracts/
+├── core
+│   ├── SoundCreatorV1.sol ─ "Factory"
+│   ├── SoundEditionV1.sol ─ "NFT implementation"
+│   ├── SoundFeeRegistry.sol ─ "For handling of platform fees *"
+│   ├── interfaces
+│   │   ├── IMetadataModule.sol
+│   │   ├── IMinterModule.sol ─ "Generalized minter interface *"
+│   │   ├── ISoundCreatorV1.sol
+│   │   ├── ISoundEditionV1.sol
+│   │   └── ISoundFeeRegistry.sol
+│   └── utils
+│       └── ArweaveURILib.sol
+└── modules
+    ├── BaseMinter.sol ─ "For handling of platform fees (specific to sound)."
+    ├── EditionMaxMinter.sol
+    ├── FixedPriceSignatureMinter.sol
+    ├── GoldenEggMetadata.sol
+    ├── MerkleDropMinter.sol
+    ├── RangeEditionMinter.sol
+    └── interfaces
+        ├── IEditionMaxMinter.sol
+        ├── IFixedPriceSignatureMinter.sol
+        ├── IGoldenEggMetadata.sol
+        ├── IMerkleDropMinter.sol
+        └── IRangeEditionMinter.sol
+```
+
+## Diagram
+
+```mermaid
+graph TD
+    SoundCreator --> initialize
+    SoundCreator --> MinterContract
+
+    subgraph SoundEdition[ ]
+    initialize
+    mint
+    withdraw
+    tokenURI
+    end
+
+    tokenURI --> MetadataContract
+    MinterContract --> mint
+    withdraw --> PaymentContract
+
+```
+
+## Documentation
+
+A comprehensive documentation is currently in the works.
 
 ## Installation
 
@@ -79,7 +176,8 @@ We generally follow OpenZeppelin's conventions:
 -   Underscore `_before` private variables.
 -   Underscore `after_` function arguments which shadow globals.
 -   [Natspec](https://docs.soliditylang.org/en/develop/natspec-format.html) format for comments, using `@dev` for function descriptions.
-### Run tests
+
+### Testing
 
 (`v` == logs verbosity)
 
@@ -95,7 +193,7 @@ pnpm test:coverage
 
 This will produce the coverage report in `/coverage` folder. Note that `forge coverage` is still in active development so it often claims if/else branches are uncovered even when there are tests executed on them.
 
-### Deployment
+### Deploying
 
 Create a .env in the root with:
 
