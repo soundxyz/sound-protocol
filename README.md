@@ -17,8 +17,6 @@ Deployed on goerli & mainnet:
 | `SoundEditionV1` | 0x8cfbfae570d673864cd61e1e4543eb7874ca35c2
 | `SoundCreatorV1` | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
 
----
-
 ## Specification
 
 See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec. Documentation coming soon.
@@ -67,31 +65,31 @@ or building your own customized versions.
 
 ```ml
 contracts/
-├── core
-│   ├── SoundCreatorV1.sol ─ "Factory"
-│   ├── SoundEditionV1.sol ─ "NFT implementation"
-│   ├── SoundFeeRegistry.sol ─ "For handling of platform fees *"
-│   ├── interfaces
-│   │   ├── IMetadataModule.sol
-│   │   ├── IMinterModule.sol ─ "Generalized minter interface *"
-│   │   ├── ISoundCreatorV1.sol
-│   │   ├── ISoundEditionV1.sol
-│   │   └── ISoundFeeRegistry.sol
-│   └── utils
-│       └── ArweaveURILib.sol
-└── modules
-    ├── BaseMinter.sol ─ "For handling of platform fees (specific to sound)."
-    ├── EditionMaxMinter.sol
-    ├── FixedPriceSignatureMinter.sol
-    ├── GoldenEggMetadata.sol
-    ├── MerkleDropMinter.sol
-    ├── RangeEditionMinter.sol
-    └── interfaces
-        ├── IEditionMaxMinter.sol
-        ├── IFixedPriceSignatureMinter.sol
-        ├── IGoldenEggMetadata.sol
-        ├── IMerkleDropMinter.sol
-        └── IRangeEditionMinter.sol
+├─ core
+│  ├─ SoundCreatorV1.sol ─ "Factory"
+│  ├─ SoundEditionV1.sol ─ "NFT implementation"
+│  ├─ SoundFeeRegistry.sol * ─ "Platform fee registry"
+│  ├─ interfaces
+│  │  ├─ IMetadataModule.sol ─ "Metadata module interface"
+│  │  ├─ IMinterModule.sol * ─ "Generalized minter interface"
+│  │  ├─ ISoundCreatorV1.sol ─ "Factory interface"
+│  │  ├─ ISoundEditionV1.sol ─ "NFT implementation interface"
+│  │  └─ ISoundFeeRegistry.sol * ─ "Platform fee registry interface"
+│  └─ utils
+│     └─ ArweaveURILib.sol * ─ "For efficient storage of Arweave URIs"
+└─ modules
+   ├─ BaseMinter.sol * ─ "Contains shared minting logic"
+   ├─ EditionMaxMinter.sol * ─ "Minimalistic minter"
+   ├─ FixedPriceSignatureMinter.sol * ─ "For permissioned mints via ECDSA signatures"
+   ├─ MerkleDropMinter.sol * ─ "For permissioned mints via Merkle proofs"
+   ├─ RangeEditionMinter.sol * ─ "Range edition minter"
+   ├─ GoldenEggMetadata.sol * ─ "For the on-chain golden egg metadata"
+   └─ interfaces
+      ├─ IEditionMaxMinter.sol *
+      ├─ IFixedPriceSignatureMinter.sol *
+      ├─ IMerkleDropMinter.sol *
+      ├─ IRangeEditionMinter.sol *
+      └─ IGoldenEggMetadata.sol *
 ```
 
 ## Diagram
