@@ -2,16 +2,28 @@
 
 ## Specification
 
-See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec.
+See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec. Documentation coming soon.
 
-## Deployments
+## Addresses
 
--   [mainnet]('src/json/mainnet.json')
--   [goerli]('src/json/goerli.json')
+Deployed on goerli & mainnet:
 
-# Installation
+| Contract  |  Address |
+|---|---|
+| `SoundFeeRegistry` | 0x8f921211c9771baeb648ac7becb322a540298a4b |
+| `GoldenEggMetadata` | 0x3ca50e8da8c3d359fc934aea0161f5346ccb62a1
+| `FixedPriceSignatureMinter` | 0xc47306699611fc4c84744dcd7f458938b829506a
+| `MerkleDropMinter` | 0xeae422887230c0ffb91fd8f708f5fdd354c92f2f
+| `RangeEditionMinter` | 0x65c25fadd9b88df5c8c101a3b99a5d614b708596
+| `EditionMaxMinter` | 0xb1e015816c823f556d1eb921042bb09ed41db8a7
+| `SoundEditionV1` | 0x8cfbfae570d673864cd61e1e4543eb7874ca35c2
+| `SoundCreatorV1` | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
 
-## Prerequisites
+---
+
+## Installation
+
+### Prerequisites
 
 -   [git](https://git-scm.com/downloads)
 -   [nodeJS](https://nodejs.org/en/download/)
@@ -20,59 +32,56 @@ See [spec](./spec.md) for current protocol specification. For details on how to 
 -   [brew](https://brew.sh/)
 -   [foundry](https://getfoundry.sh) - You can run `sh ./setup.sh` to install Foundry and its dependencies.
 
-## Setup
+### Setup
 
 -   Clone the repository
 
-```bash
-git clone git@github.com:soundxyz/sound-protocol.git
-cd sound-protocol
-```
+    ```bash
+    git clone git@github.com:soundxyz/sound-protocol.git
+    cd sound-protocol
+    ```
 
 -   Setup node version
     Either install the version specified in `nvmrc` or use `nvm` to set it up:
 
-```
-nvm use
-```
+    ```
+    nvm use
+    ```
 
 -   Install packages
 
-```
-pnpm install
-```
+    ```
+    pnpm install
+    ```
 
 -   Build contracts
 
-```
-pnpm build
-```
+    ```
+    pnpm build
+    ```
 
 -   Run tests
 
-```
-pnpm test
-```
+    ```
+    pnpm test
+    ```
 
 -   Print gas reports from tests
 
-```
-pnpm test:gas
-```
+    ```
+    pnpm test:gas
+    ```
 
-## Code conventions
+### Code conventions
 
 We generally follow OpenZeppelin's conventions:
 
 -   Underscore `_before` private variables.
 -   Underscore `after_` function arguments which shadow globals.
 -   [Natspec](https://docs.soliditylang.org/en/develop/natspec-format.html) format for comments, using `@dev` for function descriptions.
+### Run tests
 
-To run prettier on all solidity files, uncomment the last line in `.prettierrc.js`, then run `npx prettier --write ./contracts/**/*.sol`
-
-## Testing
-
-To see logs when testing (`v` == verbosity):
+(`v` == logs verbosity)
 
 `forge test -vvv`
 
@@ -86,7 +95,7 @@ pnpm test:coverage
 
 This will produce the coverage report in `/coverage` folder. Note that `forge coverage` is still in active development so it often claims if/else branches are uncovered even when there are tests executed on them.
 
-## Deployment
+### Deployment
 
 Create a .env in the root with:
 
@@ -102,10 +111,5 @@ Then run:
 
 ```
 pnpm deploy:goerli
-```
 
-According to the foundry docs, we _should_ be able to verify on etherscan by appending this to the above command: ` --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv`, but that doesn't seem to work. Instead, we can verify each contract individually. Ex:
-
-```
-forge verify-contract --chain-id 5 --num-of-optimizations 200 --compiler-version v0.8.15 0x4613283c53669847c40eb0cf7946f1fb30b1f030 contracts/modules/Metadata/GoldenEggMetadataModule.sol:GoldenEggMetadataModule
 ```
