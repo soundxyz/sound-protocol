@@ -54,44 +54,7 @@ The Sound Protocol comprises of several components:
 - **`PaymentContract`**
 
   Can be a contract such as a [0xSplits](https://github.com/0xSplits/splits-contracts) wallet, or an Externally Owned Account (EOA).
-
-## Contracts
-
-The smart contracts are stored under the `contracts` directory.
-
-Files marked with an asterik (*) are specific to [sound.xyz](https://sound.xyz),  
-but you can refer to them if you are building contracts to interact with them on-chain,   
-or building your own customized versions.
-
-```ml
-contracts/
-├─ core
-│  ├─ SoundCreatorV1.sol ─ "Factory"
-│  ├─ SoundEditionV1.sol ─ "NFT implementation"
-│  ├─ SoundFeeRegistry.sol * ─ "Platform fee registry"
-│  ├─ interfaces
-│  │  ├─ IMetadataModule.sol ─ "Metadata module interface"
-│  │  ├─ IMinterModule.sol * ─ "Generalized minter interface"
-│  │  ├─ ISoundCreatorV1.sol ─ "Factory interface"
-│  │  ├─ ISoundEditionV1.sol ─ "NFT implementation interface"
-│  │  └─ ISoundFeeRegistry.sol * ─ "Platform fee registry interface"
-│  └─ utils
-│     └─ ArweaveURILib.sol * ─ "For efficient storage of Arweave URIs"
-└─ modules
-   ├─ BaseMinter.sol * ─ "Contains shared minting logic"
-   ├─ EditionMaxMinter.sol * ─ "Minimalistic minter"
-   ├─ FixedPriceSignatureMinter.sol * ─ "For permissioned mints via ECDSA signatures"
-   ├─ MerkleDropMinter.sol * ─ "For permissioned mints via Merkle proofs"
-   ├─ RangeEditionMinter.sol * ─ "Range edition minter"
-   ├─ GoldenEggMetadata.sol * ─ "For the on-chain golden egg metadata"
-   └─ interfaces
-      ├─ IEditionMaxMinter.sol *
-      ├─ IFixedPriceSignatureMinter.sol *
-      ├─ IMerkleDropMinter.sol *
-      ├─ IRangeEditionMinter.sol *
-      └─ IGoldenEggMetadata.sol *
-```
-
+  
 ## Diagram
 
 ```mermaid
@@ -110,6 +73,43 @@ graph TD
     MinterContract --> mint
     withdraw --> PaymentContract
 
+```
+
+## Contracts
+
+The smart contracts are stored under the `contracts` directory.
+
+Files marked with an asterik (*) are specific to [sound.xyz](https://sound.xyz),  
+but you can refer to them if you are building contracts to interact with them on-chain,   
+or building your own customized versions.
+
+```ml
+contracts/
+├── core
+│   ├── SoundCreatorV1.sol ─ "Factory"
+│   ├── SoundEditionV1.sol ─ "NFT implementation"
+│   ├── SoundFeeRegistry.sol * ─ "Platform fee registry"
+│   ├── interfaces
+│   │   ├── IMetadataModule.sol ─ "Metadata module interface"
+│   │   ├── IMinterModule.sol * ─ "Generalized minter interface"
+│   │   ├── ISoundCreatorV1.sol ─ "Factory interface"
+│   │   ├── ISoundEditionV1.sol ─ "NFT implementation interface"
+│   │   └── ISoundFeeRegistry.sol * ─ "Platform fee registry interface"
+│   └── utils
+│       └── ArweaveURILib.sol * ─ "For efficient storage of Arweave URIs"
+└── modules
+    ├── BaseMinter.sol * ─ "Contains shared minting logic"
+    ├── EditionMaxMinter.sol * ─ "Minimalistic minter"
+    ├── FixedPriceSignatureMinter.sol * ─ "For permissioned mints via ECDSA signatures"
+    ├── MerkleDropMinter.sol * ─ "For permissioned mints via Merkle proofs"
+    ├── RangeEditionMinter.sol * ─ "Cuts off mints after a set time if a quota is hit"
+    ├── GoldenEggMetadata.sol * ─ "For the on-chain golden egg metadata"
+    └── interfaces
+        ├── IEditionMaxMinter.sol *
+        ├── IFixedPriceSignatureMinter.sol *
+        ├── IMerkleDropMinter.sol *
+        ├── IRangeEditionMinter.sol *
+        └── IGoldenEggMetadata.sol *
 ```
 
 ## Documentation
