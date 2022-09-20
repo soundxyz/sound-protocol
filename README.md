@@ -72,7 +72,7 @@ The Sound Protocol comprises of several components:
 - **`MetadataContract`**
 
   A contract which is called by the `SoundEdition` in the `tokenURI` function for customizable metadata logic.  
-  Optional, and defaults to regular.
+  Optional.
   
 ## Diagram
 
