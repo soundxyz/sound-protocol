@@ -153,4 +153,9 @@ No contracts in the prevailing Sound Protocol are upgradeable, therefore trust a
     - Time values (`startTime`, `cutoffTime`, `endTime`)
     - `paused` - Whether a given mint schedule is paused or not.
     - `affiliateFeeBPS` - The affiliate fee percentage paid to the affiliate address from primary sales.
+    - `price` - The price of the token in ETH.
+    - `maxMintablePerAccount` - The maximum number of tokens that can be minted by a single account.
+    - The mintable quantity for a given mint schedule.
+    - `signer` - The signer address used to authorizing minting (only applies to `FixedPriceSignatureMinter`).
+    - `merkleRootHash` - The root hash of the merkle tree of accounts allowed to mint (only applies to `MerkleDropMinter`).
 - Minter or metadata modules deployed in the future may have different trust assumptions than existing minter contracts. 
