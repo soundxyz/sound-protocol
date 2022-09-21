@@ -15,24 +15,28 @@ import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 
 contract Deploy is Script {
-    uint16 private constant PLATFORM_FEE_BPS = 500;
-    address OWNER = vm.envAddress("OWNER");
+    bool private ONLY_MINTERS = vm.envBool("ONLY_MINTERS");
+    uint16 private PLATFORM_FEE_BPS = uint16(vm.envUint("PLATFORM_FEE_BPS"));
+    address private OWNER = vm.envAddress("OWNER");
 
     function run() external {
         vm.startBroadcast();
 
-        // Deploy the SoundFeeRegistry
+        // Deploy registry and transfer ownership to given owner
         SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(OWNER, PLATFORM_FEE_BPS);
-
-        // Make the gnosis safe the owner of SoundFeeRegistry
         soundFeeRegistry.transferOwnership(OWNER);
-
-        // Deploy modules
-        new GoldenEggMetadata();
+    
+        // Deploy minter modules
         new FixedPriceSignatureMinter(soundFeeRegistry);
         new MerkleDropMinter(soundFeeRegistry);
         new RangeEditionMinter(soundFeeRegistry);
         new EditionMaxMinter(soundFeeRegistry);
+
+        // If only deploying minters, we're done.
+        if (ONLY_MINTERS) return;
+
+        // Deploy golden egg module
+        new GoldenEggMetadata();
 
         // Deploy edition implementation (& initialize it for security)
         SoundEditionV1 editionImplementation = new SoundEditionV1();
