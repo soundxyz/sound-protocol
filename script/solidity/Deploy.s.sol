@@ -22,11 +22,8 @@ contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
 
-        // Deploy the SoundFeeRegistry
-        SoundFeeRegistry soundFeeRegistry;
-
         // Deploy registry and transfer ownership to given owner
-        soundFeeRegistry = new SoundFeeRegistry(OWNER, PLATFORM_FEE_BPS);
+        SoundFeeRegistry soundFeeRegistry = new SoundFeeRegistry(OWNER, PLATFORM_FEE_BPS);
         soundFeeRegistry.transferOwnership(OWNER);
     
         // Deploy minter modules
