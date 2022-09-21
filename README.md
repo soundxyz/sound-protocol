@@ -22,16 +22,15 @@ Sound Protocol is a generalized platform for flexible and efficient creation of 
 
 ## Deployments
 
-Deployed on goerli & mainnet:
+Permissionless zero-fee deployments on Goerli testnet and Mainnet:
 
 | Contract  |  Address |
 |---|---|
-| `SoundFeeRegistry` | 0x8f921211c9771baeb648ac7becb322a540298a4b |
 | `GoldenEggMetadata` | 0x3ca50e8da8c3d359fc934aea0161f5346ccb62a1
-| `FixedPriceSignatureMinter` | 0xc47306699611fc4c84744dcd7f458938b829506a
-| `MerkleDropMinter` | 0xeae422887230c0ffb91fd8f708f5fdd354c92f2f
-| `RangeEditionMinter` | 0x65c25fadd9b88df5c8c101a3b99a5d614b708596
-| `EditionMaxMinter` | 0xb1e015816c823f556d1eb921042bb09ed41db8a7
+| `FixedPriceSignatureMinter` | 0xc8ae7e42e834bc11c906d01726e55571a0620158
+| `MerkleDropMinter` | 0xda4b6fbb85918700e5ee91f6ce3cc2148af02912
+| `RangeEditionMinter` | 0x4552f8b70a72a8ea1084bf7b7ba50f10f2f9daa7
+| `EditionMaxMinter` | 0x5e5d50ea70c9a1b6ed64506f121b094156b8fd20
 | `SoundEditionV1` | 0x8cfbfae570d673864cd61e1e4543eb7874ca35c2
 | `SoundCreatorV1` | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
 
