@@ -22,11 +22,10 @@ Sound Protocol is a generalized platform for flexible and efficient creation of 
 
 ## Deployments
 
-All contracts are deployed on Goerli testnet and Mainnet.
+Permissionless zero-fee deployments on Goerli testnet and Mainnet:
 
 | Contract  |  Address |
 |---|---|
-| `SoundFeeRegistry` | 0x8f921211c9771baeb648ac7becb322a540298a4b |
 | `GoldenEggMetadata` | 0x3ca50e8da8c3d359fc934aea0161f5346ccb62a1
 | `FixedPriceSignatureMinter` | 0xc8ae7e42e834bc11c906d01726e55571a0620158
 | `MerkleDropMinter` | 0xda4b6fbb85918700e5ee91f6ce3cc2148af02912
