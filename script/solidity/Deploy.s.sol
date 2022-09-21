@@ -15,8 +15,8 @@ import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 
 contract Deploy is Script {
-    bool private ONLY_FREE_MINTERS = vm.envBool("ONLY_FREE_MINTERS");
-    uint16 private PLATFORM_FEE_BPS = 500;
+    bool private ONLY_MINTERS = vm.envBool("ONLY_MINTERS");
+    uint16 private PLATFORM_FEE_BPS = uint16(vm.envUint("PLATFORM_FEE_BPS"));
     address private OWNER = vm.envAddress("OWNER");
 
     function run() external {
@@ -24,24 +24,19 @@ contract Deploy is Script {
 
         // Deploy the SoundFeeRegistry
         SoundFeeRegistry soundFeeRegistry;
-        if (ONLY_FREE_MINTERS) {
-            // No need for the fee registry to exist if all minters are free
-            // Just need a non-zero address
-            soundFeeRegistry = SoundFeeRegistry(address(1));
-        } else {
-            // Deploy registry and transfer ownership to given owner
-            soundFeeRegistry = new SoundFeeRegistry(OWNER, PLATFORM_FEE_BPS);
-            soundFeeRegistry.transferOwnership(OWNER);
-        }
 
+        // Deploy registry and transfer ownership to given owner
+        soundFeeRegistry = new SoundFeeRegistry(OWNER, PLATFORM_FEE_BPS);
+        soundFeeRegistry.transferOwnership(OWNER);
+    
         // Deploy minter modules
         new FixedPriceSignatureMinter(soundFeeRegistry);
         new MerkleDropMinter(soundFeeRegistry);
         new RangeEditionMinter(soundFeeRegistry);
         new EditionMaxMinter(soundFeeRegistry);
 
-        // If only deploying free minters, we're done.
-        if (ONLY_FREE_MINTERS) return;
+        // If only deploying minters, we're done.
+        if (ONLY_MINTERS) return;
 
         // Deploy golden egg module
         new GoldenEggMetadata();
