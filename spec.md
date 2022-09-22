@@ -81,7 +81,7 @@ Features:
 
 -   Minter modules must implement `IMinterModule.sol`
 -   Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
--   Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the `SoundEditionV1.editionMaxMintable`. It is up to the artist to initialize the `editionMaxMintable` with a value high enough to accomodate all current & future mints.
+-   Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the quantity set on the edition. It is up to the artist to initialize the `editionMaxMintableLower` and `editionMaxMintableHigher` with values high enough to accomodate all current & future mints.
 -   Affiliate fee: Third parties can collect an affiliate fee by setting an address when minting. The fee is set by the artist when initializing the mint instance. Example use-case: a music blog that exposes a UI to mint songs it is promoting.
 -   Current modules:
     -   `FixedPriceSignatureMinter`
@@ -92,7 +92,7 @@ Features:
     -   `RangeEditionMinter`
         -   Mints either a fixed quantity or a quantity [within a range](https://sound.mirror.xyz/hmz2pueqBV37MD-mULjvch0vQoc-VKJdsfqXf8jTB30) based on time bounds.
         -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.
-    -   `PublicSaleMinter`
+    -   `EditionMaxMinter`
         -   Mints tokens at a fixed price.
         -   The quantity of tokens an address can mint is constrained by `maxMintablePerAccount`.
     -   `MerkleDropMinter`
