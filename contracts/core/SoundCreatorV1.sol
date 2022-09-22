@@ -28,7 +28,6 @@ pragma solidity ^0.8.16;
 */
 
 import { Clones } from "openzeppelin/proxy/Clones.sol";
-import { UUPSUpgradeable } from "openzeppelin-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import { ISoundCreatorV1 } from "./interfaces/ISoundCreatorV1.sol";
 import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
