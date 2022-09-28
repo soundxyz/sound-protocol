@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 1.1.0
+
+### Minor Changes
+
+-   776aa88: Updates addresses json with free minters
+
 ## 1.0.0
 
 ### Major Changes
