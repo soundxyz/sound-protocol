@@ -37,7 +37,7 @@ import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
 /**
  * @title SoundCreatorV1
- * @notice A factory that deploys minimal proxies of `SoundEditionV1.sol`.
+ * @dev A factory that deploys minimal proxies of `SoundEditionV1.sol`.
  * @dev The proxies are OpenZeppelin's Clones implementation of https://eips.ethereum.org/EIPS/eip-1167
  */
 contract SoundCreatorV1 is ISoundCreatorV1, OwnableRoles {

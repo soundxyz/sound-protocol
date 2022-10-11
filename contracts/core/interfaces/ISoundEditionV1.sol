@@ -55,7 +55,7 @@ struct EditionInfo {
 
 /**
  * @title ISoundEditionV1
- * @notice The interface for Sound edition contracts.
+ * @dev The interface for Sound edition contracts.
  */
 interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // =============================================================

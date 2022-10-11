@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 /**
  * @title IMetadataModule
- * @notice The interface for custom metadata modules.
+ * @dev The interface for custom metadata modules.
  */
 interface IMetadataModule {
     /**

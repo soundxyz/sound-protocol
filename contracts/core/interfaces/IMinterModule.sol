@@ -6,7 +6,7 @@ import { ISoundFeeRegistry } from "./ISoundFeeRegistry.sol";
 
 /**
  * @title IMinterModule
- * @notice The interface for Sound protocol minter modules.
+ * @dev The interface for Sound protocol minter modules.
  */
 interface IMinterModule is IERC165 {
     // =============================================================
@@ -63,7 +63,7 @@ interface IMinterModule is IERC165 {
     event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
     /**
-     * @notice Emitted when the `affiliateFeeBPS` is updated.
+     * @dev Emitted when the `affiliateFeeBPS` is updated.
      * @param edition The edition address.
      * @param mintId  The mint ID, to distinguish between multiple mints for the same edition.
      * @param bps     The affiliate fee basis points.
@@ -71,7 +71,7 @@ interface IMinterModule is IERC165 {
     event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 bps);
 
     /**
-     * @notice Emitted when a mint happens.
+     * @dev Emitted when a mint happens.
      * @param edition            The edition address.
      * @param mintId             The mint ID, to distinguish between multiple mints for
      *                           the same edition.

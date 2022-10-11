@@ -11,7 +11,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 
 /*
  * @title RangeEditionMinter
- * @notice Module for range edition mints of Sound editions.
+ * @dev Module for range edition mints of Sound editions.
  * @author Sound.xyz
  */
 contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
