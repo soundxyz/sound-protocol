@@ -666,6 +666,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function _initializeNameAndSymbol(string memory name_, string memory symbol_) internal {
         // Overflow impossible since max block gas limit bounds the length of the strings.
         unchecked {
+            // Returns `bytes32(0)` if the strings are too long to be packed into a single word.
             bytes32 packed = LibString.packTwo(name_, symbol_);
             // If we cannot pack both strings into a single 32-byte word, store separately.
             // We need 2 bytes to store their lengths.
