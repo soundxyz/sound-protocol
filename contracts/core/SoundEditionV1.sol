@@ -36,6 +36,7 @@ import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC298
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { LibString } from "solady/utils/LibString.sol";
 
 import { ISoundEditionV1, EditionInfo } from "./interfaces/ISoundEditionV1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
@@ -665,18 +666,16 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function _initializeNameAndSymbol(string memory name_, string memory symbol_) internal {
         // Overflow impossible since max block gas limit bounds the length of the strings.
         unchecked {
-            uint256 nameLength = bytes(name_).length;
-            uint256 symbolLength = bytes(symbol_).length;
-            uint256 totalLength = nameLength + symbolLength;
+            bytes32 packed = LibString.packTwo(name_, symbol_);
             // If we cannot pack both strings into a single 32-byte word, store separately.
             // We need 2 bytes to store their lengths.
-            if (totalLength > 32 - 2) {
+            if (packed == bytes32(0)) {
                 ERC721AStorage.layout()._name = name_;
                 ERC721AStorage.layout()._symbol = symbol_;
                 return;
             }
             // Otherwise, pack them and store them into a single word.
-            _shortNameAndSymbol = bytes32(abi.encodePacked(uint8(nameLength), name_, uint8(symbolLength), symbol_));
+            _shortNameAndSymbol = packed;
         }
     }
 
@@ -692,19 +691,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             bytes32 packed = _shortNameAndSymbol;
             // If the strings have been previously packed.
             if (packed != bytes32(0)) {
-                // Allocate the bytes.
-                bytes memory nameBytes = new bytes(uint8(packed[0]));
-                bytes memory symbolBytes = new bytes(uint8(packed[1 + nameBytes.length]));
-                // Copy the bytes.
-                for (uint256 i; i < nameBytes.length; ++i) {
-                    nameBytes[i] = bytes1(packed[1 + i]);
-                }
-                for (uint256 i; i < symbolBytes.length; ++i) {
-                    symbolBytes[i] = bytes1(packed[2 + nameBytes.length + i]);
-                }
-                // Cast the bytes.
-                name_ = string(nameBytes);
-                symbol_ = string(symbolBytes);
+                (name_, symbol_) = LibString.unpackTwo(packed);
             } else {
                 // Otherwise, load them from their separate variables.
                 name_ = ERC721AStorage.layout()._name;
