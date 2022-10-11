@@ -6,7 +6,7 @@ import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 
 /**
  * @title IGoldenEggMetadata
- * @dev The interface for the Sound Golden Egg metadata module.
+ * @notice The interface for the Sound Golden Egg metadata module.
  */
 interface IGoldenEggMetadata is IMetadataModule {
     /**

@@ -5,7 +5,7 @@ import { IMetadataModule } from "./IMetadataModule.sol";
 
 /**
  * @title ISoundCreatorV1
- * @dev The interface for the Sound edition factory.
+ * @notice The interface for the Sound edition factory.
  */
 interface ISoundCreatorV1 {
     // =============================================================

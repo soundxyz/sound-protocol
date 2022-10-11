@@ -44,7 +44,7 @@ import { ArweaveURILib } from "./utils/ArweaveURILib.sol";
 
 /**
  * @title SoundEditionV1
- * @dev The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
+ * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
 contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
     using ArweaveURILib for ArweaveURILib.URI;

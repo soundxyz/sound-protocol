@@ -11,7 +11,7 @@ import { ISoundEditionV1, EditionInfo } from "@core/interfaces/ISoundEditionV1.s
 
 /*
  * @title EditionMaxMinter
- * @dev Module for unpermissioned mints of Sound editions.
+ * @notice Module for unpermissioned mints of Sound editions.
  * @author Sound.xyz
  */
 contract EditionMaxMinter is IEditionMaxMinter, BaseMinter {

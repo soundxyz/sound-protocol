@@ -6,7 +6,7 @@ import { ISoundFeeRegistry } from "./ISoundFeeRegistry.sol";
 
 /**
  * @title IMinterModule
- * @dev The interface for Sound protocol minter modules.
+ * @notice The interface for Sound protocol minter modules.
  */
 interface IMinterModule is IERC165 {
     // =============================================================
