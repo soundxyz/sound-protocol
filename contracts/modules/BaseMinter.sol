@@ -184,7 +184,7 @@ abstract contract BaseMinter is IMinterModule {
     function totalPrice(
         address edition,
         uint128 mintId,
-        address minter,
+        address to,
         uint32 quantity
     ) public view virtual override returns (uint128);
 

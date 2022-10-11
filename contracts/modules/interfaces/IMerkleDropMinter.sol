@@ -171,7 +171,7 @@ interface IMerkleDropMinter is IMinterModule {
         address affiliate
     ) external payable;
 
-    /*
+    /**
      * @dev Sets the `price` for (`edition`, `mintId`).
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId  The mint ID.
@@ -183,7 +183,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint96 price
     ) external;
 
-    /*
+    /**
      * @dev Sets the `maxMintablePerAccount` for (`edition`, `mintId`).
      * @param edition               Address of the song edition contract we are minting for.
      * @param mintId                The mint ID.
@@ -195,7 +195,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 maxMintablePerAccount
     ) external;
 
-    /*
+    /**
      * @dev Sets the `maxMintable` for (`edition`, `mintId`).
      * @param edition               Address of the song edition contract we are minting for.
      * @param mintId                The mint ID.
@@ -207,7 +207,7 @@ interface IMerkleDropMinter is IMinterModule {
         uint32 maxMintable
     ) external;
 
-    /*
+    /**
      * @dev Sets the `merkleRootHash` for (`edition`, `mintId`).
      * @param edition        Address of the song edition contract we are minting for.
      * @param mintId         The mint ID.

@@ -167,7 +167,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     function totalPrice(
         address edition,
         uint128 mintId,
-        address, /* minter */
+        address, /* to */
         uint32 quantity
     ) public view virtual override(BaseMinter, IMinterModule) returns (uint128) {
         unchecked {
