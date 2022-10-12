@@ -146,9 +146,11 @@ contract EditionMaxMinter is IEditionMaxMinter, BaseMinter {
         info.affiliateFeeBPS = baseData.affiliateFeeBPS;
         info.mintPaused = baseData.mintPaused;
         info.price = mintData.price;
-        info.maxMintablePerAccount = mintData.maxMintablePerAccount;
+        
         info.maxMintableLower = editionInfo.editionMaxMintableLower;
         info.maxMintableUpper = editionInfo.editionMaxMintableUpper;
+        info.maxMintablePerAccount = mintData.maxMintablePerAccount;
+        info.totalMinted = uint32(editionInfo.totalMinted);
         info.cutoffTime = editionInfo.editionCutoffTime;
     }
 
