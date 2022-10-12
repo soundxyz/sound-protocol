@@ -263,7 +263,9 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @inheritdoc ISoundEditionV1
      */
     function withdrawETH() external {
-        SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
+        uint256 amount = address(this).balance;
+        SafeTransferLib.safeTransferETH(fundingRecipient, amount);
+        emit ETHWithdrawn(fundingRecipient, amount, msg.sender);
     }
 
     /**
@@ -272,9 +274,13 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function withdrawERC20(address[] calldata tokens) external {
         unchecked {
             uint256 n = tokens.length;
+            uint256[] memory amounts = new uint256[](n);
             for (uint256 i; i != n; ++i) {
-                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+                uint256 amount = IERC20(tokens[i]).balanceOf(address(this));
+                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, amount);
+                amounts[i] = amount;
             }
+            emit ERC20Withdrawn(fundingRecipient, tokens, amounts, msg.sender);
         }
     }
 
