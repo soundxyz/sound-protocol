@@ -165,8 +165,8 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @dev Emitted upon ERC20 withdrawal.
      * @param recipient The recipient of the ERC20 token.
      * @param tokens    The ERC20 tokens addresses.
-     * @param amounts    The amount of ERC20 tokenes withdrawn.
-     * @param caller    The account that withdrew the ERC20 token.
+     * @param amounts   The amount of each ERC20 tokene withdrawn.
+     * @param caller    The account that withdrew the ERC20 tokens.
      */
     event ERC20Withdrawn(address recipient, address[] tokens, uint256[] amounts, address caller);
 
