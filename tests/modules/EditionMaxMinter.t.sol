@@ -383,7 +383,7 @@ contract EditionMaxMinterTests is TestConfig {
         assertEq(affiliateFeeBPS, mintInfo.affiliateFeeBPS);
         assertEq(false, mintInfo.mintPaused);
         assertEq(price, mintInfo.price);
-        
+
         assertEq(editionMaxMintableLower, mintInfo.maxMintableLower);
         assertEq(editionMaxMintableUpper, mintInfo.maxMintableUpper);
         assertEq(maxMintablePerAccount, mintInfo.maxMintablePerAccount);
