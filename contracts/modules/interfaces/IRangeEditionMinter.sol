@@ -131,7 +131,7 @@ interface IRangeEditionMinter is IMinterModule {
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
 
-    /*
+    /**
      * @dev Initializes a range mint instance
      * @param edition                Address of the song edition contract we are minting for.
      * @param price                  Sale price in ETH for minting a single token in `edition`.
@@ -158,7 +158,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintablePerAccount_
     ) external returns (uint128 mintId);
 
-    /*
+    /**
      * @dev Sets the time range.
      * @param edition     Address of the song edition contract we are minting for.
      * @param startTime   Start timestamp of sale (in seconds since unix epoch).
@@ -175,7 +175,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 endTime
     ) external;
 
-    /*
+    /**
      * @dev Sets the max mintable range.
      * @param edition          Address of the song edition contract we are minting for.
      * @param maxMintableLower The lower limit of the maximum number of tokens that can be minted.
@@ -188,7 +188,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint32 maxMintableUpper
     ) external;
 
-    /*
+    /**
      * @dev Mints tokens for a given edition.
      * @param edition  Address of the song edition contract we are minting for.
      * @param quantity Token quantity to mint in song `edition`.
@@ -200,7 +200,7 @@ interface IRangeEditionMinter is IMinterModule {
         address affiliate
     ) external payable;
 
-    /*
+    /**
      * @dev Sets the `price` for (`edition`, `mintId`).
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId  The mint ID.
@@ -212,7 +212,7 @@ interface IRangeEditionMinter is IMinterModule {
         uint96 price
     ) external;
 
-    /*
+    /**
      * @dev Sets the `maxMintablePerAccount` for (`edition`, `mintId`).
      * @param edition               Address of the song edition contract we are minting for.
      * @param mintId                The mint ID.

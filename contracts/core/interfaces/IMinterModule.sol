@@ -63,7 +63,7 @@ interface IMinterModule is IERC165 {
     event TimeRangeSet(address indexed edition, uint128 indexed mintId, uint32 startTime, uint32 endTime);
 
     /**
-     * @notice Emitted when the `affiliateFeeBPS` is updated.
+     * @dev Emitted when the `affiliateFeeBPS` is updated.
      * @param edition The edition address.
      * @param mintId  The mint ID, to distinguish between multiple mints for the same edition.
      * @param bps     The affiliate fee basis points.
@@ -71,11 +71,11 @@ interface IMinterModule is IERC165 {
     event AffiliateFeeSet(address indexed edition, uint128 indexed mintId, uint16 bps);
 
     /**
-     * @notice Emitted when a mint happens.
+     * @dev Emitted when a mint happens.
      * @param edition            The edition address.
      * @param mintId             The mint ID, to distinguish between multiple mints for
      *                           the same edition.
-     * @param buyer              The buyer address.
+     * @param to                 The address to mint to.
      * @param fromTokenId        The first token ID of the batch.
      * @param quantity           The size of the batch.
      * @param requiredEtherValue Total amount of Ether required for payment.
@@ -87,7 +87,7 @@ interface IMinterModule is IERC165 {
     event Minted(
         address indexed edition,
         uint128 indexed mintId,
-        address indexed buyer,
+        address indexed to,
         uint32 fromTokenId,
         uint32 quantity,
         uint128 requiredEtherValue,
@@ -237,14 +237,14 @@ interface IMinterModule is IERC165 {
      * @dev The total price for `quantity` tokens for (`edition`, `mintId`).
      * @param edition   The edition's address.
      * @param mintId    The mint ID.
-     * @param mintId    The minter's address.
+     * @param to        The address to mint to.
      * @param quantity  The number of tokens to mint.
      * @return The computed value.
      */
     function totalPrice(
         address edition,
         uint128 mintId,
-        address minter,
+        address to,
         uint32 quantity
     ) external view returns (uint128);
 

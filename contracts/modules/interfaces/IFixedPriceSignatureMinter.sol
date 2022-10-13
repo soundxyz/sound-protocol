@@ -155,7 +155,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint32 claimTicket
     ) external payable;
 
-    /*
+    /**
      * @dev Sets the `maxMintable` for (`edition`, `mintId`).
      * @param edition               Address of the song edition contract we are minting for.
      * @param mintId                The mint ID.
@@ -167,7 +167,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint32 maxMintable
     ) external;
 
-    /*
+    /**
      * @dev Sets the `price` for (`edition`, `mintId`).
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId  The mint ID.
@@ -179,7 +179,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint96 price
     ) external;
 
-    /*
+    /**
      * @dev Sets the `maxMintablePerAccount` for (`edition`, `mintId`).
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId  The mint ID.

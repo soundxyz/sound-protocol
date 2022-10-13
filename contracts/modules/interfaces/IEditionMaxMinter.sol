@@ -92,15 +92,13 @@ interface IEditionMaxMinter is IMinterModule {
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
 
-    /*
+    /**
      * @dev Initializes a range mint instance
      * @param edition               Address of the song edition contract we are minting for.
      * @param price                 Sale price in ETH for minting a single token in `edition`.
      * @param startTime             Start timestamp of sale (in seconds since unix epoch).
      * @param endTime               End timestamp of sale (in seconds since unix epoch).
      * @param affiliateFeeBPS       The affiliate fee in basis points.
-     * @param maxMintableLower      The lower limit of the maximum number of tokens that can be minted.
-     * @param maxMintableUpper      The upper limit of the maximum number of tokens that can be minted.
      * @param maxMintablePerAccount The maximum number of tokens that can be minted by an account.
      * @return mintId The ID for the new mint instance.
      */
@@ -113,7 +111,7 @@ interface IEditionMaxMinter is IMinterModule {
         uint32 maxMintablePerAccount
     ) external returns (uint128 mintId);
 
-    /*
+    /**
      * @dev Mints tokens for a given edition.
      * @param edition   Address of the song edition contract we are minting for.
      * @param mintId    The mint ID.
@@ -127,7 +125,7 @@ interface IEditionMaxMinter is IMinterModule {
         address affiliate
     ) external payable;
 
-    /*
+    /**
      * @dev Sets the `price` for (`edition`, `mintId`).
      * @param edition Address of the song edition contract we are minting for.
      * @param mintId  The mint ID.
@@ -139,7 +137,7 @@ interface IEditionMaxMinter is IMinterModule {
         uint96 price
     ) external;
 
-    /*
+    /**
      * @dev Sets the `maxMintablePerAccount` for (`edition`, `mintId`).
      * @param edition               Address of the song edition contract we are minting for.
      * @param mintId                The mint ID.
