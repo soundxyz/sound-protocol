@@ -9,7 +9,12 @@ import { TestConfig } from "../../TestConfig.sol";
 
 contract SoundEdition_payments is TestConfig {
     event FundingRecipientSet(address fundingRecipient);
+
     event RoyaltySet(uint16 royaltyBPS);
+
+    event ETHWithdrawn(address recipient, uint256 amount, address caller);
+
+    event ERC20Withdrawn(address recipient, address[] tokens, uint256[] amounts, address caller);
 
     function test_initializeRevertsForInvalidRoyaltyBPS(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
@@ -56,9 +61,12 @@ contract SoundEdition_payments is TestConfig {
 
         uint256 totalETHSales = primaryETHSales;
 
-        // withdraw
         uint256 preFundingRecipitentETHBal = FUNDING_RECIPIENT.balance;
 
+        // Check event emitted.
+        vm.expectEmit(true, true, true, true);
+        emit ETHWithdrawn(FUNDING_RECIPIENT, totalETHSales, address(this));
+        // withdraw
         edition.withdrawETH();
 
         // post balances
@@ -83,10 +91,18 @@ contract SoundEdition_payments is TestConfig {
         tokenA.transfer(address(edition), tokenASales);
         tokenB.transfer(address(edition), tokenBSales);
 
-        // withdraw
         address[] memory tokens = new address[](2);
         tokens[0] = address(tokenA);
         tokens[1] = address(tokenB);
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = tokenASales;
+        amounts[1] = tokenBSales;
+
+        // Check event emitted.
+        vm.expectEmit(true, true, true, true);
+        emit ERC20Withdrawn(FUNDING_RECIPIENT, tokens, amounts, address(this));
+        // withdraw
         edition.withdrawERC20(tokens);
 
         _assertPostTokenBalances(tokens, [tokenASales, tokenBSales]);
