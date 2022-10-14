@@ -383,9 +383,11 @@ contract EditionMaxMinterTests is TestConfig {
         assertEq(affiliateFeeBPS, mintInfo.affiliateFeeBPS);
         assertEq(false, mintInfo.mintPaused);
         assertEq(price, mintInfo.price);
-        assertEq(maxMintablePerAccount, mintInfo.maxMintablePerAccount);
+
         assertEq(editionMaxMintableLower, mintInfo.maxMintableLower);
         assertEq(editionMaxMintableUpper, mintInfo.maxMintableUpper);
+        assertEq(maxMintablePerAccount, mintInfo.maxMintablePerAccount);
+        assertEq(0, mintInfo.totalMinted);
         assertEq(editionCutOffTime, mintInfo.cutoffTime);
 
         assertEq(0, edition.totalMinted());
@@ -403,6 +405,7 @@ contract EditionMaxMinterTests is TestConfig {
         mintInfo = minter.mintInfo(address(edition), MINT_ID);
 
         assertEq(quantity, edition.totalMinted());
+        assertEq(quantity, mintInfo.totalMinted);
     }
 
     function test_mintInfo() public {

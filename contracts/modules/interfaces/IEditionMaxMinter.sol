@@ -22,9 +22,10 @@ struct MintInfo {
     uint16 affiliateFeeBPS;
     bool mintPaused;
     uint96 price;
-    uint32 maxMintablePerAccount;
     uint32 maxMintableLower;
     uint32 maxMintableUpper;
+    uint32 maxMintablePerAccount;
+    uint32 totalMinted;
     uint32 cutoffTime;
 }
 
