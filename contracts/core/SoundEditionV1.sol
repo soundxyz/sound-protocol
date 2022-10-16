@@ -152,7 +152,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     /**
      * @dev Packed boolean flags.
      */
-    uint8 private _flags;
+    uint8 internal _flags;
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -514,6 +514,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function supportsInterface(bytes4 interfaceId)
         public
         view
+        virtual
         override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {

@@ -2,29 +2,31 @@
 pragma solidity ^0.8.16;
 
 import { LibString } from "solady/utils/LibString.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
-import { IRarityShuffleMetadata } from "./interfaces/IRarityShuffleMetadata";
+import { ISoundEditionV1a } from "@core/interfaces/ISoundEditionV1a.sol";
+import { IRarityShuffleMetadata } from "@modules/interfaces/IRarityShuffleMetadata.sol";
 
 contract RarityShuffleMetadata is IRarityShuffleMetadata {
     mapping(uint256 => uint16) public availableIds; /*Mapping to use to track used offsets*/
     uint16 public availableCount; /*Track the available count to know the id of the current max offset*/
     mapping(uint256 => uint256) public offsets; /*Store offsets once found*/
     
+    uint256 public nextIndex; /*Store next index to set*/
+    
     uint256[] public ranges; /*Store range sizes for song Ids*/
     uint256 public nRanges;
+    
+    address public edition; /*The address of the edition that can trigger metadata updates*/
 
-    // TODO initializaer?
     /// @notice Constructor sets the shuffle parameters
+    /// @param _edition Address of collection
     /// @param _availableCount Max number of offsets
-    /// @param batchSize_ Number of consecutive tokens using the same offset
-    /// @param startShuffledId_ Offset to add to all token IDs
     constructor(
+        address _edition,
         uint16 _availableCount,
-        uint256 batchSize_,
-        uint256 startShuffledId_,
         uint256 _nRanges,
-        uint256[] _ranges
+        uint256[] memory _ranges
     ) {
+        edition = _edition;
         availableCount = _availableCount; /*Set max offsets*/
         
         nRanges = _nRanges;
@@ -33,7 +35,16 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
         }
     }
     
-    // TODO admin interface to set offset for a mint
+    function triggerMetadata(uint256 quantity) external {
+        require(msg.sender == edition, "Only edition can trigger");
+        
+        for (uint256 index = nextIndex; index < nextIndex + quantity; index++) {
+        uint256 pseudorandomness = uint256(
+            keccak256(abi.encodePacked(blockhash(block.number - 1), index))
+        );
+            _setNextOffset(index, pseudorandomness);
+        }
+    }
 
     /// @notice Set offset at index using seed
     /// @param _index Offset to set
@@ -61,13 +72,10 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
         offsets[_index] = newId;
     }
 
-    /**
-     * @inheritdoc 
-     */
     function tokenURI(uint256 tokenId) external view returns (string memory) {
-        // TODO revert if does not exist
-
-        return getShuffledTokenId(tokenId);
+        uint256 shuffledTokenId = getShuffledTokenId(tokenId);
+        string memory baseURI = ISoundEditionV1a(msg.sender).baseURI();
+        return bytes(baseURI).length != 0 ? string.concat(baseURI, LibString.toString(shuffledTokenId)) : "";
     }
 
     function getShuffledTokenId(uint256 tokenId) public view returns (uint256) {
