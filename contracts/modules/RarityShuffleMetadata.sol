@@ -31,7 +31,7 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
         
         nRanges = _nRanges;
         for (uint256 index = 0; index < nRanges; index++) {
-          ranges[index] = _ranges[index];
+          ranges.push(_ranges[index]);
         }
     }
     
@@ -88,7 +88,7 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
                 uint256 center = upper - (upper - lower) / 2;
                 uint256 _rangeStart = ranges[center];
                 if (_offset == _rangeStart) return center + 1;
-                else if (_rangeStart < center) lower = center;
+                else if (_rangeStart < _offset) lower = center;
                 else upper = center - 1;
             }
             return lower + 1;
