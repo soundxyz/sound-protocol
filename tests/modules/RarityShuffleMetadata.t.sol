@@ -42,7 +42,7 @@ contract RarityShuffleMetadataTests is Test{
     function test_triggerMetadata() public {
       vm.startPrank(contractCreator);
       
-      module.triggerMetadata(10);
+      module.triggerMetadata(100);
       
       for (uint256 index = 0; index < 10; index++) {
         uint256 offset = module.offsets(index);
@@ -60,7 +60,6 @@ contract RarityShuffleMetadataTests is Test{
         else if (offset < 80) expectEqual(shuffleId, 4, offset, index);
         else if (offset < 95) expectEqual(shuffleId, 5, offset, index);
         else expectEqual(shuffleId, 6, offset, index);
-        // else revert LogError(offset, shuffleId);
       }
       
       vm.stopPrank();

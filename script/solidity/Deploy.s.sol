@@ -63,3 +63,9 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 }
+
+// Predict address of new implementation
+// Create metadata module using predicted address
+// Create new edition implementation with flags and module address
+// Deploy mint contract
+// Grant mint contract mint permissions on edition
