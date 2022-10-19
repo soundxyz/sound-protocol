@@ -55,7 +55,7 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
             uint256 pseudorandomness = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), index)));
             _setNextOffset(index, pseudorandomness);
         }
-        nextIndex += quantity;
+        nextIndex += quantity; /*Increment starting index for the next batch*/
     }
 
     /// @notice Set offset at index using seed
