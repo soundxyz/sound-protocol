@@ -75,7 +75,7 @@ contract TestConfig is Test {
 
         RarityShuffleMetadata module = new RarityShuffleMetadata(
           predictedSoundAddress,
-          100,
+          300,
           6,
           _ranges
         );

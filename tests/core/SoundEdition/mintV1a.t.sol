@@ -103,7 +103,7 @@ contract SoundEdition_mint is TestConfig {
         for (uint256 index = 0; index < 10; index++) {
           uint256 offset = module.offsets(index);
           assertFalse(usedOffset[offset]);
-          assertTrue(offset < 100);
+          assertTrue(offset < 300);
           
           usedOffset[offset] = true;
 

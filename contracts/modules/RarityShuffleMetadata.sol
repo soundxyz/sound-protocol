@@ -36,8 +36,11 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
         edition = _edition;
         availableCount = _availableCount; /*Set max offsets*/
         nRanges = _nRanges;
+        uint256 _currentMax;
         for (uint256 index = 0; index < nRanges; index++) {
+            if (_ranges[index] < _currentMax) revert RangeMustBeOrdered();
             ranges.push(_ranges[index]); /*Populate the rarity table*/
+            _currentMax = _ranges[index];
         }
         emit NewModuleCreated(_edition, address(this));
     }
@@ -45,7 +48,7 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
     /// @notice Set shuffled token IDs for a quantity of tokens, determiend by edition
     /// @param quantity Number of tokens to set
     function triggerMetadata(uint256 quantity) external {
-        if (msg.sender != edition) revert OnlyEditionCanTrigger(edition, msg.sender);
+        if (msg.sender != edition) revert OnlyEditionCanTrigger();
 
         // Set shuffled ID for each token
         for (uint256 index = nextIndex; index < nextIndex + quantity; index++) {
