@@ -63,6 +63,18 @@ contract RarityShuffleMetadataTests is Test{
 
     }
     
+    function test_bst(uint256 offset) public {
+        uint256 shuffleId = module.getShuffledTokenId(offset);
+        assertTrue(shuffleId <= 6);
+        
+        if (offset < 10) assertEq(shuffleId, 1);
+        else if (offset < 25) assertEq(shuffleId, 2);
+        else if (offset < 50) assertEq(shuffleId, 3);
+        else if (offset < 80) assertEq(shuffleId, 4);
+        else if (offset < 95) assertEq(shuffleId, 5);
+        else assertEq(shuffleId, 6);
+    }
+    
     function test_OnlyEditionCanTrigger() public {
       vm.startPrank(anyone);
       
