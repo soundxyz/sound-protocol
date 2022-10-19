@@ -27,19 +27,17 @@ pragma solidity ^0.8.16;
                ▓██████████████████████████████████████████████████████████
 */
 
-
-import { ISoundEditionV1a} from "./interfaces/ISoundEditionV1a.sol";
-import { ISoundEditionV1} from "./interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1a } from "./interfaces/ISoundEditionV1a.sol";
+import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
 import { SoundEditionV1 } from "./SoundEditionV1.sol";
 
 import { IMetadataModuleTrigger } from "./interfaces/IMetadataModuleTrigger.sol";
 
 /**
  * @title SoundEditionV1a
- * @notice The Sound Edition contract fork with per token randomness
+ * @notice The Sound Edition contract fork with premint metadata module trigger
  */
-contract SoundEditionV1a is ISoundEditionV1a, SoundEditionV1{
-
+contract SoundEditionV1a is ISoundEditionV1a, SoundEditionV1 {
     // =============================================================
     //                           CONSTANTS
     // =============================================================
@@ -48,17 +46,6 @@ contract SoundEditionV1a is ISoundEditionV1a, SoundEditionV1{
      * @dev The boolean flag on whether the `mintRandomness` is enabled.
      */
     uint8 public constant METADATA_TRIGGER_ENABLED_FLAG = 1 << 2;
-
-
-    // =============================================================
-    //                            STORAGE
-    // =============================================================
-
-
-
-    // =============================================================
-    //               PUBLIC / EXTERNAL WRITE FUNCTIONS
-    // =============================================================
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
@@ -80,9 +67,7 @@ contract SoundEditionV1a is ISoundEditionV1a, SoundEditionV1{
         override(SoundEditionV1, ISoundEditionV1)
         returns (bool)
     {
-        return
-            interfaceId == type(ISoundEditionV1a).interfaceId ||
-            super.supportsInterface(interfaceId);
+        return interfaceId == type(ISoundEditionV1a).interfaceId || super.supportsInterface(interfaceId);
     }
 
     // =============================================================
@@ -93,17 +78,15 @@ contract SoundEditionV1a is ISoundEditionV1a, SoundEditionV1{
      */
     modifier triggersMetadataUpdate(uint256 quantity) {
         if (metadataTriggerEnabled() && metadataModule != address(0)) {
-          IMetadataModuleTrigger(metadataModule).triggerMetadata(quantity);
+            IMetadataModuleTrigger(metadataModule).triggerMetadata(quantity);
         }
         _;
     }
 
-    function _mint(address to, uint256 quantity) internal override 
-    triggersMetadataUpdate(quantity)
-    {
-      super._mint(to, quantity);
+    /**
+     * @dev Adds metadata trigger modifier
+     */
+    function _mint(address to, uint256 quantity) internal override triggersMetadataUpdate(quantity) {
+        super._mint(to, quantity);
     }
-    
-    
-
 }
