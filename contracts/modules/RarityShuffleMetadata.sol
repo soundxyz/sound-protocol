@@ -89,18 +89,17 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
     /// @param tokenId Token to query
     /// @return string of tokenURI
     function tokenURI(uint256 tokenId) external view returns (string memory) {
-        uint256 shuffledTokenId = getShuffledTokenId(tokenId);
+        uint256 _offset = offsets[tokenId];
+        uint256 shuffledTokenId = getShuffledTokenId(_offset);
         string memory baseURI = ISoundEditionV1a(msg.sender).baseURI();
         return bytes(baseURI).length != 0 ? string.concat(baseURI, LibString.toString(shuffledTokenId)) : "";
     }
 
     /// @notice Query shuffled & bucketed tokenID
     /// @dev Uses offset ID with rarity ranges to return edition ID. BST modified from Compound governance getPriorVotes
-    /// @param tokenId Token to query
+    /// @param _offset TokenID with offset
     /// @return uint256 of edition ID
-    function getShuffledTokenId(uint256 tokenId) public view returns (uint256) {
-        uint256 _offset = offsets[tokenId];
-
+    function getShuffledTokenId(uint256 _offset) public view returns (uint256) {
         uint256 lower = 0;
         uint256 upper = nRanges - 1;
         while (upper > lower) {

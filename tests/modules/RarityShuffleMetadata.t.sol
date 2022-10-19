@@ -89,8 +89,8 @@ contract RarityShuffleMetadataTests is Test{
         assertTrue(offset < 100);
         
         usedOffset[offset] = true;
-
-        uint256 shuffleId = module.getShuffledTokenId(index);
+        
+        uint256 shuffleId = module.getShuffledTokenId(offset);
         assertTrue(shuffleId <= 6);
         
         if (offset < 10) assertEq(shuffleId, 1);
