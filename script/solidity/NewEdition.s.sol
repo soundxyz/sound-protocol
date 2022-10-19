@@ -16,12 +16,23 @@ import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 import { RarityShuffleMetadata } from "@modules/RarityShuffleMetadata.sol";
 
+import { Merkle } from "murky/Merkle.sol";
+
 contract NewEdition is Script {
     address private OWNER = vm.envAddress("OWNER");
     address private SOUND_CREATOR = vm.envAddress("SOUND_CREATOR");
     address private EDITION_MAX_MINTER = vm.envAddress("EDITION_MAX_MINTER");
+    address private MERKLE_MINTER = vm.envAddress("MERKLE_MINTER");
+    address private RANGE_MINTER = vm.envAddress("RANGE_MINTER");
     uint8 public constant MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
     uint8 public constant METADATA_TRIGGER_ENABLED_FLAG = 1 << 2;
+
+    bytes32[] leaves;
+
+    bytes32 public root;
+
+    Merkle public m;
+    address[] accounts = []; // TODO populated
 
     uint256 internal _salt = 1;
 
@@ -33,6 +44,18 @@ contract NewEdition is Script {
     string constant CONTRACT_URI = "https://example.com/storefront/";
     uint16 constant ROYALTY_BPS = 100;
     uint8 constant FLAGS = MINT_RANDOMNESS_ENABLED_FLAG | METADATA_TRIGGER_ENABLED_FLAG;
+
+    function setUpMerkleTree() public {
+        // Initialize
+        m = new Merkle();
+
+        leaves = new bytes32[](accounts.length);
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            leaves[i] = keccak256(abi.encodePacked(accounts[i]));
+        }
+
+        root = m.getRoot(leaves);
+    }
 
     function run() external {
         vm.startBroadcast();
@@ -53,6 +76,8 @@ contract NewEdition is Script {
 
         SoundCreatorV1 soundCreator = SoundCreatorV1(SOUND_CREATOR);
         EditionMaxMinter minter = EditionMaxMinter(EDITION_MAX_MINTER);
+        MerkleDropMinter merkleMinter = MerkleDropMinter(MERKLE_MINTER);
+        RangeEditionMinter rangeMinter = RangeEditionMinter(RANGE_MINTER);
         
         (address predictedSoundAddress,) = soundCreator.soundEditionAddress(OWNER, bytes32(_salt));
 
@@ -84,6 +109,11 @@ contract NewEdition is Script {
 
         soundCreator.createSoundAndMints(bytes32(_salt), initData, contracts, data);
         (address addr, ) = soundCreator.soundEditionAddress(OWNER, bytes32(_salt));
+        SoundEditionV1a edition = SoundEditionV1a(addr);
+        
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
+        edition.grantRoles(address(merkleMinter), edition.MINTER_ROLE());
+        edition.grantRoles(address(rangeMinter), edition.MINTER_ROLE());
         
         minter.createEditionMint(
           addr,
@@ -91,6 +121,31 @@ contract NewEdition is Script {
           uint32(block.timestamp),
           uint32(block.timestamp + 30 days),
           0,
+          100
+        );
+        
+        setUpMerkleTree();
+        
+        
+        merkleMinter.createEditionMint(
+          addr,
+          root,
+          0.0008 ether,
+          uint32(block.timestamp),
+          uint32(block.timestamp + 30 days),
+          0,
+          888,
+          100
+        );
+        
+        rangeMinter.createEditionMint(
+          addr,
+          0.0008 ether,
+          uint32(block.timestamp),
+          uint32(block.timestamp + 30 days),
+          0,
+          0,
+          888,
           100
         );
 
