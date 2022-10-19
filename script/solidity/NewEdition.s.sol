@@ -32,7 +32,7 @@ contract NewEdition is Script {
     bytes32 public root;
 
     Merkle public m;
-    address[] accounts = []; // TODO populated
+    address[] accounts = []; // TODO populate
 
     uint256 internal _salt = 1;
 
