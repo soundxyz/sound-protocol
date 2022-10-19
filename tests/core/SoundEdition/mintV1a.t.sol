@@ -10,6 +10,8 @@ import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../../TestConfigv1a.sol";
 import { stdError } from "forge-std/Test.sol";
 
+error USED(uint256 id, uint256 by, uint256 curr);
+
 /**
  * @dev Tests base minting functionality directly from edition.
  */
@@ -17,8 +19,13 @@ contract SoundEdition_mint is TestConfig {
     event EditionMaxMintableRangeSet(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_);
 
     event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
+    
+    struct Offset {
+        bool used;
+        uint256 by;
+    }
 
-  mapping (uint256 => bool) usedOffset;
+  mapping (uint256 => Offset) usedOffset;
 
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
@@ -98,14 +105,18 @@ contract SoundEdition_mint is TestConfig {
 
         assert(edition.balanceOf(recipient2) == quantity);
         
+        uint256 totalMinted = edition.totalMinted();
+        assertEq(totalMinted, 99);
+        
         // Test that rarity shuffle was triggered
         RarityShuffleMetadata module = RarityShuffleMetadata(edition.metadataModule());
-        for (uint256 index = 0; index < 10; index++) {
+        for (uint256 index = 0; index < totalMinted; index++) {
           uint256 offset = module.offsets(index);
-          assertFalse(usedOffset[offset]);
+        //   assertFalse(usedOffset[offset]);
+          if (usedOffset[offset].used) revert USED(offset, usedOffset[offset].by, index);
           assertTrue(offset < 300);
           
-          usedOffset[offset] = true;
+          usedOffset[offset] = Offset(true, index);
 
           uint256 shuffleId = module.getShuffledTokenId(offset);
           assertTrue(shuffleId <= 6);

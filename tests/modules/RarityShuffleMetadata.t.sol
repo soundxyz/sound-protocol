@@ -8,11 +8,15 @@ import { RarityShuffleMetadata } from "@modules/RarityShuffleMetadata.sol";
 import { IRarityShuffleMetadata } from "@modules/interfaces/IRarityShuffleMetadata.sol";
 
 error LogError(uint256, uint256, uint256, uint256);
+error USED(uint256 id, uint256 by, uint256 curr);
 
 contract RarityShuffleMetadataTests is Test{
+    struct Offset {
+        bool used;
+        uint256 by;
+    }
   
-  mapping (uint256 => bool) usedOffset;
-  
+  mapping (uint256 => Offset) usedOffset;
 
   RarityShuffleMetadata module;
   
@@ -34,7 +38,7 @@ contract RarityShuffleMetadataTests is Test{
 
         module = new RarityShuffleMetadata(
           contractCreator,
-          100,
+          300,
           6,
           _ranges
         );
@@ -72,7 +76,7 @@ contract RarityShuffleMetadataTests is Test{
       vm.startPrank(contractCreator);
 
       vm.expectRevert(IRarityShuffleMetadata.NoEditionsRemain.selector);
-      module.triggerMetadata(101);
+      module.triggerMetadata(301);
       
       vm.stopPrank();
       
@@ -82,13 +86,16 @@ contract RarityShuffleMetadataTests is Test{
       vm.startPrank(contractCreator);
 
       module.triggerMetadata(100);
+      module.triggerMetadata(100);
+      module.triggerMetadata(100);
       
-      for (uint256 index = 0; index < 10; index++) {
+      for (uint256 index = 0; index < 300; index++) {
         uint256 offset = module.offsets(index);
-        assertFalse(usedOffset[offset]);
-        assertTrue(offset < 100);
+        // assertFalse(usedOffset[offset]);
+          if (usedOffset[offset].used) revert USED(offset, usedOffset[offset].by, index);
+        assertTrue(offset < 300);
         
-        usedOffset[offset] = true;
+          usedOffset[offset] = Offset(true, index);
         
         uint256 shuffleId = module.getShuffledTokenId(offset);
         assertTrue(shuffleId <= 6);
