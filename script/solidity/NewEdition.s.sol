@@ -32,9 +32,9 @@ contract NewEdition is Script {
     bytes32 public root;
 
     Merkle public m;
-    address[] accounts = []; // TODO populate
+    address[] accounts = [0x744222844bFeCC77156297a6427B5876A6769e19, 0x5AAF1550C05EcF287F51954E263b9a44D0557617, 0x01B2f8877f3e8F366eF4D4F48230949123733897]; // TODO populate
 
-    uint256 internal _salt = 1;
+    uint256 internal _salt = 2;
 
       uint256[] _ranges;
 
@@ -82,69 +82,70 @@ contract NewEdition is Script {
         (address predictedSoundAddress,) = soundCreator.soundEditionAddress(OWNER, bytes32(_salt));
 
 
-        RarityShuffleMetadata module = new RarityShuffleMetadata(
-          predictedSoundAddress,
-          888,
-          13,
-          _ranges
-        );
+        // RarityShuffleMetadata module = new RarityShuffleMetadata(
+        //   predictedSoundAddress,
+        //   888,
+        //   13,
+        //   _ranges
+        // );
 
-        bytes memory initData = abi.encodeWithSelector(
-            SoundEditionV1.initialize.selector,
-            NAME,
-            SYMBOL,
-            address(module),
-            BASE_URI,
-            CONTRACT_URI,
-            OWNER,
-            ROYALTY_BPS,
-            0,
-            888,
-            block.timestamp + 30 days,
-            FLAGS
-        );
+        // bytes memory initData = abi.encodeWithSelector(
+        //     SoundEditionV1.initialize.selector,
+        //     NAME,
+        //     SYMBOL,
+        //     address(module),
+        //     BASE_URI,
+        //     CONTRACT_URI,
+        //     OWNER,
+        //     ROYALTY_BPS,
+        //     0,
+        //     888,
+        //     block.timestamp + 30 days,
+        //     FLAGS
+        // );
 
         address[] memory contracts;
         bytes[] memory data;
 
-        soundCreator.createSoundAndMints(bytes32(_salt), initData, contracts, data);
+        // soundCreator.createSoundAndMints(bytes32(_salt), initData, contracts, data);
         (address addr, ) = soundCreator.soundEditionAddress(OWNER, bytes32(_salt));
-        SoundEditionV1a edition = SoundEditionV1a(addr);
+        // SoundEditionV1a edition = SoundEditionV1a(addr);
         
-        edition.grantRoles(address(minter), edition.MINTER_ROLE());
-        edition.grantRoles(address(merkleMinter), edition.MINTER_ROLE());
-        edition.grantRoles(address(rangeMinter), edition.MINTER_ROLE());
+        // edition.grantRoles(address(minter), edition.MINTER_ROLE());
+        // edition.grantRoles(address(merkleMinter), edition.MINTER_ROLE());
+        // edition.grantRoles(address(rangeMinter), edition.MINTER_ROLE());
         
-        minter.createEditionMint(
-          addr,
-          0.0008 ether,
-          uint32(block.timestamp),
-          uint32(block.timestamp + 30 days),
-          0,
-          100
-        );
+        // minter.createEditionMint(
+        //   addr,
+        //   0.0008 ether,
+        //   uint32(block.timestamp),
+        //   uint32(block.timestamp + 30 days),
+        //   0,
+        //   100
+        // );
         
-        setUpMerkleTree();
+        // setUpMerkleTree();
         
         
-        merkleMinter.createEditionMint(
-          addr,
-          root,
-          0.0008 ether,
-          uint32(block.timestamp),
-          uint32(block.timestamp + 30 days),
-          0,
-          888,
-          100
-        );
+        // merkleMinter.createEditionMint(
+        //   addr,
+        //   root,
+        //   0.0008 ether,
+        //   uint32(block.timestamp),
+        //   uint32(block.timestamp + 30 days),
+        //   0,
+        //   888,
+        //   100
+        // );
         
         rangeMinter.createEditionMint(
           addr,
           0.0008 ether,
           uint32(block.timestamp),
+          uint32(block.timestamp + 29 days),
           uint32(block.timestamp + 30 days),
           0,
-          0,
+          888,
           888,
           100
         );

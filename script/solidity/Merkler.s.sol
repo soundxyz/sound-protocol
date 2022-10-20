@@ -20,7 +20,7 @@ import { Merkle } from "murky/Merkle.sol";
 
 contract Merkler is Script {
     address private MERKLE_MINTER = vm.envAddress("MERKLE_MINTER");
-    uint256 public constant MINT_ID = 0; // TODO set
+    uint128 public constant MINT_ID = 0; // TODO set
     address public constant EDITION = address(0); // TODO set
 
     bytes32[] leaves;
@@ -28,7 +28,7 @@ contract Merkler is Script {
     bytes32 public root;
 
     Merkle public m;
-    address[] accounts = []; // TODO populate
+    address[] accounts = [0x744222844bFeCC77156297a6427B5876A6769e19, 0x5AAF1550C05EcF287F51954E263b9a44D0557617, 0x01B2f8877f3e8F366eF4D4F48230949123733897]; // TODO populate
 
 
     function setUpMerkleTree() public {
