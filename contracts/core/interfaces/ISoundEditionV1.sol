@@ -170,6 +170,22 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     event ERC20Withdrawn(address recipient, address[] tokens, uint256[] amounts, address caller);
 
+    /**
+     * @dev Emitted upon a mint.
+     * @param to          The address to mint to.
+     * @param quantity    The number of minted.
+     * @param fromTokenId The first token ID minted.
+     */
+    event Minted(address to, uint256 quantity, uint256 fromTokenId);
+
+    /**
+     * @dev Emitted upon an airdrop.
+     * @param to          The recipients of the airdrop.
+     * @param quantity    The number of tokens airdropped to each address in `to`.
+     * @param fromTokenId The first token ID minted to the first address in `to`.
+     */
+    event Airdropped(address[] to, uint256 quantity, uint256 fromTokenId);
+
     // =============================================================
     //                            ERRORS
     // =============================================================

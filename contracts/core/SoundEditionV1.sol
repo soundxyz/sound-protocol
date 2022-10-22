@@ -233,6 +233,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         fromTokenId = _nextTokenId();
         // Mint the tokens. Will revert if `quantity` is zero.
         _mint(to, quantity);
+
+        emit Minted(to, quantity, fromTokenId);
     }
 
     /**
@@ -258,6 +260,8 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 _mint(to[i], quantity);
             }
         }
+
+        emit Airdropped(to, quantity, fromTokenId);
     }
 
     /**
