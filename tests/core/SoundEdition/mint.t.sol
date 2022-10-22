@@ -16,6 +16,10 @@ contract SoundEdition_mint is TestConfig {
 
     event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
 
+    event Minted(address to, uint256 quantity, uint256 fromTokenId);
+
+    event Airdropped(address[] to, uint256 quantity, uint256 fromTokenId);
+
     function test_adminMintRevertsIfNotAuthorized(address nonAdminOrOwner) public {
         vm.assume(nonAdminOrOwner != address(this));
         vm.assume(nonAdminOrOwner != address(0));
@@ -83,8 +87,14 @@ contract SoundEdition_mint is TestConfig {
         edition.grantRoles(admin, edition.ADMIN_ROLE());
         vm.stopPrank();
 
+        uint256 expectedFromTokenId = edition.nextTokenId();
+
+        vm.expectEmit(true, true, true, true);
+        emit Minted(admin, 69, expectedFromTokenId);
         vm.prank(admin);
-        edition.mint(admin, 69);
+        uint256 fromTokenId = edition.mint(admin, 69);
+
+        assertEq(expectedFromTokenId, fromTokenId);
 
         assert(edition.balanceOf(admin) == 69);
 
@@ -269,6 +279,9 @@ contract SoundEdition_mint is TestConfig {
         edition.grantRoles(admin, edition.ADMIN_ROLE());
 
         expectedFromTokenId = edition.nextTokenId();
+
+        vm.expectEmit(true, true, true, true);
+        emit Airdropped(to, quantity, expectedFromTokenId);
         vm.prank(admin);
         fromTokenId = edition.airdrop(to, quantity);
 
