@@ -94,6 +94,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
+        address to,
         uint32 quantity,
         uint32 signedQuantity,
         address affiliate,
@@ -111,9 +112,9 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
-        _validateSignatureAndClaim(signature, data.signer, claimTicket, edition, mintId, signedQuantity, affiliate);
+        _validateSignatureAndClaim(signature, data.signer, claimTicket, edition, mintId, to, signedQuantity, affiliate);
 
-        _mint(edition, mintId, quantity, affiliate);
+        _mint(edition, mintId, to, quantity, affiliate);
     }
 
     /**
@@ -246,6 +247,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
      * @param claimTicket    The ticket number to enforce single-use of the signature.
      * @param edition        The edition address.
      * @param mintId         The mint instance ID.
+     * @param to             The address to mint to.
      * @param signedQuantity The max quantity this buyer has been approved to mint.
      * @param affiliate      The affiliate address.
      */
@@ -255,6 +257,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 claimTicket,
         address edition,
         uint128 mintId,
+        address to,
         uint32 signedQuantity,
         address affiliate
     ) private {
@@ -262,7 +265,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR(),
-                keccak256(abi.encode(MINT_TYPEHASH, msg.sender, mintId, claimTicket, signedQuantity, affiliate))
+                keccak256(abi.encode(MINT_TYPEHASH, to, mintId, claimTicket, signedQuantity, affiliate))
             )
         );
 

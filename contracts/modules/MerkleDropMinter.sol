@@ -79,31 +79,32 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
-        uint32 requestedQuantity,
-        bytes32[] calldata merkleProof,
+        address to,
+        uint32 quantity,
+        bytes32[] calldata proof,
         address affiliate
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
-        // Increase `totalMinted` by `requestedQuantity`.
+        // Increase `totalMinted` by `quantity`.
         // Require that the increased value does not exceed `maxMintable`.
-        data.totalMinted = _incrementTotalMinted(data.totalMinted, requestedQuantity, data.maxMintable);
+        data.totalMinted = _incrementTotalMinted(data.totalMinted, quantity, data.maxMintable);
 
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        bool valid = MerkleProofLib.verify(merkleProof, data.merkleRootHash, leaf);
+        bytes32 leaf = keccak256(abi.encodePacked(to));
+        bool valid = MerkleProofLib.verify(proof, data.merkleRootHash, leaf);
         if (!valid) revert InvalidMerkleProof();
 
         unchecked {
-            // Check the additional `requestedQuantity` does not exceed the maximum mintable per account.
-            uint256 numberMinted = ISoundEditionV1(edition).numberMinted(msg.sender);
+            // Check the additional `quantity` does not exceed the maximum mintable per account.
+            uint256 numberMinted = ISoundEditionV1(edition).numberMinted(to);
             // Won't overflow. The total number of tokens minted in `edition` won't exceed `type(uint32).max`,
             // and `quantity` has 32 bits.
-            if (numberMinted + requestedQuantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
+            if (numberMinted + quantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
         }
 
-        _mint(edition, mintId, requestedQuantity, affiliate);
+        _mint(edition, mintId, to, quantity, affiliate);
 
-        emit DropClaimed(msg.sender, requestedQuantity);
+        emit DropClaimed(to, quantity);
     }
 
     /**

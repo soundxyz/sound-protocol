@@ -262,14 +262,16 @@ abstract contract BaseMinter is IMinterModule {
      * Note: this function should be called at the end of a function due to it refunding any
      * excess ether paid, to adhere to the checks-effects-interactions pattern.
      * Otherwise, a reentrancy guard must be used.
-     * @param edition The edition address.
-     * @param mintId The ID for the mint instance.
-     * @param quantity The quantity of tokens to mint.
+     * @param edition   The edition address.
+     * @param mintId    The ID for the mint instance.
+     * @param to        The address to mint to.
+     * @param quantity  The quantity of tokens to mint.
      * @param affiliate The affiliate (referral) address.
      */
     function _mint(
         address edition,
         uint128 mintId,
+        address to,
         uint32 quantity,
         address affiliate
     ) internal {
@@ -286,7 +288,7 @@ abstract contract BaseMinter is IMinterModule {
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
-        uint128 requiredEtherValue = totalPrice(edition, mintId, msg.sender, quantity);
+        uint128 requiredEtherValue = totalPrice(edition, mintId, to, quantity);
 
         // Reverts if the payment is not exact.
         if (msg.value < requiredEtherValue) revert Underpaid(msg.value, requiredEtherValue);
@@ -318,9 +320,9 @@ abstract contract BaseMinter is IMinterModule {
         emit Minted(
             edition,
             mintId,
-            msg.sender,
+            to,
             // Need to put this call here to avoid stack-too-deep error (it returns fromTokenId)
-            uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(msg.sender, quantity)),
+            uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(to, quantity)),
             quantity,
             requiredEtherValue,
             platformFee,
@@ -333,7 +335,9 @@ abstract contract BaseMinter is IMinterModule {
 
         unchecked {
             // Note: We do this at the end to avoid creating a reentrancy vector.
-            // Refund the user any ETH they spent over the current total price of the NFTs.
+            // Refund the caller any ETH they spent over the current total price of the NFTs.
+            // Note that refunds are always to the caller, not the address
+            // which the NFTs are minted to.
             if (msg.value > requiredEtherValue) {
                 SafeTransferLib.safeTransferETH(msg.sender, msg.value - requiredEtherValue);
             }

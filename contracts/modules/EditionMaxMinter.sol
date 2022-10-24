@@ -72,6 +72,7 @@ contract EditionMaxMinter is IEditionMaxMinter, BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
+        address to,
         uint32 quantity,
         address affiliate
     ) public payable {
@@ -79,13 +80,13 @@ contract EditionMaxMinter is IEditionMaxMinter, BaseMinter {
 
         unchecked {
             // Check the additional `requestedQuantity` does not exceed the maximum mintable per account.
-            uint256 numberMinted = ISoundEditionV1(edition).numberMinted(msg.sender);
+            uint256 numberMinted = ISoundEditionV1(edition).numberMinted(to);
             // Won't overflow. The total number of tokens minted in `edition` won't exceed `type(uint32).max`,
             // and `quantity` has 32 bits.
             if (numberMinted + quantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
         }
 
-        _mint(edition, mintId, quantity, affiliate);
+        _mint(edition, mintId, to, quantity, affiliate);
     }
 
     /**
