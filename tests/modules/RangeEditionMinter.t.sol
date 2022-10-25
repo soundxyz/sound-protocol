@@ -220,6 +220,41 @@ contract RangeEditionMinterTests is TestConfig {
         );
     }
 
+    function test_mintToDifferentAddress() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        RangeEditionMinter minter = new RangeEditionMinter(feeRegistry);
+
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
+
+        minter.createEditionMint(
+            address(edition),
+            PRICE,
+            START_TIME,
+            CUTOFF_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS,
+            0,
+            EDITION_MAX_MINTABLE,
+            EDITION_MAX_MINTABLE
+        );
+
+        vm.warp(START_TIME);
+        unchecked {
+            uint256 seed = uint256(keccak256(bytes("test_mintToDifferentAddress()")));
+            for (uint256 i; i < 10; ++i) {
+                address to = getFundedAccount(uint256(keccak256(abi.encode(i + seed))));
+                uint256 quantity;
+                for (uint256 j = 1e9; quantity == 0; ++j) {
+                    quantity = uint256(keccak256(abi.encode(j + i + seed))) % 10;
+                }
+                assertEq(edition.balanceOf(to), 0);
+                minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, to, uint32(quantity), address(0));
+                assertEq(edition.balanceOf(to), quantity);
+            }
+        }
+    }
+
     function test_mintWhenOverMaxMintablePerAccountReverts() public {
         (SoundEditionV1 edition, RangeEditionMinter minter) = _createEditionAndMinter(1);
         vm.warp(START_TIME);

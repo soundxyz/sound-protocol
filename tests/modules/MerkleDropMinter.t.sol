@@ -98,6 +98,30 @@ contract MerkleDropMinterTests is TestConfig {
         );
     }
 
+    function test_mintToDifferentAddress() external {
+        (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
+            0,
+            EDITION_MAX_MINTABLE,
+            EDITION_MAX_MINTABLE
+        );
+
+        vm.warp(START_TIME);
+        unchecked {
+            uint256 seed = uint256(keccak256(bytes("test_mintToDifferentAddress()")));
+            for (uint256 i; i < accounts.length; ++i) {
+                address to = accounts[i];
+                bytes32[] memory proof = m.getProof(leaves, i);
+                uint256 quantity;
+                for (uint256 j = 1e9; quantity == 0; ++j) {
+                    quantity = uint256(keccak256(abi.encode(j + i + seed))) % 10;
+                }
+                assertEq(edition.balanceOf(to), 0);
+                minter.mint(address(edition), mintId, to, uint32(quantity), proof, address(0));
+                assertEq(edition.balanceOf(to), quantity);
+            }
+        }
+    }
+
     function test_canMintMultipleTimesLessThanMaxMintablePerAccount() public {
         uint32 maxPerAccount = 2;
         (SoundEditionV1 edition, MerkleDropMinter minter, uint128 mintId) = _createEditionAndMinter(
