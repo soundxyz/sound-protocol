@@ -104,7 +104,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
 
         unchecked {
             // Check that the additional `quantity` does not exceed the maximum mintable per account.
-            // `maxMintablePerAccount` and `quantity` are 32 bits.
+            // Won't overflow, as `maxMintablePerAccount` and `quantity` are 32 bits.
             if ((_mintCounts[edition][mintId][to] += quantity) > data.maxMintablePerAccount)
                 revert ExceedsMaxPerAccount();
         }
