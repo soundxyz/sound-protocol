@@ -105,7 +105,7 @@ contract GoldenEggMetadataTests is TestConfig {
             EDITION_MAX_MINTABLE // max mintable per account
         );
 
-        minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, mintQuantity, address(0));
+        minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, address(this), mintQuantity, address(0));
 
         vm.warp(editionCutoffTime);
 
@@ -128,7 +128,7 @@ contract GoldenEggMetadataTests is TestConfig {
             CUTOFF_TIME
         );
 
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, address(this), 1, address(0));
         uint256 tokenId = 1;
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
@@ -146,7 +146,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         uint32 quantity = MAX_MINTABLE_UPPER;
 
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, address(this), quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
@@ -161,14 +161,14 @@ contract GoldenEggMetadataTests is TestConfig {
             CUTOFF_TIME
         );
 
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, address(this), quantity, address(0));
 
         // check golden egg has not been generated after minting one less than the max
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         assertEq(goldenEggTokenId, 0);
 
         // Mint one more to bring us to maxMintableLower
-        minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, address(0));
+        minter.mint{ value: PRICE }(address(edition), MINT_ID, address(this), 1, address(0));
 
         // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CUTOFF_TIME);
@@ -187,7 +187,7 @@ contract GoldenEggMetadataTests is TestConfig {
         (SoundEditionV1 edition, RangeEditionMinter minter, ) = _createEdition(CUTOFF_TIME);
 
         uint32 quantity = MAX_MINTABLE_LOWER - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, address(this), quantity, address(0));
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
@@ -202,7 +202,7 @@ contract GoldenEggMetadataTests is TestConfig {
         );
 
         uint32 quantity = MAX_MINTABLE_LOWER - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, address(this), quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
@@ -227,7 +227,7 @@ contract GoldenEggMetadataTests is TestConfig {
         edition.grantRoles(admin, edition.ADMIN_ROLE());
 
         uint32 quantity = MAX_MINTABLE_LOWER - 1;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, address(this), quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
@@ -266,7 +266,7 @@ contract GoldenEggMetadataTests is TestConfig {
         );
 
         uint32 quantity = MAX_MINTABLE_LOWER;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, address(this), quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated
@@ -293,7 +293,7 @@ contract GoldenEggMetadataTests is TestConfig {
         edition.grantRoles(admin, edition.ADMIN_ROLE());
 
         uint32 quantity = MAX_MINTABLE_LOWER;
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, address(this), quantity, address(0));
 
         uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
         // golden egg not generated

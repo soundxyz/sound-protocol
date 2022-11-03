@@ -28,10 +28,11 @@ contract MockMinter is BaseMinter {
     function mint(
         address edition,
         uint128 mintId,
+        address to,
         uint32 quantity,
         address affiliate
     ) external payable {
-        _mint(edition, mintId, quantity, affiliate);
+        _mint(edition, mintId, to, quantity, affiliate);
     }
 
     function setPrice(uint96 price) external {

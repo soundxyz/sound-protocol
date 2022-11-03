@@ -138,7 +138,9 @@ interface IFixedPriceSignatureMinter is IMinterModule {
 
     /**
      * @dev Mints a token for a particular mint instance.
+     * @param edition        Address of the song edition contract we are minting for.
      * @param mintId         The mint ID.
+     * @param to             The address to mint to.
      * @param quantity       The quantity of tokens to mint.
      * @param signedQuantity The max quantity this buyer has been approved to mint.
      * @param affiliate      The affiliate address.
@@ -148,6 +150,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
     function mint(
         address edition,
         uint128 mintId,
+        address to,
         uint32 quantity,
         uint32 signedQuantity,
         address affiliate,

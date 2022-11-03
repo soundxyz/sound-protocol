@@ -170,6 +170,58 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         );
     }
 
+    function test_mintToDifferentAddress() external {
+        SoundEditionV1 edition = createGenericEdition();
+
+        FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
+
+        edition.grantRoles(address(minter), edition.MINTER_ROLE());
+
+        minter.createEditionMint(
+            address(edition),
+            0,
+            _signerAddress(),
+            EDITION_MAX_MINTABLE,
+            START_TIME,
+            END_TIME,
+            AFFILIATE_FEE_BPS
+        );
+
+        vm.warp(START_TIME);
+        unchecked {
+            uint256 seed = uint256(keccak256(bytes("test_mintToDifferentAddress()")));
+            for (uint256 i; i < 10; ++i) {
+                address to = getFundedAccount(uint256(keccak256(abi.encode(i + seed))));
+                uint256 quantity;
+                for (uint256 j = 1e9; quantity == 0; ++j) {
+                    quantity = uint256(keccak256(abi.encode(j + i + seed))) % 10;
+                }
+                uint32 claimTicket = uint32(i);
+                bytes memory sig = _getSignature(
+                    to,
+                    address(minter),
+                    MINT_ID,
+                    claimTicket,
+                    EDITION_MAX_MINTABLE,
+                    NULL_AFFILIATE
+                );
+
+                assertEq(edition.balanceOf(to), 0);
+                minter.mint(
+                    address(edition),
+                    MINT_ID,
+                    to,
+                    uint32(quantity),
+                    EDITION_MAX_MINTABLE,
+                    NULL_AFFILIATE,
+                    sig,
+                    claimTicket
+                );
+                assertEq(edition.balanceOf(to), quantity);
+            }
+        }
+    }
+
     function test_mintRevertsIfBuyerNotAuthorized() public {
         (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
@@ -190,6 +242,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -214,6 +267,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -243,6 +297,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * quantity - 1 }(
             address(edition),
             MINT_ID,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -266,6 +321,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(
             address(edition),
             MINT_ID,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -281,6 +337,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * MAX_MINTABLE }(
             address(edition),
             MINT_ID,
+            buyer,
             MAX_MINTABLE,
             MAX_MINTABLE,
             NULL_AFFILIATE,
@@ -296,6 +353,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -323,6 +381,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -338,6 +397,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -373,6 +433,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             nonExistentMintId,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -405,6 +466,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             MINT_ID,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -441,6 +503,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             MINT_ID,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -463,6 +526,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             MINT_ID,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -522,6 +586,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition1),
             mintId1,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -536,6 +601,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition2),
             mintId2,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -586,6 +652,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             mintId1,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -600,6 +667,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             mintId2,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -649,6 +717,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             minter.mint{ value: PRICE }(
                 address(edition),
                 mintId,
+                buyer,
                 QUANTITY_1,
                 SIGNED_QUANTITY_1,
                 NULL_AFFILIATE,
@@ -795,6 +864,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -808,6 +878,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -840,6 +911,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             MINT_ID,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -854,6 +926,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             MINT_ID,
+            buyer,
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
@@ -876,6 +949,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * QUANTITY_1 }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             wrongAffiliate,
@@ -889,6 +963,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * QUANTITY_1 }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
@@ -901,6 +976,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         minter.mint{ value: PRICE * QUANTITY_1 }(
             address(edition),
             MINT_ID,
+            buyer,
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             affiliate,

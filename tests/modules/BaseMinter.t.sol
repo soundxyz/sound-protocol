@@ -140,9 +140,9 @@ contract MintControllerBaseTests is TestConfig {
         minter.setPrice(price);
 
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.Underpaid.selector, price * 2 - 1, price * 2));
-        minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, address(0));
+        minter.mint{ value: price * 2 - 1 }(address(edition), mintId, address(this), 2, address(0));
 
-        minter.mint{ value: price * 2 }(address(edition), mintId, 2, address(0));
+        minter.mint{ value: price * 2 }(address(edition), mintId, address(this), 2, address(0));
     }
 
     function test_mintRefundsForOverpaid() public {
@@ -160,7 +160,7 @@ contract MintControllerBaseTests is TestConfig {
         uint256 balanceBefore = buyer.balance;
 
         vm.prank(buyer);
-        minter.mint{ value: price * (quantity + 1) }(address(edition), mintId, quantity, address(0));
+        minter.mint{ value: price * (quantity + 1) }(address(edition), mintId, buyer, quantity, address(0));
 
         uint256 balanceAfter = buyer.balance;
 
@@ -182,7 +182,7 @@ contract MintControllerBaseTests is TestConfig {
         uint256 balanceBefore = buyer.balance;
 
         vm.prank(buyer);
-        minter.mint{ value: price * quantity }(address(edition), mintId, quantity, address(0));
+        minter.mint{ value: price * quantity }(address(edition), mintId, buyer, quantity, address(0));
 
         uint256 balanceAfter = buyer.balance;
 
@@ -201,11 +201,11 @@ contract MintControllerBaseTests is TestConfig {
 
         vm.expectRevert(IMinterModule.MintPaused.selector);
 
-        minter.mint{ value: price * 2 }(address(edition), mintId, 2, address(0));
+        minter.mint{ value: price * 2 }(address(edition), mintId, address(this), 2, address(0));
 
         minter.setEditionMintPaused(address(edition), mintId, false);
 
-        minter.mint{ value: price * 2 }(address(edition), mintId, 2, address(0));
+        minter.mint{ value: price * 2 }(address(edition), mintId, address(this), 2, address(0));
     }
 
     function test_mintRevertsWithZeroQuantity() public {
@@ -217,7 +217,7 @@ contract MintControllerBaseTests is TestConfig {
 
         vm.expectRevert(IERC721AUpgradeable.MintZeroQuantity.selector);
 
-        minter.mint{ value: 0 }(address(edition), mintId, 0, address(0));
+        minter.mint{ value: 0 }(address(edition), mintId, address(this), 0, address(0));
     }
 
     function test_createEditionMintMultipleTimes() external {
@@ -226,6 +226,28 @@ contract MintControllerBaseTests is TestConfig {
         for (uint256 i; i < 3; ++i) {
             uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
             assertEq(mintId, i);
+        }
+    }
+
+    function test_mintToDifferentAddress() external {
+        minter.setPrice(0);
+
+        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+
+        uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
+
+        unchecked {
+            uint256 seed = uint256(keccak256(bytes("test_mintToDifferentAddress()")));
+            for (uint256 i; i < 10; ++i) {
+                address to = getFundedAccount(uint256(keccak256(abi.encode(i + seed))));
+                uint256 quantity;
+                for (uint256 j = 1e9; quantity == 0; ++j) {
+                    quantity = uint256(keccak256(abi.encode(j + i + seed))) % 10;
+                }
+                assertEq(edition.balanceOf(to), 0);
+                minter.mint(address(edition), mintId, to, uint32(quantity), address(0));
+                assertEq(edition.balanceOf(to), quantity);
+            }
         }
     }
 
@@ -238,14 +260,14 @@ contract MintControllerBaseTests is TestConfig {
         uint128 mintId1 = minter.createEditionMint(address(edition1), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         // Mint all of the supply except for 1 token
-        minter.mint(address(edition1), mintId1, maxSupply - 1, address(0));
+        minter.mint(address(edition1), mintId1, address(this), maxSupply - 1, address(0));
 
         // try minting 2 more - should fail and tell us there is only 1 available
         vm.expectRevert(abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, 1));
-        minter.mint(address(edition1), mintId1, 2, address(0));
+        minter.mint(address(edition1), mintId1, address(this), 2, address(0));
 
         // try minting 1 more - should succeed
-        minter.mint(address(edition1), mintId1, 1, address(0));
+        minter.mint(address(edition1), mintId1, address(this), 1, address(0));
     }
 
     function test_setTimeRange(address nonController) public {
@@ -347,7 +369,7 @@ contract MintControllerBaseTests is TestConfig {
 
         address affiliate = getFundedAccount(123456789);
 
-        minter.mint{ value: requiredEtherValue }(address(edition), mintId, quantity, affiliate);
+        minter.mint{ value: requiredEtherValue }(address(edition), mintId, address(this), quantity, affiliate);
 
         uint256 expectedAffiliateFees = (requiredEtherValue * affiliateFeeBPS) / minter.MAX_BPS();
 
@@ -374,7 +396,7 @@ contract MintControllerBaseTests is TestConfig {
 
         address affiliate = getFundedAccount(123456789);
 
-        minter.mint{ value: requiredEtherValue }(address(edition), mintId, quantity, affiliate);
+        minter.mint{ value: requiredEtherValue }(address(edition), mintId, address(this), quantity, affiliate);
 
         uint256 expectedPlatformFees = (requiredEtherValue * platformFeeBPS) / minter.MAX_BPS();
 
@@ -444,7 +466,7 @@ contract MintControllerBaseTests is TestConfig {
 
         vm.deal(buyer, requiredEtherValue);
         vm.prank(buyer);
-        minter.mint{ value: requiredEtherValue }(address(edition), mintId, quantity, affiliate);
+        minter.mint{ value: requiredEtherValue }(address(edition), mintId, buyer, quantity, affiliate);
 
         _test_withdrawAffiliateFeesAccrued(affiliate, expectedAffiliateFees);
         _test_withdrawPlatformFeesAccrued(expectedPlatformFees);
