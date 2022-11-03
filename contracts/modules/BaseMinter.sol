@@ -308,18 +308,18 @@ abstract contract BaseMinter is IMinterModule {
 
         // Reverts if the payment is not sufficient.
         unchecked {
-            if (t.payment < t.requiredEtherValue) revert Underpaid(t.payment, t.requiredEtherValue);    
+            if (t.payment < t.requiredEtherValue) revert Underpaid(t.payment, t.requiredEtherValue);
         }
 
         (t.remainingPayment, t.platformFee) = _deductPlatformFee(uint128(t.requiredEtherValue));
 
         // Check if the mint is an affiliated mint.
         t.affiliated = isAffiliated(edition, mintId, affiliate);
-        
+
         unchecked {
             if (t.affiliated) {
                 // Compute the affiliate fee.
-                // Won't overflow, as `remainingPayment` from `_deductPlatformFee` is 128 bits, 
+                // Won't overflow, as `remainingPayment` from `_deductPlatformFee` is 128 bits,
                 // and `affiliateFeeBPS` is 16 bits.
                 t.affiliateFee = (t.remainingPayment * uint256(baseData.affiliateFeeBPS)) / uint256(_MAX_BPS);
                 // Deduct the affiliate fee from the remaining payment.

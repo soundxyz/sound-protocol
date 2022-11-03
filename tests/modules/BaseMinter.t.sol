@@ -436,7 +436,7 @@ contract MintControllerBaseTests is TestConfig {
         vm.assume(buyer != address(0));
         price = price % 1e19;
         quantity = 1 + (quantity % 8);
-        tip = bound(tip, 0, 2 ** 128 - 1);
+        tip = bound(tip, 0, 2**128 - 1);
 
         _MintAndWithdrawlWithAffiliateAndPlatformFeeTemps memory t;
 
@@ -461,7 +461,9 @@ contract MintControllerBaseTests is TestConfig {
         t.affiliated = minter.isAffiliated(address(edition), t.mintId, t.affiliate);
         if (t.affiliated) {
             // The affiliate fees are deducted after the platform fees.
-            t.expectedAffiliateFees = ((t.requiredEtherValue - t.expectedPlatformFees) * affiliateFeeBPS) / minter.MAX_BPS();
+            t.expectedAffiliateFees =
+                ((t.requiredEtherValue - t.expectedPlatformFees) * affiliateFeeBPS) /
+                minter.MAX_BPS();
         }
         // Expect an event.
         t.fromTokenId = uint32(edition.nextTokenId());
