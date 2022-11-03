@@ -187,6 +187,17 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
     /**
      * @inheritdoc IMerkleDropMinter
      */
+    function mintCount(
+        address edition,
+        uint128 mintId,
+        address to
+    ) public view virtual returns (uint256) {
+        return _mintCounts[edition][mintId][to];
+    }
+
+    /**
+     * @inheritdoc IMerkleDropMinter
+     */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory) {
         BaseData memory baseData = _baseData[edition][mintId];
         EditionMintData storage mintData = _editionMintData[edition][mintId];

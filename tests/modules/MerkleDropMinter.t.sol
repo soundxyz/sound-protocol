@@ -116,8 +116,10 @@ contract MerkleDropMinterTests is TestConfig {
                     quantity = uint256(keccak256(abi.encode(j + i + seed))) % 10;
                 }
                 assertEq(edition.balanceOf(to), 0);
+                assertEq(minter.mintCount(address(edition), mintId, to), 0);
                 minter.mint(address(edition), mintId, to, uint32(quantity), proof, address(0));
                 assertEq(edition.balanceOf(to), quantity);
+                assertEq(minter.mintCount(address(edition), mintId, to), quantity);
             }
         }
     }

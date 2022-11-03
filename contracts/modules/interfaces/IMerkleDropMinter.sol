@@ -229,6 +229,19 @@ interface IMerkleDropMinter is IMinterModule {
     // =============================================================
 
     /**
+     * @dev Returns the number of tokens minted to address `to`, for (`edition`, `mintId`).
+     * @param edition Address of the song edition contract we are minting for.
+     * @param mintId  The mint ID.
+     * @param to      The address to mint to.
+     * @return count The number of tokens minted.
+     */
+    function mintCount(
+        address edition,
+        uint128 mintId,
+        address to
+    ) external view returns (uint256 count);
+
+    /**
      * @dev Returns IMerkleDropMinter.MintInfo instance containing the full minter parameter set.
      * @param edition The edition to get the mint instance for.
      * @param mintId The ID of the mint instance.
