@@ -83,6 +83,7 @@ interface IMinterModule is IERC165 {
      * @param affiliateFee       The cut paid to the affiliate.
      * @param affiliate          The affiliate's address.
      * @param affiliated         Whether the affiliate is affiliated.
+     * @param tip                The amount of tip.
      */
     event Minted(
         address indexed edition,
@@ -94,7 +95,8 @@ interface IMinterModule is IERC165 {
         uint128 platformFee,
         uint128 affiliateFee,
         address affiliate,
-        bool affiliated
+        bool affiliated,
+        uint256 tip
     );
 
     // =============================================================

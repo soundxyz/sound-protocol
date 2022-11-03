@@ -37,7 +37,8 @@ contract MintControllerBaseTests is TestConfig {
         uint128 platformFee,
         uint128 affiliateFee,
         address affiliate,
-        bool affiliated
+        bool affiliated,
+        uint256 tip
     );
 
     MockMinter public minter;
@@ -329,7 +330,8 @@ contract MintControllerBaseTests is TestConfig {
             platformFeeBPS,
             price,
             quantity,
-            address(this)
+            address(this),
+            0
         );
 
         affiliateIsZeroAddress = false;
@@ -342,7 +344,8 @@ contract MintControllerBaseTests is TestConfig {
             platformFeeBPS,
             price,
             quantity,
-            address(this)
+            address(this),
+            0
         );
     }
 
@@ -408,6 +411,17 @@ contract MintControllerBaseTests is TestConfig {
         test_withdrawPlatformFeesAccrued(platformFeeBPS);
     }
 
+    // For preventing stack too deep.
+    struct _MintAndWithdrawlWithAffiliateAndPlatformFeeTemps {
+        address affiliate;
+        uint128 mintId;
+        uint256 requiredEtherValue;
+        uint256 expectedPlatformFees;
+        uint256 expectedAffiliateFees;
+        bool affiliated;
+        uint32 fromTokenId;
+    }
+
     // This is an integration test to ensure that all the functions work together properly.
     function test_mintAndWithdrawlWithAffiliateAndPlatformFee(
         bool affiliateIsZeroAddress,
@@ -416,60 +430,62 @@ contract MintControllerBaseTests is TestConfig {
         uint16 platformFeeBPS,
         uint96 price,
         uint32 quantity,
-        address buyer
+        address buyer,
+        uint256 tip
     ) public {
         vm.assume(buyer != address(0));
         price = price % 1e19;
         quantity = 1 + (quantity % 8);
+        tip = bound(tip, 0, 2 ** 128 - 1);
+
+        _MintAndWithdrawlWithAffiliateAndPlatformFeeTemps memory t;
 
         minter.setPrice(price);
 
         SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
-        address affiliate = affiliateIsZeroAddress
+        t.affiliate = affiliateIsZeroAddress
             ? address(0)
             : getFundedAccount(uint256(keccak256(abi.encode(affiliateSeed))));
 
-        uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
+        t.mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         if (platformFeeBPS > MAX_BPS) return;
         feeRegistry.setPlatformFeeBPS(platformFeeBPS);
-        if (!_test_setAffiliateFee(edition, mintId, affiliateFeeBPS)) return;
+        if (!_test_setAffiliateFee(edition, t.mintId, affiliateFeeBPS)) return;
 
-        uint256 expectedPlatformFees;
-        uint256 expectedAffiliateFees;
+        t.requiredEtherValue = minter.totalPrice(address(edition), t.mintId, address(this), quantity);
 
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity);
+        t.expectedPlatformFees = (t.requiredEtherValue * platformFeeBPS) / minter.MAX_BPS();
 
-        expectedPlatformFees = (requiredEtherValue * platformFeeBPS) / minter.MAX_BPS();
-
-        bool affiliated = minter.isAffiliated(address(edition), mintId, affiliate);
-        if (affiliated) {
+        t.affiliated = minter.isAffiliated(address(edition), t.mintId, t.affiliate);
+        if (t.affiliated) {
             // The affiliate fees are deducted after the platform fees.
-            expectedAffiliateFees = ((requiredEtherValue - expectedPlatformFees) * affiliateFeeBPS) / minter.MAX_BPS();
+            t.expectedAffiliateFees = ((t.requiredEtherValue - t.expectedPlatformFees) * affiliateFeeBPS) / minter.MAX_BPS();
         }
         // Expect an event.
-        uint32 fromTokenId = uint32(edition.nextTokenId());
+        t.fromTokenId = uint32(edition.nextTokenId());
         vm.expectEmit(true, true, true, true);
         emit Minted(
             address(edition),
-            mintId,
+            t.mintId,
             buyer,
-            fromTokenId,
+            t.fromTokenId,
             quantity,
-            uint128(requiredEtherValue),
-            uint128(expectedPlatformFees),
-            uint128(expectedAffiliateFees),
-            affiliate,
-            affiliated
+            uint128(t.requiredEtherValue),
+            uint128(t.expectedPlatformFees),
+            uint128(t.expectedAffiliateFees),
+            t.affiliate,
+            t.affiliated,
+            tip
         );
 
-        vm.deal(buyer, requiredEtherValue);
+        vm.deal(buyer, t.requiredEtherValue + tip);
         vm.prank(buyer);
-        minter.mint{ value: requiredEtherValue }(address(edition), mintId, buyer, quantity, affiliate, 0);
+        minter.mint{ value: t.requiredEtherValue + tip }(address(edition), t.mintId, buyer, quantity, t.affiliate, tip);
 
-        _test_withdrawAffiliateFeesAccrued(affiliate, expectedAffiliateFees);
-        _test_withdrawPlatformFeesAccrued(expectedPlatformFees);
+        _test_withdrawAffiliateFeesAccrued(t.affiliate, t.expectedAffiliateFees);
+        _test_withdrawPlatformFeesAccrued(t.expectedPlatformFees);
     }
 
     function test_revertsIfFeeRegistryIsZero() external {
