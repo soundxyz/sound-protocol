@@ -84,7 +84,8 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
         uint128 mintId,
         address to,
         uint32 quantity,
-        address affiliate
+        address affiliate,
+        uint256 tip
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -102,7 +103,7 @@ contract RangeEditionMinter is IRangeEditionMinter, BaseMinter {
             if (numberMinted + quantity > data.maxMintablePerAccount) revert ExceedsMaxPerAccount();
         }
 
-        _mint(edition, mintId, to, quantity, affiliate);
+        _mint(edition, mintId, to, quantity, affiliate, tip);
     }
 
     /**

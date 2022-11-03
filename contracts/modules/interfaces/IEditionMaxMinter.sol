@@ -119,13 +119,15 @@ interface IEditionMaxMinter is IMinterModule {
      * @param to        The address to mint to.
      * @param quantity  Token quantity to mint in song `edition`.
      * @param affiliate The affiliate address.
+     * @param tip       The amount of tip.
      */
     function mint(
         address edition,
         uint128 mintId,
         address to,
         uint32 quantity,
-        address affiliate
+        address affiliate,
+        uint256 tip
     ) external payable;
 
     /**

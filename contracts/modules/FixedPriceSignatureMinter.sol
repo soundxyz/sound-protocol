@@ -98,6 +98,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
         uint32 quantity,
         uint32 signedQuantity,
         address affiliate,
+        uint256 tip,
         bytes calldata signature,
         uint32 claimTicket
     ) public payable {
@@ -114,7 +115,7 @@ contract FixedPriceSignatureMinter is IFixedPriceSignatureMinter, BaseMinter {
 
         _validateSignatureAndClaim(signature, data.signer, claimTicket, edition, mintId, to, signedQuantity, affiliate);
 
-        _mint(edition, mintId, to, quantity, affiliate);
+        _mint(edition, mintId, to, quantity, affiliate, tip);
     }
 
     /**

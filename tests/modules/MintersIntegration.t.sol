@@ -168,7 +168,7 @@ contract MintersIntegration is TestConfig {
         // Claim 1 token
         bytes32[] memory proof0 = merkleFreeDrop.getProof(leavesFreeMerkleDrop, 0);
         vm.prank(accountsFreeMerkleDrop[0]);
-        merkleDropMinter.mint(address(edition), mintId, accountsFreeMerkleDrop[0], 1, proof0, address(0));
+        merkleDropMinter.mint(address(edition), mintId, accountsFreeMerkleDrop[0], 1, proof0, address(0), 0);
         user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
         assertEq(user0Balance, 1);
 
@@ -178,13 +178,13 @@ contract MintersIntegration is TestConfig {
         assertEq(user1Balance, 0);
         // Claim 3 tokens (max per account)
         vm.prank(accountsFreeMerkleDrop[1]);
-        merkleDropMinter.mint(address(edition), mintId, accountsFreeMerkleDrop[1], 3, proof1, address(0));
+        merkleDropMinter.mint(address(edition), mintId, accountsFreeMerkleDrop[1], 3, proof1, address(0), 0);
         user1Balance = edition.balanceOf(accountsFreeMerkleDrop[1]);
         assertEq(user1Balance, 3);
 
         // First user comes back to claim 2 more tokens, bringing balance to 3 (max per account)
         vm.prank(accountsFreeMerkleDrop[0]);
-        merkleDropMinter.mint(address(edition), mintId, accountsFreeMerkleDrop[0], 2, proof0, address(0));
+        merkleDropMinter.mint(address(edition), mintId, accountsFreeMerkleDrop[0], 2, proof0, address(0), 0);
         user0Balance = edition.balanceOf(accountsFreeMerkleDrop[0]);
         assertEq(user0Balance, 3);
 
@@ -211,7 +211,8 @@ contract MintersIntegration is TestConfig {
             accountsPresale[0],
             20,
             proof0,
-            address(0)
+            address(0),
+            0
         );
         user0Balance = edition.balanceOf(accountsPresale[0]);
         assertEq(user0Balance, 20);
@@ -228,7 +229,8 @@ contract MintersIntegration is TestConfig {
             accountsPresale[1],
             25,
             proof1,
-            address(0)
+            address(0),
+            0
         );
         user1Balance = edition.balanceOf(accountsPresale[1]);
         assertEq(user1Balance, 25);
@@ -243,7 +245,14 @@ contract MintersIntegration is TestConfig {
         assertEq(user5Balance, 0);
         // Mint 5 tokens
         vm.prank(userAccounts[4]);
-        publicSaleMinter.mint{ value: 5 * PRICE_PUBLIC_SALE }(address(edition), mintId, userAccounts[4], 5, address(0));
+        publicSaleMinter.mint{ value: 5 * PRICE_PUBLIC_SALE }(
+            address(edition),
+            mintId,
+            userAccounts[4],
+            5,
+            address(0),
+            0
+        );
         user5Balance = edition.balanceOf(userAccounts[4]);
         assertEq(user5Balance, 5);
 
@@ -257,7 +266,8 @@ contract MintersIntegration is TestConfig {
             mintId,
             userAccounts[5],
             MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE,
-            address(0)
+            address(0),
+            0
         );
         user6Balance = edition.balanceOf(userAccounts[5]);
         assertEq(user6Balance, MAX_MINTABLE_PER_ACCOUNT_PUBLIC_SALE);

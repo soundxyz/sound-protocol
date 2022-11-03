@@ -258,6 +258,18 @@ abstract contract BaseMinter is IMinterModule {
     }
 
     /**
+     * For avoiding stack too deep.
+     */
+    struct _MintTemps {
+        uint256 requiredEtherValue;
+        uint256 payment;
+        bool affiliated;
+        uint256 affiliateFee;
+        uint256 remainingPayment;
+        uint256 platformFee;
+    }
+
+    /**
      * @dev Mints `quantity` of `edition` to `to` with a required payment of `requiredEtherValue`.
      * Note: this function should be called at the end of a function due to it refunding any
      * excess ether paid, to adhere to the checks-effects-interactions pattern.
@@ -267,15 +279,22 @@ abstract contract BaseMinter is IMinterModule {
      * @param to        The address to mint to.
      * @param quantity  The quantity of tokens to mint.
      * @param affiliate The affiliate (referral) address.
+     * @param tip       The amount of tip.
      */
     function _mint(
         address edition,
         uint128 mintId,
         address to,
         uint32 quantity,
-        address affiliate
+        address affiliate,
+        uint256 tip
     ) internal {
         BaseData storage baseData = _baseData[edition][mintId];
+        _MintTemps memory t;
+        if (tip > msg.value) revert();
+        unchecked {
+            t.payment = msg.value - tip;
+        }
 
         /* --------------------- GENERAL CHECKS --------------------- */
         {
@@ -288,29 +307,30 @@ abstract contract BaseMinter is IMinterModule {
 
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
-        uint128 requiredEtherValue = totalPrice(edition, mintId, to, quantity);
+        t.requiredEtherValue = totalPrice(edition, mintId, to, quantity);
 
-        // Reverts if the payment is not exact.
-        if (msg.value < requiredEtherValue) revert Underpaid(msg.value, requiredEtherValue);
+        // Reverts if the payment is not sufficient.
+        unchecked {
+            if (t.payment < t.requiredEtherValue) revert Underpaid(t.payment, t.requiredEtherValue);
+        }
 
-        (uint128 remainingPayment, uint128 platformFee) = _deductPlatformFee(requiredEtherValue);
+        (t.remainingPayment, t.platformFee) = _deductPlatformFee(uint128(t.requiredEtherValue));
 
         // Check if the mint is an affiliated mint.
-        bool affiliated = isAffiliated(edition, mintId, affiliate);
-        uint128 affiliateFee;
+        t.affiliated = isAffiliated(edition, mintId, affiliate);
+
         unchecked {
-            if (affiliated) {
+            if (t.affiliated) {
                 // Compute the affiliate fee.
-                // Won't overflow, as `remainingPayment` is 128 bits, and `affiliateFeeBPS` is 16 bits.
-                affiliateFee = uint128(
-                    (uint256(remainingPayment) * uint256(baseData.affiliateFeeBPS)) / uint256(_MAX_BPS)
-                );
+                // Won't overflow, as `remainingPayment` from `_deductPlatformFee` is 128 bits,
+                // and `affiliateFeeBPS` is 16 bits.
+                t.affiliateFee = (t.remainingPayment * uint256(baseData.affiliateFeeBPS)) / uint256(_MAX_BPS);
                 // Deduct the affiliate fee from the remaining payment.
                 // Won't underflow as `affiliateFee <= remainingPayment`.
-                remainingPayment -= affiliateFee;
+                t.remainingPayment -= t.affiliateFee;
                 // Increment the affiliate fees accrued.
                 // Overflow is incredibly unrealistic.
-                _affiliateFeesAccrued[affiliate] += affiliateFee;
+                _affiliateFeesAccrued[affiliate] += uint128(t.affiliateFee);
             }
         }
 
@@ -322,13 +342,13 @@ abstract contract BaseMinter is IMinterModule {
             mintId,
             to,
             // Need to put this call here to avoid stack-too-deep error (it returns fromTokenId)
-            uint32(ISoundEditionV1(edition).mint{ value: remainingPayment }(to, quantity)),
+            uint32(ISoundEditionV1(edition).mint{ value: t.remainingPayment }(to, quantity)),
             quantity,
-            requiredEtherValue,
-            platformFee,
-            affiliateFee,
+            uint128(t.requiredEtherValue),
+            uint128(t.platformFee),
+            uint128(t.affiliateFee),
             affiliate,
-            affiliated
+            t.affiliated
         );
 
         /* ------------------------- REFUND ------------------------- */
@@ -338,8 +358,8 @@ abstract contract BaseMinter is IMinterModule {
             // Refund the caller any ETH they spent over the current total price of the NFTs.
             // Note that refunds are always to the caller, not the address
             // which the NFTs are minted to.
-            if (msg.value > requiredEtherValue) {
-                SafeTransferLib.safeTransferETH(msg.sender, msg.value - requiredEtherValue);
+            if (t.payment > t.requiredEtherValue) {
+                SafeTransferLib.safeTransferETH(msg.sender, t.payment - t.requiredEtherValue);
             }
         }
     }

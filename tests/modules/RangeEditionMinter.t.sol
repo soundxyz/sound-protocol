@@ -249,7 +249,7 @@ contract RangeEditionMinterTests is TestConfig {
                     quantity = uint256(keccak256(abi.encode(j + i + seed))) % 10;
                 }
                 assertEq(edition.balanceOf(to), 0);
-                minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, to, uint32(quantity), address(0));
+                minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, to, uint32(quantity), address(0), 0);
                 assertEq(edition.balanceOf(to), quantity);
             }
         }
@@ -262,7 +262,7 @@ contract RangeEditionMinterTests is TestConfig {
         address caller = getFundedAccount(1);
         vm.prank(caller);
         vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerAccount.selector);
-        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, address(this), 2, address(0));
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, address(this), 2, address(0), 0);
     }
 
     function test_mintWhenOverMaxMintableDueToPreviousMintedReverts() public {
@@ -280,7 +280,7 @@ contract RangeEditionMinterTests is TestConfig {
         // attempting to mint 2 more reverts
         vm.prank(caller);
         vm.expectRevert(IRangeEditionMinter.ExceedsMaxPerAccount.selector);
-        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, caller, 2, address(0));
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, caller, 2, address(0), 0);
     }
 
     function test_mintWhenMintablePerAccountIsSetAndSatisfied() public {
@@ -298,7 +298,7 @@ contract RangeEditionMinterTests is TestConfig {
         // Ensure we can mint the max allowed of 2 tokens
         vm.warp(START_TIME);
         vm.prank(caller);
-        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, caller, 2, address(0));
+        minter.mint{ value: PRICE * 2 }(address(edition), MINT_ID, caller, 2, address(0), 0);
 
         assertEq(edition.balanceOf(caller), 3);
 
@@ -319,7 +319,7 @@ contract RangeEditionMinterTests is TestConfig {
         assertEq(data.totalMinted, 0);
 
         vm.prank(caller);
-        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, caller, quantity, address(0));
+        minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, caller, quantity, address(0), 0);
 
         assertEq(edition.balanceOf(caller), uint256(quantity));
 
@@ -343,7 +343,7 @@ contract RangeEditionMinterTests is TestConfig {
         );
 
         vm.expectRevert(expectedRevert);
-        minter.mint{ value: requiredPayment - 1 }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: requiredPayment - 1 }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
     }
 
     function test_mintRevertsForMintNotOpen() public {
@@ -355,22 +355,22 @@ contract RangeEditionMinterTests is TestConfig {
         vm.expectRevert(
             abi.encodeWithSelector(IMinterModule.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
         );
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
 
         vm.warp(START_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
 
         vm.warp(END_TIME + 1);
         vm.expectRevert(
             abi.encodeWithSelector(IMinterModule.MintNotOpen.selector, block.timestamp, START_TIME, END_TIME)
         );
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
 
         vm.warp(END_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
 
         vm.warp(CUTOFF_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
     }
 
     function test_mintRevertsForSoldOut(uint32 quantityToBuyBeforeCutoff, uint32 quantityToBuyAfterCutoff) public {
@@ -394,7 +394,8 @@ contract RangeEditionMinterTests is TestConfig {
             MINT_ID,
             address(this),
             quantityToBuyBeforeCutoff,
-            address(0)
+            address(0),
+            0
         );
 
         if (totalMinted + quantityToBuyAfterCutoff > MAX_MINTABLE_LOWER) {
@@ -407,7 +408,8 @@ contract RangeEditionMinterTests is TestConfig {
             MINT_ID,
             address(this),
             quantityToBuyAfterCutoff,
-            address(0)
+            address(0),
+            0
         );
     }
 
@@ -425,11 +427,11 @@ contract RangeEditionMinterTests is TestConfig {
         minter.setMaxMintableRange(address(edition), MINT_ID, maxMintableLower, maxMintableUpper);
 
         vm.warp(START_TIME);
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
 
         vm.warp(CUTOFF_TIME);
         vm.expectRevert(abi.encodeWithSelector(IMinterModule.ExceedsAvailableSupply.selector, maxMintableLower));
-        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0));
+        minter.mint{ value: quantity * PRICE }(address(edition), MINT_ID, address(this), quantity, address(0), 0);
     }
 
     function test_canSetTimeRangeBaseMinter(address nonController) public {
@@ -623,7 +625,7 @@ contract RangeEditionMinterTests is TestConfig {
 
         // Warp to start time & mint some tokens to test that totalMinted changed
         vm.warp(expectedStartTime);
-        minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, address(this), 4, address(0));
+        minter.mint{ value: mintData.price * 4 }(address(edition), MINT_ID, address(this), 4, address(0), 0);
 
         mintData = minter.mintInfo(address(edition), MINT_ID);
 

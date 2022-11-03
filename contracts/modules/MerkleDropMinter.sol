@@ -90,7 +90,8 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
         address to,
         uint32 quantity,
         bytes32[] calldata proof,
-        address affiliate
+        address affiliate,
+        uint256 tip
     ) public payable {
         EditionMintData storage data = _editionMintData[edition][mintId];
 
@@ -109,7 +110,7 @@ contract MerkleDropMinter is IMerkleDropMinter, BaseMinter {
                 revert ExceedsMaxPerAccount();
         }
 
-        _mint(edition, mintId, to, quantity, affiliate);
+        _mint(edition, mintId, to, quantity, affiliate, tip);
 
         emit DropClaimed(to, quantity);
     }

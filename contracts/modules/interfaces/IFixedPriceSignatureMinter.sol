@@ -144,6 +144,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
      * @param quantity       The quantity of tokens to mint.
      * @param signedQuantity The max quantity this buyer has been approved to mint.
      * @param affiliate      The affiliate address.
+     * @param tip            The amount of tip.
      * @param signature      The signed message to authorize the mint.
      * @param claimTicket    The ticket number to enforce single-use of the signature.
      */
@@ -154,6 +155,7 @@ interface IFixedPriceSignatureMinter is IMinterModule {
         uint32 quantity,
         uint32 signedQuantity,
         address affiliate,
+        uint256 tip,
         bytes calldata signature,
         uint32 claimTicket
     ) external payable;

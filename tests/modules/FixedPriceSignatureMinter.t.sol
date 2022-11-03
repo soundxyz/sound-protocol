@@ -214,6 +214,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
                     uint32(quantity),
                     EDITION_MAX_MINTABLE,
                     NULL_AFFILIATE,
+                    0,
                     sig,
                     claimTicket
                 );
@@ -246,6 +247,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig1,
             claimTicket
         );
@@ -271,8 +273,9 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig2,
-            claimTicket++
+            claimTicket
         );
     }
 
@@ -301,6 +304,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -325,6 +329,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig1,
             CLAIM_TICKET_0
         );
@@ -341,6 +346,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             MAX_MINTABLE,
             MAX_MINTABLE,
             NULL_AFFILIATE,
+            0,
             sig2,
             CLAIM_TICKET_0
         );
@@ -357,6 +363,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig3,
             CLAIM_TICKET_0
         );
@@ -385,6 +392,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig,
             claimTicket
         );
@@ -401,6 +409,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig,
             claimTicket++
         );
@@ -437,6 +446,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -470,6 +480,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -507,6 +518,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig1,
             claimTicket1
         );
@@ -530,6 +542,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig2,
             claimTicket2
         );
@@ -590,6 +603,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -605,6 +619,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -656,6 +671,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -671,6 +687,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -721,6 +738,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
                 QUANTITY_1,
                 SIGNED_QUANTITY_1,
                 NULL_AFFILIATE,
+                0,
                 sig,
                 claimTicket
             );
@@ -868,6 +886,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig1,
             claimTicket
         );
@@ -882,6 +901,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig1,
             claimTicket
         );
@@ -915,6 +935,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -930,6 +951,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             quantity,
             signedQuantity,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -953,6 +975,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             wrongAffiliate,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -967,6 +990,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             NULL_AFFILIATE,
+            0,
             sig,
             CLAIM_TICKET_0
         );
@@ -980,6 +1004,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
             QUANTITY_1,
             SIGNED_QUANTITY_1,
             affiliate,
+            0,
             sig,
             CLAIM_TICKET_0
         );

@@ -160,12 +160,13 @@ interface IMerkleDropMinter is IMinterModule {
 
     /**
      * @dev Mints a token for a particular mint instance.
-     * @param edition  Address of the song edition contract we are minting for.
-     * @param mintId   The mint ID.
-     * @param to       The address to mint to.
-     * @param quantity The quantity of tokens to mint.
-     * @param proof    The merkle proof.
+     * @param edition   Address of the song edition contract we are minting for.
+     * @param mintId    The mint ID.
+     * @param to        The address to mint to.
+     * @param quantity  The quantity of tokens to mint.
+     * @param proof     The merkle proof.
      * @param affiliate The affiliate address.
+     * @param tip       The amount of tip.
      */
     function mint(
         address edition,
@@ -173,7 +174,8 @@ interface IMerkleDropMinter is IMinterModule {
         address to,
         uint32 quantity,
         bytes32[] calldata proof,
-        address affiliate
+        address affiliate,
+        uint256 tip
     ) external payable;
 
     /**
