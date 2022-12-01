@@ -1,5 +1,6 @@
 {
     "ISoundEditionV1": "0x50899e54",
+    "ISoundEditionV1_1": "0x425aac3d",
     "IMinterModule": "0x37c74bd8",
     "IFixedPriceSignatureMinter": "0xa61bd96f",
     "IMerkleDropMinter": "0x89691c4c",
