@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 1.2.0
+
+### Minor Changes
+
+-   e08b00c: Missed version bump
+
 ## 1.1.1
 
 ### Patch Changes
