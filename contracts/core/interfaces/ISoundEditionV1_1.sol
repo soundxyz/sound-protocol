@@ -54,10 +54,10 @@ struct EditionInfo {
 }
 
 /**
- * @title ISoundEditionV1
+ * @title ISoundEditionV1_1
  * @notice The interface for Sound edition contracts.
  */
-interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
+interface ISoundEditionV1_1 is IERC721AUpgradeable, IERC2981Upgradeable {
     // =============================================================
     //                            EVENTS
     // =============================================================
@@ -118,6 +118,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param mintRandomnessEnabled_ The boolean value.
      */
     event MintRandomnessEnabledSet(bool mintRandomnessEnabled_);
+
+    /**
+     * @dev Emitted when the `operatorFilteringEnabled` is set.
+     * @param operatorFilteringEnabled_ The boolean value.
+     */
+    event OperatorFilteringEnablededSet(bool operatorFilteringEnabled_);
 
     /**
      * @dev Emitted upon initialization.
@@ -422,6 +428,16 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      */
     function setMintRandomnessEnabled(bool mintRandomnessEnabled_) external;
 
+    /**
+     * @dev Sets whether OpenSea operator filtering is enabled.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract, or have the `ADMIN_ROLE`.
+     *
+     * @param operatorFilteringEnabled_ The boolean value.
+     */
+    function setOperatorFilteringEnabled(bool operatorFilteringEnabled_) external;
+
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
@@ -464,6 +480,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The constant value.
      */
     function MINT_RANDOMNESS_ENABLED_FLAG() external pure returns (uint8);
+
+    /**
+     * @dev Returns the bit flag to enable OpenSea operator filtering.
+     * @return The constant value.
+     */
+    function OPERATOR_FILTERING_ENABLED_FLAG() external pure returns (uint8);
 
     /**
      * @dev Returns the base token URI for the collection.
@@ -531,6 +553,12 @@ interface ISoundEditionV1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @return The configured value.
      */
     function mintRandomnessEnabled() external view returns (bool);
+
+    /**
+     * @dev Returns whether the `operatorFilteringEnabled` has been enabled.
+     * @return The configured value.
+     */
+    function operatorFilteringEnabled() external view returns (bool);
 
     /**
      * @dev Returns whether the mint has been concluded.

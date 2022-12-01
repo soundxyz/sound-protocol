@@ -4,10 +4,10 @@ pragma solidity ^0.8.16;
 import { Test } from "forge-std/Test.sol";
 
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
 import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
-import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
+import { MockSoundEditionV1_1 } from "./mocks/MockSoundEditionV1_1.sol";
 
 contract TestConfig is Test {
     // From ISoundEditionVI.
@@ -40,7 +40,7 @@ contract TestConfig is Test {
         feeRegistry = new SoundFeeRegistry(SOUND_FEE_ADDRESS, PLATFORM_FEE_BPS);
 
         // Deploy SoundEdition implementation
-        MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
+        MockSoundEditionV1_1 soundEditionImplementation = new MockSoundEditionV1_1();
 
         soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
     }
@@ -71,7 +71,7 @@ contract TestConfig is Test {
         uint8 flags
     ) public returns (address) {
         bytes memory initData = abi.encodeWithSelector(
-            SoundEditionV1.initialize.selector,
+            SoundEditionV1_1.initialize.selector,
             name,
             symbol,
             metadataModule,
@@ -93,9 +93,9 @@ contract TestConfig is Test {
         return payable(addr);
     }
 
-    function createGenericEdition() public returns (SoundEditionV1) {
+    function createGenericEdition() public returns (SoundEditionV1_1) {
         return
-            SoundEditionV1(
+            SoundEditionV1_1(
                 createSound(
                     SONG_NAME,
                     SONG_SYMBOL,

@@ -2,11 +2,11 @@
 pragma solidity ^0.8.16;
 
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { MockMinter, MintInfo } from "../mocks/MockMinter.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1_1 } from "@core/interfaces/ISoundEditionV1_1.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
@@ -52,8 +52,8 @@ contract MintControllerBaseTests is TestConfig {
         minter = new MockMinter(feeRegistry);
     }
 
-    function _createEdition(uint32 editionMaxMintable) internal returns (SoundEditionV1 edition) {
-        edition = SoundEditionV1(
+    function _createEdition(uint32 editionMaxMintable) internal returns (SoundEditionV1_1 edition) {
+        edition = SoundEditionV1_1(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -73,7 +73,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_createEditionMintRevertsIfCallerNotEditionOwnerOrAdmin() external {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
         address attacker = getFundedAccount(1);
 
         vm.expectRevert(IMinterModule.Unauthorized.selector);
@@ -82,7 +82,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_createEditionMintRevertsIfAffiliateFeeBPSTooHigh() external {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint16 affiliateFeeBPS = minter.MAX_BPS() + 1;
 
         vm.expectRevert(IMinterModule.InvalidAffiliateFeeBPS.selector);
@@ -90,7 +90,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_createEditionMintViaOwner() external {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = 0;
 
@@ -103,7 +103,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_createEditionMintViaAdmin() external {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = 0;
         address admin = address(1037037);
@@ -118,7 +118,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_createEditionMintIncremenetsNextMintId() external {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint256 prevMintId = minter.nextMintId();
         minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
@@ -132,7 +132,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_mintRevertsForUnderpaid() public {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
@@ -146,7 +146,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_mintRefundsForOverpaid() public {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
@@ -168,7 +168,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_mintAcceptsExactPayment() public {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
@@ -190,7 +190,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_mintRevertsWhenPaused() public {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
@@ -211,7 +211,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_mintRevertsWithZeroQuantity() public {
         minter.setPrice(0);
 
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
@@ -221,7 +221,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_createEditionMintMultipleTimes() external {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         for (uint256 i; i < 3; ++i) {
             uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
@@ -233,7 +233,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.setPrice(0);
 
         uint32 maxSupply = 50;
-        SoundEditionV1 edition1 = _createEdition(maxSupply);
+        SoundEditionV1_1 edition1 = _createEdition(maxSupply);
 
         uint128 mintId1 = minter.createEditionMint(address(edition1), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
@@ -241,7 +241,7 @@ contract MintControllerBaseTests is TestConfig {
         minter.mint(address(edition1), mintId1, maxSupply - 1, address(0));
 
         // try minting 2 more - should fail and tell us there is only 1 available
-        vm.expectRevert(abi.encodeWithSelector(ISoundEditionV1.ExceedsEditionAvailableSupply.selector, 1));
+        vm.expectRevert(abi.encodeWithSelector(ISoundEditionV1_1.ExceedsEditionAvailableSupply.selector, 1));
         minter.mint(address(edition1), mintId1, 2, address(0));
 
         // try minting 1 more - should succeed
@@ -251,7 +251,7 @@ contract MintControllerBaseTests is TestConfig {
     function test_setTimeRange(address nonController) public {
         vm.assume(nonController != address(this));
 
-        SoundEditionV1 edition = _createEdition(1);
+        SoundEditionV1_1 edition = _createEdition(1);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
@@ -325,14 +325,14 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_setAffiliateFee() public {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
         uint16 affiliateFeeBPS = 10;
         _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
     }
 
     function test_withdrawAffiliateFeesAccrued(uint16 affiliateFeeBPS) public {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         uint96 price = 1 ether;
@@ -360,7 +360,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function test_withdrawPlatformFeesAccrued(uint16 platformFeeBPS) public {
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         uint96 price = 1 ether;
@@ -402,7 +402,7 @@ contract MintControllerBaseTests is TestConfig {
 
         minter.setPrice(price);
 
-        SoundEditionV1 edition = _createEdition(EDITION_MAX_MINTABLE);
+        SoundEditionV1_1 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         address affiliate = affiliateIsZeroAddress
             ? address(0)
@@ -490,7 +490,7 @@ contract MintControllerBaseTests is TestConfig {
     }
 
     function _test_setAffiliateFee(
-        SoundEditionV1 edition,
+        SoundEditionV1_1 edition,
         uint128 mintId,
         uint16 affiliateFeeBPS
     ) internal returns (bool) {

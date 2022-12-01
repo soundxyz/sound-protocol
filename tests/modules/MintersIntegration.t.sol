@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 import { Merkle } from "murky/Merkle.sol";
 import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
@@ -41,7 +41,7 @@ contract MintersIntegration is TestConfig {
         getFundedAccount(6) // User 6 - participate in public sale
     ];
 
-    SoundEditionV1 public edition;
+    SoundEditionV1_1 public edition;
 
     // Helper function to setup a MerkleTree construct
     function setUpMerkleTree(address[] memory accounts) public returns (Merkle, bytes32[] memory) {
@@ -70,7 +70,7 @@ contract MintersIntegration is TestConfig {
     function test_Glasshouse() public {
         uint32 EDITION_MAX_MINTABLE = 1000;
         // Setup Glass house sound edition
-        edition = SoundEditionV1(
+        edition = SoundEditionV1_1(
             createSound(
                 "Glass House",
                 "GLASS",
