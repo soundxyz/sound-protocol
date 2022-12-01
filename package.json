@@ -15,7 +15,7 @@
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json && bob-tsm script/js/buildInterfaceIdsFile.ts  && pnpm prettier:write",
         "postinstall": "forge install",
         "prepack": "rm -rf out out-2 dist typechain && pnpm gen:ids && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm run typechain && bob-tsm build.ts",
-        "prep-release": "bob-tsm script/js/buildInterfaceIdsFile.ts && bob-tsm script/js/buildAddressJsonFile.ts && pnpm prettier:write",
+        "prep-release": "bob-tsm script/js/buildInterfaceIdsFile.ts && pnpm prettier:write",
         "prepare": "husky install",
         "prettier:write": "prettier --write **/*.{js,ts,json,sol}",
         "postpublish": "gh-release",
