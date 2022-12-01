@@ -30,14 +30,14 @@ pragma solidity ^0.8.16;
 import { Clones } from "openzeppelin/proxy/Clones.sol";
 
 import { ISoundCreatorV1 } from "./interfaces/ISoundCreatorV1.sol";
-import { ISoundEditionV1 } from "./interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1_1 } from "./interfaces/ISoundEditionV1_1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 
 /**
  * @title SoundCreatorV1
- * @notice A factory that deploys minimal proxies of `SoundEditionV1.sol`.
+ * @notice A factory that deploys minimal proxies of `SoundEditionV1_1.sol`.
  * @dev The proxies are OpenZeppelin's Clones implementation of https://eips.ethereum.org/EIPS/eip-1167
  */
 contract SoundCreatorV1 is ISoundCreatorV1, OwnableRoles {

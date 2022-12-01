@@ -4,8 +4,8 @@ import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
-import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { ISoundEditionV1_1 } from "@core/interfaces/ISoundEditionV1_1.sol";
+import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
 import { IFixedPriceSignatureMinter, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
@@ -105,7 +105,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
         return abi.encodePacked(r, s, v);
     }
 
-    function _createEditionAndMinter() internal returns (SoundEditionV1 edition, FixedPriceSignatureMinter minter) {
+    function _createEditionAndMinter() internal returns (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) {
         edition = createGenericEdition();
 
         minter = new FixedPriceSignatureMinter(feeRegistry);
@@ -124,7 +124,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_createEditionMintEmitsEvent() public {
-        SoundEditionV1 edition = createGenericEdition();
+        SoundEditionV1_1 edition = createGenericEdition();
 
         FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
 
@@ -153,7 +153,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
-        SoundEditionV1 edition = createGenericEdition();
+        SoundEditionV1_1 edition = createGenericEdition();
 
         FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
 
@@ -171,7 +171,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintRevertsIfBuyerNotAuthorized() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 claimTicket = 0;
         address buyer = getFundedAccount(1);
@@ -223,7 +223,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintWithUnderpaidReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = quantity;
@@ -252,7 +252,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintWhenSoldOutReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 claimTicket = 0;
         uint32 quantity = MAX_MINTABLE + 1;
@@ -305,7 +305,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address buyer = getFundedAccount(1);
         uint32 claimTicket = 0;
@@ -347,7 +347,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintForNonExistentMintIdReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = quantity;
@@ -382,7 +382,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = quantity;
@@ -420,7 +420,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_multipleMintsFromSameBuyer() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 quantity = 1;
         uint32 signedQuantity = 2;
@@ -474,8 +474,8 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_signatureCannotBeReusedOnDifferentEditions() public {
-        SoundEditionV1 edition1 = createGenericEdition();
-        SoundEditionV1 edition2 = createGenericEdition();
+        SoundEditionV1_1 edition1 = createGenericEdition();
+        SoundEditionV1_1 edition2 = createGenericEdition();
 
         // Use the same minter for both editions
         FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
@@ -545,7 +545,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_signatureCannotBeReusedOnDifferentMintInstances() external {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address buyer = getFundedAccount(1);
 
@@ -618,7 +618,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
 
         bool[] memory expectedClaimedAndUnclaimed = new bool[](numOfTokensToBuy * 2);
 
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint128 mintId = minter.createEditionMint(
             address(edition),
@@ -671,7 +671,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_setMaxMintable(uint32 maxMintable) public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         vm.expectEmit(true, true, true, true);
         emit MaxMintableSet(address(edition), MINT_ID, maxMintable);
@@ -681,7 +681,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_setMaxMintableRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
         address attacker = getFundedAccount(1);
 
         vm.expectRevert(IMinterModule.Unauthorized.selector);
@@ -690,7 +690,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_setPrice(uint96 price) public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         vm.expectEmit(true, true, true, true);
         emit PriceSet(address(edition), MINT_ID, price);
@@ -702,7 +702,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     function test_setSigner(address signer) public {
         vm.assume(signer != address(0));
 
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         vm.expectEmit(true, true, true, true);
         emit SignerSet(address(edition), MINT_ID, signer);
@@ -712,7 +712,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_setZeroSignerReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         vm.expectRevert(IFixedPriceSignatureMinter.SignerIsZeroAddress.selector);
         minter.setSigner(address(edition), MINT_ID, address(0));
@@ -739,7 +739,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintInfo() public {
-        SoundEditionV1 edition = createGenericEdition();
+        SoundEditionV1_1 edition = createGenericEdition();
 
         FixedPriceSignatureMinter minter = new FixedPriceSignatureMinter(feeRegistry);
 
@@ -773,7 +773,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintWithDifferentChainIdReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 claimTicket = 0;
         address buyer = getFundedAccount(1);
@@ -817,7 +817,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintWithMoreThanSignedQuantityReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = 2;
@@ -863,7 +863,7 @@ contract FixedPriceSignatureMinterTests is TestConfig {
     }
 
     function test_mintWithInvalidAffiliateReverts() public {
-        (SoundEditionV1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
+        (SoundEditionV1_1 edition, FixedPriceSignatureMinter minter) = _createEditionAndMinter();
 
         address buyer = getFundedAccount(1);
         address affiliate = getFundedAccount(2);

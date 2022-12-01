@@ -26,3 +26,8 @@
 	path = lib/murky
 	url = https://github.com/dmfxyz/murky
 	ignore = dirty
+[submodule "lib/closedsea"]
+	path = lib/closedsea
+	url = https://github.com/vectorized/closedsea
+	branch = main
+	ignore = dirty

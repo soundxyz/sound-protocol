@@ -41,7 +41,7 @@ contract MockMinter is BaseMinter {
     function totalPrice(
         address, /* edition */
         uint128, /* mintId */
-        address, /* minter */
+        address, /* to */
         uint32 quantity
     ) public view virtual override(BaseMinter) returns (uint128) {
         unchecked {
