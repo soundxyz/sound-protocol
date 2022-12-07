@@ -3,7 +3,7 @@ import type { ProjectManifest } from "@pnpm/types";
 import { buildCode } from "bob-ts";
 import { execaCommand } from "execa";
 import { copy, ensureDir } from "fs-extra";
-import { rm, writeFile } from "fs/promises";
+import { rm, writeFile, readdir } from "fs/promises";
 import pkg from "../../package.json";
 
 const makePublishManifest = getDefault(makePublishManifestPkg);
@@ -14,6 +14,9 @@ await rm("dist", {
 });
 
 await copy("typechain", "src/typechain");
+
+const paths = await readdir("out");
+console.log(`out dir paths`, paths);
 
 const tsc = execaCommand("tsc -p tsconfig.build.json", {
     stdio: "inherit",

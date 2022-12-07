@@ -14,25 +14,24 @@ export async function pruneArtifacts() {
 
     const inclusionStrings = ["sound", "minter", "goldenegg"];
     const exclusionStrings = ["RangeEditionMinterUpdater", "RangeEditionMinterInvariants", ".t.sol", "test", "mock"];
-    for await (const p of walk(CONTRACT_ARTIFACTS_DIR)) {
-        const currentPath = p.toLowerCase();
-
+    for await (const currentPath of walk(CONTRACT_ARTIFACTS_DIR)) {
         let foundMatch = false;
         for (const str of inclusionStrings) {
-            if (currentPath.includes(str.toLowerCase())) {
+            if (currentPath.toLowerCase().includes(str.toLowerCase())) {
                 foundMatch = true;
                 break;
             }
         }
 
         for (const str of exclusionStrings) {
-            if (currentPath.includes(str.toLowerCase())) {
+            if (currentPath.toLowerCase().includes(str.toLowerCase())) {
                 foundMatch = false;
                 break;
             }
         }
 
         if (!foundMatch) {
+            console.log(`Removing ${currentPath}`);
             await rm(currentPath, {
                 force: true,
             });

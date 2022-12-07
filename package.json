@@ -14,7 +14,7 @@
         "deploy:goerli": "EVM_NETWORK=goerli pnpm gen:ids && source .env && forge script script/solidity/Deploy.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=goerli pnpm prep-release",
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json && bob-tsm script/js/buildInterfaceIdsFile.ts  && pnpm prettier:write",
         "postinstall": "forge install",
-        "prepack": "rm -rf out dist typechain && pnpm gen:ids && pnpm build && pnpm prune-artifacts && pnpm run typechain && bob-tsm script/js/build.ts",
+        "prepack": "rm -rf out dist typechain && pnpm gen:ids && pnpm build && pnpm prune-artifacts && pnpm typechain && bob-tsm script/js/build.ts",
         "prune-artifacts": "bob-tsm script/js/pruneArtifacts.ts",
         "prep-release": "bob-tsm script/js/buildInterfaceIdsFile.ts && pnpm prettier:write",
         "prepare": "husky install",
