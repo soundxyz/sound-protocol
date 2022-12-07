@@ -12,7 +12,7 @@ export async function pruneTypechain() {
         }
     }
 
-    const inclusionStrings = ["sound", "minter", "goldenegg"];
+    const inclusionStrings = ["index", "sound", "minter", "goldenegg"];
     const exclusionStrings = ["RangeEditionMinterUpdater", "RangeEditionMinterInvariants"];
     for await (const currentPath of walk(TYPECHAIN_DIR)) {
         const fileName = path.basename(currentPath).toLowerCase();
