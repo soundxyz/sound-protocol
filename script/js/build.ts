@@ -4,7 +4,8 @@ import { buildCode } from "bob-ts";
 import { execaCommand } from "execa";
 import { copy, ensureDir } from "fs-extra";
 import { rm, writeFile } from "fs/promises";
-import pkg from "./package.json";
+import pkg from "../../package.json";
+import { pruneTypechain } from "./pruneTypechain";
 
 const makePublishManifest = getDefault(makePublishManifestPkg);
 
@@ -85,3 +86,5 @@ await rm("src/typechain", {
 function getDefault<T>(v: T | { default?: T }) {
     return (("default" in v ? v.default : v) || v) as T;
 }
+
+await pruneTypechain();
