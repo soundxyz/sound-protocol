@@ -2,4 +2,4 @@
 "@soundxyz/sound-protocol": minor
 ---
 
-Adds pruneTypechain script
+Adds pruneArtifacts script

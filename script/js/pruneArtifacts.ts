@@ -1,9 +1,9 @@
 import { rm, opendir, readdir, lstat, rmdir } from "fs/promises";
 import path from "path";
 
-const TYPECHAIN_DIR = "dist/typechain";
+const CONTRACT_ARTIFACTS_DIR = "out";
 
-export async function pruneTypechain() {
+export async function pruneArtifacts() {
     async function* walk(dir) {
         for await (const d of await opendir(dir)) {
             const entry = path.join(dir, d.name);
@@ -12,21 +12,21 @@ export async function pruneTypechain() {
         }
     }
 
-    const inclusionStrings = ["index", "sound", "minter", "goldenegg"];
-    const exclusionStrings = ["RangeEditionMinterUpdater", "RangeEditionMinterInvariants"];
-    for await (const currentPath of walk(TYPECHAIN_DIR)) {
-        const fileName = path.basename(currentPath).toLowerCase();
+    const inclusionStrings = ["sound", "minter", "goldenegg"];
+    const exclusionStrings = ["RangeEditionMinterUpdater", "RangeEditionMinterInvariants", ".t.sol", "test", "mock"];
+    for await (const p of walk(CONTRACT_ARTIFACTS_DIR)) {
+        const currentPath = p.toLowerCase();
 
         let foundMatch = false;
         for (const str of inclusionStrings) {
-            if (fileName.includes(str.toLowerCase())) {
+            if (currentPath.includes(str.toLowerCase())) {
                 foundMatch = true;
                 break;
             }
         }
 
         for (const str of exclusionStrings) {
-            if (fileName.includes(str.toLowerCase())) {
+            if (currentPath.includes(str.toLowerCase())) {
                 foundMatch = false;
                 break;
             }
@@ -39,7 +39,7 @@ export async function pruneTypechain() {
         }
     }
 
-    await removeEmptyDirectories(TYPECHAIN_DIR);
+    await removeEmptyDirectories(CONTRACT_ARTIFACTS_DIR);
 }
 
 async function removeEmptyDirectories(dir) {
@@ -62,3 +62,5 @@ async function removeEmptyDirectories(dir) {
         await rmdir(dir);
     }
 }
+
+await pruneArtifacts();
