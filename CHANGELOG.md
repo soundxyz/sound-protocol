@@ -1,5 +1,15 @@
 # @soundxyz/sound-protocol
 
+## 1.3.0
+
+### Minor Changes
+
+-   f0b7c84: Adds pruneArtifacts script
+
+### Patch Changes
+
+-   855d919: Nukes buildAddresses script
+
 ## 1.2.0
 
 ### Minor Changes
