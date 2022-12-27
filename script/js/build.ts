@@ -3,8 +3,8 @@ import type { ProjectManifest } from "@pnpm/types";
 import { buildCode } from "bob-ts";
 import { execaCommand } from "execa";
 import { copy, ensureDir } from "fs-extra";
-import { rm, writeFile } from "fs/promises";
-import pkg from "./package.json";
+import { rm, writeFile, readdir } from "fs/promises";
+import pkg from "../../package.json";
 
 const makePublishManifest = getDefault(makePublishManifestPkg);
 
