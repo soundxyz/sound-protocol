@@ -7,8 +7,10 @@ const CONTRACT_ADDRESSES = {
     merkleDropMinter: "0xda4b6fbb85918700e5ee91f6ce3cc2148af02912",
     rangeEditionMinter: "0x4552f8b70a72a8ea1084bf7b7ba50f10f2f9daa7",
     editionMaxMinter: "0x5e5d50ea70c9a1b6ed64506f121b094156b8fd20",
-    soundEditionV1: "0x8cfbfae570d673864cd61e1e4543eb7874ca35c2",
     soundCreatorV1: "0xaef3e8c8723d9c31863be8de54df2668ef7c4b89",
+    // SoundEdition implementations
+    soundEditionV1: "0x8cfbfae570d673864cd61e1e4543eb7874ca35c2",
+    soundEditionV1_1: "0xE5fEB62FB34aDbA661B7c8256887a8B9a21C2278",
 } as const;
 
 const contractAddresses = {
