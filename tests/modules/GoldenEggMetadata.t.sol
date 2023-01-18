@@ -134,7 +134,7 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 mintQuantity,
         uint32 tokenId,
         bool checkUnauthorized
-    ) external {
+    ) public {
         mintQuantity = 1 + (mintQuantity % 8);
 
         numberedUpto = numberedUpto % mintQuantity;
@@ -164,6 +164,13 @@ contract GoldenEggMetadataTests is TestConfig {
         } else {
             string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(tokenId));
             assertEq(edition.tokenURI(tokenId), expectedTokenURI);
+        }
+    }
+
+    function test_getTokenURI() external {
+        unchecked {
+            for (uint256 i; i < 2; ++i)
+                for (uint32 j; j < 2; ++j) for (uint32 k; k < 2; ++k) test_getTokenURI(i, 2, j, k == 0);
         }
     }
 
