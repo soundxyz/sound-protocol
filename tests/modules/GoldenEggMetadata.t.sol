@@ -5,7 +5,7 @@ import { Strings } from "openzeppelin/utils/Strings.sol";
 
 import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
+import { IGoldenEggMetadata, GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
@@ -24,6 +24,8 @@ contract GoldenEggMetadataTests is TestConfig {
     uint32 constant MAX_MINTABLE_UPPER = 69;
 
     uint32 constant MINT_ID = 0;
+
+    event NumberUptoSet(address indexed edition, uint256 tokenId);
 
     function _createEdition(uint32 editionCutoffTime)
         internal
@@ -68,8 +70,13 @@ contract GoldenEggMetadataTests is TestConfig {
     }
 
     function test_getGoldenEggTokenId(uint32 editionCutoffTime, uint32 mintQuantity) external {
-        vm.assume(mintQuantity > 0 && mintQuantity < 10);
-        vm.assume(editionCutoffTime > block.timestamp);
+        if (!(mintQuantity > 0 && mintQuantity < 10)) {
+            mintQuantity = 5;
+        }
+
+        if (!(editionCutoffTime > block.timestamp)) {
+            editionCutoffTime = uint32(block.timestamp + 100);
+        }
 
         GoldenEggMetadata eggModule = new GoldenEggMetadata();
 
@@ -119,7 +126,45 @@ contract GoldenEggMetadataTests is TestConfig {
             assertFalse(edition.mintConcluded());
         }
 
-        assertEq(eggModule.getGoldenEggTokenId(edition), expectedGoldenEggId);
+        assertEq(eggModule.getGoldenEggTokenId(address(edition)), expectedGoldenEggId);
+    }
+
+    function test_getTokenURI(
+        uint256 numberedUpto,
+        uint32 mintQuantity,
+        uint32 tokenId,
+        bool checkUnauthorized
+    ) external {
+        mintQuantity = 1 + (mintQuantity % 8);
+
+        numberedUpto = numberedUpto % mintQuantity;
+
+        tokenId = 1 + (tokenId % mintQuantity);
+
+        (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition(
+            CUTOFF_TIME
+        );
+
+        minter.mint{ value: PRICE * mintQuantity }(address(edition), MINT_ID, mintQuantity, address(0));
+
+        if (checkUnauthorized) {
+            vm.expectRevert(IGoldenEggMetadata.Unauthorized.selector);
+            vm.prank(address(1));
+            goldenEggModule.setNumberedUpto(address(edition), numberedUpto);
+        }
+        vm.expectEmit(true, true, true, true);
+        emit NumberUptoSet(address(edition), numberedUpto);
+        goldenEggModule.setNumberedUpto(address(edition), numberedUpto);
+
+        assertEq(goldenEggModule.numberedUpto(address(edition)), numberedUpto);
+
+        if (numberedUpto != 0 && tokenId > numberedUpto) {
+            string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(0));
+            assertEq(edition.tokenURI(tokenId), expectedTokenURI);
+        } else {
+            string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(tokenId));
+            assertEq(edition.tokenURI(tokenId), expectedTokenURI);
+        }
     }
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
@@ -131,7 +176,7 @@ contract GoldenEggMetadataTests is TestConfig {
         minter.mint{ value: PRICE }(address(edition), MINT_ID, 1, address(0));
         uint256 tokenId = 1;
 
-        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(tokenId));
 
         assertEq(goldenEggTokenId, 0);
@@ -148,7 +193,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
-        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
 
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
@@ -164,7 +209,7 @@ contract GoldenEggMetadataTests is TestConfig {
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         // check golden egg has not been generated after minting one less than the max
-        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         assertEq(goldenEggTokenId, 0);
 
         // Mint one more to bring us to maxMintableLower
@@ -172,7 +217,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CUTOFF_TIME);
-        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
 
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
@@ -204,7 +249,7 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 quantity = MAX_MINTABLE_LOWER - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
-        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         // golden egg not generated
         assertEq(goldenEggTokenId, 0);
 
@@ -212,7 +257,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CUTOFF_TIME);
-        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
     }
@@ -229,7 +274,7 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 quantity = MAX_MINTABLE_LOWER - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
-        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         // golden egg not generated
         assertEq(goldenEggTokenId, 0);
 
@@ -238,7 +283,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CUTOFF_TIME);
-        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
 
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
@@ -268,7 +313,7 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 quantity = MAX_MINTABLE_LOWER;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
-        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         // golden egg not generated
         assertEq(goldenEggTokenId, 0);
 
@@ -276,7 +321,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CUTOFF_TIME);
-        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
 
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
@@ -295,7 +340,7 @@ contract GoldenEggMetadataTests is TestConfig {
         uint32 quantity = MAX_MINTABLE_LOWER;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
-        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        uint256 goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         // golden egg not generated
         assertEq(goldenEggTokenId, 0);
 
@@ -304,7 +349,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
         // Warp to cutoff time, which is set to randomnessLockedTimeThreshold
         vm.warp(CUTOFF_TIME);
-        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(edition);
+        goldenEggTokenId = goldenEggModule.getGoldenEggTokenId(address(edition));
         string memory expectedTokenURI = string.concat(BASE_URI, "goldenEgg");
         assertEq(edition.tokenURI(goldenEggTokenId), expectedTokenURI);
     }
