@@ -36,17 +36,26 @@ import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC298
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { LibString } from "solady/utils/LibString.sol";
+import { OperatorFilterer } from "closedsea/OperatorFilterer.sol";
 
-import { ISoundEditionV1, EditionInfo } from "./interfaces/ISoundEditionV1.sol";
+import { ISoundEditionV1_1, EditionInfo } from "./interfaces/ISoundEditionV1_1.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 import { ArweaveURILib } from "./utils/ArweaveURILib.sol";
+import { MintRandomnessLib } from "./utils/MintRandomnessLib.sol";
 
 /**
- * @title SoundEditionV1
+ * @title SoundEditionV1_1
  * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
-contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
+contract SoundEditionV1_1 is
+    ISoundEditionV1_1,
+    ERC721AQueryableUpgradeable,
+    ERC721ABurnableUpgradeable,
+    OwnableRoles,
+    OperatorFilterer
+{
     using ArweaveURILib for ArweaveURILib.URI;
 
     // =============================================================
@@ -82,6 +91,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
     /**
+     * @dev The interface ID for SoundEdition v1.0.0.
+     */
+    bytes4 private constant _INTERFACE_ID_SOUND_EDITION_V1 = 0x50899e54;
+
+    /**
      * @dev The boolean flag on whether the metadata is frozen.
      */
     uint8 public constant METADATA_IS_FROZEN_FLAG = 1 << 0;
@@ -90,6 +104,11 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      * @dev The boolean flag on whether the `mintRandomness` is enabled.
      */
     uint8 public constant MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
+
+    /**
+     * @dev The boolean flag on whether OpenSea operator filtering is enabled.
+     */
+    uint8 public constant OPERATOR_FILTERING_ENABLED_FLAG = 1 << 2;
 
     // =============================================================
     //                            STORAGE
@@ -142,7 +161,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      *      unless `randomnessLockedAfterMinted` or `randomnessLockedTimestamp` have been surpassed.
      *      Used for game mechanics like the Sound Golden Egg.
      */
-    bytes9 private _mintRandomness;
+    uint72 private _mintRandomness;
 
     /**
      * @dev The royalty fee in basis points.
@@ -159,7 +178,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     // =============================================================
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function initialize(
         string memory name_,
@@ -215,10 +234,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             editionCutoffTime_,
             flags_
         );
+
+        if (flags_ & OPERATOR_FILTERING_ENABLED_FLAG != 0) {
+            _registerForOperatorFiltering();
+        }
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function mint(address to, uint256 quantity)
         external
@@ -232,10 +255,12 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         fromTokenId = _nextTokenId();
         // Mint the tokens. Will revert if `quantity` is zero.
         _mint(to, quantity);
+
+        emit Minted(to, quantity, fromTokenId);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function airdrop(address[] calldata to, uint256 quantity)
         external
@@ -257,29 +282,37 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
                 _mint(to[i], quantity);
             }
         }
+
+        emit Airdropped(to, quantity, fromTokenId);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function withdrawETH() external {
-        SafeTransferLib.safeTransferETH(fundingRecipient, address(this).balance);
+        uint256 amount = address(this).balance;
+        SafeTransferLib.safeTransferETH(fundingRecipient, amount);
+        emit ETHWithdrawn(fundingRecipient, amount, msg.sender);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function withdrawERC20(address[] calldata tokens) external {
         unchecked {
             uint256 n = tokens.length;
+            uint256[] memory amounts = new uint256[](n);
             for (uint256 i; i != n; ++i) {
-                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, IERC20(tokens[i]).balanceOf(address(this)));
+                uint256 amount = IERC20(tokens[i]).balanceOf(address(this));
+                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, amount);
+                amounts[i] = amount;
             }
+            emit ERC20Withdrawn(fundingRecipient, tokens, amounts, msg.sender);
         }
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setMetadataModule(address metadataModule_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         metadataModule = metadataModule_;
@@ -288,7 +321,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _baseURIStorage.update(baseURI_);
@@ -297,7 +330,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _contractURIStorage.update(contractURI_);
@@ -306,7 +339,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _flags |= METADATA_IS_FROZEN_FLAG;
@@ -314,7 +347,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setFundingRecipient(address fundingRecipient_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
@@ -323,7 +356,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setRoyalty(uint16 royaltyBPS_) external onlyRolesOrOwner(ADMIN_ROLE) onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
@@ -331,7 +364,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setEditionMaxMintableRange(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_)
         external
@@ -360,7 +393,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setEditionCutoffTime(uint32 editionCutoffTime_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (mintConcluded()) revert MintHasConcluded();
@@ -371,7 +404,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function setMintRandomnessEnabled(bool mintRandomnessEnabled_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (_totalMinted() != 0) revert MintsAlreadyExist();
@@ -383,12 +416,83 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
         emit MintRandomnessEnabledSet(mintRandomnessEnabled_);
     }
 
+    /**
+     * @inheritdoc ISoundEditionV1_1
+     */
+    function setOperatorFilteringEnabled(bool operatorFilteringEnabled_) external onlyRolesOrOwner(ADMIN_ROLE) {
+        if (operatorFilteringEnabled() != operatorFilteringEnabled_) {
+            _flags ^= OPERATOR_FILTERING_ENABLED_FLAG;
+            if (operatorFilteringEnabled_) {
+                _registerForOperatorFiltering();
+            }
+        }
+
+        emit OperatorFilteringEnablededSet(operatorFilteringEnabled_);
+    }
+
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC721AUpgradeable, IERC721AUpgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
+    function approve(address operator, uint256 tokenId)
+        public
+        payable
+        override(ERC721AUpgradeable, IERC721AUpgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.approve(operator, tokenId);
+    }
+
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /**
+     * @inheritdoc IERC721AUpgradeable
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId, data);
+    }
+
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function editionInfo() external view returns (EditionInfo memory info) {
         info.baseURI = baseURI();
@@ -413,7 +517,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function mintRandomness() public view returns (uint256) {
         if (mintConcluded() && mintRandomnessEnabled()) {
@@ -423,7 +527,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function editionMaxMintable() public view returns (uint32) {
         if (block.timestamp < editionCutoffTime) {
@@ -434,56 +538,63 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function isMetadataFrozen() public view returns (bool) {
         return _flags & METADATA_IS_FROZEN_FLAG != 0;
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function mintRandomnessEnabled() public view returns (bool) {
         return _flags & MINT_RANDOMNESS_ENABLED_FLAG != 0;
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
+     */
+    function operatorFilteringEnabled() public view returns (bool) {
+        return _operatorFilteringEnabled();
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1_1
      */
     function mintConcluded() public view returns (bool) {
         return _totalMinted() == editionMaxMintable();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function nextTokenId() public view returns (uint256) {
         return _nextTokenId();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function numberMinted(address owner) external view returns (uint256) {
         return _numberMinted(owner);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function numberBurned(address owner) external view returns (uint256) {
         return _numberBurned(owner);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function totalMinted() public view returns (uint256) {
         return _totalMinted();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function totalBurned() public view returns (uint256) {
         return _totalBurned();
@@ -509,16 +620,17 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ISoundEditionV1, ERC721AUpgradeable, IERC721AUpgradeable)
+        override(ISoundEditionV1_1, ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {
         return
-            interfaceId == type(ISoundEditionV1).interfaceId ||
+            interfaceId == _INTERFACE_ID_SOUND_EDITION_V1 ||
+            interfaceId == type(ISoundEditionV1_1).interfaceId ||
             ERC721AUpgradeable.supportsInterface(interfaceId) ||
             interfaceId == _INTERFACE_ID_ERC2981 ||
             interfaceId == this.supportsInterface.selector;
@@ -552,14 +664,14 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function baseURI() public view returns (string memory) {
         return _baseURIStorage.load();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1
+     * @inheritdoc ISoundEditionV1_1
      */
     function contractURI() public view returns (string memory) {
         return _contractURIStorage.load();
@@ -568,6 +680,25 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
+
+    /**
+     * @dev For operator filtering to be toggled on / off.
+     */
+    function _operatorFilteringEnabled() internal view override returns (bool) {
+        return _flags & OPERATOR_FILTERING_ENABLED_FLAG != 0;
+    }
+
+    /**
+     * @dev For skipping the operator check if the operator is the OpenSea Conduit.
+     * If somehow, we use a different address in the future, it won't break functionality,
+     * only increase the gas used back to what it will be with regular operator filtering.
+     */
+    function _isPriorityOperator(address operator) internal pure override returns (bool) {
+        // OpenSea Seaport Conduit:
+        // https://etherscan.io/address/0x1E0049783F008A0085193E00003D00cd54003c71
+        // https://goerli.etherscan.io/address/0x1E0049783F008A0085193E00003D00cd54003c71
+        return operator == address(0x1E0049783F008A0085193E00003D00cd54003c71);
+    }
 
     /**
      * @inheritdoc ERC721AUpgradeable
@@ -636,22 +767,15 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
      */
     modifier updatesMintRandomness() {
         if (mintRandomnessEnabled() && !mintConcluded()) {
-            bytes32 randomness = _mintRandomness;
-            assembly {
-                // Pick any of the last 256 blocks psuedorandomly for the blockhash.
-                // Store the blockhash, the current `randomness` and the `coinbase()`
-                // into the scratch space.
-                mstore(0x00, blockhash(sub(number(), add(1, byte(0, randomness)))))
-                // `randomness` is left-aligned.
-                // `coinbase()` is right-aligned.
-                // `difficulty()` is right-aligned.
-                // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
-                // is implemented, the randomness will be determined by the beacon chain.
-                mstore(0x20, xor(randomness, xor(coinbase(), difficulty())))
-                // Compute the new `randomness` by hashing the scratch space.
-                randomness := keccak256(0x00, 0x40)
+            uint256 randomness = _mintRandomness;
+            uint256 newRandomness = MintRandomnessLib.nextMintRandomness(
+                randomness,
+                _totalMinted(),
+                editionMaxMintable()
+            );
+            if (newRandomness != randomness) {
+                _mintRandomness = uint72(newRandomness);
             }
-            _mintRandomness = bytes9(randomness);
         }
         _;
     }
@@ -665,18 +789,17 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
     function _initializeNameAndSymbol(string memory name_, string memory symbol_) internal {
         // Overflow impossible since max block gas limit bounds the length of the strings.
         unchecked {
-            uint256 nameLength = bytes(name_).length;
-            uint256 symbolLength = bytes(symbol_).length;
-            uint256 totalLength = nameLength + symbolLength;
+            // Returns `bytes32(0)` if the strings are too long to be packed into a single word.
+            bytes32 packed = LibString.packTwo(name_, symbol_);
             // If we cannot pack both strings into a single 32-byte word, store separately.
             // We need 2 bytes to store their lengths.
-            if (totalLength > 32 - 2) {
+            if (packed == bytes32(0)) {
                 ERC721AStorage.layout()._name = name_;
                 ERC721AStorage.layout()._symbol = symbol_;
                 return;
             }
             // Otherwise, pack them and store them into a single word.
-            _shortNameAndSymbol = bytes32(abi.encodePacked(uint8(nameLength), name_, uint8(symbolLength), symbol_));
+            _shortNameAndSymbol = packed;
         }
     }
 
@@ -692,19 +815,7 @@ contract SoundEditionV1 is ISoundEditionV1, ERC721AQueryableUpgradeable, ERC721A
             bytes32 packed = _shortNameAndSymbol;
             // If the strings have been previously packed.
             if (packed != bytes32(0)) {
-                // Allocate the bytes.
-                bytes memory nameBytes = new bytes(uint8(packed[0]));
-                bytes memory symbolBytes = new bytes(uint8(packed[1 + nameBytes.length]));
-                // Copy the bytes.
-                for (uint256 i; i < nameBytes.length; ++i) {
-                    nameBytes[i] = bytes1(packed[1 + i]);
-                }
-                for (uint256 i; i < symbolBytes.length; ++i) {
-                    symbolBytes[i] = bytes1(packed[2 + nameBytes.length + i]);
-                }
-                // Cast the bytes.
-                name_ = string(nameBytes);
-                symbol_ = string(symbolBytes);
+                (name_, symbol_) = LibString.unpackTwo(packed);
             } else {
                 // Otherwise, load them from their separate variables.
                 name_ = ERC721AStorage.layout()._name;

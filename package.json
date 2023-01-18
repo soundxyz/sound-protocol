@@ -1,6 +1,6 @@
 {
     "name": "@soundxyz/sound-protocol",
-    "version": "1.1.0",
+    "version": "1.3.0",
     "homepage": "https://github.com/soundxyz/sound-protocol#readme",
     "repository": {
         "type": "git",
@@ -10,12 +10,13 @@
     "author": "soundxyz",
     "scripts": {
         "build": "forge build",
-        "deploy:mainnet": "EVM_NETWORK=mainnet pnpm gen:ids && source .env && forge script script/solidity/Deploy.s.sol --fork-url $MAINNET_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=mainnet pnpm prep-release",
-        "deploy:goerli": "EVM_NETWORK=goerli pnpm gen:ids && source .env && forge script script/solidity/Deploy.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=goerli pnpm prep-release",
+        "deploy:mainnet": "EVM_NETWORK=mainnet pnpm gen:ids && source .env && forge script script/solidity/Deploy.1.1.0.s.sol --fork-url $MAINNET_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=mainnet pnpm prep-release",
+        "deploy:goerli": "EVM_NETWORK=goerli pnpm gen:ids && source .env && forge script script/solidity/Deploy.1.1.0.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast && EVM_NETWORK=goerli pnpm prep-release",
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json && bob-tsm script/js/buildInterfaceIdsFile.ts  && pnpm prettier:write",
         "postinstall": "forge install",
-        "prepack": "rm -rf out out-2 dist typechain && pnpm gen:ids && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm run typechain && bob-tsm build.ts",
-        "prep-release": "bob-tsm script/js/buildInterfaceIdsFile.ts && bob-tsm script/js/buildAddressJsonFile.ts && pnpm prettier:write",
+        "prepack": "rm -rf out dist typechain && pnpm gen:ids && pnpm build && pnpm prune-artifacts && pnpm typechain && bob-tsm script/js/build.ts",
+        "prune-artifacts": "bob-tsm script/js/pruneArtifacts.ts",
+        "prep-release": "bob-tsm script/js/buildInterfaceIdsFile.ts && pnpm prettier:write",
         "prepare": "husky install",
         "prettier:write": "prettier --write **/*.{js,ts,json,sol}",
         "postpublish": "gh-release",
@@ -26,7 +27,7 @@
         "test": "forge test",
         "test:coverage": "forge coverage --contracts contracts --report lcov && genhtml lcov.info --branch-coverage --output-directory coverage --legend",
         "test:gas": "forge test --gas-report",
-        "typechain": "typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out-2/**/*.json'"
+        "typechain": "typechain --discriminate-types --target ethers-v5 --out-dir typechain 'out/**/*.json'"
     },
     "lint-staged": {
         "*.sol": "solhint",

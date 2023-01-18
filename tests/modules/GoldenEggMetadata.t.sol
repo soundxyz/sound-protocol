@@ -73,7 +73,7 @@ contract GoldenEggMetadataTests is TestConfig {
         if (!(mintQuantity > 0 && mintQuantity < 10)) {
             mintQuantity = 5;
         }
-
+        
         if (!(editionCutoffTime > block.timestamp)) {
             editionCutoffTime = uint32(block.timestamp + 100);
         }
@@ -129,18 +129,13 @@ contract GoldenEggMetadataTests is TestConfig {
         assertEq(eggModule.getGoldenEggTokenId(address(edition)), expectedGoldenEggId);
     }
 
-    function test_getTokenURI(
-        uint256 numberedUpto,
-        uint32 mintQuantity,
-        uint32 tokenId,
-        bool checkUnauthorized
-    ) public {
-        mintQuantity = 1 + (mintQuantity % 8);
+    function test_getTokenURI(uint256 numberedUpto, uint32 mintQuantity, uint32 tokenId, bool checkUnauthorized) public {
+        mintQuantity = 1 + mintQuantity % 8;
 
         numberedUpto = numberedUpto % mintQuantity;
 
-        tokenId = 1 + (tokenId % mintQuantity);
-
+        tokenId = 1 + tokenId % mintQuantity;
+        
         (SoundEditionV1 edition, RangeEditionMinter minter, GoldenEggMetadata goldenEggModule) = _createEdition(
             CUTOFF_TIME
         );
@@ -155,9 +150,9 @@ contract GoldenEggMetadataTests is TestConfig {
         vm.expectEmit(true, true, true, true);
         emit NumberUptoSet(address(edition), numberedUpto);
         goldenEggModule.setNumberedUpto(address(edition), numberedUpto);
-
+        
         assertEq(goldenEggModule.numberedUpto(address(edition)), numberedUpto);
-
+        
         if (numberedUpto != 0 && tokenId > numberedUpto) {
             string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(0));
             assertEq(edition.tokenURI(tokenId), expectedTokenURI);
@@ -169,8 +164,10 @@ contract GoldenEggMetadataTests is TestConfig {
 
     function test_getTokenURI() external {
         unchecked {
-            for (uint256 i; i < 2; ++i)
-                for (uint32 j; j < 2; ++j) for (uint32 k; k < 2; ++k) test_getTokenURI(i, 2, j, k == 0);
+            for (uint i; i < 2; ++i)
+        for (uint32 j; j < 2; ++j)
+            for (uint32 k; k < 2; ++k) 
+                test_getTokenURI(i, 2, j, k == 0);        
         }
     }
 

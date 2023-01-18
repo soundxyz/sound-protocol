@@ -1,5 +1,31 @@
 # @soundxyz/sound-protocol
 
+## 1.3.0
+
+### Minor Changes
+
+-   f0b7c84: Adds pruneArtifacts script
+
+### Patch Changes
+
+-   855d919: Nukes buildAddresses script
+
+## 1.2.0
+
+### Minor Changes
+
+-   e08b00c: Missed version bump
+
+## 1.1.1
+
+### Patch Changes
+
+-   270d7ab: SoundEditionV1_1
+    -   Implements the interface for OpenSea's Mandatory Operator Filterer for royalties via ClosedSea
+    -   Security enhancements for Golden egg computations
+    -   Adds some additional events for ETHWithdrawn, ERC20Withdrawn, Minted, and Airdropped
+    -   Cleans up some assembly logic into a library
+
 ## 1.1.0
 
 ### Minor Changes

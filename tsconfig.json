@@ -15,5 +15,5 @@
         "allowSyntheticDefaultImports": true,
         "incremental": false
     },
-    "include": ["build.ts", "package.json", "typechain", "src", "src/**/*.json"]
+    "include": ["script/js/**/*", "package.json", "typechain", "src", "src/**/*.json"]
 }

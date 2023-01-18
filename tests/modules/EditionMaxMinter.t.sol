@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
+import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 import { IEditionMaxMinter, MintInfo } from "@modules/interfaces/IEditionMaxMinter.sol";
@@ -63,7 +63,7 @@ contract EditionMaxMinterTests is TestConfig {
 
     function _createEditionAndMinter(uint32 _maxMintablePerAccount)
         internal
-        returns (SoundEditionV1 edition, EditionMaxMinter minter)
+        returns (SoundEditionV1_1 edition, EditionMaxMinter minter)
     {
         edition = createGenericEdition();
 
@@ -91,7 +91,7 @@ contract EditionMaxMinterTests is TestConfig {
         uint16 affiliateFeeBPS,
         uint32 maxMintablePerAccount
     ) public {
-        SoundEditionV1 edition = SoundEditionV1(
+        SoundEditionV1_1 edition = SoundEditionV1_1(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -147,7 +147,7 @@ contract EditionMaxMinterTests is TestConfig {
     }
 
     function test_createEditionMintEmitsEvent() public {
-        SoundEditionV1 edition = createGenericEdition();
+        SoundEditionV1_1 edition = createGenericEdition();
 
         EditionMaxMinter minter = new EditionMaxMinter(feeRegistry);
 
@@ -167,7 +167,7 @@ contract EditionMaxMinterTests is TestConfig {
     }
 
     function test_mintWhenOverMaxMintablePerAccountReverts() public {
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(1);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(1);
         vm.warp(START_TIME);
 
         address caller = getFundedAccount(1);
@@ -177,7 +177,7 @@ contract EditionMaxMinterTests is TestConfig {
     }
 
     function test_mintWhenOverMaxMintableDueToPreviousMintedReverts() public {
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(3);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(3);
         vm.warp(START_TIME);
 
         address caller = getFundedAccount(1);
@@ -196,7 +196,7 @@ contract EditionMaxMinterTests is TestConfig {
 
     function test_mintWhenMintablePerAccountIsSetAndSatisfied() public {
         // Set max allowed per account to 3
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(3);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(3);
 
         address caller = getFundedAccount(1);
 
@@ -217,7 +217,7 @@ contract EditionMaxMinterTests is TestConfig {
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.warp(START_TIME);
 
@@ -237,7 +237,7 @@ contract EditionMaxMinterTests is TestConfig {
 
     function test_mintRevertForUnderpaid() public {
         uint32 quantity = 2;
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(quantity);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(quantity);
 
         vm.warp(START_TIME);
 
@@ -254,7 +254,7 @@ contract EditionMaxMinterTests is TestConfig {
     }
 
     function test_mintRevertsForMintNotOpen() public {
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         uint32 quantity = 1;
 
@@ -281,7 +281,7 @@ contract EditionMaxMinterTests is TestConfig {
     }
 
     function test_setPrice(uint96 price) public {
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.expectEmit(true, true, true, true);
         emit PriceSet(address(edition), MINT_ID, price);
@@ -292,7 +292,7 @@ contract EditionMaxMinterTests is TestConfig {
 
     function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
         vm.assume(maxMintablePerAccount != 0);
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.expectEmit(true, true, true, true);
         emit MaxMintablePerAccountSet(address(edition), MINT_ID, maxMintablePerAccount);
@@ -302,14 +302,14 @@ contract EditionMaxMinterTests is TestConfig {
     }
 
     function test_setZeroMaxMintablePerAccountReverts() public {
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.expectRevert(IEditionMaxMinter.MaxMintablePerAccountIsZero.selector);
         minter.setMaxMintablePerAccount(address(edition), MINT_ID, 0);
     }
 
     function test_createWithZeroMaxMintablePerAccountReverts() public {
-        (SoundEditionV1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
+        (SoundEditionV1_1 edition, EditionMaxMinter minter) = _createEditionAndMinter(type(uint32).max);
 
         vm.expectRevert(IEditionMaxMinter.MaxMintablePerAccountIsZero.selector);
         minter.createEditionMint(address(edition), PRICE, START_TIME, END_TIME, AFFILIATE_FEE_BPS, 0);
@@ -354,7 +354,7 @@ contract EditionMaxMinterTests is TestConfig {
         if (editionMaxMintableLower < quantity) editionMaxMintableLower = quantity;
         if (editionMaxMintableUpper < quantity) editionMaxMintableUpper = quantity;
 
-        SoundEditionV1 edition = SoundEditionV1(
+        SoundEditionV1_1 edition = SoundEditionV1_1(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
