@@ -45,6 +45,19 @@ interface IGoldenEggMetadata is IMetadataModule {
     // =============================================================
 
     /**
+     * @dev Returns the default maximum `tokenId` for `edition` that has a numbered json.
+     * @return The constant value
+     */
+    function DEFAULT_NUMBER_UPTO() external pure returns (uint256);
+
+    /**
+     * @dev Returns the maximum `tokenId` for `edition` that has a numbered json.
+     * @param edition Address of the song edition contract we are minting for.
+     * @return The configured value.
+     */
+    function numberedUpto(address edition) external view returns (uint256);
+
+    /**
      * @dev When registered on a SoundEdition proxy, its `tokenURI` redirects execution to this `tokenURI`.
      * @param tokenId The token ID to retrieve the token URI for.
      * @return The token URI string.

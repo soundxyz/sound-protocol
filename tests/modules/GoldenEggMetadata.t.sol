@@ -156,9 +156,10 @@ contract GoldenEggMetadataTests is TestConfig {
         emit NumberUptoSet(address(edition), numberedUpto);
         goldenEggModule.setNumberedUpto(address(edition), numberedUpto);
 
-        assertEq(goldenEggModule.numberedUpto(address(edition)), numberedUpto);
+        uint256 n = numberedUpto == 0 ? goldenEggModule.DEFAULT_NUMBER_UPTO() : numberedUpto;
+        assertEq(goldenEggModule.numberedUpto(address(edition)), n);
 
-        if (numberedUpto != 0 && tokenId > numberedUpto) {
+        if (tokenId > n) {
             string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(0));
             assertEq(edition.tokenURI(tokenId), expectedTokenURI);
         } else {

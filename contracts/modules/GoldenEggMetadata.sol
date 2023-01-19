@@ -8,6 +8,15 @@ import { IGoldenEggMetadata } from "@modules/interfaces/IGoldenEggMetadata.sol";
 
 contract GoldenEggMetadata is IGoldenEggMetadata {
     // =============================================================
+    //                           CONSTANTS
+    // =============================================================
+
+    /**
+     * @dev The default maximum `tokenId` for `edition` that has a numbered json.
+     */
+    uint256 public constant DEFAULT_NUMBER_UPTO = 1000;
+
+    // =============================================================
     //                            STORAGE
     // =============================================================
 
@@ -15,7 +24,7 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
      * @dev The maximum `tokenId` for `edition` that has a numbered json.
      * If zero, all `tokenId`s have number jsons.
      */
-    mapping(address => uint256) public numberedUpto;
+    mapping(address => uint256) internal _numberedUpto;
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
@@ -25,13 +34,21 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
      * @inheritdoc IGoldenEggMetadata
      */
     function setNumberedUpto(address edition, uint256 tokenId) external onlyEditionOwnerOrAdmin(edition) {
-        numberedUpto[edition] = tokenId;
+        _numberedUpto[edition] = tokenId;
         emit NumberUptoSet(edition, tokenId);
     }
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
+
+    /**
+     * @inheritdoc IGoldenEggMetadata
+     */
+    function numberedUpto(address edition) public view returns (uint256) {
+        uint256 n = _numberedUpto[edition];
+        return n == 0 ? DEFAULT_NUMBER_UPTO : n;
+    }
 
     /**
      * @inheritdoc IGoldenEggMetadata
@@ -44,8 +61,8 @@ contract GoldenEggMetadata is IGoldenEggMetadata {
 
         if (tokenId == goldenEggTokenId) return string.concat(baseURI, "goldenEgg");
 
-        uint256 n = numberedUpto[msg.sender];
-        return string.concat(baseURI, LibString.toString(n != 0 && tokenId > n ? 0 : tokenId));
+        uint256 n = numberedUpto(msg.sender);
+        return string.concat(baseURI, LibString.toString(tokenId > n ? 0 : tokenId));
     }
 
     /**
