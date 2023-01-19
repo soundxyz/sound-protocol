@@ -25,7 +25,7 @@ contract GoldenEggMetadataTests is TestConfig {
 
     uint32 constant MINT_ID = 0;
 
-    event NumberUptoSet(address indexed edition, uint256 tokenId);
+    event NumberUpToSet(address indexed edition, uint256 tokenId);
 
     function _createEdition(uint32 editionCutoffTime)
         internal
@@ -130,14 +130,14 @@ contract GoldenEggMetadataTests is TestConfig {
     }
 
     function test_getTokenURI(
-        uint256 numberedUpto,
+        uint256 numberedUpTo,
         uint32 mintQuantity,
         uint32 tokenId,
         bool checkUnauthorized
     ) public {
         mintQuantity = 1 + (mintQuantity % 8);
 
-        numberedUpto = numberedUpto % mintQuantity;
+        numberedUpTo = numberedUpTo % mintQuantity;
 
         tokenId = 1 + (tokenId % mintQuantity);
 
@@ -150,14 +150,14 @@ contract GoldenEggMetadataTests is TestConfig {
         if (checkUnauthorized) {
             vm.expectRevert(IGoldenEggMetadata.Unauthorized.selector);
             vm.prank(address(1));
-            goldenEggModule.setNumberedUpto(address(edition), numberedUpto);
+            goldenEggModule.setNumberedUpTo(address(edition), numberedUpTo);
         }
         vm.expectEmit(true, true, true, true);
-        emit NumberUptoSet(address(edition), numberedUpto);
-        goldenEggModule.setNumberedUpto(address(edition), numberedUpto);
+        emit NumberUpToSet(address(edition), numberedUpTo);
+        goldenEggModule.setNumberedUpTo(address(edition), numberedUpTo);
 
-        uint256 n = numberedUpto == 0 ? goldenEggModule.DEFAULT_NUMBER_UPTO() : numberedUpto;
-        assertEq(goldenEggModule.numberedUpto(address(edition)), n);
+        uint256 n = numberedUpTo == 0 ? goldenEggModule.DEFAULT_NUMBER_UP_TO() : numberedUpTo;
+        assertEq(goldenEggModule.numberedUpTo(address(edition)), n);
 
         if (tokenId > n) {
             string memory expectedTokenURI = string.concat(BASE_URI, Strings.toString(0));

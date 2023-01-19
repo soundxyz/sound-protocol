@@ -18,7 +18,7 @@ interface IGoldenEggMetadata is IMetadataModule {
      * @param edition Address of the song edition contract we are minting for.
      * @param tokenId The maximum `tokenId` for `edition` that has a numberd json.
      */
-    event NumberUptoSet(address indexed edition, uint256 tokenId);
+    event NumberUpToSet(address indexed edition, uint256 tokenId);
 
     // =============================================================
     //                            ERRORS
@@ -38,7 +38,7 @@ interface IGoldenEggMetadata is IMetadataModule {
      * @param edition Address of the song edition contract we are minting for.
      * @param tokenId The maximum `tokenId` for `edition` that has a numberd json.
      */
-    function setNumberedUpto(address edition, uint256 tokenId) external;
+    function setNumberedUpTo(address edition, uint256 tokenId) external;
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
@@ -48,14 +48,14 @@ interface IGoldenEggMetadata is IMetadataModule {
      * @dev Returns the default maximum `tokenId` for `edition` that has a numbered json.
      * @return The constant value
      */
-    function DEFAULT_NUMBER_UPTO() external pure returns (uint256);
+    function DEFAULT_NUMBER_UP_TO() external pure returns (uint256);
 
     /**
      * @dev Returns the maximum `tokenId` for `edition` that has a numbered json.
      * @param edition Address of the song edition contract we are minting for.
      * @return The configured value.
      */
-    function numberedUpto(address edition) external view returns (uint256);
+    function numberedUpTo(address edition) external view returns (uint256);
 
     /**
      * @dev When registered on a SoundEdition proxy, its `tokenURI` redirects execution to this `tokenURI`.
