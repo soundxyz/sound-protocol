@@ -100,7 +100,7 @@ flowchart LR
 
 The smart contracts are stored under the `contracts` directory.
 
-Files marked with an asterik (\*) are specific to [sound.xyz](https://sound.xyz),  
+Files marked with an asterisk (\*) are specific to [sound.xyz](https://sound.xyz),  
 but you can refer to them if you are building contracts to interact with them on-chain,   
 or building your own customized versions.
 

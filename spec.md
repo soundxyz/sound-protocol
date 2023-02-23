@@ -37,7 +37,7 @@ Features:
     -   Allows freezing of metadata, beyond which the variables can't be modified by `owner`.
 -   Payments
     -   `SoundEditionV1.fundingRecipient` - an address that receives all revenue accrued (primary sales & secondary royalty revenue). In the case where the artist is the sole recipient, this is their wallet address. If they are splitting revenue with other parties, this could be an [0xSplits SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) or alternative splitter contract.
-    -   Secondary revenue can accrue to to the edition via the `receive` function, or to a separate address (ex: a [SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) set as the `fundingRecipient`).
+    -   Secondary revenue can accrue to the edition via the `receive` function, or to a separate address (ex: a [SplitWallet](https://docs.0xsplits.xyz/smartcontracts/SplitWallet) set as the `fundingRecipient`).
     -   Minter modules created by Sound collect a platform fee governed by `SoundFeeRegistry.sol`.
 -   Minting
     -   Only the owner, callers with ADMIN_ROLE, and callers with MINTER_ROLE (e.g. minter modules) can call mint.
@@ -74,14 +74,14 @@ Features:
 -   Current modules:
     -   `GoldenEggMetadataModule.sol`
         -   Uses the `mintRandomness` on the edition to return the golden egg token ID. The Golden Egg is a single token per edition that is randomly selected from the set of minted tokens.
-        -   The `mintRandomness` is determined by storing the blockhash of each mint on the edition contract, up until a token quantity threshold or timestamp (whichever comes first). NOTE: The randommness doesn't necessarily need to be used for the golden egg.
+        -   The `mintRandomness` is determined by storing the blockhash of each mint on the edition contract, up until a token quantity threshold or timestamp (whichever comes first). NOTE: The randomness doesn't necessarily need to be used for the golden egg.
         -   `GoldenEggMetadataModule.sol` uses the `mintRandomness` on the edition to return the golden egg token ID.
 
 ### Minter modules
 
 -   Minter modules must implement `IMinterModule.sol`
 -   Minter modules are contracts authorized to mint via a `MINTER_ROLE`, which can only be granted by the edition owner (the artist).
--   Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the quantity set on the edition. It is up to the artist to initialize the `editionMaxMintableLower` and `editionMaxMintableHigher` with values high enough to accomodate all current & future mints.
+-   Each minter can define any max token quantity, irrespective of quantities minted by other minters. However, all minters are constrained by the quantity set on the edition. It is up to the artist to initialize the `editionMaxMintableLower` and `editionMaxMintableHigher` with values high enough to accommodate all current & future mints.
 -   Affiliate fee: Third parties can collect an affiliate fee by setting an address when minting. The fee is set by the artist when initializing the mint instance. Example use-case: a music blog that exposes a UI to mint songs it is promoting.
 -   Current modules:
     -   `FixedPriceSignatureMinter`
@@ -133,7 +133,7 @@ This section describes, from a security perspective, the expected behavior of th
     - Can mint tokens from the edition contract.
 - **Affiliate**: 
     - An account assigned by the edition owner or admin, that receives a portion of the primary sales. 
-    - It is set by passing an affiliate address to a minter contract's `mint` funtion.
+    - It is set by passing an affiliate address to a minter contract's `mint` function.
 - **Buyer**: 
     - An account that purchases a token from the edition contract. 
     - The term "Buyer" is irrespective of price, as mint configurations can be set with price of zero.
@@ -149,7 +149,7 @@ No contracts in the prevailing Sound Protocol are upgradeable, therefore trust a
     - `cutoffTime` - This is a time threshold that is used to conditionally determine the maximum mintable quantity, and can be changed only if the minting hasn't concluded.
     - `mintRandomness` - A random number generated with each mint & used for game mechanics like the Sound Golden Egg. It can only be enabled or disabled if no tokens have been minted.
 - The `SoundCreatorV1` can be set to a different edition implementation at any time, which may have different trust assumptions. Changing the edition implementation does not impact editions which have already been deployed.
-- The edition owner or admins can change the following paramters on the minter modules:
+- The edition owner or admins can change the following parameters on the minter modules:
     - Time values (`startTime`, `cutoffTime`, `endTime`)
     - `paused` - Whether a given mint schedule is paused or not.
     - `affiliateFeeBPS` - The affiliate fee percentage paid to the affiliate address from primary sales.
