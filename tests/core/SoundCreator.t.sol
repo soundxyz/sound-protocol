@@ -2,13 +2,13 @@
 pragma solidity ^0.8.16;
 
 import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
-import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
+import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
 import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
 contract SoundCreatorTests is TestConfig {
@@ -33,7 +33,7 @@ contract SoundCreatorTests is TestConfig {
     // Tests that the factory deploys
     function test_deploysSoundCreator() public {
         // Deploy logic contracts
-        SoundEditionV1_1 editionImplementation = new SoundEditionV1_1();
+        SoundEditionV1_2 editionImplementation = new SoundEditionV1_2();
         SoundCreatorV1 soundCreator = new SoundCreatorV1(address(editionImplementation));
 
         assert(address(soundCreator) != address(0));
@@ -42,7 +42,7 @@ contract SoundCreatorTests is TestConfig {
 
     // Tests that the factory creates a new sound NFT
     function test_createSound() public {
-        SoundEditionV1_1 soundEdition = createGenericEdition();
+        SoundEditionV1_2 soundEdition = createGenericEdition();
 
         assert(address(soundEdition) != address(0));
         assertEq(soundEdition.name(), SONG_NAME);
@@ -50,7 +50,7 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_createSoundSetsNameAndSymbolCorrectly(string memory name, string memory symbol) public {
-        SoundEditionV1_1 soundEdition = SoundEditionV1_1(
+        SoundEditionV1_2 soundEdition = SoundEditionV1_2(
             createSound(
                 name,
                 symbol,
@@ -71,8 +71,8 @@ contract SoundCreatorTests is TestConfig {
     }
 
     function test_createSoundRevertsOnDoubleInitialization() public {
-        SoundEditionV1_1 soundEdition = createGenericEdition();
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        SoundEditionV1_2 soundEdition = createGenericEdition();
+        vm.expectRevert(Ownable.Unauthorized.selector);
         soundEdition.initialize(
             SONG_NAME,
             SONG_SYMBOL,
@@ -93,7 +93,7 @@ contract SoundCreatorTests is TestConfig {
 
         assertEq(address(soundCreator.owner()), address(this));
 
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         vm.prank(attacker);
         soundCreator.transferOwnership(attacker);
     }
@@ -103,11 +103,11 @@ contract SoundCreatorTests is TestConfig {
 
         assertEq(address(soundCreator.owner()), address(this));
 
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         vm.prank(newOwner);
         soundCreator.completeOwnershipHandover(newOwner);
 
-        vm.expectRevert(OwnableRoles.NoHandoverRequest.selector);
+        vm.expectRevert(Ownable.NoHandoverRequest.selector);
         soundCreator.completeOwnershipHandover(newOwner);
 
         vm.prank(newOwner);
@@ -131,7 +131,7 @@ contract SoundCreatorTests is TestConfig {
     function test_attackerCantSetNewImplementation(address attacker) public {
         vm.assume(attacker != address(this));
 
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         vm.prank(attacker);
         soundCreator.setEditionImplementation(address(0));
     }
@@ -140,7 +140,7 @@ contract SoundCreatorTests is TestConfig {
         vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
         new SoundCreatorV1(address(0));
 
-        SoundEditionV1_1 soundEdition = createGenericEdition();
+        SoundEditionV1_2 soundEdition = createGenericEdition();
         SoundCreatorV1 soundCreator = new SoundCreatorV1(address(soundEdition));
 
         vm.expectRevert(ISoundCreatorV1.ImplementationAddressCantBeZero.selector);
@@ -171,7 +171,7 @@ contract SoundCreatorTests is TestConfig {
         }
 
         // Deploy the implementation of the edition.
-        SoundEditionV1_1 editionImplementation = new SoundEditionV1_1();
+        SoundEditionV1_2 editionImplementation = new SoundEditionV1_2();
 
         (address soundEditionAddress, ) = soundCreator.soundEditionAddress(address(this), salt);
 
@@ -263,8 +263,8 @@ contract SoundCreatorTests is TestConfig {
         // Call the create function.
         (, bytes[] memory results) = _createSoundEditionWithCalls(salt, contracts, data);
 
-        // Cast it to `SoundEditionV1_1` for convenience.
-        SoundEditionV1_1 soundEdition = SoundEditionV1_1(soundEditionAddress);
+        // Cast it to `SoundEditionV1_2` for convenience.
+        SoundEditionV1_2 soundEdition = SoundEditionV1_2(soundEditionAddress);
 
         // Check that the `MINTER_ROLE` has been assigned properly.
         assertTrue(soundEdition.hasAnyRole(address(signatureMinter), editionImplementation.MINTER_ROLE()));
@@ -315,7 +315,7 @@ contract SoundCreatorTests is TestConfig {
     function _makeInitData() internal pure returns (bytes memory) {
         return
             abi.encodeWithSelector(
-                SoundEditionV1_1.initialize.selector,
+                SoundEditionV1_2.initialize.selector,
                 SONG_NAME,
                 SONG_SYMBOL,
                 METADATA_MODULE,

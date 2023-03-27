@@ -1,15 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import { IAccessControlEnumerableUpgradeable } from "openzeppelin-upgradeable/access/IAccessControlEnumerableUpgradeable.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
-import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
+import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
+import { ISoundEditionV1_2, EditionInfo } from "@core/interfaces/ISoundEditionV1_2.sol";
 import { ISoundEditionV1_1 } from "@core/interfaces/ISoundEditionV1_1.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
+import { LibMulticaller } from "multicaller/LibMulticaller.sol";
+import { MulticallerWithSender } from "multicaller/MulticallerWithSender.sol";
+import { Ownable } from "solady/auth/Ownable.sol";
 
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 
 import { TestConfig } from "../../TestConfig.sol";
+
+contract MulticallerWithSenderUpgradeable is MulticallerWithSender {
+    function initialize() external {
+        assembly {
+            sstore(0, shl(160, 1))
+        }
+    }
+}
+
+contract MulticallerWithSenderAttacker {
+    fallback() external payable {
+        address[] memory targets = new address[](1);
+        targets[0] = msg.sender;
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeWithSelector(ISoundEditionV1_2.setRoyalty.selector, msg.sender, uint16(12));
+
+        MulticallerWithSender multicallerWithSender = MulticallerWithSender(
+            payable(LibMulticaller.MULTICALLER_WITH_SENDER)
+        );
+
+        multicallerWithSender.aggregateWithSender(targets, data, new uint256[](1));
+    }
+}
 
 /**
  * @dev Miscellaneous tests for SoundEdition
@@ -32,6 +59,8 @@ contract SoundEdition_misc is TestConfig {
 
     event OperatorFilteringEnablededSet(bool operatorFilteringEnabled_);
 
+    error TransferCallerNotOwnerNorApproved();
+
     function test_createSoundEmitsEvent() public {
         vm.expectEmit(true, true, true, true);
 
@@ -52,7 +81,7 @@ contract SoundEdition_misc is TestConfig {
             FLAGS
         );
 
-        SoundEditionV1_1(
+        SoundEditionV1_2(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -70,8 +99,10 @@ contract SoundEdition_misc is TestConfig {
     }
 
     function test_supportsInterface() public {
-        SoundEditionV1_1 edition = createGenericEdition();
-        bool supportsEditionIface = edition.supportsInterface(type(ISoundEditionV1_1).interfaceId);
+        SoundEditionV1_2 edition = createGenericEdition();
+        bool supportsEditionIface = edition.supportsInterface(type(ISoundEditionV1_2).interfaceId);
+        assertTrue(supportsEditionIface);
+        supportsEditionIface = edition.supportsInterface(type(ISoundEditionV1_1).interfaceId);
         assertTrue(supportsEditionIface);
         supportsEditionIface = edition.supportsInterface(type(ISoundEditionV1).interfaceId);
         assertTrue(supportsEditionIface);
@@ -80,10 +111,10 @@ contract SoundEdition_misc is TestConfig {
     }
 
     function test_operatorFilterer() public {
-        SoundEditionV1_1[2] memory editions;
+        SoundEditionV1_2[2] memory editions;
 
         for (uint8 i; i < 2; ++i) {
-            editions[i] = SoundEditionV1_1(
+            editions[i] = SoundEditionV1_2(
                 createSound(
                     SONG_NAME,
                     SONG_SYMBOL,
@@ -163,5 +194,53 @@ contract SoundEdition_misc is TestConfig {
         gasUsedForEnabled = gasBefore - gasleft();
 
         assertTrue(gasUsedForEnabled > gasUsedForDisabled);
+    }
+
+    function test_multicallerSupport(uint256) public {
+        MulticallerWithSender multicallerWithSender = MulticallerWithSender(
+            payable(LibMulticaller.MULTICALLER_WITH_SENDER)
+        );
+        vm.etch(LibMulticaller.MULTICALLER_WITH_SENDER, bytes(address(new MulticallerWithSenderUpgradeable()).code));
+        MulticallerWithSenderUpgradeable(payable(LibMulticaller.MULTICALLER_WITH_SENDER)).initialize();
+
+        SoundEditionV1_2 edition = createGenericEdition();
+
+        MulticallerWithSenderAttacker attacker = new MulticallerWithSenderAttacker();
+
+        address fundingRecipient = address(attacker);
+        uint16 royaltyBPS = uint16(_bound(_random(), 0, 10));
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(edition);
+        targets[1] = address(edition);
+
+        bytes[] memory data = new bytes[](2);
+        data[0] = abi.encodeWithSelector(SoundEditionV1_2.setFundingRecipient.selector, fundingRecipient);
+        data[1] = abi.encodeWithSelector(SoundEditionV1_2.setRoyalty.selector, royaltyBPS);
+
+        bool isUnauthorized;
+        if (_random() % 16 == 0) {
+            vm.startPrank(address(1));
+            vm.expectRevert(Ownable.Unauthorized.selector);
+            isUnauthorized = true;
+        } else if (_random() % 2 == 0) {
+            edition.grantRoles(address(this), edition.ADMIN_ROLE());
+            edition.transferOwnership(address(1));
+        }
+        multicallerWithSender.aggregateWithSender(targets, data, new uint256[](data.length));
+        if (isUnauthorized) {
+            return;
+        }
+
+        EditionInfo memory info = edition.editionInfo();
+
+        assertEq(info.royaltyBPS, royaltyBPS);
+        assertEq(info.fundingRecipient, fundingRecipient);
+
+        vm.deal(address(edition), 1 ether);
+
+        edition.withdrawETH();
+
+        assertEq(edition.editionInfo().royaltyBPS, royaltyBPS);
     }
 }

@@ -3,5 +3,7 @@ openzeppelin-upgradeable/=./lib/openzeppelin-contracts-upgradeable/contracts/
 chiru-labs/ERC721A-Upgradeable/=./lib/ERC721A-Upgradeable/contracts/
 solady/=./lib/solady/src/
 closedsea/=./lib/closedsea/src/
+preapprove/=./lib/preapprove/src/
+multicaller/=./lib/multicaller/src/
 @core=./contracts/core
 @modules=./contracts/modules/
