@@ -10,7 +10,7 @@ contract MintRandomnessLibTest is TestConfig {
         if (randomness == 0) {
             randomness = 1;
         }
-        uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, totalMinted, 0);
+        uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, totalMinted, 1, 0);
         assertEq(newRandomness, randomness);
     }
 
@@ -24,12 +24,12 @@ contract MintRandomnessLibTest is TestConfig {
                     uint256 maxMintable = 256;
                     uint256 maxMintableHalf = maxMintable >> 1;
                     for (uint256 i; i < maxMintableHalf; ++i) {
-                        uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, i, maxMintable);
+                        uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, i, 1, maxMintable);
                         if (randomness != newRandomness) changesBeforeHalf++;
                         randomness = newRandomness;
                     }
                     for (uint256 i = maxMintableHalf; i < maxMintable; ++i) {
-                        uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, i, maxMintable);
+                        uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, i, 1, maxMintable);
                         if (randomness != newRandomness) changesAfterHalf++;
                         randomness = newRandomness;
                     }
@@ -57,10 +57,30 @@ contract MintRandomnessLibTest is TestConfig {
             uint256 changes;
             for (uint256 t; t < 8192; ++t) {
                 uint256 randomness = t + 1;
-                uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, 255, 256);
+                uint256 newRandomness = MintRandomnessLib.nextMintRandomness(randomness, 255, 1, 256);
                 if (randomness != newRandomness) changes++;
             }
             assertTrue(changes != 0);
+        }
+    }
+
+    function test_mintRandomnessSameWithPartitions() public {
+        for (uint256 t; t < 2; ++t) {
+            uint256 randomnessBatched = t;
+            uint256 randomnessSeparate = t;
+            uint256 maxMintable = 256;
+            uint256 quantity = 10;
+            for (uint256 i; i < quantity; ++i) {
+                uint256 totalMinted = i;
+                randomnessSeparate = MintRandomnessLib.nextMintRandomness(
+                    randomnessSeparate,
+                    totalMinted,
+                    1,
+                    maxMintable
+                );
+            }
+            randomnessBatched = MintRandomnessLib.nextMintRandomness(randomnessBatched, 0, quantity, maxMintable);
+            assertEq(randomnessSeparate, randomnessBatched);
         }
     }
 }

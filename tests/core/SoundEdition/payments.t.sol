@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
-import { ISoundEditionV1_1 } from "@core/interfaces/ISoundEditionV1_1.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
+import { ISoundEditionV1_2 } from "@core/interfaces/ISoundEditionV1_2.sol";
+import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { MockERC20 } from "../../mocks/MockERC20.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
@@ -19,7 +19,7 @@ contract SoundEdition_payments is TestConfig {
     function test_initializeRevertsForInvalidRoyaltyBPS(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
 
-        vm.expectRevert(ISoundEditionV1_1.InvalidRoyaltyBPS.selector);
+        vm.expectRevert(ISoundEditionV1_2.InvalidRoyaltyBPS.selector);
         createSound(
             SONG_NAME,
             SONG_SYMBOL,
@@ -36,7 +36,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_initializeRevertsForInvalidFundingRecipient() public {
-        vm.expectRevert(ISoundEditionV1_1.InvalidFundingRecipient.selector);
+        vm.expectRevert(ISoundEditionV1_2.InvalidFundingRecipient.selector);
         createSound(
             SONG_NAME,
             SONG_SYMBOL,
@@ -53,7 +53,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_withdrawETHSuccess() public {
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         // mint with ETH
         uint256 primaryETHSales = 10 ether;
@@ -79,7 +79,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_withdrawERC20Success() public {
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         // secondary ERC20 royalties
         MockERC20 tokenA = new MockERC20();
@@ -122,23 +122,23 @@ contract SoundEdition_payments is TestConfig {
     // ================================
 
     function test_setFundingRecipientRevertsForNonOwner() public {
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         edition.setFundingRecipient(getFundedAccount(2));
     }
 
     function test_setFundingRecipientRevertsForZeroAddress() public {
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
-        vm.expectRevert(ISoundEditionV1_1.InvalidFundingRecipient.selector);
+        vm.expectRevert(ISoundEditionV1_2.InvalidFundingRecipient.selector);
         edition.setFundingRecipient(address(0));
     }
 
     function test_setFundingRecipientSuccess() public {
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         address newFundingRecipient = getFundedAccount(1);
         edition.setFundingRecipient(newFundingRecipient);
@@ -147,7 +147,7 @@ contract SoundEdition_payments is TestConfig {
     }
 
     function test_setFundingRecipientEmitsEvent() public {
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         address newFundingRecipient = getFundedAccount(1);
 
@@ -161,25 +161,25 @@ contract SoundEdition_payments is TestConfig {
     // ================================
 
     function test_setRoyaltyRevertsForNonOwner() public {
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         edition.setRoyalty(500);
     }
 
     function test_setRoyaltyRevertsForInvalidValue(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS > MAX_BPS);
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
-        vm.expectRevert(ISoundEditionV1_1.InvalidRoyaltyBPS.selector);
+        vm.expectRevert(ISoundEditionV1_2.InvalidRoyaltyBPS.selector);
         edition.setRoyalty(royaltyBPS);
     }
 
     function test_setRoyaltySuccess(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS <= MAX_BPS);
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         edition.setRoyalty(royaltyBPS);
 
@@ -188,7 +188,7 @@ contract SoundEdition_payments is TestConfig {
 
     function test_setRoyaltyEmitsEvent(uint16 royaltyBPS) public {
         vm.assume(royaltyBPS <= MAX_BPS);
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         vm.expectEmit(false, false, false, true);
         emit RoyaltySet(royaltyBPS);
@@ -203,7 +203,7 @@ contract SoundEdition_payments is TestConfig {
         // avoid overflow
         vm.assume(salePrice < 2**128);
 
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
 
         (address fundingRecipient, uint256 royaltyAmount) = edition.royaltyInfo(tokenId, salePrice);
 
@@ -216,7 +216,7 @@ contract SoundEdition_payments is TestConfig {
     function test_supportsERC2981Interface() public {
         bytes4 _INTERFACE_ID_ERC2981 = 0x2a55205a;
 
-        SoundEditionV1_1 edition = createGenericEdition();
+        SoundEditionV1_2 edition = createGenericEdition();
         bool supportsERC2981 = edition.supportsInterface(_INTERFACE_ID_ERC2981);
         assertTrue(supportsERC2981);
     }

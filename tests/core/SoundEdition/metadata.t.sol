@@ -3,11 +3,11 @@ pragma solidity ^0.8.16;
 
 import { Strings } from "openzeppelin/utils/Strings.sol";
 import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgradeable.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
-import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
+import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
-import { ISoundEditionV1_1 } from "@core/interfaces/ISoundEditionV1_1.sol";
-import { MockSoundEditionV1_1 } from "../../mocks/MockSoundEditionV1_1.sol";
+import { ISoundEditionV1_2 } from "@core/interfaces/ISoundEditionV1_2.sol";
+import { MockSoundEditionV1_2 } from "../../mocks/MockSoundEditionV1_2.sol";
 import { MockMetadataModule } from "../../mocks/MockMetadataModule.sol";
 import { TestConfig } from "../../TestConfig.sol";
 
@@ -17,9 +17,9 @@ contract SoundEdition_metadata is TestConfig {
     event ContractURISet(string _contractURI);
     event MetadataModuleSet(address _metadataModule);
 
-    function _createEdition() internal returns (MockSoundEditionV1_1 soundEdition) {
+    function _createEdition() internal returns (MockSoundEditionV1_2 soundEdition) {
         // deploy new sound contract
-        soundEdition = MockSoundEditionV1_1(
+        soundEdition = MockSoundEditionV1_2(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -38,12 +38,12 @@ contract SoundEdition_metadata is TestConfig {
 
     function _createEditionWithMetadata()
         internal
-        returns (MockSoundEditionV1_1 soundEdition, MockMetadataModule metadataModule)
+        returns (MockSoundEditionV1_2 soundEdition, MockMetadataModule metadataModule)
     {
         metadataModule = new MockMetadataModule();
 
         // deploy new sound contract
-        soundEdition = MockSoundEditionV1_1(
+        soundEdition = MockSoundEditionV1_2(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -62,7 +62,7 @@ contract SoundEdition_metadata is TestConfig {
 
     // Generates tokenURI using baseURI if no metadata module is selected
     function test_baseURIWhenNoMetadataModule() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         // mint NFTs
         soundEdition.mint(2);
@@ -74,14 +74,14 @@ contract SoundEdition_metadata is TestConfig {
 
     // Should successfully return contract URI for the collection
     function test_contractURI() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         assertEq(soundEdition.contractURI(), CONTRACT_URI);
     }
 
     // Generate tokenURI using the metadata module
     function test_metadataModule() public {
-        (MockSoundEditionV1_1 soundEdition, ) = _createEditionWithMetadata();
+        (MockSoundEditionV1_2 soundEdition, ) = _createEditionWithMetadata();
 
         // mint NFTs
         soundEdition.mint(2);
@@ -92,7 +92,7 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_tokenURIRevertsWhenTokenIdDoesntExist() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         vm.expectRevert(IERC721AUpgradeable.URIQueryForNonexistentToken.selector);
         soundEdition.tokenURI(2);
@@ -103,25 +103,25 @@ contract SoundEdition_metadata is TestConfig {
     // ================================
 
     function test_setBaseURIRevertsForNonOwner() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         string memory newBaseURI = "https://abc.com/";
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         soundEdition.setBaseURI(newBaseURI);
     }
 
     function test_setBaseURIRevertsWhenMetadataFrozen() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         // Freeze Metadata
         soundEdition.freezeMetadata();
 
         string memory newBaseURI = "https://abc.com/";
 
-        vm.expectRevert(ISoundEditionV1_1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV1_2.MetadataIsFrozen.selector);
         soundEdition.setBaseURI(newBaseURI);
     }
 
@@ -133,7 +133,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test owner can set base URI
          */
-        MockSoundEditionV1_1 soundEdition1 = _createEdition();
+        MockSoundEditionV1_2 soundEdition1 = _createEdition();
 
         soundEdition1.mint(2);
         soundEdition1.setBaseURI(newBaseURI);
@@ -143,7 +143,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test admin can set base URI
          */
-        MockSoundEditionV1_1 soundEdition2 = _createEdition();
+        MockSoundEditionV1_2 soundEdition2 = _createEdition();
 
         soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
         soundEdition2.mint(2);
@@ -155,7 +155,7 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setBaseURIEmitsEvent() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         string memory newBaseURI = "https://abc.com/";
 
@@ -169,25 +169,25 @@ contract SoundEdition_metadata is TestConfig {
     // ================================
 
     function test_setContractURIRevertsForNonOwner() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         string memory newContractURI = "https://abc.com/";
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         soundEdition.setContractURI(newContractURI);
     }
 
     function test_setContractURIRevertsWhenMetadataFrozen() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         // Freeze Metadata
         soundEdition.freezeMetadata();
 
         string memory newContractURI = "https://abc.com/";
 
-        vm.expectRevert(ISoundEditionV1_1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV1_2.MetadataIsFrozen.selector);
         soundEdition.setContractURI(newContractURI);
     }
 
@@ -197,7 +197,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test owner can set contract URI
          */
-        MockSoundEditionV1_1 soundEdition1 = _createEdition();
+        MockSoundEditionV1_2 soundEdition1 = _createEdition();
 
         soundEdition1.setContractURI(newContractURI);
 
@@ -206,7 +206,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test admin can set contract URI
          */
-        MockSoundEditionV1_1 soundEdition2 = _createEdition();
+        MockSoundEditionV1_2 soundEdition2 = _createEdition();
 
         soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
 
@@ -217,7 +217,7 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setContractURIEmitsEvent() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         string memory newContractURI = "https://abc.com/";
 
@@ -231,25 +231,25 @@ contract SoundEdition_metadata is TestConfig {
     // ================================
 
     function test_setMetadataModuleRevertsForNonOwner() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         soundEdition.setMetadataModule(address(newMetadataModule));
     }
 
     function test_setMetadataModuleRevertsWhenMetadataFrozen() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         // Freeze Metadata
         soundEdition.freezeMetadata();
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
-        vm.expectRevert(ISoundEditionV1_1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV1_2.MetadataIsFrozen.selector);
         soundEdition.setMetadataModule(address(newMetadataModule));
     }
 
@@ -260,7 +260,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test owner can set metadata module
          */
-        MockSoundEditionV1_1 soundEdition1 = _createEdition();
+        MockSoundEditionV1_2 soundEdition1 = _createEdition();
 
         // mint NFTs
         soundEdition1.mint(2);
@@ -273,7 +273,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test admin can set metadata module
          */
-        MockSoundEditionV1_1 soundEdition2 = _createEdition();
+        MockSoundEditionV1_2 soundEdition2 = _createEdition();
 
         soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
 
@@ -286,7 +286,7 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_setMetadataModuleEmitsEvent() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         MockMetadataModule newMetadataModule = new MockMetadataModule();
 
@@ -300,19 +300,19 @@ contract SoundEdition_metadata is TestConfig {
     // ================================
 
     function test_freezeMetadataRevertsForNonOwner() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         soundEdition.freezeMetadata();
     }
 
     function test_freezeMetadataRevertsIfAlreadyFrozen() public {
-        MockSoundEditionV1_1 soundEdition = _createEdition();
+        MockSoundEditionV1_2 soundEdition = _createEdition();
         soundEdition.freezeMetadata();
 
-        vm.expectRevert(ISoundEditionV1_1.MetadataIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV1_2.MetadataIsFrozen.selector);
         soundEdition.freezeMetadata();
     }
 
@@ -320,7 +320,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test owner can freeze metadata
          */
-        MockSoundEditionV1_1 soundEdition1 = _createEdition();
+        MockSoundEditionV1_2 soundEdition1 = _createEdition();
 
         soundEdition1.freezeMetadata();
 
@@ -329,7 +329,7 @@ contract SoundEdition_metadata is TestConfig {
         /**
          * Test admin can freeze metadata
          */
-        MockSoundEditionV1_1 soundEdition2 = _createEdition();
+        MockSoundEditionV1_2 soundEdition2 = _createEdition();
 
         soundEdition2.grantRoles(ARTIST_ADMIN, soundEdition2.ADMIN_ROLE());
 
@@ -340,7 +340,7 @@ contract SoundEdition_metadata is TestConfig {
     }
 
     function test_freezeMetadataEmitsEvent() public {
-        (MockSoundEditionV1_1 soundEdition, IMetadataModule metadataModule) = _createEditionWithMetadata();
+        (MockSoundEditionV1_2 soundEdition, IMetadataModule metadataModule) = _createEditionWithMetadata();
 
         vm.expectEmit(false, false, false, true);
         emit MetadataFrozen(metadataModule, BASE_URI, CONTRACT_URI);

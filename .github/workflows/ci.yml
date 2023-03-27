@@ -29,12 +29,3 @@ jobs:
                   forge test -vvv --gas-report
               id: test
 
-            - name: Code coverage
-              run: |
-                  forge coverage --report lcov
-
-            - name: Upload coverage to Codecov
-              uses: codecov/codecov-action@v3
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  file: lcov.info

@@ -12,7 +12,7 @@ export async function pruneArtifacts() {
         }
     }
 
-    const inclusionStrings = ["sound", "minter", "goldenegg"];
+    const inclusionStrings = ["sound", "minter", "goldenegg", "sam"];
     const exclusionStrings = ["RangeEditionMinterUpdater", "RangeEditionMinterInvariants", ".t.sol", "test", "mock"];
     for await (const currentPath of walk(CONTRACT_ARTIFACTS_DIR)) {
         let foundMatch = false;
