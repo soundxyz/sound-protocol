@@ -7,3 +7,4 @@ preapprove/=./lib/preapprove/src/
 multicaller/=./lib/multicaller/src/
 @core=./contracts/core
 @modules=./contracts/modules/
+forge-std/=./lib/forge-std/src/
