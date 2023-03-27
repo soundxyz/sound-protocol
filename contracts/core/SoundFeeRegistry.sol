@@ -86,7 +86,7 @@ contract SoundFeeRegistry is ISoundFeeRegistry, OwnableRoles {
     // =============================================================
 
     /**
-     * @dev Restricts the sound fee address to be address(0).
+     * @dev Restricts the sound fee address not be the zero address.
      * @param soundFeeAddress_ The sound fee address.
      */
     modifier onlyValidSoundFeeAddress(address soundFeeAddress_) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
+import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { MintInfo } from "@modules/interfaces/IRangeEditionMinter.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { BaseMinter } from "@modules/BaseMinter.sol";
@@ -11,7 +11,7 @@ import { InvariantTest } from "./InvariantTest.sol";
 contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest {
     RangeEditionMinterUpdater minterUpdater;
     RangeEditionMinter minter;
-    SoundEditionV1_1 edition;
+    SoundEditionV1_2 edition;
 
     function setUp() public override {
         super.setUp();
@@ -57,10 +57,10 @@ contract RangeEditionMinterInvariants is RangeEditionMinterTests, InvariantTest 
 contract RangeEditionMinterUpdater {
     uint128 constant MINT_ID = 0;
 
-    SoundEditionV1_1 edition;
+    SoundEditionV1_2 edition;
     RangeEditionMinter minter;
 
-    constructor(SoundEditionV1_1 _edition, RangeEditionMinter _minter) {
+    constructor(SoundEditionV1_2 _edition, RangeEditionMinter _minter) {
         edition = _edition;
         minter = _minter;
     }

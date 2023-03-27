@@ -3,11 +3,12 @@ pragma solidity ^0.8.16;
 
 import { Strings } from "openzeppelin/utils/Strings.sol";
 
-import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
+import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { IOpenGoldenEggMetadata, OpenGoldenEggMetadata } from "@modules/OpenGoldenEggMetadata.sol";
-import { ISoundEditionV1_1 } from "@core/interfaces/ISoundEditionV1_1.sol";
-import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
+import { ISoundEditionV1_2 } from "@core/interfaces/ISoundEditionV1_2.sol";
+import { Ownable } from "solady/auth/Ownable.sol";
+
 import { TestConfig } from "../TestConfig.sol";
 
 contract OpenGoldenEggMetadataTests is TestConfig {
@@ -30,7 +31,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
     function _createEdition(uint32 editionCutoffTime)
         internal
         returns (
-            SoundEditionV1_1 edition,
+            SoundEditionV1_2 edition,
             RangeEditionMinter minter,
             OpenGoldenEggMetadata goldenEggModule
         )
@@ -38,7 +39,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
         minter = new RangeEditionMinter(feeRegistry);
         goldenEggModule = new OpenGoldenEggMetadata();
 
-        edition = SoundEditionV1_1(
+        edition = SoundEditionV1_2(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -80,7 +81,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
 
         OpenGoldenEggMetadata eggModule = new OpenGoldenEggMetadata();
 
-        SoundEditionV1_1 edition = SoundEditionV1_1(
+        SoundEditionV1_2 edition = SoundEditionV1_2(
             createSound(
                 SONG_NAME,
                 SONG_SYMBOL,
@@ -141,7 +142,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
 
         tokenId = 1 + (tokenId % mintQuantity);
 
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             CUTOFF_TIME
         );
 
@@ -177,7 +178,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
 
     // Test if tokenURI returns default metadata using baseURI, if auction is still active
     function test_getTokenURIBeforeAuctionEnded() external {
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             CUTOFF_TIME
         );
 
@@ -193,7 +194,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
 
     // Test if tokenURI returns goldenEgg uri, when max tokens minted
     function test_getTokenURIAfterMaxMinted() external {
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             CUTOFF_TIME
         );
 
@@ -210,7 +211,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
     // Test if tokenURI returns goldenEgg uri, when both randomnessLocked conditions have been met
     function test_getTokenURIAfterRandomnessLocked() external {
         uint32 quantity = MAX_MINTABLE_LOWER - 1;
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             CUTOFF_TIME
         );
 
@@ -237,20 +238,20 @@ contract OpenGoldenEggMetadataTests is TestConfig {
 
     // Test if setMintRandomnessTokenThreshold only callable by Edition's owner
     function test_setMintRandomnessRevertsForNonOwner() external {
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, ) = _createEdition(CUTOFF_TIME);
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, ) = _createEdition(CUTOFF_TIME);
 
         uint32 quantity = MAX_MINTABLE_LOWER - 1;
         minter.mint{ value: PRICE * quantity }(address(edition), MINT_ID, quantity, address(0));
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         edition.setEditionMaxMintableRange(quantity, MAX_MINTABLE_UPPER);
     }
 
     // Test when owner lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
     function test_setMintRandomnessTokenThresholdViaOwnerSuccess() external {
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             CUTOFF_TIME
         );
 
@@ -272,7 +273,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
 
     // Test when admin lowering mintRandomnessLockAfter for insufficient sales, it generates the golden egg
     function test_setMintRandomnessTokenThresholdViaAdminSuccess() external {
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             CUTOFF_TIME
         );
 
@@ -303,18 +304,18 @@ contract OpenGoldenEggMetadataTests is TestConfig {
 
     // Test if setRandomnessTimeThreshold only callable by Edition's owner
     function test_setRandomnessTimeThresholdRevertsForNonOwner() external {
-        (SoundEditionV1_1 edition, , ) = _createEdition(CUTOFF_TIME);
+        (SoundEditionV1_2 edition, , ) = _createEdition(CUTOFF_TIME);
 
         address caller = getFundedAccount(1);
         vm.prank(caller);
-        vm.expectRevert(OwnableRoles.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         edition.setEditionCutoffTime(666);
     }
 
     // Test when owner lowering mintRandomnessTimeThreshold, it generates the golden egg
     function test_setRandomnessTimeThresholdViaOwnerSuccess() external {
         uint32 randomnessTimeThreshold = type(uint32).max;
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             randomnessTimeThreshold
         );
 
@@ -338,7 +339,7 @@ contract OpenGoldenEggMetadataTests is TestConfig {
     // Test when admin lowering mintRandomnessTimeThreshold, it generates the golden egg
     function test_setRandomnessTimeThresholdViaAdminSuccess() external {
         uint32 randomnessTimeThreshold = type(uint32).max;
-        (SoundEditionV1_1 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
+        (SoundEditionV1_2 edition, RangeEditionMinter minter, OpenGoldenEggMetadata goldenEggModule) = _createEdition(
             randomnessTimeThreshold
         );
 

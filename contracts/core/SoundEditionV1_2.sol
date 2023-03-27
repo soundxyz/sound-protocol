@@ -31,32 +31,34 @@ import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgr
 import { ERC721AUpgradeable, ERC721AStorage } from "chiru-labs/ERC721A-Upgradeable/ERC721AUpgradeable.sol";
 import { ERC721AQueryableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721AQueryableUpgradeable.sol";
 import { ERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
-import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { IERC2981Upgradeable } from "openzeppelin-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { LibString } from "solady/utils/LibString.sol";
+import { LibBitmap } from "solady/utils/LibBitmap.sol";
 import { OperatorFilterer } from "closedsea/OperatorFilterer.sol";
+import { LibMulticaller } from "multicaller/LibMulticaller.sol";
 
-import { ISoundEditionV1_1, EditionInfo } from "./interfaces/ISoundEditionV1_1.sol";
+import { ISoundEditionV1_2, EditionInfo } from "./interfaces/ISoundEditionV1_2.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 import { ArweaveURILib } from "./utils/ArweaveURILib.sol";
 import { MintRandomnessLib } from "./utils/MintRandomnessLib.sol";
 
 /**
- * @title SoundEditionV1_1
+ * @title SoundEditionV1_2
  * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
-contract SoundEditionV1_1 is
-    ISoundEditionV1_1,
+contract SoundEditionV1_2 is
+    ISoundEditionV1_2,
     ERC721AQueryableUpgradeable,
     ERC721ABurnableUpgradeable,
     OwnableRoles,
     OperatorFilterer
 {
     using ArweaveURILib for ArweaveURILib.URI;
+    using LibBitmap for LibBitmap.Bitmap;
 
     // =============================================================
     //                           CONSTANTS
@@ -73,14 +75,6 @@ contract SoundEditionV1_1 is
     uint256 public constant ADMIN_ROLE = _ROLE_0;
 
     /**
-     * @dev The maximum limit for the mint or airdrop `quantity`.
-     *      Prevents the first-time transfer costs for tokens near the end of large mint batches
-     *      via ERC721A from becoming too expensive due to the need to scan many storage slots.
-     *      See: https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
-     */
-    uint256 public constant ADDRESS_BATCH_MINT_LIMIT = 255;
-
-    /**
      * @dev Basis points denominator used in fee calculations.
      */
     uint16 internal constant _MAX_BPS = 10_000;
@@ -94,6 +88,11 @@ contract SoundEditionV1_1 is
      * @dev The interface ID for SoundEdition v1.0.0.
      */
     bytes4 private constant _INTERFACE_ID_SOUND_EDITION_V1 = 0x50899e54;
+
+    /**
+     * @dev The interface ID for SoundEdition v1.1.0.
+     */
+    bytes4 private constant _INTERFACE_ID_SOUND_EDITION_V1_1 = 0x425aac3d;
 
     /**
      * @dev The boolean flag on whether the metadata is frozen.
@@ -173,12 +172,27 @@ contract SoundEditionV1_1 is
      */
     uint8 private _flags;
 
+    /**
+     * @dev The Sound Automated Market (i.e. bonding curve minter), if any.
+     */
+    address public sam;
+
+    /**
+     * @dev The total number of tokens minted at the very first use of `samMint`.
+     */
+    uint32 private _totalMintedSnapshot;
+
+    /**
+     * @dev Whether the `_totalMintedSnapshot` has been initialized.
+     */
+    bool private _totalMintedSnapshotInitialized;
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function initialize(
         string memory name_,
@@ -241,33 +255,45 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
+     */
+    function setSAM(address sam_) external onlyRolesOrOwner(ADMIN_ROLE) onlyBeforeMintConcluded {
+        // If there has been any tokens minted, disallow setting
+        // the SAM to a non-zero address.
+        // So, as long as the initial mints have not concluded,
+        // the artist can still unset SAM if they desire.
+        if (_totalMinted() != 0)
+            if (sam_ != address(0)) revert MintsAlreadyExist();
+        sam = sam_;
+        emit SAMSet(sam_);
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1_2
      */
     function mint(address to, uint256 quantity)
         external
         payable
         onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE)
-        requireWithinAddressBatchMintLimit(quantity)
         requireMintable(quantity)
-        updatesMintRandomness
+        updatesMintRandomness(quantity)
         returns (uint256 fromTokenId)
     {
         fromTokenId = _nextTokenId();
         // Mint the tokens. Will revert if `quantity` is zero.
-        _mint(to, quantity);
+        _batchMint(to, quantity);
 
         emit Minted(to, quantity, fromTokenId);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function airdrop(address[] calldata to, uint256 quantity)
         external
         onlyRolesOrOwner(ADMIN_ROLE)
-        requireWithinAddressBatchMintLimit(quantity)
         requireMintable(to.length * quantity)
-        updatesMintRandomness
+        updatesMintRandomness(to.length * quantity)
         returns (uint256 fromTokenId)
     {
         if (to.length == 0) revert NoAddressesToAirdrop();
@@ -279,7 +305,7 @@ contract SoundEditionV1_1 is
             uint256 toLength = to.length;
             // Mint the tokens. Will revert if `quantity` is zero.
             for (uint256 i; i != toLength; ++i) {
-                _mint(to[i], quantity);
+                _batchMint(to[i], quantity);
             }
         }
 
@@ -287,50 +313,180 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
+     */
+    function samMint(address to, uint256 quantity)
+        external
+        payable
+        onlySAM
+        onlyAfterMintConcluded
+        returns (uint256 fromTokenId)
+    {
+        if (!_totalMintedSnapshotInitialized) {
+            _totalMintedSnapshot = uint32(_totalMinted());
+            _totalMintedSnapshotInitialized = true;
+        }
+
+        fromTokenId = _nextTokenId();
+        _batchMint(to, quantity);
+
+        // We don't need to emit an event here,
+        // as the bonding curve minter will have already emitted a comprehensive event.
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1_2
+     */
+    function samBurn(address burner, uint256[] calldata tokenIds) external onlySAM onlyAfterMintConcluded {
+        // We can use unchecked as the length of `tokenIds` is bounded
+        // to a small number by the max block gas limit.
+        unchecked {
+            // For performance, we will directly read and update the storage of ERC721A.
+            ERC721AStorage.Layout storage layout = ERC721AStorage.layout();
+            // The next `tokenId` to be minted (i.e. `_nextTokenId()`).
+            uint256 stop = layout._currentIndex;
+
+            uint256 burnedBit = 1 << 224; // Bit 224 in a packed ownership represents a burned token in ERC721A.
+            uint256 n = tokenIds.length;
+
+            // For checking if the `tokenIds` are strictly ascending.
+            uint256 prevTokenId;
+
+            for (uint256 i; i != n; ) {
+                uint256 tokenId = tokenIds[i];
+
+                // Revert `tokenId` is out of bounds.
+                if (_or(tokenId < _startTokenId(), stop <= tokenId)) revert OwnerQueryForNonexistentToken();
+
+                // Revert if `tokenIds` is not strictly ascending.
+                // SoundEdition tokens IDs start from 1, and `prevTokenId` is initially 0,
+                // so the initial pass of the loop won't revert.
+                if (tokenId <= prevTokenId) revert TokenIdsNotStrictlyAscending();
+
+                // The initialized packed ownership slot's value.
+                uint256 prevOwnershipPacked;
+                // Scan backwards for an initialized packed ownership slot.
+                // ERC721A's invariant guarantees that there will always be an initialized slot as long as
+                // the start of the backwards scan falls within `[_startTokenId() .. _nextTokenId())`.
+                for (uint256 j = tokenId; (prevOwnershipPacked = layout._packedOwnerships[j]) == 0; ) --j;
+
+                // If the initialized slot is burned, revert.
+                if (prevOwnershipPacked & burnedBit != 0) revert OwnerQueryForNonexistentToken();
+
+                // Unpack the `tokenOwner` from bits [0..159] of `prevOwnershipPacked`.
+                address tokenOwner = address(uint160(prevOwnershipPacked));
+
+                // Enforce waiting a block before a recently minted or transferred token can be burned.
+                if (block.timestamp == ((prevOwnershipPacked >> 160) & (2**64 - 1))) revert CannotBurnImmediately();
+
+                // Check if the burner is either the owner or an approved operator for all the
+                bool mayBurn = tokenOwner == burner || isApprovedForAll(tokenOwner, burner);
+
+                uint256 offset;
+                uint256 currTokenId = tokenId;
+                do {
+                    // Revert if the burner is not authorized to burn the token.
+                    if (!mayBurn)
+                        if (getApproved(currTokenId) != burner) revert TransferCallerNotOwnerNorApproved();
+                    // Emit the `Transfer` event for burn.
+                    emit Transfer(tokenOwner, address(0), currTokenId);
+                    // Increment `offset` and update `currTokenId`.
+                    currTokenId = tokenId + (++offset);
+                } while (
+                    // Neither out of bounds, nor at the end of `tokenIds`.
+                    !_or(currTokenId == stop, i + offset == n) &&
+                        // Token ID is sequential.
+                        tokenIds[i + offset] == currTokenId &&
+                        // The packed ownership slot is not initialized.
+                        layout._packedOwnerships[currTokenId] == 0
+                );
+
+                // Update the packed ownership for `tokenId` in ERC721A's storage.
+                //
+                // Bits Layout:
+                // - [0..159]   `addr`
+                // - [160..223] `startTimestamp`
+                // - [224]      `burned`
+                // - [225]      `nextInitialized` (optional)
+                // - [232..255] `extraData` (not used)
+                layout._packedOwnerships[tokenId] = burnedBit | (block.timestamp << 160) | uint256(uint160(tokenOwner));
+
+                // If the slot after the mini batch is neither out of bounds, nor initialized.
+                if (currTokenId != stop)
+                    if (layout._packedOwnerships[currTokenId] == 0)
+                        layout._packedOwnerships[currTokenId] = prevOwnershipPacked;
+
+                // Update the address data in ERC721A's storage.
+                // - Decrease the token balance for the `tokenOwner` (bits [0..63]).
+                // - Increase the number burned for the `tokenOwner` (bits [128..191]).
+                //
+                // Note that this update has to be in the loop as tokens
+                // can be burned by an operator that is not the token owner.
+                layout._packedAddressData[tokenOwner] += (offset << 128) - offset;
+
+                // Advance `i` by `offset`, the number of tokens burned in the mini batch.
+                i += offset;
+
+                // Set the `prevTokenId` for checking that the `tokenIds` is strictly ascending.
+                prevTokenId = currTokenId - 1;
+            }
+            // Increase the `_burnCounter` in ERC721A's storage.
+            layout._burnCounter += n;
+        }
+        // We don't need to emit an event here,
+        // as the bonding curve minter will have already emitted a comprehensive event.
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1_2
      */
     function withdrawETH() external {
         uint256 amount = address(this).balance;
-        SafeTransferLib.safeTransferETH(fundingRecipient, amount);
+        SafeTransferLib.forceSafeTransferETH(fundingRecipient, amount);
         emit ETHWithdrawn(fundingRecipient, amount, msg.sender);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function withdrawERC20(address[] calldata tokens) external {
         unchecked {
             uint256 n = tokens.length;
             uint256[] memory amounts = new uint256[](n);
             for (uint256 i; i != n; ++i) {
-                uint256 amount = IERC20(tokens[i]).balanceOf(address(this));
-                SafeTransferLib.safeTransfer(tokens[i], fundingRecipient, amount);
-                amounts[i] = amount;
+                amounts[i] = SafeTransferLib.safeTransferAll(tokens[i], fundingRecipient);
             }
             emit ERC20Withdrawn(fundingRecipient, tokens, amounts, msg.sender);
         }
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
-    function setMetadataModule(address metadataModule_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
+    function setMetadataModule(address metadataModule_)
+        external
+        onlyRolesOrOwner(ADMIN_ROLE)
+        onlyMetadataNotFrozen
+        onlyBeforeMintConcluded
+    {
         metadataModule = metadataModule_;
 
         emit MetadataModuleSet(metadataModule_);
+        emitAllMetadataUpdate();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function setBaseURI(string memory baseURI_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _baseURIStorage.update(baseURI_);
 
         emit BaseURISet(baseURI_);
+        emitAllMetadataUpdate();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function setContractURI(string memory contractURI_) external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _contractURIStorage.update(contractURI_);
@@ -339,7 +495,7 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function freezeMetadata() external onlyRolesOrOwner(ADMIN_ROLE) onlyMetadataNotFrozen {
         _flags |= METADATA_IS_FROZEN_FLAG;
@@ -347,7 +503,7 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function setFundingRecipient(address fundingRecipient_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (fundingRecipient_ == address(0)) revert InvalidFundingRecipient();
@@ -356,7 +512,7 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function setRoyalty(uint16 royaltyBPS_) external onlyRolesOrOwner(ADMIN_ROLE) onlyValidRoyaltyBPS(royaltyBPS_) {
         royaltyBPS = royaltyBPS_;
@@ -364,23 +520,23 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function setEditionMaxMintableRange(uint32 editionMaxMintableLower_, uint32 editionMaxMintableUpper_)
         external
         onlyRolesOrOwner(ADMIN_ROLE)
+        onlyBeforeMintConcluded
     {
-        if (mintConcluded()) revert MintHasConcluded();
-
         uint32 currentTotalMinted = uint32(_totalMinted());
 
         if (currentTotalMinted != 0) {
-            editionMaxMintableLower_ = uint32(FixedPointMathLib.max(editionMaxMintableLower_, currentTotalMinted));
-
-            editionMaxMintableUpper_ = uint32(FixedPointMathLib.max(editionMaxMintableUpper_, currentTotalMinted));
-
+            // If the lower bound is larger than the current stored value, revert.
+            if (editionMaxMintableLower_ > editionMaxMintableLower) revert InvalidEditionMaxMintableRange();
             // If the upper bound is larger than the current stored value, revert.
             if (editionMaxMintableUpper_ > editionMaxMintableUpper) revert InvalidEditionMaxMintableRange();
+
+            editionMaxMintableLower_ = uint32(FixedPointMathLib.max(editionMaxMintableLower_, currentTotalMinted));
+            editionMaxMintableUpper_ = uint32(FixedPointMathLib.max(editionMaxMintableUpper_, currentTotalMinted));
         }
 
         // If the lower bound is larger than the upper bound, revert.
@@ -393,18 +549,20 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
-    function setEditionCutoffTime(uint32 editionCutoffTime_) external onlyRolesOrOwner(ADMIN_ROLE) {
-        if (mintConcluded()) revert MintHasConcluded();
-
+    function setEditionCutoffTime(uint32 editionCutoffTime_)
+        external
+        onlyRolesOrOwner(ADMIN_ROLE)
+        onlyBeforeMintConcluded
+    {
         editionCutoffTime = editionCutoffTime_;
 
         emit EditionCutoffTimeSet(editionCutoffTime_);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function setMintRandomnessEnabled(bool mintRandomnessEnabled_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (_totalMinted() != 0) revert MintsAlreadyExist();
@@ -417,7 +575,7 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function setOperatorFilteringEnabled(bool operatorFilteringEnabled_) external onlyRolesOrOwner(ADMIN_ROLE) {
         if (operatorFilteringEnabled() != operatorFilteringEnabled_) {
@@ -428,6 +586,13 @@ contract SoundEditionV1_1 is
         }
 
         emit OperatorFilteringEnablededSet(operatorFilteringEnabled_);
+    }
+
+    /**
+     * @inheritdoc ISoundEditionV1_2
+     */
+    function emitAllMetadataUpdate() public {
+        emit BatchMetadataUpdate(_startTokenId(), _nextTokenId() - 1);
     }
 
     /**
@@ -492,7 +657,7 @@ contract SoundEditionV1_1 is
     // =============================================================
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function editionInfo() external view returns (EditionInfo memory info) {
         info.baseURI = baseURI();
@@ -517,84 +682,90 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
-    function mintRandomness() public view returns (uint256) {
-        if (mintConcluded() && mintRandomnessEnabled()) {
-            return uint256(keccak256(abi.encode(_mintRandomness, address(this))));
-        }
-        return 0;
+    function mintRandomness() public view returns (uint256 result) {
+        if (mintConcluded())
+            if (mintRandomnessEnabled()) {
+                result = _mintRandomness;
+                assembly {
+                    mstore(0x00, result)
+                    mstore(0x20, address())
+                    result := keccak256(0x00, 0x40)
+                }
+            }
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function editionMaxMintable() public view returns (uint32) {
         if (block.timestamp < editionCutoffTime) {
             return editionMaxMintableUpper;
         } else {
-            return uint32(FixedPointMathLib.max(editionMaxMintableLower, _totalMinted()));
+            uint256 t = _totalMintedSnapshotInitialized ? _totalMintedSnapshot : _totalMinted();
+            return uint32(FixedPointMathLib.max(editionMaxMintableLower, t));
         }
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function isMetadataFrozen() public view returns (bool) {
         return _flags & METADATA_IS_FROZEN_FLAG != 0;
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function mintRandomnessEnabled() public view returns (bool) {
         return _flags & MINT_RANDOMNESS_ENABLED_FLAG != 0;
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function operatorFilteringEnabled() public view returns (bool) {
         return _operatorFilteringEnabled();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function mintConcluded() public view returns (bool) {
-        return _totalMinted() == editionMaxMintable();
+        return _totalMinted() >= editionMaxMintable();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function nextTokenId() public view returns (uint256) {
         return _nextTokenId();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function numberMinted(address owner) external view returns (uint256) {
         return _numberMinted(owner);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function numberBurned(address owner) external view returns (uint256) {
         return _numberBurned(owner);
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function totalMinted() public view returns (uint256) {
         return _totalMinted();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function totalBurned() public view returns (uint256) {
         return _totalBurned();
@@ -620,17 +791,18 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ISoundEditionV1_1, ERC721AUpgradeable, IERC721AUpgradeable)
+        override(ISoundEditionV1_2, ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {
         return
             interfaceId == _INTERFACE_ID_SOUND_EDITION_V1 ||
-            interfaceId == type(ISoundEditionV1_1).interfaceId ||
+            interfaceId == _INTERFACE_ID_SOUND_EDITION_V1_1 ||
+            interfaceId == type(ISoundEditionV1_2).interfaceId ||
             ERC721AUpgradeable.supportsInterface(interfaceId) ||
             interfaceId == _INTERFACE_ID_ERC2981 ||
             interfaceId == this.supportsInterface.selector;
@@ -664,14 +836,14 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function baseURI() public view returns (string memory) {
         return _baseURIStorage.load();
     }
 
     /**
-     * @inheritdoc ISoundEditionV1_1
+     * @inheritdoc ISoundEditionV1_2
      */
     function contractURI() public view returns (string memory) {
         return _contractURIStorage.load();
@@ -680,6 +852,17 @@ contract SoundEditionV1_1 is
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
+
+    /**
+     * @dev Override the `onlyRolesOrOwner` modifier on `OwnableRoles`
+     *      to support multicaller sender forwarding.
+     */
+    modifier onlyRolesOrOwner(uint256 roles) virtual override {
+        address sender = LibMulticaller.sender();
+        if (!hasAnyRole(sender, roles))
+            if (sender != owner()) revert Unauthorized();
+        _;
+    }
 
     /**
      * @dev For operator filtering to be toggled on / off.
@@ -754,23 +937,40 @@ contract SoundEditionV1_1 is
     }
 
     /**
-     * @dev Ensures that the `quantity` does not exceed `ADDRESS_BATCH_MINT_LIMIT`.
-     * @param quantity The number of tokens minted per address.
+     * @dev Ensures that the caller is the Sound Automated Market (i.e. bonding curve minter).
      */
-    modifier requireWithinAddressBatchMintLimit(uint256 quantity) {
-        if (quantity > ADDRESS_BATCH_MINT_LIMIT) revert ExceedsAddressBatchMintLimit();
+    modifier onlySAM() {
+        if (msg.sender != sam) revert Unauthorized();
+        _;
+    }
+
+    /**
+     * @dev Ensures that the mint has not been concluded.
+     */
+    modifier onlyBeforeMintConcluded() {
+        if (mintConcluded()) revert MintHasConcluded();
+        _;
+    }
+
+    /**
+     * @dev Ensures that the mint has been concluded.
+     */
+    modifier onlyAfterMintConcluded() {
+        if (!mintConcluded()) revert MintNotConcluded();
         _;
     }
 
     /**
      * @dev Updates the mint randomness.
+     * @param totalQuantity The total number of tokens to mint.
      */
-    modifier updatesMintRandomness() {
+    modifier updatesMintRandomness(uint256 totalQuantity) {
         if (mintRandomnessEnabled() && !mintConcluded()) {
             uint256 randomness = _mintRandomness;
             uint256 newRandomness = MintRandomnessLib.nextMintRandomness(
                 randomness,
                 _totalMinted(),
+                totalQuantity,
                 editionMaxMintable()
             );
             if (newRandomness != randomness) {
@@ -821,6 +1021,34 @@ contract SoundEditionV1_1 is
                 name_ = ERC721AStorage.layout()._name;
                 symbol_ = ERC721AStorage.layout()._symbol;
             }
+        }
+    }
+
+    /**
+     * @dev Mints a big batch in mini batches to prevent expensive
+     *      first-time transfer gas costs.
+     * @param to       The address to mint to.
+     * @param quantity The number of NFTs to mint.
+     */
+    function _batchMint(address to, uint256 quantity) internal {
+        unchecked {
+            if (quantity == 0) revert MintZeroQuantity();
+            // Mint in mini batches of 32.
+            uint256 i = quantity % 32;
+            if (i != 0) _mint(to, i);
+            while (i != quantity) {
+                _mint(to, 32);
+                i += 32;
+            }
+        }
+    }
+
+    /**
+     * @dev Branchless or.
+     */
+    function _or(bool a, bool b) internal pure returns (bool c) {
+        assembly {
+            c := or(a, b)
         }
     }
 }

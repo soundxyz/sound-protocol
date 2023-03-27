@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import { Test } from "forge-std/Test.sol";
+import "./TestPlus.sol";
 
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { SoundEditionV1_1 } from "@core/SoundEditionV1_1.sol";
+import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
-import { MockSoundEditionV1_1 } from "./mocks/MockSoundEditionV1_1.sol";
+import { MockSoundEditionV1_2 } from "./mocks/MockSoundEditionV1_2.sol";
 
-contract TestConfig is Test {
+contract TestConfig is TestPlus {
     // From ISoundEditionVI.
     uint8 public constant METADATA_IS_FROZEN_FLAG = 1 << 0;
     uint8 public constant MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
@@ -40,7 +40,7 @@ contract TestConfig is Test {
         feeRegistry = new SoundFeeRegistry(SOUND_FEE_ADDRESS, PLATFORM_FEE_BPS);
 
         // Deploy SoundEdition implementation
-        MockSoundEditionV1_1 soundEditionImplementation = new MockSoundEditionV1_1();
+        MockSoundEditionV1_2 soundEditionImplementation = new MockSoundEditionV1_2();
 
         soundCreator = new SoundCreatorV1(address(soundEditionImplementation));
     }
@@ -71,7 +71,7 @@ contract TestConfig is Test {
         uint8 flags
     ) public returns (address) {
         bytes memory initData = abi.encodeWithSelector(
-            SoundEditionV1_1.initialize.selector,
+            SoundEditionV1_2.initialize.selector,
             name,
             symbol,
             metadataModule,
@@ -93,9 +93,9 @@ contract TestConfig is Test {
         return payable(addr);
     }
 
-    function createGenericEdition() public returns (SoundEditionV1_1) {
+    function createGenericEdition() public returns (SoundEditionV1_2) {
         return
-            SoundEditionV1_1(
+            SoundEditionV1_2(
                 createSound(
                     SONG_NAME,
                     SONG_SYMBOL,
