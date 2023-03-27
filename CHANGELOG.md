@@ -1,5 +1,16 @@
 # @soundxyz/sound-protocol
 
+## 1.4.0
+
+### Minor Changes
+
+-   ada3ba9: Sound Edition V1.2, w/ SAM
+
+### Patch Changes
+
+-   141415c: - Replaces mainnet.json & goerli.json with CONTRACT_ADDRESSES
+    -   Fixes incorrect mainnet addresses for merkleDropMinter & rangeEditionMinter
+
 ## 1.3.0
 
 ### Minor Changes
