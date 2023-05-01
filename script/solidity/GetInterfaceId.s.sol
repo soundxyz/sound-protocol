@@ -11,6 +11,12 @@ import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
 import { IEditionMaxMinter } from "@modules/interfaces/IEditionMaxMinter.sol";
 import { IRangeEditionMinter } from "@modules/interfaces/IRangeEditionMinter.sol";
 
+import { IMinterModuleV2 } from "@core/interfaces/IMinterModuleV2.sol";
+import { IFixedPriceSignatureMinterV2 } from "@modules/interfaces/IFixedPriceSignatureMinterV2.sol";
+import { IMerkleDropMinterV2 } from "@modules/interfaces/IMerkleDropMinterV2.sol";
+import { IEditionMaxMinterV2 } from "@modules/interfaces/IEditionMaxMinterV2.sol";
+import { IRangeEditionMinterV2 } from "@modules/interfaces/IRangeEditionMinterV2.sol";
+
 contract GetInterfaceId is Script {
     function run() external view {
         console.log("{");
@@ -36,6 +42,22 @@ contract GetInterfaceId is Script {
 
         console.log('", "IRangeEditionMinter": "');
         console.logBytes4(type(IRangeEditionMinter).interfaceId);
+
+        // v2
+        console.log('", "IMinterModuleV2": "');
+        console.logBytes4(type(IMinterModuleV2).interfaceId);
+
+        console.log('", "IFixedPriceSignatureMinterV2": "');
+        console.logBytes4(type(IFixedPriceSignatureMinterV2).interfaceId);
+
+        console.log('", "IMerkleDropMinterV2": "');
+        console.logBytes4(type(IMerkleDropMinterV2).interfaceId);
+
+        console.log('", "IEditionMaxMinterV2": "');
+        console.logBytes4(type(IEditionMaxMinterV2).interfaceId);
+
+        console.log('", "IRangeEditionMinterV2": "');
+        console.logBytes4(type(IRangeEditionMinterV2).interfaceId);
 
         console.log('"}');
     }
