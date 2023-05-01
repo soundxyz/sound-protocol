@@ -6,7 +6,6 @@ import { Script } from "forge-std/Script.sol";
 import { OpenGoldenEggMetadata } from "@modules/OpenGoldenEggMetadata.sol";
 
 contract Deploy is Script {
-
     function run() external {
         vm.startBroadcast();
 

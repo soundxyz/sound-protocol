@@ -9,10 +9,10 @@ import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
-import { FixedPriceSignatureMinter } from "@modules/FixedPriceSignatureMinter.sol";
-import { MerkleDropMinter } from "@modules/MerkleDropMinter.sol";
-import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
-import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
+import { FixedPriceSignatureMinterV2 } from "@modules/FixedPriceSignatureMinterV2.sol";
+import { MerkleDropMinterV2 } from "@modules/MerkleDropMinterV2.sol";
+import { RangeEditionMinterV2 } from "@modules/RangeEditionMinterV2.sol";
+import { EditionMaxMinterV2 } from "@modules/EditionMaxMinterV2.sol";
 
 contract Deploy is Script {
     bool private ONLY_MINTERS = vm.envBool("ONLY_MINTERS");
@@ -22,14 +22,11 @@ contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
 
-        // https://etherscan.io/address/0x8f921211c9771baEb648Ac7bECB322a540298A4B#readContract
-        ISoundFeeRegistry soundFeeRegistry = ISoundFeeRegistry(0x8f921211c9771baEb648Ac7bECB322a540298A4B);
-
         // Deploy minter modules
-        new FixedPriceSignatureMinter(soundFeeRegistry);
-        new MerkleDropMinter(soundFeeRegistry);
-        new RangeEditionMinter(soundFeeRegistry);
-        new EditionMaxMinter(soundFeeRegistry);
+        new FixedPriceSignatureMinterV2();
+        new MerkleDropMinterV2();
+        new RangeEditionMinterV2();
+        new EditionMaxMinterV2();
 
         // If only deploying minters, we're done.
         if (ONLY_MINTERS) return;
