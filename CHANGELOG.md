@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 1.5.0
+
+### Minor Changes
+
+-   238caaa: MintersV2
+
 ## 1.4.0
 
 ### Minor Changes
