@@ -22,18 +22,25 @@ Sound Protocol is a generalized platform for flexible and efficient creation of 
 
 ## Deployments
 
-Permissionless zero-fee deployments on Goerli testnet and Mainnet:
+`SoundCreatorV1` Factory contract
+| Network |  Address |
+|---|---|
+| `Mainnet` | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
+| `Goerli`  | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
+| `Optimism` | 0x5bcf5773bcf1f131a0cad5c74aa9be1a80b63c55
+
+
+Permissionless zero-fee minter/metadata deployments on Mainnet, Goerli, Optimism, and Optimism Goerli:
 
 | Contract  |  Address |
 |---|---|
-| `GoldenEggMetadata` | 0x3ca50e8da8c3d359fc934aea0161f5346ccb62a1
-| `FixedPriceSignatureMinter` | 0xc8ae7e42e834bc11c906d01726e55571a0620158
-| `MerkleDropMinter` | 0xda4b6fbb85918700e5ee91f6ce3cc2148af02912
-| `RangeEditionMinter` | 0x4552f8b70a72a8ea1084bf7b7ba50f10f2f9daa7
-| `EditionMaxMinter` | 0x5e5d50ea70c9a1b6ed64506f121b094156b8fd20
-| `SoundCreatorV1` | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
-| `SoundEditionV1` | 0x8cfbfae570d673864cd61e1e4543eb7874ca35c2
-| `SoundEditionV1_1` | 0xE5fEB62FB34aDbA661B7c8256887a8B9a21C2278
+| `GoldenEggMetadata` | 0x000000002154ad3431c330ac2db6ed42195f9141
+| `OpenGoldenEggMetadata` | 0x00000000c417a48cd096067520747607a0331f0e
+| `MerkleDropMinter` | 0x0000000067149f4d5e7d2904179b8fccca000539
+| `RangeEditionMinter` | 0x000000006154a95522e183f4d85bb7f2cd666ae8
+
+
+
 
 ## Specification
 
