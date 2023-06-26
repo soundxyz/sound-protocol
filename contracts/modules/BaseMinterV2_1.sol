@@ -382,7 +382,7 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
         bool affiliated;
         uint256 affiliateFee;
         uint256 remainingPayment;
-        uint256 platformFlatFee;
+        uint256 platformFlatFeeTotal;
         uint256 platformFee;
         uint256 totalPrice;
         uint256 requiredEtherValue;
@@ -425,9 +425,9 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
         unchecked {
-            t.platformFlatFee = uint256(quantity) * uint256(platformFlatFee) + uint256(platformPerTxFlatFee);
+            t.platformFlatFeeTotal = uint256(quantity) * uint256(platformFlatFee) + uint256(platformPerTxFlatFee);
             t.totalPrice = totalPrice(edition, mintId, to, quantity);
-            t.requiredEtherValue = t.totalPrice + t.platformFlatFee;
+            t.requiredEtherValue = t.totalPrice + t.platformFlatFeeTotal;
 
             // Reverts if the payment is not exact, or not enough.
             if (_useExactPayment()) {
@@ -437,7 +437,10 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
             }
 
             // Compute the platform fee.
-            t.platformFee = (t.totalPrice * uint256(platformFeeBPS)) / uint256(BPS_DENOMINATOR) + t.platformFlatFee;
+            t.platformFee =
+                (t.totalPrice * uint256(platformFeeBPS)) /
+                uint256(BPS_DENOMINATOR) +
+                t.platformFlatFeeTotal;
             // Increment the platform fees accrued.
             platformFeesAccrued = SafeCastLib.toUint128(uint256(platformFeesAccrued) + t.platformFee);
             // Deduct the platform fee.
