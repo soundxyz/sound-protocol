@@ -36,6 +36,11 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     uint16 public constant MAX_PLATFORM_FEE_BPS = 1000;
 
     /**
+     * @dev The maximum platform flat fee per transaction NFT.
+     */
+    uint96 public constant MAX_PLATFORM_PER_TX_FLAT_FEE = 0.1 ether;
+
+    /**
      * @dev The maximum platform flat fee per NFT.
      */
     uint96 public constant MAX_PLATFORM_FLAT_FEE = 0.1 ether;
@@ -68,6 +73,11 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
      * @dev The platform fee in basis points.
      */
     uint16 public platformFeeBPS;
+
+    /**
+     * @dev The amount of platform flat fees per transaction.
+     */
+    uint96 public platformPerTxFlatFee;
 
     /**
      * @dev Maps an edition and the mint ID to a mint instance.
@@ -198,6 +208,15 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
         if (flatFee > MAX_PLATFORM_FLAT_FEE) revert InvalidPlatformFlatFee();
         platformFlatFee = flatFee;
         emit PlatformFlatFeeSet(flatFee);
+    }
+
+    /**
+     * @inheritdoc IMinterModuleV2
+     */
+    function setPlatformPerTxFlatFee(uint96 perTxFlatFee) public onlyOwner {
+        if (perTxFlatFee > MAX_PLATFORM_PER_TX_FLAT_FEE) revert InvalidPlatformPerTxFlatFee();
+        platformPerTxFlatFee = perTxFlatFee;
+        emit PlatformPerTxFlatFeeSet(perTxFlatFee);
     }
 
     /**
@@ -398,7 +417,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
         unchecked {
-            t.platformFlatFee = uint256(quantity) * uint256(platformFlatFee);
+            t.platformFlatFee = uint256(quantity) * uint256(platformFlatFee) + uint256(platformPerTxFlatFee);
             t.totalPrice = totalPrice(edition, mintId, to, quantity);
             t.requiredEtherValue = t.totalPrice + t.platformFlatFee;
 

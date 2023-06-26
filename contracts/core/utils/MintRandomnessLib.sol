@@ -52,10 +52,11 @@ library MintRandomnessLib {
                     // Pick any of the last 256 blocks pseudorandomly for the blockhash.
                     mstore(0x00, blockhash(sub(number(), add(1, and(0xff, randomness)))))
                     // After the merge, if [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399)
-                    // is implemented, the `difficulty()` will be determined by the beacon chain.
+                    // is implemented, the `difficulty()` will be determined by the beacon chain,
+                    // and renamed to `prevrandao()`.
                     // We also need to xor with the `totalMinted` to prevent the randomness
                     // from being stucked.
-                    mstore(0x20, xor(xor(randomness, difficulty()), totalMinted))
+                    mstore(0x20, xor(xor(randomness, prevrandao()), totalMinted))
 
                     let r := keccak256(0x00, 0x40)
 

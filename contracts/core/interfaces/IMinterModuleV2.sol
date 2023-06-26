@@ -129,6 +129,12 @@ interface IMinterModuleV2 is IERC165 {
     event PlatformFlatFeeSet(uint96 flatFee);
 
     /**
+     * @dev Emitted when the `platformPerTxFlatFee` is updated.
+     * @param perTxFlatFee The amount of platform flat fee per transaction.
+     */
+    event PlatformPerTxFlatFeeSet(uint96 perTxFlatFee);
+
+    /**
      * @dev Emitted when the `platformFeeAddress` is updated.
      * @param addr The platform fee address.
      */
@@ -203,6 +209,11 @@ interface IMinterModuleV2 is IERC165 {
      * @dev The platform flat fee must not exceed `MAX_PLATFORM_FLAT_FEE`.
      */
     error InvalidPlatformFlatFee();
+
+    /**
+     * @dev The platform per-transaction flat fee must not exceed `MAX_PLATFORM_PER_TX_FLAT_FEE`.
+     */
+    error InvalidPlatformPerTxFlatFee();
 
     /**
      * @dev The platform fee address cannot be zero.
@@ -306,6 +317,16 @@ interface IMinterModuleV2 is IERC165 {
     function setPlatformFlatFee(uint96 flatFee) external;
 
     /**
+     * @dev Sets the per-transaction platform flat fee.
+     *
+     * Calling conditions:
+     * - The caller must be the owner of the contract.
+     *
+     * @param perTxFlatFee The platform per transaction flat fee.
+     */
+    function setPlatformPerTxFlatFee(uint96 perTxFlatFee) external;
+
+    /**
      * @dev Sets the platform fee address.
      *
      * Calling conditions:
@@ -352,6 +373,12 @@ interface IMinterModuleV2 is IERC165 {
      * @return The constant value.
      */
     function MAX_PLATFORM_FLAT_FEE() external pure returns (uint96);
+
+    /**
+     * @dev The maximum value for platform flat fee per transaction.
+     * @return The constant value.
+     */
+    function MAX_PLATFORM_PER_TX_FLAT_FEE() external pure returns (uint96);
 
     /**
      * @dev The total fees accrued for `affiliate`.
