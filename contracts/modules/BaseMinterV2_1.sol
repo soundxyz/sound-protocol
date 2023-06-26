@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundEditionV1_2 } from "@core/interfaces/ISoundEditionV1_2.sol";
-import { IMinterModuleV2 } from "@core/interfaces/IMinterModuleV2.sol";
+import { IMinterModuleV2_1 } from "@core/interfaces/IMinterModuleV2_1.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
@@ -13,9 +13,9 @@ import { LibMulticaller } from "multicaller/LibMulticaller.sol";
 
 /**
  * @title Minter Base
- * @dev The `BaseMinterV2` class maintains a central storage record of edition mint instances.
+ * @dev The `BaseMinterV2_1` class maintains a central storage record of edition mint instances.
  */
-abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
+abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
     // =============================================================
     //                           CONSTANTS
     // =============================================================
@@ -36,9 +36,19 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     uint16 public constant MAX_PLATFORM_FEE_BPS = 1000;
 
     /**
+     * @dev The maximum platform flat fee per transaction NFT.
+     */
+    uint96 public constant MAX_PLATFORM_PER_TX_FLAT_FEE = 0.1 ether;
+
+    /**
      * @dev The maximum platform flat fee per NFT.
      */
     uint96 public constant MAX_PLATFORM_FLAT_FEE = 0.1 ether;
+
+    /**
+     * @dev The interface id for IMinterModuleV2.
+     */
+    bytes4 internal constant _INTERFACE_ID_MINTER_MODULE_V2 = 0xf8ccd08e;
 
     // =============================================================
     //                            STORAGE
@@ -70,6 +80,11 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     uint16 public platformFeeBPS;
 
     /**
+     * @dev The amount of platform flat fees per transaction.
+     */
+    uint96 public platformPerTxFlatFee;
+
+    /**
      * @dev Maps an edition and the mint ID to a mint instance.
      */
     mapping(address => mapping(uint256 => BaseData)) private _baseData;
@@ -96,7 +111,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     // These functions can only be called by the owner or admin of the edition.
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function setEditionMintPaused(
         address edition,
@@ -108,7 +123,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function setTimeRange(
         address edition,
@@ -124,7 +139,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function setAffiliateFee(
         address edition,
@@ -137,7 +152,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function setAffiliateMerkleRoot(
         address edition,
@@ -153,7 +168,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     // These functions can be called by anyone.
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function withdrawForAffiliate(address affiliate) public override {
         uint128 accrued = affiliateFeesAccrued[affiliate];
@@ -165,7 +180,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function withdrawForPlatform() public override {
         address to = platformFeeAddress;
@@ -183,7 +198,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     // These functions can only be called by the owner of the minter contract.
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function setPlatformFee(uint16 bps) public onlyOwner {
         if (bps > MAX_PLATFORM_FEE_BPS) revert InvalidPlatformFeeBPS();
@@ -192,7 +207,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function setPlatformFlatFee(uint96 flatFee) public onlyOwner {
         if (flatFee > MAX_PLATFORM_FLAT_FEE) revert InvalidPlatformFlatFee();
@@ -201,7 +216,16 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
+     */
+    function setPlatformPerTxFlatFee(uint96 perTxFlatFee) public onlyOwner {
+        if (perTxFlatFee > MAX_PLATFORM_PER_TX_FLAT_FEE) revert InvalidPlatformPerTxFlatFee();
+        platformPerTxFlatFee = perTxFlatFee;
+        emit PlatformPerTxFlatFeeSet(perTxFlatFee);
+    }
+
+    /**
+     * @inheritdoc IMinterModuleV2_1
      */
     function setPlatformFeeAddress(address addr) public onlyOwner {
         if (addr == address(0)) revert PlatformFeeAddressIsZero();
@@ -214,14 +238,14 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     // =============================================================
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function nextMintId() external view returns (uint128) {
         return _nextMintId;
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function isAffiliatedWithProof(
         address edition,
@@ -243,7 +267,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function isAffiliated(
         address edition,
@@ -254,7 +278,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function affiliateMerkleRoot(address edition, uint128 mintId) external view returns (bytes32) {
         return _getBaseData(edition, mintId).affiliateMerkleRoot;
@@ -264,11 +288,14 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IMinterModuleV2).interfaceId || interfaceId == this.supportsInterface.selector;
+        return
+            interfaceId == _INTERFACE_ID_MINTER_MODULE_V2 ||
+            interfaceId == type(IMinterModuleV2_1).interfaceId ||
+            interfaceId == this.supportsInterface.selector;
     }
 
     /**
-     * @inheritdoc IMinterModuleV2
+     * @inheritdoc IMinterModuleV2_1
      */
     function totalPrice(
         address edition,
@@ -398,7 +425,7 @@ abstract contract BaseMinterV2 is IMinterModuleV2, Ownable {
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
         unchecked {
-            t.platformFlatFee = uint256(quantity) * uint256(platformFlatFee);
+            t.platformFlatFee = uint256(quantity) * uint256(platformFlatFee) + uint256(platformPerTxFlatFee);
             t.totalPrice = totalPrice(edition, mintId, to, quantity);
             t.requiredEtherValue = t.totalPrice + t.platformFlatFee;
 

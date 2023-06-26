@@ -9,10 +9,10 @@ import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { GoldenEggMetadata } from "@modules/GoldenEggMetadata.sol";
-import { FixedPriceSignatureMinterV2 } from "@modules/FixedPriceSignatureMinterV2.sol";
-import { MerkleDropMinterV2 } from "@modules/MerkleDropMinterV2.sol";
-import { RangeEditionMinterV2 } from "@modules/RangeEditionMinterV2.sol";
-import { EditionMaxMinterV2 } from "@modules/EditionMaxMinterV2.sol";
+import { FixedPriceSignatureMinterV2_1 } from "@modules/FixedPriceSignatureMinterV2_1.sol";
+import { MerkleDropMinterV2_1 } from "@modules/MerkleDropMinterV2_1.sol";
+import { RangeEditionMinterV2_1 } from "@modules/RangeEditionMinterV2_1.sol";
+import { EditionMaxMinterV2_1 } from "@modules/EditionMaxMinterV2_1.sol";
 
 contract Deploy is Script {
     bool private ONLY_MINTERS = vm.envBool("ONLY_MINTERS");
@@ -23,10 +23,10 @@ contract Deploy is Script {
         vm.startBroadcast();
 
         // Deploy minter modules
-        new FixedPriceSignatureMinterV2();
-        new MerkleDropMinterV2();
-        new RangeEditionMinterV2();
-        new EditionMaxMinterV2();
+        new FixedPriceSignatureMinterV2_1();
+        new MerkleDropMinterV2_1();
+        new RangeEditionMinterV2_1();
+        new EditionMaxMinterV2_1();
 
         // If only deploying minters, we're done.
         if (ONLY_MINTERS) return;

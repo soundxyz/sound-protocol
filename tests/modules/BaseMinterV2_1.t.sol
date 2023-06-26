@@ -5,9 +5,10 @@ import { IERC721AUpgradeable } from "chiru-labs/ERC721A-Upgradeable/IERC721AUpgr
 import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { TestConfig } from "../TestConfig.sol";
-import { MockMinterV2, MintInfo } from "../mocks/MockMinterV2.sol";
+import { MockMinterV2_1, MintInfo } from "../mocks/MockMinterV2_1.sol";
 import { ISoundEditionV1_2 } from "@core/interfaces/ISoundEditionV1_2.sol";
 import { IMinterModuleV2 } from "@core/interfaces/IMinterModuleV2.sol";
+import { IMinterModuleV2_1 } from "@core/interfaces/IMinterModuleV2_1.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { Ownable } from "solady/auth/Ownable.sol";
@@ -33,6 +34,8 @@ contract MintControllerBaseV2Tests is TestConfig {
 
     event PlatformFlatFeeSet(uint96 flatFee);
 
+    event PlatformPerTxFlatFeeSet(uint96 perTxFlatFee);
+
     event PlatformFeeAddressSet(address addr);
 
     event Minted(
@@ -49,7 +52,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint256 indexed attributionId
     );
 
-    MockMinterV2 public minter;
+    MockMinterV2_1 public minter;
 
     uint32 constant START_TIME = 0;
     uint32 constant END_TIME = type(uint32).max;
@@ -58,7 +61,7 @@ contract MintControllerBaseV2Tests is TestConfig {
     function setUp() public override {
         super.setUp();
 
-        minter = new MockMinterV2();
+        minter = new MockMinterV2_1();
     }
 
     function _createEdition(uint32 editionMaxMintable) internal returns (SoundEditionV1_2 edition) {
@@ -94,7 +97,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         SoundEditionV1_2 edition = _createEdition(EDITION_MAX_MINTABLE);
         uint16 affiliateFeeBPS = minter.MAX_AFFILIATE_FEE_BPS() + 1;
 
-        vm.expectRevert(IMinterModuleV2.InvalidAffiliateFeeBPS.selector);
+        vm.expectRevert(IMinterModuleV2_1.InvalidAffiliateFeeBPS.selector);
         minter.createEditionMint(address(edition), START_TIME, END_TIME, affiliateFeeBPS);
     }
 
@@ -148,10 +151,10 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint96 price = 1;
         minter.setPrice(price);
 
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2.WrongPayment.selector, price * 2 - 1, price * 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2_1.WrongPayment.selector, price * 2 - 1, price * 2));
         minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, address(0));
 
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2.WrongPayment.selector, price * 2 + 1, price * 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2_1.WrongPayment.selector, price * 2 + 1, price * 2));
         minter.mint{ value: price * 2 + 1 }(address(edition), mintId, 2, address(0));
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, address(0));
@@ -189,7 +192,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint96 price = 1;
         minter.setPrice(price);
 
-        vm.expectRevert(IMinterModuleV2.MintPaused.selector);
+        vm.expectRevert(IMinterModuleV2_1.MintPaused.selector);
 
         minter.mint{ value: price * 2 }(address(edition), mintId, 2, address(0));
 
@@ -301,7 +304,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity);
 
         bytes32[] memory affiliateProof = m.getProof(leaves, 1);
-        vm.expectRevert(IMinterModuleV2.InvalidAffiliate.selector);
+        vm.expectRevert(IMinterModuleV2_1.InvalidAffiliate.selector);
         minter.mintTo{ value: requiredEtherValue }(
             address(edition),
             mintId,
@@ -388,6 +391,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint256 expectedAffiliateFees;
         uint256 platformFeeBPS;
         uint256 platformFlatFee;
+        uint256 platformPerTxFlatFee;
         uint256 affiliateFeeBPS;
     }
 
@@ -426,6 +430,12 @@ contract MintControllerBaseV2Tests is TestConfig {
             emit PlatformFlatFeeSet(uint96(t.platformFlatFee));
             minter.setPlatformFlatFee(uint96(t.platformFlatFee));
         }
+        if (_random() % 2 == 0) {
+            t.platformPerTxFlatFee = _bound(_random(), 1, minter.MAX_PLATFORM_PER_TX_FLAT_FEE());
+            vm.expectEmit(true, true, true, true);
+            emit PlatformPerTxFlatFeeSet(uint96(t.platformPerTxFlatFee));
+            minter.setPlatformPerTxFlatFee(uint96(t.platformPerTxFlatFee));
+        }
 
         t.affiliateFeeBPS = _bound(_random(), 0, minter.MAX_AFFILIATE_FEE_BPS() * 2);
         if (!_test_setAffiliateFee(edition, mintId, uint16(t.affiliateFeeBPS))) return;
@@ -437,6 +447,10 @@ contract MintControllerBaseV2Tests is TestConfig {
         if (t.platformFlatFee != 0) {
             t.expectedPlatformFees += t.platformFlatFee * t.quantity;
             t.requiredEtherValue += t.platformFlatFee * t.quantity;
+        }
+        if (t.platformPerTxFlatFee != 0) {
+            t.expectedPlatformFees += t.platformPerTxFlatFee;
+            t.requiredEtherValue += t.platformPerTxFlatFee;
         }
 
         t.affiliated = minter.isAffiliated(address(edition), mintId, t.affiliate);
@@ -508,7 +522,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint16 affiliateFeeBPS
     ) internal returns (bool) {
         if (affiliateFeeBPS > minter.MAX_AFFILIATE_FEE_BPS()) {
-            vm.expectRevert(IMinterModuleV2.InvalidAffiliateFeeBPS.selector);
+            vm.expectRevert(IMinterModuleV2_1.InvalidAffiliateFeeBPS.selector);
             minter.setAffiliateFee(address(edition), mintId, affiliateFeeBPS);
             return false;
         }
@@ -521,6 +535,7 @@ contract MintControllerBaseV2Tests is TestConfig {
 
     function test_supportsInterface() external {
         assertTrue(minter.supportsInterface(type(IMinterModuleV2).interfaceId));
+        assertTrue(minter.supportsInterface(type(IMinterModuleV2_1).interfaceId));
         assertTrue(minter.supportsInterface(type(IERC165).interfaceId));
         assertFalse(minter.supportsInterface(bytes4(0)));
     }

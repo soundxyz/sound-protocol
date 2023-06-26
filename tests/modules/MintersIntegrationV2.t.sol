@@ -5,8 +5,8 @@ import { MerkleProof } from "openzeppelin/utils/cryptography/MerkleProof.sol";
 
 import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { MerkleDropMinterV2 } from "@modules/MerkleDropMinterV2.sol";
-import { RangeEditionMinterV2 } from "@modules/RangeEditionMinterV2.sol";
+import { MerkleDropMinterV2_1 } from "@modules/MerkleDropMinterV2_1.sol";
+import { RangeEditionMinterV2_1 } from "@modules/RangeEditionMinterV2_1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
@@ -95,7 +95,7 @@ contract MintersIntegrationV2 is TestConfig {
         // Setup the Merkle tree
         (Merkle merkleFreeDrop, bytes32[] memory leavesFreeMerkleDrop) = setUpMerkleTree(accountsFreeMerkleDrop);
 
-        MerkleDropMinterV2 merkleDropMinter = new MerkleDropMinterV2();
+        MerkleDropMinterV2_1 merkleDropMinter = new MerkleDropMinterV2_1();
         edition.grantRoles(address(merkleDropMinter), edition.MINTER_ROLE());
 
         bytes32 root = merkleFreeDrop.getRoot(leavesFreeMerkleDrop);
@@ -132,7 +132,7 @@ contract MintersIntegrationV2 is TestConfig {
         );
 
         // SETUP PUBLIC SALE
-        RangeEditionMinterV2 publicSaleMinter = new RangeEditionMinterV2();
+        RangeEditionMinterV2_1 publicSaleMinter = new RangeEditionMinterV2_1();
         edition.grantRoles(address(publicSaleMinter), edition.MINTER_ROLE());
 
         uint128 mintIdPublicSale = publicSaleMinter.createEditionMint(
@@ -155,7 +155,7 @@ contract MintersIntegrationV2 is TestConfig {
     function run_FreeAirdrop(
         address[] memory accountsFreeMerkleDrop,
         bytes32[] memory leavesFreeMerkleDrop,
-        MerkleDropMinterV2 merkleDropMinter,
+        MerkleDropMinterV2_1 merkleDropMinter,
         Merkle merkleFreeDrop,
         uint128 mintId
     ) public {
@@ -194,7 +194,7 @@ contract MintersIntegrationV2 is TestConfig {
     function run_Presale(
         address[] memory accountsPresale,
         bytes32[] memory leavesPresale,
-        MerkleDropMinterV2 merkleDropMinter,
+        MerkleDropMinterV2_1 merkleDropMinter,
         Merkle mPresale,
         uint128 mintId
     ) public {
@@ -222,7 +222,7 @@ contract MintersIntegrationV2 is TestConfig {
         vm.warp(START_TIME_PUBLIC_SALE);
     }
 
-    function run_PublicSale(RangeEditionMinterV2 publicSaleMinter, uint128 mintId) public {
+    function run_PublicSale(RangeEditionMinterV2_1 publicSaleMinter, uint128 mintId) public {
         // Check user 5 has no tokens
         uint256 user5Balance = edition.balanceOf(userAccounts[4]);
         assertEq(user5Balance, 0);

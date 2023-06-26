@@ -10,7 +10,7 @@ import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 /**
  * @title Minter Adapter
  * @dev A minter adapter for minting to user specified addresses on
- *      old EditionMaxMinterV2s and RangeEditionMinterV2s,
+ *      old EditionMaxMinterV2_1s and RangeEditionMinterV2_1s,
  *      which do not have a `mintTo` function.
  */
 contract MinterAdapter is IMinterAdapter {

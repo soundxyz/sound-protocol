@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import { MerkleProofLib } from "solady/utils/MerkleProofLib.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { BaseMinterV2 } from "@modules/BaseMinterV2.sol";
+import { BaseMinterV2_1 } from "@modules/BaseMinterV2_1.sol";
 
 struct MintInfo {
     uint32 startTime;
@@ -12,7 +12,7 @@ struct MintInfo {
     bool mintPaused;
 }
 
-contract MockMinterV2 is BaseMinterV2 {
+contract MockMinterV2_1 is BaseMinterV2_1 {
     uint96 private _currentPrice;
 
     function createEditionMint(
@@ -54,7 +54,7 @@ contract MockMinterV2 is BaseMinterV2 {
         uint128, /* mintId */
         address, /* to */
         uint32 quantity
-    ) public view virtual override(BaseMinterV2) returns (uint128) {
+    ) public view virtual override(BaseMinterV2_1) returns (uint128) {
         unchecked {
             // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.
             return uint128(uint256(_currentPrice) * uint256(quantity));
