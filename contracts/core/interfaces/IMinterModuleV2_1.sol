@@ -452,10 +452,16 @@ interface IMinterModuleV2_1 is IERC165 {
     function platformFeeBPS() external returns (uint16);
 
     /**
-     * @dev Returns the platform flat fee.
+     * @dev Returns the platform flat fee per item.
      * @return The configured value.
      */
     function platformFlatFee() external returns (uint96);
+
+    /**
+     * @dev Returns the platform flat fee per transaction.
+     * @return The configured value.
+     */
+    function platformPerTxFlatFee() external returns (uint96);
 
     /**
      * @dev Returns the platform fee address.

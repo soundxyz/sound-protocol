@@ -137,6 +137,9 @@ contract EditionMaxMinterV2_1 is IEditionMaxMinterV2_1, BaseMinterV2_1 {
         info.cutoffTime = editionInfo.editionCutoffTime;
 
         info.affiliateMerkleRoot = baseData.affiliateMerkleRoot;
+        info.platformFeeBPS = platformFeeBPS;
+        info.platformFlatFee = platformFlatFee;
+        info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
     /**

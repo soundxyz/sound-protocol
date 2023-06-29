@@ -220,6 +220,9 @@ contract MerkleDropMinterV2_1 is IMerkleDropMinterV2_1, BaseMinterV2_1 {
         info.merkleRootHash = mintData.merkleRootHash;
 
         info.affiliateMerkleRoot = baseData.affiliateMerkleRoot;
+        info.platformFeeBPS = platformFeeBPS;
+        info.platformFlatFee = platformFlatFee;
+        info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
     /**

@@ -225,6 +225,9 @@ contract RangeEditionMinterV2_1 is IRangeEditionMinterV2_1, BaseMinterV2_1 {
         info.cutoffTime = mintData.cutoffTime;
 
         info.affiliateMerkleRoot = baseData.affiliateMerkleRoot;
+        info.platformFeeBPS = platformFeeBPS;
+        info.platformFlatFee = platformFlatFee;
+        info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
     /**

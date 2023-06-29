@@ -29,6 +29,9 @@ struct MintInfo {
     uint32 totalMinted;
     address signer;
     bytes32 affiliateMerkleRoot;
+    uint16 platformFeeBPS;
+    uint96 platformFlatFee;
+    uint96 platformPerTxFlatFee;
 }
 
 /**

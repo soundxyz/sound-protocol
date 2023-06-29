@@ -218,6 +218,9 @@ contract FixedPriceSignatureMinterV2_1 is IFixedPriceSignatureMinterV2_1, BaseMi
         info.signer = mintData.signer;
 
         info.affiliateMerkleRoot = baseData.affiliateMerkleRoot;
+        info.platformFeeBPS = platformFeeBPS;
+        info.platformFlatFee = platformFlatFee;
+        info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
     /**
