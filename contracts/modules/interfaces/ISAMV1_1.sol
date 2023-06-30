@@ -665,6 +665,12 @@ interface ISAMV1_1 is IERC165 {
     function platformFeeBPS() external returns (uint16);
 
     /**
+     * @dev Returns the platform per-transaction flat fee.
+     * @return The configured value.
+     */
+    function platformPerTxFlatFee() external returns (uint96);
+
+    /**
      * @dev Returns the platform fee address.
      * @return The configured value.
      */
