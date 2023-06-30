@@ -25,6 +25,8 @@ import { IMerkleDropMinterV2_1 } from "@modules/interfaces/IMerkleDropMinterV2_1
 import { IEditionMaxMinterV2_1 } from "@modules/interfaces/IEditionMaxMinterV2_1.sol";
 import { IRangeEditionMinterV2_1 } from "@modules/interfaces/IRangeEditionMinterV2_1.sol";
 
+import { ISAM } from "@modules/interfaces/ISAM.sol";
+
 contract GetInterfaceId is Script {
     function run() external view {
         console.log("{");
@@ -86,6 +88,9 @@ contract GetInterfaceId is Script {
 
         console.log('", "IRangeEditionMinterV2_1": "');
         console.logBytes4(type(IRangeEditionMinterV2_1).interfaceId);
+
+        console.log('", "ISAM": "');
+        console.logBytes4(type(ISAM).interfaceId);
 
         console.log('"}');
     }

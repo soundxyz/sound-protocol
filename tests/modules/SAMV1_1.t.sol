@@ -3,7 +3,8 @@ pragma solidity ^0.8.16;
 import { Merkle } from "murky/Merkle.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { IERC721AUpgradeable, ISoundEditionV1_2, SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
-import { ISAM, SAM, SAMInfo } from "@modules/SAM.sol";
+import { ISAMV1_1, SAMV1_1, SAMInfo } from "@modules/SAMV1_1.sol";
+import { ISAM } from "@modules/SAM.sol";
 import { Ownable } from "solady/auth/Ownable.sol";
 import { SafeCastLib } from "solady/utils/SafeCastLib.sol";
 import { LibPRNG } from "solady/utils/LibPRNG.sol";
@@ -65,7 +66,7 @@ contract MulticallerWithSenderAttacker {
         targets[0] = msg.sender;
 
         bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeWithSelector(ISAM.setAffiliateFee.selector, msg.sender, uint16(12));
+        data[0] = abi.encodeWithSelector(ISAMV1_1.setAffiliateFee.selector, msg.sender, uint16(12));
 
         MulticallerWithSender multicallerWithSender = MulticallerWithSender(
             payable(LibMulticaller.MULTICALLER_WITH_SENDER)
@@ -75,7 +76,7 @@ contract MulticallerWithSenderAttacker {
     }
 }
 
-contract MockSAM is SAM {
+contract MockSAM is SAMV1_1 {
     bool internal _checkEdition;
 
     function directSetPoolBalance(address edition, uint256 balance) public {
@@ -300,11 +301,13 @@ contract SAMTests is TestConfig {
     function test_supportsInterface() public {
         MockSAM sam = new MockSAM();
 
+        bool supportsISAMV1_1 = sam.supportsInterface(type(ISAMV1_1).interfaceId);
         bool supportsISAM = sam.supportsInterface(type(ISAM).interfaceId);
         bool supports165 = sam.supportsInterface(type(IERC165).interfaceId);
 
         assertTrue(supports165);
         assertTrue(supportsISAM);
+        assertTrue(supportsISAMV1_1);
     }
 
     function _createEditionAndSAM() internal returns (SoundEditionV1_2 edition, MockSAM sam) {
@@ -395,11 +398,11 @@ contract SAMTests is TestConfig {
 
         sam.buy{ value: 1 }(address(edition), exploiter, 1, address(0), new bytes32[](0));
 
-        vm.expectRevert(ISAM.InSAMPhase.selector);
+        vm.expectRevert(ISAMV1_1.InSAMPhase.selector);
         sam.setInflectionPrice(address(edition), 500 ether);
-        vm.expectRevert(ISAM.InSAMPhase.selector);
+        vm.expectRevert(ISAMV1_1.InSAMPhase.selector);
         sam.setInflectionPoint(address(edition), 1);
-        vm.expectRevert(ISAM.InSAMPhase.selector);
+        vm.expectRevert(ISAMV1_1.InSAMPhase.selector);
         sam.setBasePrice(address(edition), 100 ether);
 
         uint256[] memory tokenIds = new uint256[](1);
@@ -946,7 +949,7 @@ contract SAMTests is TestConfig {
 
         _maxMint(edition);
 
-        vm.expectRevert(ISAM.SAMDoesNotExist.selector);
+        vm.expectRevert(ISAMV1_1.SAMDoesNotExist.selector);
         sam.buy{ value: address(this).balance }(address(edition), address(1), 1, address(0), new bytes32[](0));
     }
 
@@ -962,7 +965,7 @@ contract SAMTests is TestConfig {
 
         uint256[] memory tokenIdsToSell = new uint256[](1);
         tokenIdsToSell[0] = 1;
-        vm.expectRevert(ISAM.SAMDoesNotExist.selector);
+        vm.expectRevert(ISAMV1_1.SAMDoesNotExist.selector);
         sam.sell(address(edition), tokenIdsToSell, 0, address(this));
     }
 
@@ -1232,7 +1235,7 @@ contract SAMTests is TestConfig {
     function _testWithdrawForPlatform(MockSAM sam) internal {
         (address feeAddr, ) = _randomSigner();
 
-        vm.expectRevert(ISAM.PlatformFeeAddressIsZero.selector);
+        vm.expectRevert(ISAMV1_1.PlatformFeeAddressIsZero.selector);
         sam.setPlatformFeeAddress(address(0));
 
         vm.expectRevert(Ownable.Unauthorized.selector);
@@ -1441,14 +1444,14 @@ contract SAMTests is TestConfig {
         }
         if (_random() % 8 == 0) _checkAllExists(edition, collector, t.tokenIds[0]);
         if (t.tokenIds[0].length == 0) {
-            vm.expectRevert(ISAM.BurnZeroQuantity.selector);
+            vm.expectRevert(ISAMV1_1.BurnZeroQuantity.selector);
         }
         sam.sell(address(edition), t.tokenIds[0], t.totalSellPrices[0], collector, t.attributionId);
         if (_random() % 8 == 0) _checkAllBurned(edition, collector, t.tokenIds[0]);
 
         if (_random() % 2 == 0) {
             if (t.tokenIds[1].length == 0) {
-                vm.expectRevert(ISAM.BurnZeroQuantity.selector);
+                vm.expectRevert(ISAMV1_1.BurnZeroQuantity.selector);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSignature(
@@ -1476,7 +1479,7 @@ contract SAMTests is TestConfig {
         vm.warp(block.timestamp + 60);
         if (_random() % 8 == 0) _checkAllExists(edition, collector, t.tokenIds[1]);
         if (t.tokenIds[1].length == 0) {
-            vm.expectRevert(ISAM.BurnZeroQuantity.selector);
+            vm.expectRevert(ISAMV1_1.BurnZeroQuantity.selector);
         }
         sam.sell(address(edition), t.tokenIds[1], t.totalSellPrices[1], collector);
         if (_random() % 8 == 0) _checkAllBurned(edition, collector, t.tokenIds[1]);
@@ -1531,7 +1534,7 @@ contract SAMTests is TestConfig {
         emit BuyFreezeTimeSet(address(edition), uint32(block.timestamp));
         sam.setBuyFreezeTime(address(edition), uint32(block.timestamp));
 
-        vm.expectRevert(ISAM.BuyIsFrozen.selector);
+        vm.expectRevert(ISAMV1_1.BuyIsFrozen.selector);
         sam.buy{ value: address(this).balance }(address(edition), address(this), 1, address(0), new bytes32[](0));
 
         vm.warp(block.timestamp + 60);
@@ -1555,7 +1558,7 @@ contract SAMTests is TestConfig {
 
         _mintOut(edition);
 
-        vm.expectRevert(ISAM.InvalidBuyFreezeTime.selector);
+        vm.expectRevert(ISAMV1_1.InvalidBuyFreezeTime.selector);
         sam.setBuyFreezeTime(address(edition), uint32(buyFreezeTime + 11));
 
         sam.setBuyFreezeTime(address(edition), uint32(buyFreezeTime + 10));
@@ -1571,7 +1574,7 @@ contract SAMTests is TestConfig {
 
         vm.warp(buyFreezeTime);
 
-        vm.expectRevert(ISAM.BuyIsFrozen.selector);
+        vm.expectRevert(ISAMV1_1.BuyIsFrozen.selector);
         sam.buy{ value: address(this).balance }(address(edition), address(this), 1, address(0), new bytes32[](0));
     }
 
@@ -1589,7 +1592,7 @@ contract SAMTests is TestConfig {
 
         _mintOut(edition);
 
-        vm.expectRevert(ISAM.InvalidMaxSupply.selector);
+        vm.expectRevert(ISAMV1_1.InvalidMaxSupply.selector);
         sam.setMaxSupply(address(edition), uint32(maxSupply + 11));
 
         sam.setMaxSupply(address(edition), uint32(maxSupply));
@@ -1637,23 +1640,23 @@ contract SAMTests is TestConfig {
             vm.expectRevert(Ownable.Unauthorized.selector);
             hasRevert = true;
         } else if (t.maxSupply == 0) {
-            vm.expectRevert(ISAM.InvalidMaxSupply.selector);
+            vm.expectRevert(ISAMV1_1.InvalidMaxSupply.selector);
             hasRevert = true;
         } else if (t.buyFreezeTime == 0) {
-            vm.expectRevert(ISAM.InvalidBuyFreezeTime.selector);
+            vm.expectRevert(ISAMV1_1.InvalidBuyFreezeTime.selector);
             hasRevert = true;
         } else if (t.artistFeeBPS > t.maxArtistFeeBPS) {
-            vm.expectRevert(ISAM.InvalidArtistFeeBPS.selector);
+            vm.expectRevert(ISAMV1_1.InvalidArtistFeeBPS.selector);
             hasRevert = true;
         } else if (t.goldenEggFeeBPS > t.maxGoldenEggFeeBPS) {
-            vm.expectRevert(ISAM.InvalidGoldenEggFeeBPS.selector);
+            vm.expectRevert(ISAMV1_1.InvalidGoldenEggFeeBPS.selector);
             hasRevert = true;
         } else if (t.affiliateFeeBPS > t.maxAffiliateFeeBPS) {
-            vm.expectRevert(ISAM.InvalidAffiliateFeeBPS.selector);
+            vm.expectRevert(ISAMV1_1.InvalidAffiliateFeeBPS.selector);
             hasRevert = true;
         } else if (_random() % 2 == 0) {
             _maxMint(edition);
-            vm.expectRevert(ISAM.InSAMPhase.selector);
+            vm.expectRevert(ISAMV1_1.InSAMPhase.selector);
             hasRevert = true;
         }
 
@@ -1695,7 +1698,7 @@ contract SAMTests is TestConfig {
 
         // Test if repeated creation for the same edition is not allowed.
         if (_random() % 2 == 0) {
-            vm.expectRevert(ISAM.SAMAlreadyExists.selector);
+            vm.expectRevert(ISAMV1_1.SAMAlreadyExists.selector);
             sam.create(
                 address(edition),
                 uint96(t.basePrice),
@@ -1848,7 +1851,7 @@ contract SAMTests is TestConfig {
             // the `onlyBeforeSAMPhase` modifier reverts.
             if (_random() % 16 == 0 && !hasRevert && !(r == 4 || r == 6)) {
                 _mintOut(edition);
-                vm.expectRevert(ISAM.InSAMPhase.selector);
+                vm.expectRevert(ISAMV1_1.InSAMPhase.selector);
                 mintHasConcluded = true;
                 hasRevert = true;
             }
@@ -1909,7 +1912,7 @@ contract SAMTests is TestConfig {
             if (r == 4) {
                 t.artistFeeBPS = _bound(_random(), 0, t.maxArtistFeeBPS * 2);
                 if (t.artistFeeBPS > t.maxArtistFeeBPS && !hasRevert) {
-                    vm.expectRevert(ISAM.InvalidArtistFeeBPS.selector);
+                    vm.expectRevert(ISAMV1_1.InvalidArtistFeeBPS.selector);
                     hasRevert = true;
                 }
                 if (!hasRevert) {
@@ -1926,7 +1929,7 @@ contract SAMTests is TestConfig {
             if (r == 5) {
                 t.goldenEggFeeBPS = _bound(_random(), 0, t.maxGoldenEggFeeBPS * 2);
                 if (t.goldenEggFeeBPS > t.maxGoldenEggFeeBPS && !hasRevert) {
-                    vm.expectRevert(ISAM.InvalidGoldenEggFeeBPS.selector);
+                    vm.expectRevert(ISAMV1_1.InvalidGoldenEggFeeBPS.selector);
                     hasRevert = true;
                 }
                 if (!hasRevert) {
@@ -1943,7 +1946,7 @@ contract SAMTests is TestConfig {
             if (r == 6) {
                 t.affiliateFeeBPS = _bound(_random(), 0, t.maxAffiliateFeeBPS * 2);
                 if (t.affiliateFeeBPS > t.maxAffiliateFeeBPS && !hasRevert) {
-                    vm.expectRevert(ISAM.InvalidAffiliateFeeBPS.selector);
+                    vm.expectRevert(ISAMV1_1.InvalidAffiliateFeeBPS.selector);
                     hasRevert = true;
                 }
                 if (!hasRevert) {
@@ -2001,7 +2004,7 @@ contract SAMTests is TestConfig {
 
         // Test `buy` to see if it reverts for unapproved affiliate.
         bytes32[] memory proof = m.getProof(leaves, 1);
-        vm.expectRevert(ISAM.InvalidAffiliate.selector);
+        vm.expectRevert(ISAMV1_1.InvalidAffiliate.selector);
         sam.buy{ value: address(this).balance }(address(edition), address(this), 1, accounts[0], proof);
 
         sam.buy{ value: address(this).balance }(address(edition), address(this), 1, accounts[1], proof);
@@ -2028,13 +2031,17 @@ contract SAMTests is TestConfig {
         targets[2] = address(sam);
 
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeWithSelector(ISAM.setBasePrice.selector, address(edition), uint96(t.basePrice));
+        data[0] = abi.encodeWithSelector(ISAMV1_1.setBasePrice.selector, address(edition), uint96(t.basePrice));
         data[1] = abi.encodeWithSelector(
-            ISAM.setInflectionPrice.selector,
+            ISAMV1_1.setInflectionPrice.selector,
             address(edition),
             uint128(t.inflectionPrice)
         );
-        data[2] = abi.encodeWithSelector(ISAM.setInflectionPoint.selector, address(edition), uint32(t.inflectionPoint));
+        data[2] = abi.encodeWithSelector(
+            ISAMV1_1.setInflectionPoint.selector,
+            address(edition),
+            uint32(t.inflectionPoint)
+        );
 
         bool isUnauthorized;
         if (_random() % 16 == 0) {
@@ -2055,9 +2062,13 @@ contract SAMTests is TestConfig {
         assertEq(info.inflectionPrice, t.inflectionPrice);
         assertEq(info.inflectionPoint, t.inflectionPoint);
 
-        data[0] = abi.encodeWithSelector(ISAM.setBasePrice.selector, address(edition), uint96(1 ether));
-        data[1] = abi.encodeWithSelector(ISAM.setInflectionPrice.selector, address(edition), uint96(1));
-        data[2] = abi.encodeWithSelector(ISAM.setInflectionPoint.selector, address(edition), uint32(type(uint32).max));
+        data[0] = abi.encodeWithSelector(ISAMV1_1.setBasePrice.selector, address(edition), uint96(1 ether));
+        data[1] = abi.encodeWithSelector(ISAMV1_1.setInflectionPrice.selector, address(edition), uint96(1));
+        data[2] = abi.encodeWithSelector(
+            ISAMV1_1.setInflectionPoint.selector,
+            address(edition),
+            uint32(type(uint32).max)
+        );
 
         multicallerWithSender.aggregateWithSender(targets, data, new uint256[](data.length));
 
@@ -2088,7 +2099,7 @@ contract SAMTests is TestConfig {
             targets[0] = address(sam);
 
             data = new bytes[](1);
-            data[0] = abi.encodeWithSelector(ISAM.withdrawForAffiliate.selector, affiliate);
+            data[0] = abi.encodeWithSelector(ISAMV1_1.withdrawForAffiliate.selector, affiliate);
             multicallerWithSender.aggregateWithSender(targets, data, new uint256[](data.length));
         }
 
@@ -2104,7 +2115,7 @@ contract SAMTests is TestConfig {
 
         sam.setCheckEdition(true);
 
-        vm.expectRevert(ISAM.UnapprovedEdition.selector);
+        vm.expectRevert(ISAMV1_1.UnapprovedEdition.selector);
         sam.create(
             address(edition),
             BASE_PRICE,
@@ -2165,7 +2176,7 @@ contract SAMTests is TestConfig {
 
         edition = createGenericEdition();
 
-        vm.expectRevert(ISAM.UnapprovedEdition.selector);
+        vm.expectRevert(ISAMV1_1.UnapprovedEdition.selector);
         sam.create(
             address(edition),
             BASE_PRICE,
