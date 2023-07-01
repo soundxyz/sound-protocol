@@ -21,7 +21,7 @@
         "prettier:write": "prettier --write **/*.{js,ts,json,sol}",
         "postpublish": "gh-release",
         "release": "pnpm publish --access=public --no-git-checks",
-        "release:canary": "(node script/js/canary-release.js && pnpm -r publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
+        "release:canary": "(node script/js/canary-release.js && pnpm publish --access public --no-git-checks --tag alpha) || echo Skipping Canary...",
         "slither": "slither . --config-file slither.config.json",
         "solhint": "solhint -f table contracts/**/*.sol",
         "test": "forge test",
