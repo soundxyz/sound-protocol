@@ -26,6 +26,7 @@ import { IEditionMaxMinterV2_1 } from "@modules/interfaces/IEditionMaxMinterV2_1
 import { IRangeEditionMinterV2_1 } from "@modules/interfaces/IRangeEditionMinterV2_1.sol";
 
 import { ISAM } from "@modules/interfaces/ISAM.sol";
+import { ISAMV1_1 } from "@modules/interfaces/ISAMV1_1.sol";
 
 contract GetInterfaceId is Script {
     function run() external view {
@@ -91,6 +92,9 @@ contract GetInterfaceId is Script {
 
         console.log('", "ISAM": "');
         console.logBytes4(type(ISAM).interfaceId);
+
+        console.log('", "ISAMV1_1": "');
+        console.logBytes4(type(ISAMV1_1).interfaceId);
 
         console.log('"}');
     }
