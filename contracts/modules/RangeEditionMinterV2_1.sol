@@ -230,6 +230,10 @@ contract RangeEditionMinterV2_1 is IRangeEditionMinterV2_1, BaseMinterV2_1 {
         info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
+    function isV2_1() external pure returns (bool) {
+        return true;
+    }
+
     /**
      * @inheritdoc IERC165
      */

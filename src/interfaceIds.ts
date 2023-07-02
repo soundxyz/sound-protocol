@@ -13,9 +13,9 @@ export const interfaceIds = {
     IRangeEditionMinterV2: "0x84435ae5",
     IMinterModuleV2_1: "0x7a2b8b9b",
     IFixedPriceSignatureMinterV2_1: "0x0f713f15",
-    IMerkleDropMinterV2_1: "0x5e9a2e5f",
+    IMerkleDropMinterV2_1: "0x6328e9ad",
     IEditionMaxMinterV2_1: "0x6ee3f258",
-    IRangeEditionMinterV2_1: "0x84435ae5",
+    IRangeEditionMinterV2_1: "0xb9f19d17",
     ISAM: "0xa3c2dbc7",
     ISAMV1_1: "0x212580d2",
 } as const;

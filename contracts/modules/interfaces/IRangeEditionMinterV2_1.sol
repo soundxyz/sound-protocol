@@ -257,4 +257,6 @@ interface IRangeEditionMinterV2_1 is IMinterModuleV2_1 {
      * @return mintInfo Information about this mint.
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
+
+    function isV2_1() external pure returns (bool);
 }
