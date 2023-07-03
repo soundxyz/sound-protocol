@@ -15,7 +15,7 @@ interface IMinterAdapter is IERC165 {
 
     /**
      * @dev Emitted when a mint happens via the minter adapter.
-     * @param minter        The address of the EditionMaxMinterV2 or RangeEditionMinterV2.
+     * @param minter        The address of the EditionMaxMinterV2_1 or RangeEditionMinterV2_1.
      * @param edition       The address of the edition.
      * @param fromTokenId   The starting token ID in the batch minted.
      * @param quantity      The number of tokens minted.
@@ -37,7 +37,7 @@ interface IMinterAdapter is IERC165 {
 
     /**
      * @dev Mints tokens for a given edition.
-     * @param minter         The address of the EditionMaxMinterV2 or RangeEditionMinterV2.
+     * @param minter         The address of the EditionMaxMinterV2_1 or RangeEditionMinterV2_1.
      * @param edition        Address of the song edition contract we are minting for.
      * @param mintId         The mint ID.
      * @param to             The address to mint to.

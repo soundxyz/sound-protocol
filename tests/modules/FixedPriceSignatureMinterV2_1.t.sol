@@ -3,19 +3,19 @@ pragma solidity ^0.8.16;
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
-import { IMinterModuleV2 } from "@core/interfaces/IMinterModuleV2.sol";
+import { IMinterModuleV2_1 } from "@core/interfaces/IMinterModuleV2_1.sol";
 import { ISoundEditionV1_2 } from "@core/interfaces/ISoundEditionV1_2.sol";
 import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { FixedPriceSignatureMinterV2 } from "@modules/FixedPriceSignatureMinterV2.sol";
-import { IFixedPriceSignatureMinterV2, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinterV2.sol";
+import { FixedPriceSignatureMinterV2_1 } from "@modules/FixedPriceSignatureMinterV2_1.sol";
+import { IFixedPriceSignatureMinterV2_1, MintInfo } from "@modules/interfaces/IFixedPriceSignatureMinterV2_1.sol";
 import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 import { Ownable } from "solady/auth/Ownable.sol";
 
 import "forge-std/console.sol";
 
-contract FixedPriceSignatureMinterV2Tests is TestConfig {
+contract FixedPriceSignatureMinterV2_1Tests is TestConfig {
     using ECDSA for bytes32;
 
     uint96 constant PRICE = 1;
@@ -88,10 +88,10 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                IFixedPriceSignatureMinterV2(minter).DOMAIN_SEPARATOR(),
+                IFixedPriceSignatureMinterV2_1(minter).DOMAIN_SEPARATOR(),
                 keccak256(
                     abi.encode(
-                        IFixedPriceSignatureMinterV2(minter).MINT_TYPEHASH(),
+                        IFixedPriceSignatureMinterV2_1(minter).MINT_TYPEHASH(),
                         buyer,
                         mintId,
                         claimTicket,
@@ -106,10 +106,13 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         return abi.encodePacked(r, s, v);
     }
 
-    function _createEditionAndMinter() internal returns (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) {
+    function _createEditionAndMinter()
+        internal
+        returns (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter)
+    {
         edition = createGenericEdition();
 
-        minter = new FixedPriceSignatureMinterV2();
+        minter = new FixedPriceSignatureMinterV2_1();
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
@@ -127,7 +130,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     function test_createEditionMintEmitsEvent() public {
         SoundEditionV1_2 edition = createGenericEdition();
 
-        FixedPriceSignatureMinterV2 minter = new FixedPriceSignatureMinterV2();
+        FixedPriceSignatureMinterV2_1 minter = new FixedPriceSignatureMinterV2_1();
 
         vm.expectEmit(false, false, false, true);
 
@@ -156,9 +159,9 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     function test_createEditionMintRevertsIfSignerIsZeroAddress() public {
         SoundEditionV1_2 edition = createGenericEdition();
 
-        FixedPriceSignatureMinterV2 minter = new FixedPriceSignatureMinterV2();
+        FixedPriceSignatureMinterV2_1 minter = new FixedPriceSignatureMinterV2_1();
 
-        vm.expectRevert(IFixedPriceSignatureMinterV2.SignerIsZeroAddress.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.SignerIsZeroAddress.selector);
 
         minter.createEditionMint(
             address(edition),
@@ -172,7 +175,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintRevertsIfBuyerNotAuthorized() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 claimTicket = 0;
         address buyer = getFundedAccount(1);
@@ -204,7 +207,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
 
         // This mint fails because invalidBuyer isn't in the signed message
         vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinterV2.InvalidSignature.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.InvalidSignature.selector);
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
@@ -217,7 +220,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintWithWrongPaymentReverts() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = quantity;
@@ -226,7 +229,9 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         bytes memory sig = _getSignature(buyer, address(minter), MINT_ID, CLAIM_TICKET_0, signedQuantity, buyer);
 
         vm.prank(buyer);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2.WrongPayment.selector, PRICE * quantity - 1, PRICE * 2));
+        vm.expectRevert(
+            abi.encodeWithSelector(IMinterModuleV2_1.WrongPayment.selector, PRICE * quantity - 1, PRICE * 2)
+        );
         minter.mint{ value: PRICE * quantity - 1 }(
             address(edition),
             MINT_ID,
@@ -238,7 +243,9 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         );
 
         vm.prank(buyer);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2.WrongPayment.selector, PRICE * quantity + 1, PRICE * 2));
+        vm.expectRevert(
+            abi.encodeWithSelector(IMinterModuleV2_1.WrongPayment.selector, PRICE * quantity + 1, PRICE * 2)
+        );
         minter.mint{ value: PRICE * quantity + 1 }(
             address(edition),
             MINT_ID,
@@ -251,7 +258,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintWhenSoldOutReverts() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 claimTicket = 0;
         uint32 quantity = MAX_MINTABLE + 1;
@@ -261,7 +268,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         bytes memory sig1 = _getSignature(buyer, address(minter), MINT_ID, claimTicket, signedQuantity, buyer);
 
         vm.prank(buyer);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2.ExceedsAvailableSupply.selector, MAX_MINTABLE));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2_1.ExceedsAvailableSupply.selector, MAX_MINTABLE));
         minter.mint{ value: PRICE * (MAX_MINTABLE + 1) }(
             address(edition),
             MINT_ID,
@@ -291,7 +298,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         bytes memory sig3 = _getSignature(buyer, address(minter), MINT_ID, claimTicket++, MAX_MINTABLE, buyer);
 
         vm.prank(buyer);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2.ExceedsAvailableSupply.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2_1.ExceedsAvailableSupply.selector, 0));
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
@@ -304,7 +311,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintWithUnauthorizedMinterReverts() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         address buyer = getFundedAccount(1);
         uint32 claimTicket = 0;
@@ -326,7 +333,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         edition.revokeRoles(address(minter), edition.MINTER_ROLE());
 
         vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinterV2.SignatureAlreadyUsed.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.SignatureAlreadyUsed.selector);
         minter.mint{ value: PRICE }(
             address(edition),
             MINT_ID,
@@ -339,7 +346,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintForNonExistentMintIdReverts() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = quantity;
@@ -354,7 +361,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         uint128 nonExistentMintId = MINT_ID + 1;
 
         vm.prank(buyer);
-        vm.expectRevert(IMinterModuleV2.MintDoesNotExist.selector);
+        vm.expectRevert(IMinterModuleV2_1.MintDoesNotExist.selector);
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             nonExistentMintId,
@@ -367,7 +374,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintUpdatesValuesAndMintsCorrectly() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = quantity;
@@ -398,7 +405,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_multipleMintsFromSameBuyer() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 quantity = 1;
         uint32 signedQuantity = 2;
@@ -442,7 +449,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         SoundEditionV1_2 edition2 = createGenericEdition();
 
         // Use the same minter for both editions
-        FixedPriceSignatureMinterV2 minter = new FixedPriceSignatureMinterV2();
+        FixedPriceSignatureMinterV2_1 minter = new FixedPriceSignatureMinterV2_1();
 
         edition1.grantRoles(address(minter), edition1.MINTER_ROLE());
         edition2.grantRoles(address(minter), edition2.MINTER_ROLE());
@@ -489,7 +496,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         // Mint with same signature on edition 2 fails - signature invalid
 
         vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinterV2.InvalidSignature.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.InvalidSignature.selector);
         minter.mint{ value: PRICE }(
             address(edition2),
             mintId2,
@@ -502,7 +509,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_signatureCannotBeReusedOnDifferentMintInstances() external {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         address buyer = getFundedAccount(1);
 
@@ -546,7 +553,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
         // Mint with same signature on mint instance 2 - signature invalid
 
         vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinterV2.InvalidSignature.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.InvalidSignature.selector);
         minter.mint{ value: PRICE }(
             address(edition),
             mintId2,
@@ -568,7 +575,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
 
         bool[] memory expectedClaimedAndUnclaimed = new bool[](numOfTokensToBuy * 2);
 
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint128 mintId = minter.createEditionMint(
             address(edition),
@@ -614,7 +621,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_setMaxMintable(uint32 maxMintable) public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         vm.expectEmit(true, true, true, true);
         emit MaxMintableSet(address(edition), MINT_ID, maxMintable);
@@ -624,7 +631,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_setMaxMintableRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
         address attacker = getFundedAccount(1);
 
         vm.expectRevert(Ownable.Unauthorized.selector);
@@ -633,7 +640,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_setPrice(uint96 price) public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         vm.expectEmit(true, true, true, true);
         emit PriceSet(address(edition), MINT_ID, price);
@@ -645,7 +652,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     function test_setSigner(address signer) public {
         vm.assume(signer != address(0));
 
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         vm.expectEmit(true, true, true, true);
         emit SignerSet(address(edition), MINT_ID, signer);
@@ -655,36 +662,36 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_setZeroSignerReverts() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
-        vm.expectRevert(IFixedPriceSignatureMinterV2.SignerIsZeroAddress.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.SignerIsZeroAddress.selector);
         minter.setSigner(address(edition), MINT_ID, address(0));
     }
 
     function test_supportsInterface() public {
-        (, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
-        bool supportsIMinterModuleV2 = minter.supportsInterface(type(IMinterModuleV2).interfaceId);
-        bool supportsIFixedPriceSignatureMinterV2 = minter.supportsInterface(
-            type(IFixedPriceSignatureMinterV2).interfaceId
+        bool supportsIMinterModuleV2_1 = minter.supportsInterface(type(IMinterModuleV2_1).interfaceId);
+        bool supportsIFixedPriceSignatureMinterV2_1 = minter.supportsInterface(
+            type(IFixedPriceSignatureMinterV2_1).interfaceId
         );
         bool supports165 = minter.supportsInterface(type(IERC165).interfaceId);
 
         assertTrue(supports165);
-        assertTrue(supportsIMinterModuleV2);
-        assertTrue(supportsIFixedPriceSignatureMinterV2);
+        assertTrue(supportsIMinterModuleV2_1);
+        assertTrue(supportsIFixedPriceSignatureMinterV2_1);
     }
 
     function test_moduleInterfaceId() public {
-        (, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
-        assertTrue(type(IFixedPriceSignatureMinterV2).interfaceId == minter.moduleInterfaceId());
+        assertTrue(type(IFixedPriceSignatureMinterV2_1).interfaceId == minter.moduleInterfaceId());
     }
 
     function test_mintInfo() public {
         SoundEditionV1_2 edition = createGenericEdition();
 
-        FixedPriceSignatureMinterV2 minter = new FixedPriceSignatureMinterV2();
+        FixedPriceSignatureMinterV2_1 minter = new FixedPriceSignatureMinterV2_1();
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
@@ -716,7 +723,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintWithDifferentChainIdReverts() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 claimTicket = 0;
         address buyer = getFundedAccount(1);
@@ -726,7 +733,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
 
         // This mint fails because the chain id is different.
         vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinterV2.InvalidSignature.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.InvalidSignature.selector);
         vm.chainId(11111);
         minter.mint{ value: PRICE }(
             address(edition),
@@ -753,7 +760,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
     }
 
     function test_mintWithMoreThanSignedQuantityReverts() public {
-        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2 minter) = _createEditionAndMinter();
+        (SoundEditionV1_2 edition, FixedPriceSignatureMinterV2_1 minter) = _createEditionAndMinter();
 
         uint32 quantity = 2;
         uint32 signedQuantity = 2;
@@ -765,7 +772,7 @@ contract FixedPriceSignatureMinterV2Tests is TestConfig {
 
         // This mint fails because we have exceeded the signed quantity.
         vm.prank(buyer);
-        vm.expectRevert(IFixedPriceSignatureMinterV2.ExceedsSignedQuantity.selector);
+        vm.expectRevert(IFixedPriceSignatureMinterV2_1.ExceedsSignedQuantity.selector);
         minter.mint{ value: PRICE * quantity }(
             address(edition),
             MINT_ID,

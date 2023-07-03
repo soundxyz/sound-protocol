@@ -6,13 +6,13 @@ import { Merkle } from "murky/Merkle.sol";
 
 import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
-import { MerkleDropMinterV2 } from "@modules/MerkleDropMinterV2.sol";
-import { IMerkleDropMinterV2, MintInfo } from "@modules/interfaces/IMerkleDropMinterV2.sol";
-import { IMinterModuleV2 } from "@core/interfaces/IMinterModuleV2.sol";
+import { MerkleDropMinterV2_1 } from "@modules/MerkleDropMinterV2_1.sol";
+import { IMerkleDropMinterV2_1, MintInfo } from "@modules/interfaces/IMerkleDropMinterV2_1.sol";
+import { IMinterModuleV2_1 } from "@core/interfaces/IMinterModuleV2_1.sol";
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
-contract MerkleDropMinterV2Tests is TestConfig {
+contract MerkleDropMinterV2_1Tests is TestConfig {
     uint32 public constant START_TIME = 100;
 
     uint32 public constant END_TIME = 200;
@@ -75,7 +75,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
         internal
         returns (
             SoundEditionV1_2 edition,
-            MerkleDropMinterV2 minter,
+            MerkleDropMinterV2_1 minter,
             uint128 mintId
         )
     {
@@ -83,7 +83,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
 
         setUpMerkleTree();
 
-        minter = new MerkleDropMinterV2();
+        minter = new MerkleDropMinterV2_1();
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
         mintId = minter.createEditionMint(
@@ -100,7 +100,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
 
     function test_canMintMultipleTimesLessThanMaxMintablePerAccount() public {
         uint32 maxPerAccount = 2;
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
             maxPerAccount
@@ -128,7 +128,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
     function test_cannotClaimMoreThanMaxMintablePerAccount() public {
         uint32 maxPerAccount = 1;
         uint32 requestedQuantity = 2;
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(
             0,
             6,
             maxPerAccount
@@ -137,7 +137,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
-        vm.expectRevert(IMerkleDropMinterV2.ExceedsMaxPerAccount.selector);
+        vm.expectRevert(IMerkleDropMinterV2_1.ExceedsMaxPerAccount.selector);
         // Max is 1 but buyer is requesting 2
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
@@ -146,7 +146,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
         uint32 maxPerAccount = 3;
         uint32 requestedQuantity = 3;
 
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(
             0,
             2,
             maxPerAccount
@@ -155,23 +155,23 @@ contract MerkleDropMinterV2Tests is TestConfig {
 
         vm.warp(START_TIME);
         vm.prank(accounts[2]);
-        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2.ExceedsAvailableSupply.selector, 2));
+        vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2_1.ExceedsAvailableSupply.selector, 2));
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
     function test_cannotClaimWithInvalidProof() public {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 1, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 1, 1);
         bytes32[] memory proof = m.getProof(leaves, 1);
 
         vm.warp(START_TIME);
         vm.prank(accounts[0]);
         uint32 requestedQuantity = 1;
-        vm.expectRevert(IMerkleDropMinterV2.InvalidMerkleProof.selector);
+        vm.expectRevert(IMerkleDropMinterV2_1.InvalidMerkleProof.selector);
         minter.mint(address(edition), mintId, requestedQuantity, proof, address(0));
     }
 
     function test_setPrice(uint96 price) public {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
 
         vm.expectEmit(true, true, true, true);
         emit PriceSet(address(edition), mintId, price);
@@ -181,7 +181,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
     }
 
     function test_setMaxMintable(uint32 maxMintable) public {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
 
         vm.expectEmit(true, true, true, true);
         emit MaxMintableSet(address(edition), mintId, maxMintable);
@@ -191,7 +191,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
     }
 
     function test_setMaxMintableRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
         address attacker = getFundedAccount(1);
 
         vm.expectRevert(Ownable.Unauthorized.selector);
@@ -201,7 +201,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
 
     function test_setMaxMintablePerAccount(uint32 maxMintablePerAccount) public {
         vm.assume(maxMintablePerAccount != 0);
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
 
         vm.expectEmit(true, true, true, true);
         emit MaxMintablePerAccountSet(address(edition), mintId, maxMintablePerAccount);
@@ -211,7 +211,7 @@ contract MerkleDropMinterV2Tests is TestConfig {
     }
 
     function test_setMaxMintablePerAccountRevertsIfCallerNotEditionOwnerOrAdmin(uint32 maxMintable) external {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
         address attacker = getFundedAccount(1);
 
         vm.expectRevert(Ownable.Unauthorized.selector);
@@ -220,15 +220,15 @@ contract MerkleDropMinterV2Tests is TestConfig {
     }
 
     function test_setMaxMintablePerAccountWithZeroReverts() public {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
 
-        vm.expectRevert(IMerkleDropMinterV2.MaxMintablePerAccountIsZero.selector);
+        vm.expectRevert(IMerkleDropMinterV2_1.MaxMintablePerAccountIsZero.selector);
         minter.setMaxMintablePerAccount(address(edition), mintId, 0);
     }
 
     function test_setMerkleRootHash(bytes32 merkleRootHash) public {
         vm.assume(merkleRootHash != bytes32(0));
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
 
         vm.expectEmit(true, true, true, true);
         emit MerkleRootHashSet(address(edition), mintId, merkleRootHash);
@@ -238,16 +238,16 @@ contract MerkleDropMinterV2Tests is TestConfig {
     }
 
     function test_setEmptyMerkleRootHashReverts() public {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, uint128 mintId) = _createEditionAndMinter(0, 0, 1);
 
-        vm.expectRevert(IMerkleDropMinterV2.MerkleRootHashIsEmpty.selector);
+        vm.expectRevert(IMerkleDropMinterV2_1.MerkleRootHashIsEmpty.selector);
         minter.setMerkleRootHash(address(edition), mintId, bytes32(0));
     }
 
     function test_setCreateWithMerkleRootHashReverts() public {
-        (SoundEditionV1_2 edition, MerkleDropMinterV2 minter, ) = _createEditionAndMinter(0, 0, 1);
+        (SoundEditionV1_2 edition, MerkleDropMinterV2_1 minter, ) = _createEditionAndMinter(0, 0, 1);
 
-        vm.expectRevert(IMerkleDropMinterV2.MerkleRootHashIsEmpty.selector);
+        vm.expectRevert(IMerkleDropMinterV2_1.MerkleRootHashIsEmpty.selector);
 
         minter.createEditionMint(
             address(edition),
@@ -262,27 +262,27 @@ contract MerkleDropMinterV2Tests is TestConfig {
     }
 
     function test_supportsInterface() public {
-        (, MerkleDropMinterV2 minter, ) = _createEditionAndMinter(0, 0, 1);
+        (, MerkleDropMinterV2_1 minter, ) = _createEditionAndMinter(0, 0, 1);
 
-        bool supportsIMinterModuleV2 = minter.supportsInterface(type(IMinterModuleV2).interfaceId);
-        bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMinterV2).interfaceId);
+        bool supportsIMinterModuleV2_1 = minter.supportsInterface(type(IMinterModuleV2_1).interfaceId);
+        bool supportsIMerkleDropMint = minter.supportsInterface(type(IMerkleDropMinterV2_1).interfaceId);
         bool supports165 = minter.supportsInterface(type(IERC165).interfaceId);
 
         assertTrue(supports165);
-        assertTrue(supportsIMinterModuleV2);
+        assertTrue(supportsIMinterModuleV2_1);
         assertTrue(supportsIMerkleDropMint);
     }
 
     function test_moduleInterfaceId() public {
-        (, MerkleDropMinterV2 minter, ) = _createEditionAndMinter(0, 0, 1);
+        (, MerkleDropMinterV2_1 minter, ) = _createEditionAndMinter(0, 0, 1);
 
-        assertTrue(type(IMerkleDropMinterV2).interfaceId == minter.moduleInterfaceId());
+        assertTrue(type(IMerkleDropMinterV2_1).interfaceId == minter.moduleInterfaceId());
     }
 
     function test_mintInfo() public {
         SoundEditionV1_2 edition = createGenericEdition();
 
-        MerkleDropMinterV2 minter = new MerkleDropMinterV2();
+        MerkleDropMinterV2_1 minter = new MerkleDropMinterV2_1();
         setUpMerkleTree();
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
