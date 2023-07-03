@@ -2,15 +2,15 @@
 pragma solidity ^0.8.16;
 
 import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
-import { MintInfo } from "@modules/interfaces/IRangeEditionMinterV2.sol";
-import { RangeEditionMinterV2 } from "@modules/RangeEditionMinterV2.sol";
-import { BaseMinterV2 } from "@modules/BaseMinterV2.sol";
-import { RangeEditionMinterV2Tests } from "../modules/RangeEditionMinterV2.t.sol";
+import { MintInfo } from "@modules/interfaces/IRangeEditionMinterV2_1.sol";
+import { RangeEditionMinterV2_1 } from "@modules/RangeEditionMinterV2_1.sol";
+import { BaseMinterV2_1 } from "@modules/BaseMinterV2_1.sol";
+import { RangeEditionMinterV2_1Tests } from "../modules/RangeEditionMinterV2_1.t.sol";
 import { InvariantTest } from "./InvariantTest.sol";
 
-contract RangeEditionMinterV2Invariants is RangeEditionMinterV2Tests, InvariantTest {
-    RangeEditionMinterV2Updater minterUpdater;
-    RangeEditionMinterV2 minter;
+contract RangeEditionMinterV2_1Invariants is RangeEditionMinterV2_1Tests, InvariantTest {
+    RangeEditionMinterV2_1Updater minterUpdater;
+    RangeEditionMinterV2_1 minter;
     SoundEditionV1_2 edition;
 
     function setUp() public override {
@@ -18,7 +18,7 @@ contract RangeEditionMinterV2Invariants is RangeEditionMinterV2Tests, InvariantT
 
         edition = createGenericEdition();
 
-        minter = new RangeEditionMinterV2();
+        minter = new RangeEditionMinterV2_1();
 
         edition.grantRoles(address(minter), edition.MINTER_ROLE());
 
@@ -34,7 +34,7 @@ contract RangeEditionMinterV2Invariants is RangeEditionMinterV2Tests, InvariantT
             MAX_MINTABLE_PER_ACCOUNT
         );
 
-        minterUpdater = new RangeEditionMinterV2Updater(edition, minter);
+        minterUpdater = new RangeEditionMinterV2_1Updater(edition, minter);
 
         addTargetContract(address(minter));
     }
@@ -54,13 +54,13 @@ contract RangeEditionMinterV2Invariants is RangeEditionMinterV2Tests, InvariantT
     }
 }
 
-contract RangeEditionMinterV2Updater {
+contract RangeEditionMinterV2_1Updater {
     uint128 constant MINT_ID = 0;
 
     SoundEditionV1_2 edition;
-    RangeEditionMinterV2 minter;
+    RangeEditionMinterV2_1 minter;
 
-    constructor(SoundEditionV1_2 _edition, RangeEditionMinterV2 _minter) {
+    constructor(SoundEditionV1_2 _edition, RangeEditionMinterV2_1 _minter) {
         edition = _edition;
         minter = _minter;
     }

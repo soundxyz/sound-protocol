@@ -5,9 +5,9 @@ import { ISoundCreatorV1 } from "@core/interfaces/ISoundCreatorV1.sol";
 import { SoundEditionV1_2 } from "@core/SoundEditionV1_2.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { FixedPriceSignatureMinterV2 } from "@modules/FixedPriceSignatureMinterV2.sol";
-import { MerkleDropMinterV2 } from "@modules/MerkleDropMinterV2.sol";
-import { RangeEditionMinterV2 } from "@modules/RangeEditionMinterV2.sol";
+import { FixedPriceSignatureMinterV2_1 } from "@modules/FixedPriceSignatureMinterV2_1.sol";
+import { MerkleDropMinterV2_1 } from "@modules/MerkleDropMinterV2_1.sol";
+import { RangeEditionMinterV2_1 } from "@modules/RangeEditionMinterV2_1.sol";
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { TestConfig } from "../TestConfig.sol";
 
@@ -158,15 +158,15 @@ contract SoundCreatorTests is TestConfig {
         address[] memory contracts = new address[](6);
         bytes[] memory data = new bytes[](6);
 
-        FixedPriceSignatureMinterV2 signatureMinter;
-        MerkleDropMinterV2 merkleMinter;
-        RangeEditionMinterV2 rangeMinter;
+        FixedPriceSignatureMinterV2_1 signatureMinter;
+        MerkleDropMinterV2_1 merkleMinter;
+        RangeEditionMinterV2_1 rangeMinter;
 
         // Deploy minters.
         {
-            signatureMinter = new FixedPriceSignatureMinterV2();
-            merkleMinter = new MerkleDropMinterV2();
-            rangeMinter = new RangeEditionMinterV2();
+            signatureMinter = new FixedPriceSignatureMinterV2_1();
+            merkleMinter = new MerkleDropMinterV2_1();
+            rangeMinter = new RangeEditionMinterV2_1();
         }
 
         // Deploy the implementation of the edition.
