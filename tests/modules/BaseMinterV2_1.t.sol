@@ -375,6 +375,51 @@ contract MintControllerBaseV2Tests is TestConfig {
         _test_withdrawPlatformFeesAccrued(expectedPlatformFees);
     }
 
+    function testTotalPriceAndFeesNoOverflow(
+        uint96 price,
+        uint32 quantity,
+        uint16 platformFlatFee,
+        uint16 platformFeeBPS,
+        uint96 platformPerTxFlatFee,
+        uint16 BPS_DENOMINATOR,
+        uint16 affiliateFeeBPS
+    ) public {
+        if (BPS_DENOMINATOR == 0) BPS_DENOMINATOR = 1;
+
+        uint256 subTotal = uint256(quantity) * uint256(price);
+
+        uint256 platformFlatFeeTotal = uint256(quantity) * uint256(platformFlatFee) + uint256(platformPerTxFlatFee);
+
+        uint256 total = subTotal + platformFlatFeeTotal;
+
+        uint256 platformFee = (subTotal * uint256(platformFeeBPS)) / uint256(BPS_DENOMINATOR) + platformFlatFeeTotal;
+
+        uint256 affiliateFee = (subTotal * uint256(affiliateFeeBPS)) / uint256(BPS_DENOMINATOR);
+
+        assertTrue(subTotal + platformFlatFeeTotal + total + platformFee + affiliateFee < type(uint256).max);
+    }
+
+    function testTotalPriceAndFeesNoOverflow() public {
+        testTotalPriceAndFeesNoOverflow(
+            type(uint96).max,
+            type(uint32).max,
+            type(uint16).max,
+            type(uint16).max,
+            type(uint96).max,
+            type(uint16).max,
+            type(uint16).max
+        );
+        testTotalPriceAndFeesNoOverflow(
+            type(uint96).max,
+            type(uint32).max,
+            type(uint16).max,
+            type(uint16).max,
+            type(uint96).max,
+            0,
+            type(uint16).max
+        );
+    }
+
     struct _TestTemps {
         uint256 subTotal;
         uint256 requiredEtherValue;
