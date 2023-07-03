@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 1.6.0
+
+### Minor Changes
+
+-   b56a0fb: Platform flat transaction fee support
+
 ## 1.5.0
 
 ### Minor Changes
