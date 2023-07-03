@@ -430,20 +430,30 @@ interface IMinterModuleV2_1 is IERC165 {
     function affiliateMerkleRoot(address edition, uint128 mintId) external view returns (bytes32);
 
     /**
-     * @dev The total price for `quantity` tokens for (`edition`, `mintId`).
-     *      This does NOT include any additional platform flat fees.
+     * @dev Returns the total price and fees for `quantity` tokens for (`edition`, `mintId`).
      * @param edition   The edition's address.
      * @param mintId    The mint ID.
-     * @param to        The address to mint to.
      * @param quantity  The number of tokens to mint.
-     * @return The computed value.
+     * @return total                The total buy price, inclusive of any additional platform flat fees.
+     * @return subTotal             The total buy price, exclusive of any additional platform flat fees.
+     * @return platformFlatFeeTotal The total platform flat fees, which is added onto `subTotal` to give `total`.
+     * @return platformFee          The total platform fees.
+     * @return affiliateFee         The affiliate fees.
      */
-    function totalPrice(
+    function totalPriceAndFees(
         address edition,
         uint128 mintId,
-        address to,
         uint32 quantity
-    ) external view returns (uint128);
+    )
+        external
+        view
+        returns (
+            uint256 total,
+            uint256 subTotal,
+            uint256 platformFlatFeeTotal,
+            uint256 platformFee,
+            uint256 affiliateFee
+        );
 
     /**
      * @dev Returns the platform fee basis points.

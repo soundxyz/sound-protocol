@@ -297,15 +297,35 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
     /**
      * @inheritdoc IMinterModuleV2_1
      */
-    function totalPrice(
+    function totalPriceAndFees(
         address edition,
         uint128 mintId,
-        address, /* to */
         uint32 quantity
-    ) public view virtual override returns (uint128) {
+    )
+        public
+        view
+        virtual
+        override
+        returns (
+            uint256 total,
+            uint256 subTotal,
+            uint256 platformFlatFeeTotal,
+            uint256 platformFee,
+            uint256 affiliateFee
+        )
+    {
+        BaseData storage baseData = _getBaseData(edition, mintId);
+
         unchecked {
-            // Will not overflow, as `price` is 96 bits, and `quantity` is 32 bits. 96 + 32 = 128.
-            return uint128(uint256(_getBaseData(edition, mintId).price) * uint256(quantity));
+            subTotal = uint256(quantity) * uint256(baseData.price); // Before additional fees.
+
+            platformFlatFeeTotal = uint256(quantity) * uint256(platformFlatFee) + uint256(platformPerTxFlatFee);
+
+            total = subTotal + platformFlatFeeTotal;
+
+            platformFee = (subTotal * uint256(platformFeeBPS)) / uint256(BPS_DENOMINATOR) + platformFlatFeeTotal;
+
+            affiliateFee = (subTotal * uint256(baseData.affiliateFeeBPS)) / uint256(BPS_DENOMINATOR);
         }
     }
 
@@ -382,9 +402,7 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
         bool affiliated;
         uint256 affiliateFee;
         uint256 remainingPayment;
-        uint256 platformFlatFeeTotal;
         uint256 platformFee;
-        uint256 totalPrice;
         uint256 requiredEtherValue;
     }
 
@@ -425,9 +443,8 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
         /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
 
         unchecked {
-            t.platformFlatFeeTotal = uint256(quantity) * uint256(platformFlatFee) + uint256(platformPerTxFlatFee);
-            t.totalPrice = totalPrice(edition, mintId, to, quantity);
-            t.requiredEtherValue = t.totalPrice + t.platformFlatFeeTotal;
+            // `requiredEtherValue = platformFee + affiliateFee + artistFee`.
+            (t.requiredEtherValue, , , t.platformFee, t.affiliateFee) = totalPriceAndFees(edition, mintId, quantity);
 
             // Reverts if the payment is not exact, or not enough.
             if (_useExactPayment()) {
@@ -436,14 +453,9 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
                 if (msg.value < t.requiredEtherValue) revert Underpaid(msg.value, t.requiredEtherValue);
             }
 
-            // Compute the platform fee.
-            t.platformFee =
-                (t.totalPrice * uint256(platformFeeBPS)) /
-                uint256(BPS_DENOMINATOR) +
-                t.platformFlatFeeTotal;
             // Increment the platform fees accrued.
             platformFeesAccrued = SafeCastLib.toUint128(uint256(platformFeesAccrued) + t.platformFee);
-            // Deduct the platform fee.
+            // Deduct the platform BPS fee, and the platform flat fees.
             // Won't underflow as `platformFee <= requiredEtherValue`;
             t.remainingPayment = t.requiredEtherValue - t.platformFee;
         }
@@ -452,8 +464,6 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
         t.affiliated = isAffiliatedWithProof(edition, mintId, affiliate, affiliateProof);
         unchecked {
             if (t.affiliated) {
-                // Compute the affiliate fee.
-                t.affiliateFee = (t.totalPrice * uint256(baseData.affiliateFeeBPS)) / uint256(BPS_DENOMINATOR);
                 // Deduct the affiliate fee from the remaining payment.
                 // Won't underflow as `affiliateFee <= remainingPayment`.
                 t.remainingPayment -= t.affiliateFee;
@@ -462,6 +472,7 @@ abstract contract BaseMinterV2_1 is IMinterModuleV2_1, Ownable {
                     uint256(affiliateFeesAccrued[affiliate]) + t.affiliateFee
                 );
             } else {
+                t.affiliateFee = 0;
                 // If the affiliate is not the zero address despite not being
                 // affiliated, it might be due to an invalid affiliate proof.
                 // Revert to prevent unintended skipping of affiliate payment.

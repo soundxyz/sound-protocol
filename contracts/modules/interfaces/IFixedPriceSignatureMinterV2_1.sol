@@ -256,4 +256,9 @@ interface IFixedPriceSignatureMinterV2_1 is IMinterModuleV2_1 {
      * @return separator The constant value.
      */
     function DOMAIN_SEPARATOR() external view returns (bytes32 separator);
+
+    /**
+     * @dev To prevent ERC165 selector collision.
+     */
+    function isV2_1() external pure returns (bool);
 }

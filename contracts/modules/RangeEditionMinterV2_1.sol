@@ -230,10 +230,6 @@ contract RangeEditionMinterV2_1 is IRangeEditionMinterV2_1, BaseMinterV2_1 {
         info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
-    function isV2_1() external pure returns (bool) {
-        return true;
-    }
-
     /**
      * @inheritdoc IERC165
      */
@@ -247,6 +243,13 @@ contract RangeEditionMinterV2_1 is IRangeEditionMinterV2_1, BaseMinterV2_1 {
      */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IRangeEditionMinterV2_1).interfaceId;
+    }
+
+    /**
+     * @inheritdoc IRangeEditionMinterV2_1
+     */
+    function isV2_1() external pure override returns (bool) {
+        return true;
     }
 
     // =============================================================

@@ -269,4 +269,11 @@ contract FixedPriceSignatureMinterV2_1 is IFixedPriceSignatureMinterV2_1, BaseMi
             )
         );
     }
+
+    /**
+     * @inheritdoc IFixedPriceSignatureMinterV2_1
+     */
+    function isV2_1() external pure override returns (bool) {
+        return true;
+    }
 }

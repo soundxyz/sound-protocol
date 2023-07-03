@@ -276,5 +276,8 @@ interface IMerkleDropMinterV2_1 is IMinterModuleV2_1 {
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory);
 
+    /**
+     * @dev To prevent ERC165 selector collision.
+     */
     function isV2_1() external pure returns (bool);
 }

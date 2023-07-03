@@ -155,4 +155,11 @@ contract EditionMaxMinterV2_1 is IEditionMaxMinterV2_1, BaseMinterV2_1 {
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IEditionMaxMinterV2_1).interfaceId;
     }
+
+    /**
+     * @inheritdoc IEditionMaxMinterV2_1
+     */
+    function isV2_1() external pure override returns (bool) {
+        return true;
+    }
 }

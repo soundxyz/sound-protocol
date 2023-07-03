@@ -149,7 +149,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         uint96 price = 1;
-        minter.setPrice(price);
+        minter.setPrice(address(edition), mintId, price);
 
         vm.expectRevert(abi.encodeWithSelector(IMinterModuleV2_1.WrongPayment.selector, price * 2 - 1, price * 2));
         minter.mint{ value: price * 2 - 1 }(address(edition), mintId, 2, address(0));
@@ -166,7 +166,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         uint96 price = 1;
-        minter.setPrice(price);
+        minter.setPrice(address(edition), mintId, price);
 
         uint32 quantity = 2;
 
@@ -190,7 +190,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         minter.setEditionMintPaused(address(edition), mintId, true);
 
         uint96 price = 1;
-        minter.setPrice(price);
+        minter.setPrice(address(edition), mintId, price);
 
         vm.expectRevert(IMinterModuleV2_1.MintPaused.selector);
 
@@ -202,8 +202,6 @@ contract MintControllerBaseV2Tests is TestConfig {
     }
 
     function test_mintRevertsWithZeroQuantity() public {
-        minter.setPrice(0);
-
         SoundEditionV1_2 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
@@ -223,8 +221,6 @@ contract MintControllerBaseV2Tests is TestConfig {
     }
 
     function test_cantMintPastEditionMaxMintable() external {
-        minter.setPrice(0);
-
         uint32 maxSupply = 50;
         SoundEditionV1_2 edition1 = _createEdition(maxSupply);
 
@@ -301,7 +297,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         minter.setAffiliateMerkleRoot(address(edition), mintId, m.getRoot(leaves));
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity);
+        uint256 requiredEtherValue = minter.requiredEtherValue(address(edition), mintId, quantity);
 
         bytes32[] memory affiliateProof = m.getProof(leaves, 1);
         vm.expectRevert(IMinterModuleV2_1.InvalidAffiliate.selector);
@@ -332,7 +328,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         uint96 price = 1 ether;
-        minter.setPrice(price);
+        minter.setPrice(address(edition), mintId, price);
         minter.setPlatformFee(0);
         minter.setPlatformFeeAddress(SOUND_FEE_ADDRESS);
 
@@ -340,7 +336,7 @@ contract MintControllerBaseV2Tests is TestConfig {
         _test_setAffiliateFee(edition, mintId, affiliateFeeBPS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity);
+        uint256 requiredEtherValue = minter.requiredEtherValue(address(edition), mintId, quantity);
 
         address affiliate = getFundedAccount(123456789);
 
@@ -361,14 +357,14 @@ contract MintControllerBaseV2Tests is TestConfig {
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
 
         uint96 price = 1 ether;
-        minter.setPrice(price);
+        minter.setPrice(address(edition), mintId, price);
 
         uint16 platformFeeBPS = uint16(_bound(_random(), 0, minter.MAX_PLATFORM_FEE_BPS()));
         minter.setPlatformFee(platformFeeBPS);
         minter.setPlatformFeeAddress(SOUND_FEE_ADDRESS);
 
         uint32 quantity = 1;
-        uint256 requiredEtherValue = minter.totalPrice(address(edition), mintId, address(this), quantity);
+        uint256 requiredEtherValue = minter.requiredEtherValue(address(edition), mintId, quantity);
 
         address affiliate = getFundedAccount(123456789);
 
@@ -380,7 +376,7 @@ contract MintControllerBaseV2Tests is TestConfig {
     }
 
     struct _TestTemps {
-        uint256 totalPrice;
+        uint256 subTotal;
         uint256 requiredEtherValue;
         bool affiliated;
         address affiliate;
@@ -404,8 +400,6 @@ contract MintControllerBaseV2Tests is TestConfig {
         t.price = _bound(_random(), 0, type(uint96).max);
         t.quantity = _bound(_random(), 1, 8);
 
-        minter.setPrice(uint96(t.price));
-
         SoundEditionV1_2 edition = _createEdition(EDITION_MAX_MINTABLE);
 
         (t.affiliate, ) = _randomSigner();
@@ -416,6 +410,8 @@ contract MintControllerBaseV2Tests is TestConfig {
         }
 
         uint128 mintId = minter.createEditionMint(address(edition), START_TIME, END_TIME, AFFILIATE_FEE_BPS);
+
+        minter.setPrice(address(edition), mintId, uint96(t.price));
 
         t.platformFeeBPS = _bound(_random(), 0, minter.MAX_PLATFORM_FEE_BPS());
         vm.expectEmit(true, true, true, true);
@@ -440,10 +436,10 @@ contract MintControllerBaseV2Tests is TestConfig {
         t.affiliateFeeBPS = _bound(_random(), 0, minter.MAX_AFFILIATE_FEE_BPS() * 2);
         if (!_test_setAffiliateFee(edition, mintId, uint16(t.affiliateFeeBPS))) return;
 
-        t.totalPrice = minter.totalPrice(address(edition), mintId, address(this), uint32(t.quantity));
-        t.requiredEtherValue = t.totalPrice;
+        (, t.subTotal, , , ) = minter.totalPriceAndFees(address(edition), mintId, uint32(t.quantity));
+        t.requiredEtherValue = t.subTotal;
 
-        t.expectedPlatformFees = (t.totalPrice * t.platformFeeBPS) / minter.BPS_DENOMINATOR();
+        t.expectedPlatformFees = (t.subTotal * t.platformFeeBPS) / minter.BPS_DENOMINATOR();
         if (t.platformFlatFee != 0) {
             t.expectedPlatformFees += t.platformFlatFee * t.quantity;
             t.requiredEtherValue += t.platformFlatFee * t.quantity;
@@ -455,7 +451,7 @@ contract MintControllerBaseV2Tests is TestConfig {
 
         t.affiliated = minter.isAffiliated(address(edition), mintId, t.affiliate);
         if (t.affiliated) {
-            t.expectedAffiliateFees = (t.totalPrice * t.affiliateFeeBPS) / minter.BPS_DENOMINATOR();
+            t.expectedAffiliateFees = (t.subTotal * t.affiliateFeeBPS) / minter.BPS_DENOMINATOR();
         }
         // Expect an event.
         uint32 fromTokenId = uint32(edition.nextTokenId());

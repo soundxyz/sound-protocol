@@ -225,10 +225,6 @@ contract MerkleDropMinterV2_1 is IMerkleDropMinterV2_1, BaseMinterV2_1 {
         info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
-    function isV2_1() public pure returns (bool) {
-        return true;
-    }
-
     /**
      * @inheritdoc IERC165
      */
@@ -241,5 +237,12 @@ contract MerkleDropMinterV2_1 is IMerkleDropMinterV2_1, BaseMinterV2_1 {
      */
     function moduleInterfaceId() public pure returns (bytes4) {
         return type(IMerkleDropMinterV2_1).interfaceId;
+    }
+
+    /**
+     * @inheritdoc IMerkleDropMinterV2_1
+     */
+    function isV2_1() external pure override returns (bool) {
+        return true;
     }
 }
