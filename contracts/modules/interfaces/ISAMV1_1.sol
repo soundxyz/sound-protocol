@@ -20,6 +20,8 @@ struct SAMInfo {
     uint16 affiliateFeeBPS;
     uint16 goldenEggFeeBPS;
     bytes32 affiliateMerkleRoot;
+    uint16 platformFeeBPS;
+    uint96 platformPerTxFlatFee;
 }
 
 /**
