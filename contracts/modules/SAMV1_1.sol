@@ -601,6 +601,8 @@ contract SAMV1_1 is ISAMV1_1, Ownable {
         info.affiliateFeeBPS = data.affiliateFeeBPS;
         info.goldenEggFeeBPS = data.goldenEggFeeBPS;
         info.affiliateMerkleRoot = data.affiliateMerkleRoot;
+        info.platformFeeBPS = platformFeeBPS;
+        info.platformPerTxFlatFee = platformPerTxFlatFee;
     }
 
     /**
