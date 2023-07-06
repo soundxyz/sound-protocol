@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 1.7.0
+
+### Minor Changes
+
+-   ca0bb9a: Add platformFeeBPS and platformPerTxFlatFee to SAMInfo
+
 ## 1.6.0
 
 ### Minor Changes
