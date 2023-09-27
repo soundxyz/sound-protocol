@@ -65,7 +65,7 @@ contract ArweaveURILibTest is TestConfig {
 
     function test_setBaseURIArweaveAndRegular(uint256 randomness) public {
         vm.assume(randomness != 0);
-        delete uriStorage;
+        assertEq(uriStorage.load(), "");
 
         string memory newURI;
 
@@ -82,6 +82,9 @@ contract ArweaveURILibTest is TestConfig {
 
             randomness = uint256(keccak256(abi.encode(randomness, block.timestamp)));
         }
+
+        uriStorage.update("");
+        assertEq(uriStorage.load(), "");
     }
 
     function test_setBaseURIArweaveAndRegular() public {

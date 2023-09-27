@@ -87,7 +87,6 @@ library ArweaveURILib {
                 mstore(value, valueLength)
             }
             uri.arweave = arweaveCID;
-            if (isUpdate) delete uri.regular;
         } else {
             uri.regular = value;
             if (isUpdate) delete uri.arweave;
@@ -100,6 +99,7 @@ library ArweaveURILib {
      * @param value    The string representation of the URI.
      */
     function initialize(URI storage uri, string memory value) internal {
+        if (bytes(value).length == 0) return;
         store(uri, value, false);
     }
 

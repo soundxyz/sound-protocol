@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "../../TestPlus.sol";
 import { DelegateCashLib } from "../../../contracts/modules/utils/DelegateCashLib.sol";
 
-contract MockDelegateCash {
+contract MockDelegateCashV2 {
     mapping(address => mapping(address => bool)) internal _hasDelegateForAll;
 
     function setDelegateForAll(
@@ -15,23 +15,27 @@ contract MockDelegateCash {
         _hasDelegateForAll[delegate][vault] = value;
     }
 
-    function checkDelegateForAll(address delegate, address vault) public view returns (bool) {
+    function checkDelegateForAll(
+        address delegate,
+        address vault,
+        bytes32 rights
+    ) public view returns (bool) {
+        require(rights == "");
         return _hasDelegateForAll[delegate][vault];
     }
 }
 
 contract DelegateCashLibTest is TestPlus {
     function setUp() public {
-        address mock = address(new MockDelegateCash());
-        vm.etch(DelegateCashLib.REGISTRY, mock.code);
+        vm.etch(DelegateCashLib.REGISTRY_V2, address(new MockDelegateCashV2()).code);
     }
 
-    function test_checkDelegateForAll(
+    function test_checkDelegateForAllV2(
         address delegate,
         address vault,
         bool value
     ) public {
-        MockDelegateCash(DelegateCashLib.REGISTRY).setDelegateForAll(delegate, vault, value);
+        MockDelegateCashV2(DelegateCashLib.REGISTRY_V2).setDelegateForAll(delegate, vault, value);
         assertEq(DelegateCashLib.checkDelegateForAll(delegate, vault), value);
     }
 }
