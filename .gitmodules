@@ -31,3 +31,6 @@
 	url = https://github.com/vectorized/multicaller
 	branch = main
 	ignore = dirty
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/vectorized/solady
