@@ -20,11 +20,11 @@ The following contracts have been deployed on Mainnet, Optimism, Goerli, Optimis
 
 | Contract  |  Address |
 |---|---|
-| `SoundEditionV2` | 0x0000000000c78FEE168002D89D141517b8E6E0FE
-| `SoundCreatorV2` | 0x0000000000aec84F5BFc2af15EAfb943bf4e3522
-| `SuperMinter` | 0x0000000000CF4558c36229ac0026ee16D3aE35Cd
-| `SoundOnChainMetadata` | 0x0000000000724868d80283B098Ffa809B2181692
-| `SoundMetadata` | 0x0000000000f5A96Dc85959cAeb0Cfe680f108FB5
+| `SoundEditionV2` | `0x0000000000c78FEE168002D89D141517b8E6E0FE`
+| `SoundCreatorV2` | `0x0000000000aec84F5BFc2af15EAfb943bf4e3522`
+| `SuperMinter` | `0x0000000000CF4558c36229ac0026ee16D3aE35Cd`
+| `SoundOnChainMetadata` | `0x0000000000724868d80283B098Ffa809B2181692`
+| `SoundMetadata` | `0x0000000000f5A96Dc85959cAeb0Cfe680f108FB5`
 
 ## Architecture
 
@@ -60,10 +60,12 @@ The latest Sound Protocol comprises of several components:
 
 The smart contracts are stored under the `contracts` directory.
 
-These are the contracts currently used. The actual directories may contain some older contracts not on the list, as they are left there for backwards compatibility.
+These are the contracts currently used.
+
+The actual directories may contain some older contracts not on the list ─ they are left there for backwards compatibility.
 
 ```ml
-contracts/
+contracts
 ├── core
 │   ├── SoundCreatorV2.sol ─ "Factory"
 │   ├── SoundEditionV2.sol ─ "NFT implementation"
@@ -83,7 +85,7 @@ contracts/
     │   ├── ISoundMetadata.sol
     │   └── ISoundOnChainMetadata.sol
     └── utils
-        ├── DelegateCashLib.sol ─ "Library for querying with DelegateCash"
+        ├── DelegateCashLib.sol ─ "Library for querying DelegateCash"
         └── SoundOnChainMetadataLib.sol ─ "Library for SoundOnChainMetadata"
 ```
 
