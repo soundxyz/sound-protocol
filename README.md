@@ -7,50 +7,30 @@ Sound Protocol is a generalized platform for flexible and efficient creation of 
 - [Sound Protocol](#sound-protocol)
   - [Table of Contents](#table-of-contents)
   - [Deployments](#deployments)
-  - [Specification](#specification)
-  - [Architecture](#architecture)
-  - [Diagram](#diagram)
   - [Contracts](#contracts)
   - [Documentation](#documentation)
-  - [Usage](#usage)
-    - [Prerequisites](#prerequisites)
-    - [Setup](#setup)
-    - [Testing](#testing)
-    - [Deploying](#deploying)
+  - [Development](#development)
+  - [Deploying](#deploying)
   - [Bug Bounty](#bug-bounty)
   - [License](#license)
 
 ## Deployments
 
-`SoundCreatorV1` Factory contract
-| Network |  Address |
-|---|---|
-| `Mainnet` | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
-| `Goerli`  | 0xaef3e8c8723d9c31863be8de54df2668ef7c4b89
-| `Optimism` | 0x5bcf5773bcf1f131a0cad5c74aa9be1a80b63c55
-
-
-Permissionless zero-fee minter/metadata deployments on Mainnet, Goerli, Optimism, and Optimism Goerli:
+The following contracts have been deployed on Mainnet, Optimism, Goerli, Optimism-Goerli, and Sepolia.
 
 | Contract  |  Address |
 |---|---|
-| `GoldenEggMetadata` | 0x000000002154ad3431c330ac2db6ed42195f9141
-| `OpenGoldenEggMetadata` | 0x00000000c417a48cd096067520747607a0331f0e
-| `MerkleDropMinter` | 0x0000000067149f4d5e7d2904179b8fccca000539
-| `RangeEditionMinter` | 0x000000006154a95522e183f4d85bb7f2cd666ae8
-
-
-
-
-## Specification
-
-See [spec](./spec.md) for current protocol specification. For details on how to build and run a custom minter instance, see section ["Adding a custom minter module"](./spec.md#adding-a-custom-minter-module) section in spec. Documentation coming soon.
+| `SoundEditionV2` | 0x0000000000c78FEE168002D89D141517b8E6E0FE
+| `SoundCreatorV2` | 0x0000000000aec84F5BFc2af15EAfb943bf4e3522
+| `SuperMinter` | 0x0000000000CF4558c36229ac0026ee16D3aE35Cd
+| `SoundOnChainMetadata` | 0x0000000000724868d80283B098Ffa809B2181692
+| `SoundMetadata` | 0x0000000000f5A96Dc85959cAeb0Cfe680f108FB5
 
 ## Architecture
 
-The Sound Protocol comprises of several components: 
+The latest Sound Protocol comprises of several components: 
 
-- **`SoundEdition`**  
+- **`SoundEditionV2`**  
 
   The NFT contract.
 
@@ -59,177 +39,74 @@ The Sound Protocol comprises of several components:
   The `mint` function allows authorized minter contracts or administrators to batch mint NFTs  
   (authorization is granted via the `MINTER_ROLE` or `ADMIN_ROLE`).
 
-- **`SoundCreator`** 
+- **`SoundCreatorV2`** 
 
   A factory that allows for a single transaction setup that:
-  1. Deploys and initializes `SoundEdition`.
-  2. Authorize one or more `MinterContract`s on `SoundEdition`.   
-  3. Configure one or more `MinterContract`s to mint on `SoundEdition`. 
+  1. Clones and initializes a `SoundEdition`.
+  2. Forwards calldata to an array of target contracts. These calldata can be used to set up the required authorizations and mint schedules.
 
-- **`MinterContract`**
+- **`SuperMinter`**
 
-  A contract to call the `mint` function on `SoundEdition`.  
-  This contract can implement any kind of customized sales logic.  
-  One or more `MinterContract`s can be used on the `SoundEdition` simultaneously.
+  A generalized singleton minter contract that can mint on `SoundEdition`s.
 
-- **`fundingRecipient`**
+  Technically, any contract can be authorized to mint on a `SoundEdition` as long as they are granted the `MINTER_ROLE`.
 
-  Can be a contract such as a [0xSplits](https://github.com/0xSplits/splits-contracts) wallet, or an Externally Owned Account (EOA).
+- **`SoundMetadata`**
 
-- **`MetadataContract`**
+  A contract which is called by the `SoundEdition` in the `tokenURI` function for customizable metadata logic. The on-chain JSON variant is called `SoundOnChainMetadata`.
 
-  A contract which is called by the `SoundEdition` in the `tokenURI` function for customizable metadata logic.  
-  Optional.
-  
-## Diagram
-
-```mermaid
-flowchart LR
-    SoundCreatorV1 --> initialize
-
-    subgraph SoundEditionV1
-    initialize
-    mint
-    withdrawETH
-    withdrawERC20
-    tokenURI
-    end
-
-    tokenURI -.-> MetadataContract
-    A[Minter A] --> mint
-    B[Minter B] --> mint
-    C[Minter C] --> mint
-    withdrawETH --> fundingRecipient
-    withdrawERC20 --> fundingRecipient
-```
 
 ## Contracts
 
 The smart contracts are stored under the `contracts` directory.
 
-Files marked with an asterisk (\*) are specific to [sound.xyz](https://sound.xyz),  
-but you can refer to them if you are building contracts to interact with them on-chain,   
-or building your own customized versions.
+These are the contracts currently used. The actual directories may contain some older contracts not on the list, as they are left there for backwards compatibility.
 
 ```ml
 contracts/
 ├── core
-│   ├── SoundCreatorV1.sol ─ "Factory"
-│   ├── SoundEditionV1.sol ─ "NFT implementation"
-│   ├── SoundFeeRegistry.sol * ─ "Platform fee registry"
+│   ├── SoundCreatorV2.sol ─ "Factory"
+│   ├── SoundEditionV2.sol ─ "NFT implementation"
 │   ├── interfaces
-│   │   ├── IMetadataModule.sol ─ "Metadata module interface"
-│   │   ├── IMinterModule.sol ─ "Generalized minter interface"
-│   │   ├── ISoundCreatorV1.sol ─ "Factory interface"
-│   │   ├── ISoundEditionV1.sol ─ "NFT implementation interface"
-│   │   └── ISoundFeeRegistry.sol * ─ "Platform fee registry interface"
+│   │   ├── ISoundCreatorV2.sol
+│   │   └── ISoundEditionV2.sol
 │   └── utils
-│       └── ArweaveURILib.sol * ─ "For efficient storage of Arweave URIs"
+│       ├── MintRandomnessLib.sol ─ "Library for on-chain 1-of-1 raffle"
+│       ├── LibOps.sol ─ "Library for common operations"
+│       └── ArweaveURILib.sol ─ "For efficient storage of Arweave URIs"
 └── modules
-    ├── BaseMinter.sol * ─ "Shared minting logic"
-    ├── EditionMaxMinter.sol * ─ "Minimalistic minter"
-    ├── FixedPriceSignatureMinter.sol * ─ "For permissioned mints via ECDSA signatures"
-    ├── MerkleDropMinter.sol * ─ "For permissioned mints via Merkle proofs"
-    ├── RangeEditionMinter.sol * ─ "Cuts off mints after a set time if a quota is hit"
-    ├── GoldenEggMetadata.sol * ─ "For the on-chain golden egg metadata"
-    └── interfaces
-        ├── IEditionMaxMinter.sol *
-        ├── IFixedPriceSignatureMinter.sol *
-        ├── IMerkleDropMinter.sol *
-        ├── IRangeEditionMinter.sol *
-        └── IGoldenEggMetadata.sol *
+    ├── SuperMinter.sol ─ "Generalized minter"
+    ├── SoundMetadata.sol ─ "Metadata module for SoundEdition"
+    ├── SoundOnChainMetadata.sol ─ "On-chain variant of SoundMetadata"
+    ├── interfaces
+    │   ├── ISuperMinter.sol
+    │   ├── ISoundMetadata.sol
+    │   └── ISoundOnChainMetadata.sol
+    └── utils
+        ├── DelegateCashLib.sol ─ "Library for querying with DelegateCash"
+        └── SoundOnChainMetadataLib.sol ─ "Library for SoundOnChainMetadata"
 ```
 
 ## Documentation
 
-A comprehensive documentation is currently in the works.  
+The documentation for the latest contracts is under construction.
 
-Please refer to the Natspec comments and [spec](./spec.md) for now for further details.
+For now, you can refer to the Natspec.
 
-## Usage
+## Development
 
-### Prerequisites
+This is a [foundry](https://getfoundry.sh) based project. 
 
--   [git](https://git-scm.com/downloads)
--   [nodeJS](https://nodejs.org/en/download/)
--   [node version manager](https://github.com/nvm-sh/nvm)
--   [pnpm](https://pnpm.io/) - You need to have `pnpm` installed globally, you can run `npm i -g pnpm` to install it.
--   [brew](https://brew.sh/)
--   [foundry](https://getfoundry.sh) - You can run `sh ./setup.sh` to install Foundry and its dependencies.
+However, some of the directories differ from the defaults. 
 
-### Setup
+- The contracts are under `contracts`.
+- The tests are under `tests`.
 
--   Clone the repository
+## Deploying
 
-    ```bash
-    git clone git@github.com:soundxyz/sound-protocol.git
-    cd sound-protocol
-    ```
+The contracts have already been deployed to their canonical addresses.
 
--   Setup node version
-    Either install the version specified in `nvmrc` or use `nvm` to set it up:
-
-    ```
-    nvm use
-    ```
-
--   Install packages
-
-    ```
-    pnpm install
-    ```
-
--   Build contracts
-
-    ```
-    pnpm build
-    ```
-
--   Run tests
-
-    ```
-    pnpm test
-    ```
-
--   Print gas reports from tests
-
-    ```
-    pnpm test:gas
-    ```
-
-### Testing
-
-(`v` == logs verbosity)
-
-`forge test -vvv`
-
-**Code coverage:**
-
-We use [codecov](https://app.codecov.io/gh/soundxyz/sound-protocol/) for analysing the code coverage reports generated by forge coverage. To view code coverage locally, you'll need to install `lcov` (mac: `brew install lcov`) and run:
-
-```
-pnpm test:coverage
-```
-
-This will produce the coverage report in `/coverage` folder. Note that `forge coverage` is still in active development so it often claims if/else branches are uncovered even when there are tests executed on them.
-
-### Deploying
-
-Create a .env in the root with:
-
-```
-GOERLI_RPC_URL=
-MAINNET_RPC_URL=
-PRIVATE_KEY=
-ETHERSCAN_KEY=
-OWNER=<address that will own the ownable contracts>
-```
-
-Then run:
-
-```
-pnpm deploy:goerli
-```
+If you need them on any other EVM based chain, please look into `build_create2_deployments.sh`.
 
 ## Bug Bounty
 
@@ -237,4 +114,4 @@ Up to 10 ETH for any critical bugs that could result in loss of funds. Rewards w
 
 ## License
 
-[MIT](LICENSE) Copyright 2022 Sound.xyz
+[MIT](LICENSE) Copyright 2023 Sound.xyz
