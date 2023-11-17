@@ -219,9 +219,10 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
         address to,
         uint256 quantity
     ) external payable onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE) returns (uint256 fromTokenId) {
-        fromTokenId = _beforeTieredMint(tier, quantity);
+        uint32 fromTierTokenIdIndex;
+        (fromTokenId, fromTierTokenIdIndex) = _beforeTieredMint(tier, quantity);
         _batchMint(to, quantity);
-        emit Minted(tier, to, quantity, fromTokenId);
+        emit Minted(tier, to, quantity, fromTokenId, fromTierTokenIdIndex);
     }
 
     /**
@@ -232,16 +233,17 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
         address[] calldata to,
         uint256 quantity
     ) external payable onlyRolesOrOwner(ADMIN_ROLE) returns (uint256 fromTokenId) {
+        uint32 fromTierTokenIdIndex;
         unchecked {
             // Multiplication overflow is not possible due to the max block gas limit.
             // If `quantity` is too big (e.g. 2**64), the loop in `_batchMint` will run out of gas.
             // If `to.length` is too big (e.g. 2**64), the airdrop mint loop will run out of gas.
-            fromTokenId = _beforeTieredMint(tier, to.length * quantity);
+            (fromTokenId, fromTierTokenIdIndex) = _beforeTieredMint(tier, to.length * quantity);
             for (uint256 i; i != to.length; ++i) {
                 _batchMint(to[i], quantity);
             }
         }
-        emit Airdropped(tier, to, quantity, fromTokenId);
+        emit Airdropped(tier, to, quantity, fromTokenId, fromTierTokenIdIndex);
     }
 
     /**
@@ -604,7 +606,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
         unchecked {
             uint256 l = stop - start;
             uint256 n = tierMinted(tier);
-            if (LibOps.or(start >= stop, stop > n)) revert InvalidQueryRange();
+            if (LibOps.or(start > stop, stop > n)) revert InvalidQueryRange();
             tokenIds = new uint256[](l);
             LibMap.Uint32Map storage m = _tierTokenIds[tier];
             for (uint256 i; i != l; ++i) {
@@ -910,8 +912,13 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
      * Reverts if there is insufficient supply.
      * @param tier     The tier.
      * @param quantity The total number of tokens to mint.
+     * @return fromTokenId          The first token ID minted.
+     * @return fromTierTokenIdIndex The first token index in the tier.
      */
-    function _beforeTieredMint(uint8 tier, uint256 quantity) internal returns (uint256 fromTokenId) {
+    function _beforeTieredMint(uint8 tier, uint256 quantity)
+        internal
+        returns (uint256 fromTokenId, uint32 fromTierTokenIdIndex)
+    {
         unchecked {
             if (quantity == 0) revert MintZeroQuantity();
             fromTokenId = _nextTokenId();
@@ -941,6 +948,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
                 m.set(minted + i, uint32(fromTokenId + i)); // Set the token IDs for the tier.
                 if (tier != 0) _tokenTiers.set(fromTokenId + i, tier); // Set the tier for the token ID.
             }
+            fromTierTokenIdIndex = uint32(minted);
         }
     }
 

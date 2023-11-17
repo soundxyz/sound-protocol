@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
-import { ISoundEditionV2_1 } from "@core/interfaces/ISoundEditionV2_1.sol";
+import { ISoundEditionV2 } from "@core/interfaces/ISoundEditionV2.sol";
 import { ISuperMinterV1_1 } from "@modules/interfaces/ISuperMinterV1_1.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
@@ -137,6 +137,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
 
     /**
      * @dev The maximum platform per-mint flat fee.
+     * Also applies to the maximum per-mint flat fee.
      */
     uint96 public constant MAX_PLATFORM_PER_MINT_FLAT_FEE = 0.1 ether;
 
@@ -184,6 +185,16 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @dev A mapping of `affiliate` => `feesAccrued`.
      */
     mapping(address => uint256) public affiliateFeesAccrued;
+
+    /**
+     * @dev A mapping of `firstCollector` => `feesAccrued`.
+     */
+    mapping(address => uint256) public firstCollectorFeesAccrued;
+
+    /**
+     * @dev The first collector for the edition.
+     */
+    mapping(address => address) public firstCollector;
 
     /**
      * @dev A mapping of `platform` => `price`.
@@ -319,45 +330,60 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
 
         _incrementMinted(mode, d, p);
 
-        /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
+        /* ----------------- COMPUTE AND ACCRUE FEES ---------------- */
 
         TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice);
-
-        uint256 remaining; // The fee sent to the Sound Edition (i.e. artist fee).
-        bool affiliated;
+        MintedLogData memory l;
 
         unchecked {
             if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
 
-            remaining = f.total - f.platformFee; // `platformFee <= total`;
-            platformFeesAccrued[d.platform] += f.platformFee; // Accrue the platform fee.
+            l.finalArtistFee = f.total - f.platformFee; // `platformFee <= total`;
+            l.finalPlatformFee = f.platformFee; // Initialize to the platform fee.
+            l.affiliate = p.to == p.affiliate ? address(0) : p.affiliate; // Yeah, we know it's left curved.
 
-            if (affiliated = _isAffiliatedWithProof(d, p.affiliate, p.affiliateProof)) {
-                remaining -= f.affiliateFee; // `affiliateFee <= remaining`.
-                affiliateFeesAccrued[p.affiliate] += f.affiliateFee; // Accrue the affiliate fee.
+            /* --------------------- AFFILIATE FEES --------------------- */
+
+            if (l.affiliated = _isAffiliatedWithProof(d, l.affiliate, p.affiliateProof)) {
+                l.finalArtistFee -= f.affiliateFee;
+                l.finalPlatformFee -= f.affiliateIncentive;
+                l.finalAffiliateFee = f.affiliateFee + f.affiliateIncentive;
+                affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
             } else {
                 // Proof may be invalid, revert to prevent unintended skipping of affiliate fee.
                 if (p.affiliate != address(0)) revert InvalidAffiliate();
-                f.affiliateFee = 0; // Set the affiliate fee to zero if not affiliated.
             }
+
+            /* --------------------- FREE MINT FEES --------------------- */
+
+            if (f.freeMintIncentive != 0 && f.unitPrice == 0) {
+                l.finalPlatformFee -= f.freeMintIncentive;
+                l.finalFreeMintFee = f.freeMintIncentive;
+                l.finalArtistFee += l.finalFreeMintFee;
+            }
+
+            /* ------------------ FIRST COLLECTOR FEES ------------------ */
+
+            if (firstCollector[p.edition] == address(0)) firstCollector[p.edition] = p.to;
+            if (f.firstCollectorIncentive != 0) {
+                l.finalPlatformFee -= f.firstCollectorIncentive;
+                l.finalFirstCollectorFee = f.firstCollectorIncentive;
+                firstCollectorFeesAccrued[firstCollector[p.edition]] += l.finalFirstCollectorFee;
+            }
+
+            platformFeesAccrued[d.platform] += l.finalPlatformFee; // Accrue the platform fee.
         }
 
         /* ------------------------- MINT --------------------------- */
 
-        ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
-        MintedLogData memory l;
+        ISoundEditionV2 edition = ISoundEditionV2(p.edition);
         l.quantity = p.quantity;
-        l.fromTokenId = edition.mint{ value: remaining }(p.tier, p.to, p.quantity);
+        l.fromTokenId = edition.mint{ value: l.finalArtistFee }(p.tier, p.to, p.quantity);
         l.allowlisted = p.allowlisted;
         l.allowlistedQuantity = p.allowlistedQuantity;
         l.signedClaimTicket = p.signedClaimTicket;
-        l.affiliate = p.affiliate;
-        l.affiliated = affiliated;
         l.requiredEtherValue = f.total;
         l.unitPrice = f.unitPrice;
-        l.platformFee = f.platformFee;
-        l.platformFlatFee = f.platformFlatFee;
-        l.affiliateFee = f.affiliateFee;
 
         emit Minted(p.edition, p.tier, p.scheduleNum, p.to, l, p.attributionId);
     }
@@ -549,6 +575,18 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             affiliateFeesAccrued[affiliate] = 0;
             SafeTransferLib.forceSafeTransferETH(affiliate, accrued);
             emit AffiliateFeesWithdrawn(affiliate, accrued);
+        }
+    }
+
+    /**
+     * @inheritdoc ISuperMinterV1_1
+     */
+    function withdrawForFirstCollector(address collector) public {
+        uint256 accrued = firstCollectorFeesAccrued[collector];
+        if (accrued != 0) {
+            firstCollectorFeesAccrued[collector] = 0;
+            SafeTransferLib.forceSafeTransferETH(collector, accrued);
+            emit FirstCollectorFeesWithdrawn(collector, accrued);
         }
     }
 
@@ -840,7 +878,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return LibOps.or(interfaceId == type(ISuperMinterV1_1).interfaceId, interfaceId == this.supportsInterface.selector);
+        return
+            LibOps.or(
+                interfaceId == type(ISuperMinterV1_1).interfaceId,
+                interfaceId == this.supportsInterface.selector
+            );
     }
 
     // =============================================================
@@ -923,13 +965,20 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @param c The platform fee configuration.
      */
     function _validatePlatformFeeConfig(PlatformFeeConfig memory c) internal pure {
-        if (
-            LibOps.or(
-                c.perTxFlat > MAX_PLATFORM_PER_TX_FLAT_FEE,
-                c.perMintFlat > MAX_PLATFORM_PER_MINT_FLAT_FEE,
-                c.perMintBPS > MAX_PLATFORM_PER_MINT_FEE_BPS
-            )
-        ) revert InvalidPlatformFeeConfig();
+        unchecked {
+            uint256 incentiveSum;
+            incentiveSum += uint256(c.affiliateIncentive);
+            incentiveSum += uint256(c.freeMintIncentive);
+            incentiveSum += uint256(c.firstCollectorIncentive);
+            if (
+                LibOps.or(
+                    c.perTxFlat > MAX_PLATFORM_PER_TX_FLAT_FEE,
+                    c.perMintFlat > MAX_PLATFORM_PER_MINT_FLAT_FEE,
+                    c.perMintBPS > MAX_PLATFORM_PER_MINT_FEE_BPS,
+                    incentiveSum > c.perMintFlat
+                )
+            ) revert InvalidPlatformFeeConfig();
+        }
     }
 
     /**
@@ -955,8 +1004,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         override
         returns (string memory name_, string memory version_)
     {
-        name_ = "SuperMinterV1_1";
-        version_ = "1";
+        name_ = "SuperMinter";
+        version_ = "1_1";
     }
 
     // Minting:
@@ -1088,6 +1137,10 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             // Affiliate fee is to be deducted from the sub total.
             // Will be conditionally set to zero during mint if not affiliated.
             f.affiliateFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
+            // Calculate the incentives. These may be redirected away from the `platformFee`.
+            f.affiliateIncentive = c.affiliateIncentive * uint256(quantity);
+            f.freeMintIncentive = c.freeMintIncentive * uint256(quantity);
+            f.firstCollectorIncentive = c.firstCollectorIncentive * uint256(quantity);
             // The total is the final value which the minter has to pay. It includes all fees.
             f.total = f.subTotal + f.platformFlatFee;
         }

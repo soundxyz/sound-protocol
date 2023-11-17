@@ -106,11 +106,18 @@ interface ISuperMinterV1_1 is IERC165 {
         // The platform per-transaction flat fees.
         uint256 platformTxFlatFee;
         // The total platform per-token flat fees.
+        // This includes all incentives.
         uint256 platformMintFlatFee;
         // The total platform per-token BPS fees.
         uint256 platformMintBPSFee;
-        // The total affiliate fees.
+        // The affiliate fees (before any incentives).
         uint256 affiliateFee;
+        // The incentive for the affiliate.
+        uint256 affiliateIncentive;
+        // The incentive for free mints, to be given to the artist.
+        uint256 freeMintIncentive;
+        // The incentive for the first collector.
+        uint256 firstCollectorIncentive;
     }
 
     /**
@@ -137,21 +144,38 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 requiredEtherValue;
         // The price per token.
         uint256 unitPrice;
-        // The total platform fees.
-        uint256 platformFee;
-        // The total platform flat fees.
-        uint256 platformFlatFee;
-        // The total affiliate fees.
-        uint256 affiliateFee;
+        // The final artist fee.
+        uint256 finalArtistFee;
+        // The final platform fee.
+        uint256 finalPlatformFee;
+        // The total affiliate fee.
+        uint256 finalAffiliateFee;
+        // The final free mint fee.
+        uint256 finalFreeMintFee;
+        // The final first collector fee.
+        uint256 finalFirstCollectorFee;
     }
 
     /**
      * @dev A struct to hold the fee configuration for a platform and a tier.
      */
     struct PlatformFeeConfig {
+        // The amount of platform per-mint flat fee
+        // to give to the affiliate, if provided.
+        uint96 affiliateIncentive;
+        // The amount of platform per-mint flat fee
+        // to give to the artist, if the mint is free.
+        uint96 freeMintIncentive;
+        // The amount of platform per-mint flat fee
+        // to give to the first collector.
+        uint96 firstCollectorIncentive;
         // The per-transaction flat fee.
         uint96 perTxFlat;
         // The per-token flat fee.
+        // This fee includes:
+        // - `affiliateIncentive`.
+        // - `freeMintIncentive`.
+        // - `firstCollectorIncentive`.
         uint96 perMintFlat;
         // The per-token fee BPS.
         uint16 perMintBPS;
@@ -340,6 +364,13 @@ interface ISuperMinterV1_1 is IERC165 {
      * @param accrued   The amount of Ether accrued and withdrawn.
      */
     event AffiliateFeesWithdrawn(address indexed affiliate, uint256 accrued);
+
+    /**
+     * @dev Emitted with first collector fees are withdrawn.
+     * @param collector The first collector.
+     * @param accrued   The amount of Ether accrued and withdrawn.
+     */
+    event FirstCollectorFeesWithdrawn(address indexed collector, uint256 accrued);
 
     /**
      * @dev Emitted when platform fees are withdrawn.
@@ -682,6 +713,12 @@ interface ISuperMinterV1_1 is IERC165 {
      * @param affiliate The affiliate address.
      */
     function withdrawForAffiliate(address affiliate) external;
+
+    /**
+     * @dev Withdraws all accrued fees of the first collector, to the first collector.
+     * @param collector The first collector.
+     */
+    function withdrawForFirstCollector(address collector) external;
 
     /**
      * @dev Withdraws all accrued fees of the platform, to the their fee address.
