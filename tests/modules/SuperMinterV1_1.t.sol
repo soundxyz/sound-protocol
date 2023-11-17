@@ -1,18 +1,18 @@
 pragma solidity ^0.8.16;
 
 import { Merkle } from "murky/Merkle.sol";
-import { IERC721AUpgradeable, ISoundEditionV2, SoundEditionV2 } from "@core/SoundEditionV2.sol";
+import { IERC721AUpgradeable, ISoundEditionV2_1, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
 import { ISuperMinterV1_1, SuperMinterV1_1 } from "@modules/SuperMinterV1_1.sol";
 import { DelegateCashLib } from "@modules/utils/DelegateCashLib.sol";
 import { LibOps } from "@core/utils/LibOps.sol";
 import { Ownable } from "solady/auth/Ownable.sol";
 import { SafeCastLib } from "solady/utils/SafeCastLib.sol";
 import { LibSort } from "solady/utils/LibSort.sol";
-import "../TestConfigV2.sol";
+import "../TestConfigV2_1.sol";
 
-contract SuperMinterV1_1Tests is TestConfigV2 {
+contract SuperMinterV1_1Tests is TestConfigV2_1 {
     SuperMinterV1_1 sm;
-    SoundEditionV2 edition;
+    SoundEditionV2_1 edition;
     Merkle merkle;
 
     event Minted(
@@ -36,8 +36,8 @@ contract SuperMinterV1_1Tests is TestConfigV2 {
 
     function setUp() public virtual override {
         super.setUp();
-        ISoundEditionV2.EditionInitialization memory init = genericEditionInitialization();
-        init.tierCreations = new ISoundEditionV2.TierCreation[](2);
+        ISoundEditionV2_1.EditionInitialization memory init = genericEditionInitialization();
+        init.tierCreations = new ISoundEditionV2_1.TierCreation[](2);
         init.tierCreations[0].tier = 0;
         init.tierCreations[1].tier = 1;
         init.tierCreations[1].maxMintableLower = type(uint32).max;
