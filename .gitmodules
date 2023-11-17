@@ -29,3 +29,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
+[submodule "lib/multicaller"]
+	path = lib/multicaller
+	url = https://github.com/vectorized/multicaller
