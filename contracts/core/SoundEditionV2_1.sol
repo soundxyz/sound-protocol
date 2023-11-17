@@ -183,7 +183,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     function initialize(EditionInitialization memory init) public {
         // Will revert upon double initialization.
         _initializeERC721A(init.name, init.symbol);
-        _initializeOwner(LibMulticaller.sender());
+        _initializeOwner(LibMulticaller.senderOrSigner());
 
         _validateRoyaltyBPS(init.royaltyBPS);
         _validateFundingRecipient(init.fundingRecipient);
@@ -780,7 +780,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
      * @param roles A roles bitmap.
      */
     function _requireOnlyRolesOrOwner(uint256 roles) internal view {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         if (!hasAnyRole(sender, roles))
             if (sender != owner()) LibOps.revertUnauthorized();
     }

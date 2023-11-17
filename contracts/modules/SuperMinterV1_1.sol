@@ -612,7 +612,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @inheritdoc ISuperMinterV1_1
      */
     function setPlatformFeeAddress(address recipient) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         _validatePlatformFeeAddress(recipient);
         platformFeeAddress[sender] = recipient;
         emit PlatformFeeAddressSet(sender, recipient);
@@ -622,7 +622,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @inheritdoc ISuperMinterV1_1
      */
     function setPlatformFeeConfig(uint8 tier, PlatformFeeConfig memory c) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         _validatePlatformFeeConfig(c);
         _platformFeeConfigs[LibOps.packId(sender, tier)] = c;
         emit PlatformFeeConfigSet(sender, tier, c);
@@ -632,7 +632,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @inheritdoc ISuperMinterV1_1
      */
     function setDefaultPlatformFeeConfig(PlatformFeeConfig memory c) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         _validatePlatformFeeConfig(c);
         _platformFeeConfigs[LibOps.packId(sender, _DEFAULT_FEE_CONFIG_INDEX)] = c;
         emit DefaultPlatformFeeConfigSet(sender, c);
@@ -642,7 +642,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @inheritdoc ISuperMinterV1_1
      */
     function setGAPrice(uint96 price) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         gaPrice[sender] = price;
         emit GAPriceSet(sender, price);
     }
@@ -651,7 +651,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @inheritdoc ISuperMinterV1_1
      */
     function setPlatformSigner(address signer) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         platformSigner[sender] = signer;
         emit PlatformSignerSet(sender, signer);
     }
@@ -906,7 +906,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @param edition The edition address.
      */
     function _requireOnlyEditionOwnerOrAdmin(address edition) internal view {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         if (sender != OwnableRoles(edition).owner())
             if (!OwnableRoles(edition).hasAnyRole(sender, LibOps.ADMIN_ROLE)) LibOps.revertUnauthorized();
     }
@@ -1087,7 +1087,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 revert InvalidMerkleProof();
         }
         // To mint, either the sender or `to` must be equal to `allowlisted`,
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         if (!LibOps.or(sender == allowlisted, p.to == allowlisted)) {
             // or the sender must be a delegate of `allowlisted`.
             if (!DelegateCashLib.checkDelegateForAll(sender, allowlisted)) revert CallerNotDelegated();
