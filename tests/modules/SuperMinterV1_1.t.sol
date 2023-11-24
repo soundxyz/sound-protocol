@@ -781,9 +781,10 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         pfc.perMintFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FLAT_FEE));
         pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
         pfc.affiliateIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat));
-        pfc.freeMintIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive));
+        pfc.cheapMintIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive));
+        pfc.cheapMintIncentiveThreshold = uint96(_bound(_random(), 0, pfc.cheapMintIncentive * 2));
         pfc.firstCollectorIncentive = uint96(
-            _bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive - pfc.freeMintIncentive)
+            _bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive - pfc.cheapMintIncentive)
         );
         pfc.active = true;
         vm.prank(c.platform);
@@ -822,15 +823,16 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 l.affiliated = true;
                 l.requiredEtherValue = tpaf.total;
                 l.unitPrice = tpaf.unitPrice;
-                uint256 finalFreeMintFee = tpaf.unitPrice == 0 ? tpaf.freeMintIncentive : 0;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateFee + finalFreeMintFee;
+                uint256 finalCheapMintFee;
+                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold) finalCheapMintFee = tpaf.cheapMintIncentive;
+                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateFee + finalCheapMintFee;
                 l.finalPlatformFee =
                     tpaf.platformFee -
                     tpaf.affiliateIncentive -
-                    finalFreeMintFee -
+                    finalCheapMintFee -
                     tpaf.firstCollectorIncentive;
                 l.finalAffiliateFee = tpaf.affiliateFee + tpaf.affiliateIncentive;
-                l.finalFreeMintFee = finalFreeMintFee;
+                l.finalCheapMintFee = finalCheapMintFee;
                 l.finalFirstCollectorFee = tpaf.firstCollectorIncentive;
             }
             emit Minted(address(edition), 1, 0, address(this), l, 0);
@@ -874,11 +876,12 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 l.affiliated = false;
                 l.requiredEtherValue = tpaf.total;
                 l.unitPrice = tpaf.unitPrice;
-                uint256 finalFreeMintFee = tpaf.unitPrice == 0 ? tpaf.freeMintIncentive : 0;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee + finalFreeMintFee;
-                l.finalPlatformFee = tpaf.platformFee - finalFreeMintFee - tpaf.firstCollectorIncentive;
+                uint256 finalCheapMintFee;
+                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold) finalCheapMintFee = tpaf.cheapMintIncentive;
+                l.finalArtistFee = tpaf.total - tpaf.platformFee + finalCheapMintFee;
+                l.finalPlatformFee = tpaf.platformFee - finalCheapMintFee - tpaf.firstCollectorIncentive;
                 l.finalAffiliateFee = 0;
-                l.finalFreeMintFee = finalFreeMintFee;
+                l.finalCheapMintFee = finalCheapMintFee;
                 l.finalFirstCollectorFee = tpaf.firstCollectorIncentive;
             }
             emit Minted(address(edition), 1, 0, address(this), l, 0);

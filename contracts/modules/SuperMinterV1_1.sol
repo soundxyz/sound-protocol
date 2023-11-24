@@ -354,12 +354,12 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 if (p.affiliate != address(0)) revert InvalidAffiliate();
             }
 
-            /* --------------------- FREE MINT FEES --------------------- */
+            /* -------------------- CHEAP MINT FEES --------------------- */
 
-            if (f.freeMintIncentive != 0 && f.unitPrice == 0) {
-                l.finalPlatformFee -= f.freeMintIncentive;
-                l.finalFreeMintFee = f.freeMintIncentive;
-                l.finalArtistFee += l.finalFreeMintFee;
+            if (f.cheapMintIncentive != 0 && f.unitPrice <= f.cheapMintIncentiveThreshold) {
+                l.finalPlatformFee -= f.cheapMintIncentive;
+                l.finalCheapMintFee = f.cheapMintIncentive;
+                l.finalArtistFee += l.finalCheapMintFee;
             }
 
             /* ------------------ FIRST COLLECTOR FEES ------------------ */
@@ -968,7 +968,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         unchecked {
             uint256 incentiveSum;
             incentiveSum += uint256(c.affiliateIncentive);
-            incentiveSum += uint256(c.freeMintIncentive);
+            incentiveSum += uint256(c.cheapMintIncentive);
             incentiveSum += uint256(c.firstCollectorIncentive);
             if (
                 LibOps.or(
@@ -1139,7 +1139,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             f.affiliateFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
             // Calculate the incentives. These may be redirected away from the `platformFee`.
             f.affiliateIncentive = c.affiliateIncentive * uint256(quantity);
-            f.freeMintIncentive = c.freeMintIncentive * uint256(quantity);
+            f.cheapMintIncentive = c.cheapMintIncentive * uint256(quantity);
+            f.cheapMintIncentiveThreshold = c.cheapMintIncentiveThreshold;
             f.firstCollectorIncentive = c.firstCollectorIncentive * uint256(quantity);
             // The total is the final value which the minter has to pay. It includes all fees.
             f.total = f.subTotal + f.platformFlatFee;

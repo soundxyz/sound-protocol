@@ -114,8 +114,9 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 affiliateFee;
         // The incentive for the affiliate.
         uint256 affiliateIncentive;
-        // The incentive for free mints, to be given to the artist.
-        uint256 freeMintIncentive;
+        // The incentive for cheap mints, to be given to the artist.
+        uint256 cheapMintIncentive;
+        uint256 cheapMintIncentiveThreshold;
         // The incentive for the first collector.
         uint256 firstCollectorIncentive;
     }
@@ -150,8 +151,8 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 finalPlatformFee;
         // The total affiliate fee.
         uint256 finalAffiliateFee;
-        // The final free mint fee.
-        uint256 finalFreeMintFee;
+        // The final cheap mint fee.
+        uint256 finalCheapMintFee;
         // The final first collector fee.
         uint256 finalFirstCollectorFee;
     }
@@ -164,8 +165,10 @@ interface ISuperMinterV1_1 is IERC165 {
         // to give to the affiliate, if provided.
         uint96 affiliateIncentive;
         // The amount of platform per-mint flat fee
-        // to give to the artist, if the mint is free.
-        uint96 freeMintIncentive;
+        // to give to the artist, if the mint is
+        // less than or equal to `cheapMintIncentiveThreshold`.
+        uint96 cheapMintIncentive;
+        uint96 cheapMintIncentiveThreshold;
         // The amount of platform per-mint flat fee
         // to give to the first collector.
         uint96 firstCollectorIncentive;
@@ -174,7 +177,7 @@ interface ISuperMinterV1_1 is IERC165 {
         // The per-token flat fee.
         // This fee includes:
         // - `affiliateIncentive`.
-        // - `freeMintIncentive`.
+        // - `cheapMintIncentive`.
         // - `firstCollectorIncentive`.
         uint96 perMintFlat;
         // The per-token fee BPS.
