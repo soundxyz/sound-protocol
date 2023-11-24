@@ -345,8 +345,15 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             /* --------------------- AFFILIATE FEES --------------------- */
 
             if (l.affiliated = _isAffiliatedWithProof(d, l.affiliate, p.affiliateProof)) {
+                // There are two kinds of affiliate fees:
+                // - The BPS based affiliateFee, which will be deducted from the artist's fee.
+                // - The per-mint flat affiliate incentive fee, which will be be deducted from the platform's fee.
+
+                // Deduct the BPS based affiliate fee from the artist's fee.
                 l.finalArtistFee -= f.affiliateFee;
+                // Deduct the affiliate incentive from the platform's fee.
                 l.finalPlatformFee -= f.affiliateIncentive;
+                // Sum up the BPS based affiliate fee and the affiliate incentive.
                 l.finalAffiliateFee = f.affiliateFee + f.affiliateIncentive;
                 affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
             } else {
