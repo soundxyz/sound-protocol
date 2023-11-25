@@ -783,9 +783,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         pfc.affiliateIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat));
         pfc.cheapMintIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive));
         pfc.cheapMintIncentiveThreshold = uint96(_bound(_random(), 0, pfc.cheapMintIncentive * 2));
-        pfc.firstCollectorIncentive = uint96(
-            _bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive - pfc.cheapMintIncentive)
-        );
         pfc.active = true;
         vm.prank(c.platform);
         sm.setPlatformFeeConfig(1, pfc);
@@ -826,22 +823,16 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 uint256 finalCheapMintFee;
                 if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold) finalCheapMintFee = tpaf.cheapMintIncentive;
                 l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateFee + finalCheapMintFee;
-                l.finalPlatformFee =
-                    tpaf.platformFee -
-                    tpaf.affiliateIncentive -
-                    finalCheapMintFee -
-                    tpaf.firstCollectorIncentive;
+                l.finalPlatformFee = tpaf.platformFee - tpaf.affiliateIncentive - finalCheapMintFee;
                 l.finalAffiliateFee = tpaf.affiliateFee + tpaf.affiliateIncentive;
                 l.finalCheapMintFee = finalCheapMintFee;
-                l.finalFirstCollectorFee = tpaf.firstCollectorIncentive;
             }
             emit Minted(address(edition), 1, 0, address(this), l, 0);
 
             sm.mintTo{ value: tpaf.total }(p);
             assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
             assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
-            assertEq(sm.firstCollectorFeesAccrued(p.to), l.finalFirstCollectorFee);
-            assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee + l.finalFirstCollectorFee);
+            assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
             assertEq(address(edition).balance, l.finalArtistFee);
 
             // Perform the withdrawals and check if the balances tally.
@@ -852,12 +843,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             uint256 balanceBefore = address(p.affiliate).balance;
             sm.withdrawForAffiliate(p.affiliate);
             assertEq(address(p.affiliate).balance, balanceBefore + l.finalAffiliateFee);
-            assertEq(address(sm).balance, l.finalPlatformFee + l.finalFirstCollectorFee);
-
-            balanceBefore = address(p.to).balance;
-            sm.withdrawForFirstCollector(p.to);
-            assertEq(address(p.to).balance, balanceBefore + l.finalFirstCollectorFee);
-            assertEq(address(sm).balance, l.finalPlatformFee);
 
             balanceBefore = address(feeRecipients[0]).balance;
             sm.withdrawForPlatform(c.platform);
@@ -879,16 +864,15 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 uint256 finalCheapMintFee;
                 if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold) finalCheapMintFee = tpaf.cheapMintIncentive;
                 l.finalArtistFee = tpaf.total - tpaf.platformFee + finalCheapMintFee;
-                l.finalPlatformFee = tpaf.platformFee - finalCheapMintFee - tpaf.firstCollectorIncentive;
+                l.finalPlatformFee = tpaf.platformFee - finalCheapMintFee;
                 l.finalAffiliateFee = 0;
                 l.finalCheapMintFee = finalCheapMintFee;
-                l.finalFirstCollectorFee = tpaf.firstCollectorIncentive;
             }
             emit Minted(address(edition), 1, 0, address(this), l, 0);
 
             sm.mintTo{ value: tpaf.total }(p);
             assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
-            assertEq(address(sm).balance, l.finalPlatformFee + l.finalFirstCollectorFee);
+            assertEq(address(sm).balance, l.finalPlatformFee);
             assertEq(address(edition).balance, l.finalArtistFee);
 
             // Perform the withdrawals and check if the balances tally.
@@ -896,12 +880,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             sm.setPlatformFeeAddress(feeRecipients[0]);
             assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
 
-            uint256 balanceBefore = address(p.to).balance;
-            sm.withdrawForFirstCollector(p.to);
-            assertEq(address(p.to).balance, balanceBefore + l.finalFirstCollectorFee);
-            assertEq(address(sm).balance, l.finalPlatformFee);
-
-            balanceBefore = address(feeRecipients[0]).balance;
+            uint256 balanceBefore = address(feeRecipients[0]).balance;
             sm.withdrawForPlatform(c.platform);
             assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
             assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);

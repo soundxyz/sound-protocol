@@ -187,16 +187,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     mapping(address => uint256) public affiliateFeesAccrued;
 
     /**
-     * @dev A mapping of `firstCollector` => `feesAccrued`.
-     */
-    mapping(address => uint256) public firstCollectorFeesAccrued;
-
-    /**
-     * @dev The first collector for the edition.
-     */
-    mapping(address => address) public firstCollector;
-
-    /**
      * @dev A mapping of `platform` => `price`.
      */
     mapping(address => uint96) public gaPrice;
@@ -367,15 +357,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 l.finalPlatformFee -= f.cheapMintIncentive;
                 l.finalCheapMintFee = f.cheapMintIncentive;
                 l.finalArtistFee += l.finalCheapMintFee;
-            }
-
-            /* ------------------ FIRST COLLECTOR FEES ------------------ */
-
-            if (firstCollector[p.edition] == address(0)) firstCollector[p.edition] = p.to;
-            if (f.firstCollectorIncentive != 0) {
-                l.finalPlatformFee -= f.firstCollectorIncentive;
-                l.finalFirstCollectorFee = f.firstCollectorIncentive;
-                firstCollectorFeesAccrued[firstCollector[p.edition]] += l.finalFirstCollectorFee;
             }
 
             platformFeesAccrued[d.platform] += l.finalPlatformFee; // Accrue the platform fee.
@@ -582,18 +563,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             affiliateFeesAccrued[affiliate] = 0;
             SafeTransferLib.forceSafeTransferETH(affiliate, accrued);
             emit AffiliateFeesWithdrawn(affiliate, accrued);
-        }
-    }
-
-    /**
-     * @inheritdoc ISuperMinterV1_1
-     */
-    function withdrawForFirstCollector(address collector) public {
-        uint256 accrued = firstCollectorFeesAccrued[collector];
-        if (accrued != 0) {
-            firstCollectorFeesAccrued[collector] = 0;
-            SafeTransferLib.forceSafeTransferETH(collector, accrued);
-            emit FirstCollectorFeesWithdrawn(collector, accrued);
         }
     }
 
@@ -976,7 +945,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             uint256 incentiveSum;
             incentiveSum += uint256(c.affiliateIncentive);
             incentiveSum += uint256(c.cheapMintIncentive);
-            incentiveSum += uint256(c.firstCollectorIncentive);
             if (
                 LibOps.or(
                     c.perTxFlat > MAX_PLATFORM_PER_TX_FLAT_FEE,
@@ -1148,7 +1116,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             f.affiliateIncentive = c.affiliateIncentive * uint256(quantity);
             f.cheapMintIncentive = c.cheapMintIncentive * uint256(quantity);
             f.cheapMintIncentiveThreshold = c.cheapMintIncentiveThreshold;
-            f.firstCollectorIncentive = c.firstCollectorIncentive * uint256(quantity);
             // The total is the final value which the minter has to pay. It includes all fees.
             f.total = f.subTotal + f.platformFlatFee;
         }

@@ -117,8 +117,6 @@ interface ISuperMinterV1_1 is IERC165 {
         // The incentive for cheap mints, to be given to the artist.
         uint256 cheapMintIncentive;
         uint256 cheapMintIncentiveThreshold;
-        // The incentive for the first collector.
-        uint256 firstCollectorIncentive;
     }
 
     /**
@@ -153,8 +151,6 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 finalAffiliateFee;
         // The final cheap mint fee.
         uint256 finalCheapMintFee;
-        // The final first collector fee.
-        uint256 finalFirstCollectorFee;
     }
 
     /**
@@ -169,16 +165,12 @@ interface ISuperMinterV1_1 is IERC165 {
         // less than or equal to `cheapMintIncentiveThreshold`.
         uint96 cheapMintIncentive;
         uint96 cheapMintIncentiveThreshold;
-        // The amount of platform per-mint flat fee
-        // to give to the first collector.
-        uint96 firstCollectorIncentive;
         // The per-transaction flat fee.
         uint96 perTxFlat;
         // The per-token flat fee.
         // This fee includes:
         // - `affiliateIncentive`.
         // - `cheapMintIncentive`.
-        // - `firstCollectorIncentive`.
         uint96 perMintFlat;
         // The per-token fee BPS.
         uint16 perMintBPS;
@@ -367,13 +359,6 @@ interface ISuperMinterV1_1 is IERC165 {
      * @param accrued   The amount of Ether accrued and withdrawn.
      */
     event AffiliateFeesWithdrawn(address indexed affiliate, uint256 accrued);
-
-    /**
-     * @dev Emitted with first collector fees are withdrawn.
-     * @param collector The first collector.
-     * @param accrued   The amount of Ether accrued and withdrawn.
-     */
-    event FirstCollectorFeesWithdrawn(address indexed collector, uint256 accrued);
 
     /**
      * @dev Emitted when platform fees are withdrawn.
@@ -716,12 +701,6 @@ interface ISuperMinterV1_1 is IERC165 {
      * @param affiliate The affiliate address.
      */
     function withdrawForAffiliate(address affiliate) external;
-
-    /**
-     * @dev Withdraws all accrued fees of the first collector, to the first collector.
-     * @param collector The first collector.
-     */
-    function withdrawForFirstCollector(address collector) external;
 
     /**
      * @dev Withdraws all accrued fees of the platform, to the their fee address.
