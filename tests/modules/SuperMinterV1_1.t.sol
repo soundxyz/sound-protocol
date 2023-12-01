@@ -820,12 +820,14 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 l.affiliated = true;
                 l.requiredEtherValue = tpaf.total;
                 l.unitPrice = tpaf.unitPrice;
-                uint256 finalCheapMintFee;
-                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold) finalCheapMintFee = tpaf.cheapMintIncentive;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateFee + finalCheapMintFee;
-                l.finalPlatformFee = tpaf.platformFee - tpaf.affiliateIncentive - finalCheapMintFee;
+                uint256 finalCheapMintIncentive;
+                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold)
+                    finalCheapMintIncentive = tpaf.cheapMintIncentive;
+                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateFee + finalCheapMintIncentive;
+                l.finalPlatformFee = tpaf.platformFee - tpaf.affiliateIncentive - finalCheapMintIncentive;
+                l.finalAffiliateIncentive = tpaf.affiliateIncentive;
                 l.finalAffiliateFee = tpaf.affiliateFee + tpaf.affiliateIncentive;
-                l.finalCheapMintFee = finalCheapMintFee;
+                l.finalCheapMintIncentive = finalCheapMintIncentive;
             }
             emit Minted(address(edition), 1, 0, address(this), l, 0);
 
@@ -861,12 +863,13 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 l.affiliated = false;
                 l.requiredEtherValue = tpaf.total;
                 l.unitPrice = tpaf.unitPrice;
-                uint256 finalCheapMintFee;
-                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold) finalCheapMintFee = tpaf.cheapMintIncentive;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee + finalCheapMintFee;
-                l.finalPlatformFee = tpaf.platformFee - finalCheapMintFee;
+                uint256 finalCheapMintIncentive;
+                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold)
+                    finalCheapMintIncentive = tpaf.cheapMintIncentive;
+                l.finalArtistFee = tpaf.total - tpaf.platformFee + finalCheapMintIncentive;
+                l.finalPlatformFee = tpaf.platformFee - finalCheapMintIncentive;
                 l.finalAffiliateFee = 0;
-                l.finalCheapMintFee = finalCheapMintFee;
+                l.finalCheapMintIncentive = finalCheapMintIncentive;
             }
             emit Minted(address(edition), 1, 0, address(this), l, 0);
 

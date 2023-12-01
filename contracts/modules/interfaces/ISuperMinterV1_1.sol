@@ -149,8 +149,10 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 finalPlatformFee;
         // The total affiliate fee.
         uint256 finalAffiliateFee;
-        // The final cheap mint fee.
-        uint256 finalCheapMintFee;
+        // The final affiliate incentive.
+        uint256 finalAffiliateIncentive;
+        // The final cheap mint incentive.
+        uint256 finalCheapMintIncentive;
     }
 
     /**

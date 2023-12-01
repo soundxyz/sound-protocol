@@ -362,6 +362,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 l.finalPlatformFee -= f.affiliateIncentive;
                 // Sum up the BPS based affiliate fee and the affiliate incentive.
                 l.finalAffiliateFee = f.affiliateFee + f.affiliateIncentive;
+                l.finalAffiliateIncentive = f.affiliateIncentive;
                 affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
             } else {
                 // Proof may be invalid, revert to prevent unintended skipping of affiliate fee.
@@ -373,8 +374,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             if (f.cheapMintIncentive != 0 && f.unitPrice <= f.cheapMintIncentiveThreshold) {
                 // Divert the cheap mint incentive from the platform to the artist.
                 l.finalPlatformFee -= f.cheapMintIncentive;
-                l.finalCheapMintFee = f.cheapMintIncentive;
-                l.finalArtistFee += l.finalCheapMintFee;
+                l.finalCheapMintIncentive = f.cheapMintIncentive;
+                l.finalArtistFee += l.finalCheapMintIncentive;
             }
 
             platformFeesAccrued[d.platform] += l.finalPlatformFee; // Accrue the platform fee.
