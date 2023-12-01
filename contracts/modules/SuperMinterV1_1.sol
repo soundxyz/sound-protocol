@@ -325,12 +325,29 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice);
         MintedLogData memory l;
 
-        unchecked {
+        // The following block can use unchecked math, but we'll leave it as checked math
+        // for more safety redundancy. Burns about few hundred gas more.
+        //
+        // The `finalArtistFee` is whatever that remains after deducting all of the
+        // platform fees and affiliate fees from the ETH sent.
+        //
+        // Fees are accrued in 3 places:
+        // - The `finalPlatformFee` is accrued in the `platformFeesAccrued` mapping.
+        // - The `finalAffiliateFee` is accrued in the `affiliateFeesAccrued` mapping.
+        // - The `finalArtistFee` is accrued in the `SoundEdition`.
+        //
+        // At the end of this block, the invariant must hold:
+        // `l.finalArtistFee + l.finalPlatformFee + l.finalAffiliateFee == f.total`.
+        {
             if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
 
-            l.finalArtistFee = f.total - f.platformFee; // `platformFee <= total`;
-            l.finalPlatformFee = f.platformFee; // Initialize to the platform fee.
-            l.affiliate = p.to == p.affiliate ? address(0) : p.affiliate; // Yeah, we know it's left curved.
+            // Deduct the platform fees (both BPS and flat) first.
+            // We'll deduct the affiliate fees in the affiliate fees calculation step.
+            l.finalArtistFee = f.total - f.platformFee;
+            // Initialize to the platform fee.
+            l.finalPlatformFee = f.platformFee;
+            // Yeah, we know it's left curved.
+            l.affiliate = p.to == p.affiliate ? address(0) : p.affiliate;
 
             /* --------------------- AFFILIATE FEES --------------------- */
 
@@ -354,6 +371,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             /* -------------------- CHEAP MINT FEES --------------------- */
 
             if (f.cheapMintIncentive != 0 && f.unitPrice <= f.cheapMintIncentiveThreshold) {
+                // Divert the cheap mint incentive from the platform to the artist.
                 l.finalPlatformFee -= f.cheapMintIncentive;
                 l.finalCheapMintFee = f.cheapMintIncentive;
                 l.finalArtistFee += l.finalCheapMintFee;
@@ -1083,6 +1101,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         uint32 quantity,
         uint96 signedPrice
     ) internal view returns (TotalPriceAndFees memory f) {
+        // All flat prices are stored as uint96s in storage.
+        // The quantity is a uint32. Multiplications between a uint96 and uint32 won't overflow.
         unchecked {
             PlatformFeeConfig memory c = effectivePlatformFeeConfig(d.platform, tier);
             // The actual unit price per token.
