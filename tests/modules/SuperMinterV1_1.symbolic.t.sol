@@ -5,18 +5,18 @@ import {SymTest} from "halmos-cheatcodes/SymTest.sol";
 
 contract SuperMinterV1_1SymTest is SuperMinterV1_1, SymTest {
 
-    /// @custom:halmos --no-test-constructor --symbolic-storage
+    /// @custom:halmos --no-test-constructor --symbolic-storage --solver-timeout-assertion 0
     function check_totalPriceAndFees(
         uint8 tier,
         uint256 mintId,
         uint32 quantity,
         uint96 signedPrice
-    ) public {
+    ) public view {
         MintData storage d = _getMintData(mintId);
         _totalPriceAndFees(tier, d, quantity, signedPrice);
     }
 
-    /// @custom:halmos --no-test-constructor --symbolic-storage
+    /// @custom:halmos --no-test-constructor --symbolic-storage --solver-timeout-assertion 0
     function check_computeAndAccrueFees(
         uint256 mintId,
         MintTo calldata p,
