@@ -32,3 +32,6 @@
 [submodule "lib/multicaller"]
 	path = lib/multicaller
 	url = https://github.com/vectorized/multicaller
+[submodule "lib/halmos-cheatcodes"]
+	path = lib/halmos-cheatcodes
+	url = https://github.com/a16z/halmos-cheatcodes
