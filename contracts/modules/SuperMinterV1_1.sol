@@ -1121,24 +1121,31 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             // The artist will receive the remaining after all BPS fees are deducted from sub total.
             // The minter will have to pay the sub total plus any flat fees.
             f.subTotal = unitPrice * uint256(quantity);
+            assert(quantity == 0 || uint(f.subTotal) / uint(quantity) == uint(unitPrice));
             // Sum the total flat fees for mints, and the transaction flat fee.
             f.platformTxFlatFee = c.perTxFlat;
             f.platformMintFlatFee = c.perMintFlat * uint256(quantity);
+            assert(quantity == 0 || uint(f.platformMintFlatFee) / uint(quantity) == uint(c.perMintFlat));
             f.platformFlatFee = f.platformMintFlatFee + f.platformTxFlatFee;
+            assert(uint(f.platformFlatFee) >= uint(f.platformMintFlatFee));
             // BPS fees are to be deducted from the sub total.
             f.platformMintBPSFee = LibOps.rawMulDiv(f.subTotal, c.perMintBPS, BPS_DENOMINATOR);
             // The platform fee includes BPS fees deducted from sub total,
             // and flat fees added to sub total.
             f.platformFee = f.platformMintBPSFee + f.platformFlatFee;
+            assert(uint(f.platformFee) >= uint(f.platformMintBPSFee));
             // Affiliate fee is to be deducted from the sub total.
             // Will be conditionally set to zero during mint if not affiliated.
             f.affiliateFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
             // Calculate the incentives. These may be redirected away from the `platformFee`.
             f.affiliateIncentive = c.affiliateIncentive * uint256(quantity);
             f.cheapMintIncentive = c.cheapMintIncentive * uint256(quantity);
+            assert(quantity == 0 || uint(f.affiliateIncentive) / uint(quantity) == uint(c.affiliateIncentive));
+            assert(quantity == 0 || uint(f.cheapMintIncentive) / uint(quantity) == uint(c.cheapMintIncentive));
             f.cheapMintIncentiveThreshold = c.cheapMintIncentiveThreshold;
             // The total is the final value which the minter has to pay. It includes all fees.
             f.total = f.subTotal + f.platformFlatFee;
+            assert(uint(f.total) >= uint(f.subTotal));
         }
     }
 
