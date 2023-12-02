@@ -300,31 +300,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         }
     }
 
-    /**
-     * @inheritdoc ISuperMinterV1_1
-     */
-    function mintTo(MintTo calldata p) public payable {
-        MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
-
-        /* ------------------- CHECKS AND UPDATES ------------------- */
-
-        // Check if the mint is open.
-        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
-            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
-        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
-
-        // Perform the sub workflows depending on the mint mode.
-        uint8 mode = d.mode;
-        if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
-        else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
-
-        _incrementMinted(mode, d, p);
-
-        /* ----------------- COMPUTE AND ACCRUE FEES ---------------- */
-
-        TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice);
-        MintedLogData memory l;
-
+    function _computeAndAccrueFees(
+        MintTo calldata p,
+        MintData storage d,
+        TotalPriceAndFees memory f
+    ) internal returns (MintedLogData memory l) {
         // The following block can use unchecked math, but we'll leave it as checked math
         // for more safety redundancy. Burns about few hundred gas more.
         //
@@ -380,6 +360,32 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
 
             platformFeesAccrued[d.platform] += l.finalPlatformFee; // Accrue the platform fee.
         }
+    }
+
+    /**
+     * @inheritdoc ISuperMinterV1_1
+     */
+    function mintTo(MintTo calldata p) public payable {
+        MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
+
+        /* ------------------- CHECKS AND UPDATES ------------------- */
+
+        // Check if the mint is open.
+        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
+            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
+        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
+
+        // Perform the sub workflows depending on the mint mode.
+        uint8 mode = d.mode;
+        if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
+        else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
+
+        _incrementMinted(mode, d, p);
+
+        /* ----------------- COMPUTE AND ACCRUE FEES ---------------- */
+
+        TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice);
+        MintedLogData memory l = _computeAndAccrueFees(p, d, f);
 
         /* ------------------------- MINT --------------------------- */
 
