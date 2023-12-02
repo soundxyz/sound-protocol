@@ -9,4 +9,6 @@ solc_version = '0.8.19'
 
 gas_limit = 100_000_000 # ETH is 30M, but we use a higher value.
 
+extra_output = ["storageLayout", "metadata"] # for halmos tests
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
