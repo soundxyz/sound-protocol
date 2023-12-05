@@ -101,6 +101,23 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         );
 
     /**
+     * @dev For EIP-712 presave signature digest calculation.
+     */
+    bytes32 public constant PRESAVE_TYPEHASH =
+        // prettier-ignore
+        keccak256(
+            "Presave("
+                "address edition,"
+                "uint8 tier,"
+                "uint8 scheduleNum,"
+                "address[] to,"
+                "uint32 signedQuantity,"
+                "uint32 signedClaimTicket,"
+                "uint32 signedDeadline"
+            ")"
+        );
+
+    /**
      * @dev For EIP-712 signature digest calculation.
      */
     bytes32 public constant DOMAIN_TYPEHASH = _DOMAIN_TYPEHASH;
@@ -119,6 +136,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @dev The Signature mint mint mode.
      */
     uint8 public constant VERIFY_SIGNATURE = 2;
+
+    /**
+     * @dev The Presave mint mode.
+     */
+    uint8 public constant PRESAVE = 3;
 
     /**
      * @dev The denominator of all BPS calculations.
@@ -240,6 +262,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             _validateSigner(c.signer);
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
+        } else if (mode == PRESAVE) {
+            _validateSigner(c.signer);
+            c.merkleRoot = bytes32(0);
+            c.maxMintablePerAccount = type(uint32).max;
+            c.price = 0; // Presave mode doesn't have a price.
         } else {
             revert InvalidMode();
         }
@@ -308,15 +335,13 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
 
         /* ------------------- CHECKS AND UPDATES ------------------- */
 
-        // Check if the mint is open.
-        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
-            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
-        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
+        _requireMintOpen(d);
 
         // Perform the sub workflows depending on the mint mode.
         uint8 mode = d.mode;
         if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
         else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
+        else if (mode == PRESAVE) revert InvalidMode();
 
         _incrementMinted(mode, d, p);
 
@@ -395,6 +420,35 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         emit Minted(p.edition, p.tier, p.scheduleNum, p.to, l, p.attributionId);
     }
 
+    /**
+     * @inheritdoc ISuperMinterV1_1
+     */
+    function presave(Presave calldata p) public {
+        MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
+
+        /* ------------------- CHECKS AND UPDATES ------------------- */
+
+        _requireMintOpen(d);
+
+        if (d.mode != PRESAVE) revert InvalidMode();
+        _verifyAndClaimPresaveSignature(d, p);
+
+        _incrementPresaveMinted(d, p);
+
+        /* ------------------------- MINT --------------------------- */
+
+        unchecked {
+            ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
+
+            uint256 toLength = p.to.length;
+            for (uint256 i; i != toLength; ++i) {
+                edition.mint(p.tier, p.to[i], p.signedQuantity);
+            }
+        }
+
+        emit Presaved(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity);
+    }
+
     // Per edition mint parameter setters:
     // -----------------------------------
     // These functions can only be called by the owner or admin of the edition.
@@ -412,6 +466,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         MintData storage d = _getMintData(mintId);
         // If the tier is GA and the `mode` is `VERIFY_SIGNATURE`, we'll use `gaPrice[platform]`.
         if (tier == GA_TIER && d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
+        // Presave mints will not have a price.
+        if (d.mode == PRESAVE) revert NotConfigurable();
         d.price = price;
         emit PriceSet(edition, tier, scheduleNum, price);
     }
@@ -510,6 +566,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         if (tier == GA_TIER) revert NotConfigurable();
         // Signature mints will have `type(uint32).max`.
         if (d.mode == VERIFY_SIGNATURE) revert NotConfigurable();
+        // Presave mints will have `type(uint32).max`.
+        if (d.mode == PRESAVE) revert NotConfigurable();
         _validateMaxMintablePerAccount(value);
         d.maxMintablePerAccount = value;
         emit MaxMintablePerAccountSet(edition, tier, scheduleNum, value);
@@ -689,6 +747,24 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 p.signedPrice,
                 p.signedDeadline,
                 p.affiliate
+            )));
+    }
+
+    /**
+     * @inheritdoc ISuperMinterV1_1
+     */
+    function computePresaveDigest(Presave calldata p) public view returns (bytes32) {
+        // prettier-ignore
+        return
+            _hashTypedData(keccak256(abi.encode(
+                PRESAVE_TYPEHASH,
+                p.edition,
+                p.tier, 
+                p.scheduleNum,
+                keccak256(abi.encodePacked(p.to)),
+                p.signedQuantity,
+                p.signedClaimTicket,
+                p.signedDeadline
             )));
     }
 
@@ -1041,6 +1117,39 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
+     * @dev Increments the number minted in the mint and the number minted by the collector.
+     * @param d    The mint data storage pointer.
+     * @param p    The presave parameters.
+     */
+    function _incrementPresaveMinted(MintData storage d, Presave calldata p) internal {
+        unchecked {
+            uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
+            uint256 toLength = p.to.length;
+
+            // Increment the number minted in the mint.
+            uint256 n = uint256(d.minted) + toLength * uint256(p.signedQuantity); // The next `minted`.
+            if (n > d.maxMintable) revert ExceedsMintSupply();
+            d.minted = uint32(n);
+
+            // Increment the number minted by the collectors.
+            for (uint256 i; i != toLength; ++i) {
+                LibMap.Uint32Map storage m = _numberMinted[p.to[i]];
+                m.set(mintId, uint32(uint256(m.get(mintId)) + uint256(p.signedQuantity)));
+            }
+        }
+    }
+
+    /**
+     * @dev Requires that the mint is open and not paused.
+     * @param d    The mint data storage pointer.
+     */
+    function _requireMintOpen(MintData storage d) internal view {
+        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
+            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
+        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
+    }
+
+    /**
      * @dev Verify the signature, and mark the signed claim ticket as claimed.
      * @param d The mint data storage pointer.
      * @param p The mint-to parameters.
@@ -1049,6 +1158,21 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         if (p.quantity > p.signedQuantity) revert ExceedsSignedQuantity();
         address signer = _effectiveSigner(d);
         if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computeMintToDigest(p), p.signature))
+            revert InvalidSignature();
+        if (block.timestamp > p.signedDeadline) revert SignatureExpired();
+        uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
+        if (!_claimsBitmaps[mintId].toggle(p.signedClaimTicket)) revert SignatureAlreadyUsed();
+    }
+
+    /**
+     * @dev Verify the presave signature, and mark the signed claim ticket as claimed.
+     * @param d The mint data storage pointer.
+     * @param p The presave parameters.
+     */
+    function _verifyAndClaimPresaveSignature(MintData storage d, Presave calldata p) internal {
+        // Unlike regular signature mints, presave mints only used `signedQuantity`.
+        address signer = _effectiveSigner(d);
+        if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computePresaveDigest(p), p.signature))
             revert InvalidSignature();
         if (block.timestamp > p.signedDeadline) revert SignatureExpired();
         uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);

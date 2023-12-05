@@ -256,6 +256,56 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         }
     }
 
+    function test_presave(uint256) public {
+        (address signer, uint256 privateKey) = _randomSigner();
+
+        ISuperMinterV1_1.MintCreation memory c;
+        c.maxMintable = uint32(_bound(_random(), 1, 64));
+        c.platform = address(this);
+        c.edition = address(edition);
+        c.startTime = 0;
+        c.tier = uint8(_random() % 2);
+        c.endTime = uint32(block.timestamp + 1000);
+        c.maxMintablePerAccount = uint32(_random()); // Doesn't matter, will be auto set to max.
+        c.mode = sm.PRESAVE();
+        c.signer = signer;
+        assertEq(sm.createEditionMint(c), 0);
+
+        unchecked {
+            ISuperMinterV1_1.Presave memory p;
+            p.edition = address(edition);
+            p.tier = c.tier;
+            p.scheduleNum = 0;
+            p.to = new address[](_bound(_random(), 0, 8));
+            p.signedQuantity = uint32(_bound(_random(), 1, 8));
+            p.signedClaimTicket = uint32(_bound(_random(), 0, type(uint32).max));
+            p.signedDeadline = type(uint32).max;
+            for (uint256 i; i < p.to.length; ++i) {
+                p.to[i] = _randomNonZeroAddress();
+            }
+            LibSort.sort(p.to);
+            LibSort.uniquifySorted(p.to);
+            p.signature = _generatePresaveSignature(p, privateKey);
+
+            uint256 expectedMinted = p.signedQuantity * p.to.length;
+            if (expectedMinted > c.maxMintable) {
+                vm.expectRevert(ISuperMinterV1_1.ExceedsMintSupply.selector);
+                sm.presave(p);
+                return;
+            }
+
+            sm.presave(p);
+            assertEq(sm.mintInfo(address(edition), p.tier, p.scheduleNum).minted, expectedMinted);
+            for (uint256 i; i < p.to.length; ++i) {
+                assertEq(edition.balanceOf(p.to[i]), p.signedQuantity);
+                assertEq(sm.numberMinted(address(edition), p.tier, p.scheduleNum, p.to[i]), p.signedQuantity);
+            }
+
+            vm.expectRevert(ISuperMinterV1_1.SignatureAlreadyUsed.selector);
+            sm.presave(p);
+        }
+    }
+
     function test_mintDefaultUpToMaxPerAccount() public {
         ISuperMinterV1_1.MintCreation memory c;
         c.maxMintable = type(uint32).max;
@@ -984,6 +1034,15 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         returns (bytes memory signature)
     {
         bytes32 digest = sm.computeMintToDigest(p);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
+        signature = abi.encodePacked(r, s, v);
+    }
+
+    function _generatePresaveSignature(ISuperMinterV1_1.Presave memory p, uint256 privateKey)
+        internal
+        returns (bytes memory signature)
+    {
+        bytes32 digest = sm.computePresaveDigest(p);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
         signature = abi.encodePacked(r, s, v);
     }

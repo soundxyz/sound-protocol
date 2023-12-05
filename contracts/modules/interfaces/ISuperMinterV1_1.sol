@@ -87,6 +87,28 @@ interface ISuperMinterV1_1 is IERC165 {
     }
 
     /**
+     * @dev A struct containing the arguments for presave.
+     */
+    struct Presave {
+        // The mint ID.
+        address edition;
+        // The tier of the mint.
+        uint8 tier;
+        // The edition-tier schedule number.
+        uint8 scheduleNum;
+        // The addresses to mint to.
+        address[] to;
+        // The signed quantity.
+        uint32 signedQuantity;
+        // The signed claimed ticket. Used if `mode` is `VERIFY_SIGNATURE`.
+        uint32 signedClaimTicket;
+        // The expiry timestamp for the signature. Used if `mode` is `VERIFY_SIGNATURE`.
+        uint32 signedDeadline;
+        // The signature by the signer. Used if `mode` is `VERIFY_SIGNATURE`.
+        bytes signature;
+    }
+
+    /**
      * @dev A struct containing the total prices and fees.
      */
     struct TotalPriceAndFees {
@@ -219,7 +241,7 @@ interface ISuperMinterV1_1 is IERC165 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
+        // The signer address, required if `mode` is `VERIFY_SIGNATURE` or `PRESAVE`.
         // This value will be the platform signer instead if it is configured to be `address(1)`.
         address signer;
         // Whether the platform signer is being used instead
@@ -339,6 +361,16 @@ interface ISuperMinterV1_1 is IERC165 {
         MintedLogData data,
         uint256 indexed attributionId
     );
+
+    /**
+     * @dev Emitted when tokens are minted for presave.
+     * @param edition        The address of the Sound Edition.
+     * @param tier           The tier.
+     * @param scheduleNum    The edition-tier schedule number.
+     * @param to             The recipients of the tokens minted.
+     * @param signedQuantity The amount of tokens per address.
+     */
+    event Presaved(address indexed edition, uint8 tier, uint8 scheduleNum, address[] to, uint32 signedQuantity);
 
     /**
      * @dev Emitted when the platform fee configuration for `tier` is updated.
@@ -557,6 +589,12 @@ interface ISuperMinterV1_1 is IERC165 {
     function mintTo(MintTo calldata p) external payable;
 
     /**
+     * @dev Performs a presave mint.
+     * @param p The presave parameters.
+     */
+    function presave(Presave calldata p) external;
+
+    /**
      * @dev Sets the price of the mint.
      * @param edition       The address of the Sound Edition.
      * @param tier          The tier.
@@ -758,6 +796,12 @@ interface ISuperMinterV1_1 is IERC165 {
     function MINT_TO_TYPEHASH() external pure returns (bytes32);
 
     /**
+     * @dev The EIP-712 typehash for presave mints.
+     * @return The constant value.
+     */
+    function PRESAVE_TYPEHASH() external pure returns (bytes32);
+
+    /**
      * @dev The default mint mode.
      * @return The constant value.
      */
@@ -774,6 +818,12 @@ interface ISuperMinterV1_1 is IERC165 {
      * @return The constant value.
      */
     function VERIFY_SIGNATURE() external pure returns (uint8);
+
+    /**
+     * @dev The mint mode for presave.
+     * @return The constant value.
+     */
+    function PRESAVE() external pure returns (uint8);
 
     /**
      * @dev The denominator used in BPS fee calculations.
@@ -832,6 +882,13 @@ interface ISuperMinterV1_1 is IERC165 {
      * @return The computed value.
      */
     function computeMintToDigest(MintTo calldata p) external view returns (bytes32);
+
+    /**
+     * @dev Returns the EIP-712 digest of the mint-to data for presave mints.
+     * @param p The presave parameters.
+     * @return The computed value.
+     */
+    function computePresaveDigest(Presave calldata p) external view returns (bytes32);
 
     /**
      * @dev Returns the total price and fees for the mint.
