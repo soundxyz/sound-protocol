@@ -268,8 +268,10 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         c.endTime = uint32(block.timestamp + 1000);
         c.maxMintablePerAccount = uint32(_random()); // Doesn't matter, will be auto set to max.
         c.mode = sm.PLATFORM_AIRDROP();
-        c.signer = signer;
         assertEq(sm.createEditionMint(c), 0);
+
+        vm.prank(c.platform);
+        sm.setPlatformSigner(signer);
 
         unchecked {
             ISuperMinterV1_1.PlatformAirdrop memory p;

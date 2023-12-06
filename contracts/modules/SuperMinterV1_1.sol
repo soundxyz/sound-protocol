@@ -263,7 +263,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
         } else if (mode == PLATFORM_AIRDROP) {
-            _validateSigner(c.signer);
+            c.signer = address(1); // We will just use the `platformSigner`.
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
             c.price = 0; // Platform airdrop mode doesn't have a price.
@@ -619,6 +619,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     ) public onlyEditionOwnerOrAdmin(edition) {
         uint256 mintId = LibOps.packId(edition, tier, scheduleNum);
         MintData storage d = _getMintData(mintId);
+        // Note that `PLATFORM_AIRDROP` does not allow for configuration of the signer.
         if (d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
         _validateSigner(signer);
         bool usePlatformSigner = signer == address(1);
