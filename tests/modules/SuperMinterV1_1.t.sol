@@ -78,7 +78,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 }
                 if (i == 2) {
                     c.mode = sm.VERIFY_SIGNATURE();
-                    c.signer = address(2);
                 }
                 uint8 nextScheduleNum = sm.nextScheduleNum(c.edition, c.tier);
                 assertEq(sm.createEditionMint(c), nextScheduleNum);
@@ -86,6 +85,9 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 assertEq(sm.mintInfoList(address(edition)).length, j * 3 + i + 1);
             }
         }
+
+        address signer = _randomNonZeroAddress();
+        sm.setPlatformSigner(signer);
 
         ISuperMinterV1_1.MintInfo[] memory mintInfoList = sm.mintInfoList(address(edition));
         assertEq(mintInfoList.length, 3 * 3);
@@ -103,7 +105,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                     assertEq(info.endTime, type(uint32).max);
                     assertEq(info.mode, sm.DEFAULT());
                     assertEq(info.merkleRoot, bytes32(0));
-                    assertEq(info.signer, address(0));
+                    assertEq(info.signer, signer);
                 }
                 if (i == 1) {
                     assertEq(info.mode, sm.VERIFY_MERKLE());
@@ -112,6 +114,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                     assertEq(info.endTime, uint32(block.timestamp + 1000 + i));
                     assertEq(info.mode, sm.VERIFY_MERKLE());
                     assertEq(info.merkleRoot, keccak256("x"));
+                    assertEq(info.signer, signer);
                 }
                 if (i == 2) {
                     assertEq(info.mode, sm.VERIFY_SIGNATURE());
@@ -119,7 +122,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                     assertEq(info.maxMintablePerAccount, type(uint32).max);
                     assertEq(info.endTime, uint32(block.timestamp + 1000 + i));
                     assertEq(info.mode, sm.VERIFY_SIGNATURE());
-                    assertEq(info.signer, address(2));
+                    assertEq(info.signer, signer);
                 }
             }
         }
@@ -137,8 +140,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         c.endTime = uint32(c.startTime + _bound(_random(), 0, 1000));
         c.maxMintablePerAccount = uint32(_bound(_random(), 1, type(uint32).max));
         c.merkleRoot = keccak256(abi.encodePacked(_random()));
-        c.signer = _randomNonZeroAddress();
-        if (c.signer == address(1)) c.signer = address(2);
 
         assertEq(sm.createEditionMint(c), 0);
 
@@ -146,10 +147,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         assertEq(info.platform, address(this));
         if (c.tier == 0) {
             if (c.mode == sm.DEFAULT()) {
-                assertEq(info.signer, address(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
-                sm.setSigner(address(edition), c.tier, 0, c.signer);
-
                 assertEq(info.merkleRoot, bytes32(0));
                 vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
@@ -166,10 +163,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             } else if (c.mode == sm.VERIFY_MERKLE()) {
-                assertEq(info.signer, address(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
-                sm.setSigner(address(edition), c.tier, 0, c.signer);
-
                 assertEq(info.merkleRoot, c.merkleRoot);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
 
@@ -184,8 +177,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             } else if (c.mode == sm.VERIFY_SIGNATURE()) {
-                assertEq(info.signer, c.signer);
-                sm.setSigner(address(edition), c.tier, 0, c.signer);
+                assertEq(info.signer, sm.platformSigner(c.platform));
 
                 assertEq(info.merkleRoot, bytes32(0));
                 vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
@@ -203,10 +195,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             }
         } else {
             if (c.mode == sm.DEFAULT()) {
-                assertEq(info.signer, address(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
-                sm.setSigner(address(edition), c.tier, 0, c.signer);
-
                 assertEq(info.merkleRoot, bytes32(0));
                 vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
@@ -220,10 +208,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 assertEq(info.maxMintablePerAccount, c.maxMintablePerAccount);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             } else if (c.mode == sm.VERIFY_MERKLE()) {
-                assertEq(info.signer, address(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
-                sm.setSigner(address(edition), c.tier, 0, c.signer);
-
                 assertEq(info.merkleRoot, c.merkleRoot);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
 
@@ -236,8 +220,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 assertEq(info.maxMintablePerAccount, c.maxMintablePerAccount);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             } else if (c.mode == sm.VERIFY_SIGNATURE()) {
-                assertEq(info.signer, c.signer);
-                sm.setSigner(address(edition), c.tier, 0, c.signer);
+                assertEq(info.signer, sm.platformSigner(c.platform));
 
                 assertEq(info.merkleRoot, bytes32(0));
                 vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
@@ -662,9 +645,6 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         if (c.mode == sm.VERIFY_MERKLE()) {
             c.merkleRoot = bytes32(_random() | 1);
         }
-        if (c.mode == sm.VERIFY_SIGNATURE()) {
-            c.signer = address(2);
-        }
         assertEq(sm.createEditionMint(c), 0);
 
         uint256 gaPrice = uint96(_bound(_random(), 0, type(uint96).max));
@@ -982,13 +962,8 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         c.mode = sm.VERIFY_SIGNATURE();
         c.endTime = uint32(block.timestamp + 1000);
         c.maxMintablePerAccount = type(uint32).max;
-        if (_random() % 2 == 0) {
-            c.signer = signer;
-        } else {
-            c.signer = address(1);
-            vm.prank(c.platform);
-            sm.setPlatformSigner(signer);
-        }
+        vm.prank(c.platform);
+        sm.setPlatformSigner(signer);
         assertEq(sm.createEditionMint(c), 0);
 
         ISuperMinterV1_1.MintTo memory p;
@@ -1074,39 +1049,5 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         vm.deal(address(this), type(uint192).max);
         sm.mintTo{ value: uint256(p.quantity) * uint256(gaPrice) }(p);
-    }
-
-    function test_setSigner(uint256) public {
-        address initialSigner = _random() % 2 == 0 ? address(1) : _randomNonZeroAddress();
-
-        ISuperMinterV1_1.MintCreation memory c;
-        c.maxMintable = type(uint32).max;
-        c.platform = _randomNonZeroAddress();
-        c.edition = address(edition);
-        c.tier = uint8(_random() % 2);
-        c.startTime = 0;
-        c.mode = sm.VERIFY_SIGNATURE();
-        c.endTime = uint32(block.timestamp + 1000);
-        c.maxMintablePerAccount = type(uint32).max;
-        c.signer = initialSigner;
-        assertEq(sm.createEditionMint(c), 0);
-
-        address platformSigner = _randomNonZeroAddress();
-        vm.prank(c.platform);
-        sm.setPlatformSigner(platformSigner);
-
-        ISuperMinterV1_1.MintInfo memory info = sm.mintInfo(address(edition), c.tier, 0);
-        assertEq(info.signer, initialSigner == address(1) ? platformSigner : initialSigner);
-        assertEq(info.usePlatformSigner, initialSigner == address(1));
-
-        for (uint256 i; i != 2; ++i) {
-            address updatedSigner = _random() % 2 == 0 ? address(1) : _randomNonZeroAddress();
-            sm.setSigner(address(edition), c.tier, 0, updatedSigner);
-
-            info = sm.mintInfo(address(edition), c.tier, 0);
-            assertEq(info.platform, c.platform);
-            assertEq(info.signer, updatedSigner == address(1) ? platformSigner : updatedSigner);
-            assertEq(info.usePlatformSigner, updatedSigner == address(1));
-        }
     }
 }

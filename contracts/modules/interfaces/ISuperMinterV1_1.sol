@@ -40,9 +40,6 @@ interface ISuperMinterV1_1 is IERC165 {
         address platform;
         // The mode of the mint. Options: `DEFAULT`, `VERIFY_MERKLE`, `VERIFY_SIGNATURE`.
         uint8 mode;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        // If set to `address(1)`, the platform signer will be used instead.
-        address signer;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
     }
@@ -241,12 +238,8 @@ interface ISuperMinterV1_1 is IERC165 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE` or `PLATFORM_AIRDROP`.
-        // This value will be the platform signer instead if it is configured to be `address(1)`.
+        // The signer address, used if `mode` is `VERIFY_SIGNATURE` or `PLATFORM_AIRDROP`.
         address signer;
-        // Whether the platform signer is being used instead
-        // (i.e. `signer` configured to be `address(1)`).
-        bool usePlatformSigner;
     }
 
     // =============================================================
@@ -316,15 +309,6 @@ interface ISuperMinterV1_1 is IERC165 {
      * @param merkleRoot    The Merkle root of the mint.
      */
     event MerkleRootSet(address indexed edition, uint8 tier, uint8 scheduleNum, bytes32 merkleRoot);
-
-    /**
-     * @dev Emitted when the signer of a mint is updated.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param signer        The signer of the mint.
-     */
-    event SignerSet(address indexed edition, uint8 tier, uint8 scheduleNum, address signer);
 
     /**
      * @dev Emitted when the affiliate fee BPS for a mint is updated.
@@ -511,11 +495,6 @@ interface ISuperMinterV1_1 is IERC165 {
      * @dev The signature claim ticket has already been used.
      */
     error SignatureAlreadyUsed();
-
-    /**
-     * @dev The signer cannot be the zero address.
-     */
-    error SignerIsZeroAddress();
 
     /**
      * @dev The Merkle root cannot be empty.
@@ -726,20 +705,6 @@ interface ISuperMinterV1_1 is IERC165 {
         uint8 tier,
         uint8 scheduleNum,
         bytes32 merkleRoot
-    ) external;
-
-    /**
-     * @dev Sets the signer for the mint. The mint mode must be `VERIFY_SIGNATURE`.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param signer        The signer of the mint.
-     */
-    function setSigner(
-        address edition,
-        uint8 tier,
-        uint8 scheduleNum,
-        address signer
     ) external;
 
     /**

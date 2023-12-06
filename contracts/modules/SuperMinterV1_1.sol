@@ -253,17 +253,13 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         uint8 mode = c.mode;
 
         if (mode == DEFAULT) {
-            c.signer = address(0);
             c.merkleRoot = bytes32(0);
         } else if (mode == VERIFY_MERKLE) {
             _validateMerkleRoot(c.merkleRoot);
-            c.signer = address(0);
         } else if (mode == VERIFY_SIGNATURE) {
-            _validateSigner(c.signer);
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
         } else if (mode == PLATFORM_AIRDROP) {
-            c.signer = address(1); // We will just use the `platformSigner`.
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
             c.price = 0; // Platform airdrop mode doesn't have a price.
@@ -301,7 +297,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             editionHead.numMintData = uint16(n);
 
             uint256 mintId = LibOps.packId(c.edition, c.tier, scheduleNum);
-            bool usePlatformSigner = c.signer == address(1);
 
             MintData storage d = _mintData[mintId];
             d.platform = c.platform;
@@ -312,16 +307,13 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             d.maxMintable = c.maxMintable;
             d.affiliateFeeBPS = c.affiliateFeeBPS;
             d.mode = c.mode;
-            d.flags = _MINT_CREATED_FLAG | LibOps.toFlag(usePlatformSigner, _USE_PLATFORM_SIGNER_FLAG);
+            d.flags = _MINT_CREATED_FLAG;
             d.next = editionHead.head;
             editionHead.head = uint16((uint256(c.tier) << 8) | uint256(scheduleNum));
 
             // Skip writing zeros, to avoid cold SSTOREs.
             if (c.affiliateMerkleRoot != bytes32(0)) d.affiliateMerkleRoot = c.affiliateMerkleRoot;
             if (c.merkleRoot != bytes32(0)) d.merkleRoot = c.merkleRoot;
-            if (c.signer != address(0)) {
-                if (!usePlatformSigner) d.signer = c.signer; // Only write if it is not the platform signer.
-            }
 
             emit MintCreated(c.edition, c.tier, scheduleNum, c);
         }
@@ -606,26 +598,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         _validateMerkleRoot(merkleRoot);
         d.merkleRoot = merkleRoot;
         emit MerkleRootSet(edition, tier, scheduleNum, merkleRoot);
-    }
-
-    /**
-     * @inheritdoc ISuperMinterV1_1
-     */
-    function setSigner(
-        address edition,
-        uint8 tier,
-        uint8 scheduleNum,
-        address signer
-    ) public onlyEditionOwnerOrAdmin(edition) {
-        uint256 mintId = LibOps.packId(edition, tier, scheduleNum);
-        MintData storage d = _getMintData(mintId);
-        // Note that `PLATFORM_AIRDROP` does not allow for configuration of the signer.
-        if (d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
-        _validateSigner(signer);
-        bool usePlatformSigner = signer == address(1);
-        d.flags = LibOps.setFlagTo(d.flags, _USE_PLATFORM_SIGNER_FLAG, usePlatformSigner);
-        if (!usePlatformSigner) d.signer = signer;
-        emit SignerSet(edition, tier, scheduleNum, signer);
     }
 
     // Withdrawal functions:
@@ -928,8 +900,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         info.paused = _isPaused(d);
         info.affiliateMerkleRoot = d.affiliateMerkleRoot;
         info.merkleRoot = d.merkleRoot;
-        info.signer = _effectiveSigner(d);
-        info.usePlatformSigner = _usePlatformSigner(d);
+        info.signer = platformSigner[d.platform];
     }
 
     /**
@@ -1014,14 +985,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      */
     function _validateMerkleRoot(bytes32 merkleRoot) internal pure {
         if (merkleRoot == bytes32(0)) revert MerkleRootIsEmpty();
-    }
-
-    /**
-     * @dev Validates that the signer is not the zero address.
-     * @param signer The signer.
-     */
-    function _validateSigner(address signer) internal pure {
-        if (signer == address(0)) revert SignerIsZeroAddress();
     }
 
     /**
@@ -1157,7 +1120,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      */
     function _verifyAndClaimSignature(MintData storage d, MintTo calldata p) internal {
         if (p.quantity > p.signedQuantity) revert ExceedsSignedQuantity();
-        address signer = _effectiveSigner(d);
+        address signer = platformSigner[d.platform];
         if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computeMintToDigest(p), p.signature))
             revert InvalidSignature();
         if (block.timestamp > p.signedDeadline) revert SignatureExpired();
@@ -1172,7 +1135,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      */
     function _verifyAndClaimPlatfromAidropSignature(MintData storage d, PlatformAirdrop calldata p) internal {
         // Unlike regular signature mints, platform airdrops only use `signedQuantity`.
-        address signer = _effectiveSigner(d);
+        address signer = platformSigner[d.platform];
         if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computePlatformAirdropDigest(p), p.signature))
             revert InvalidSignature();
         if (block.timestamp > p.signedDeadline) revert SignatureExpired();
@@ -1334,23 +1297,5 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      */
     function _isPaused(MintData storage d) internal view returns (bool) {
         return d.flags & _MINT_PAUSED_FLAG != 0;
-    }
-
-    /**
-     * @dev Returns the effective signer.
-     * @param d The storage pointer to the mint data.
-     * @return The effective signer.
-     */
-    function _effectiveSigner(MintData storage d) internal view returns (address) {
-        return _usePlatformSigner(d) ? platformSigner[d.platform] : d.signer;
-    }
-
-    /**
-     * @dev Returns whether the platform signer is to be used instead.
-     * @param d The storage pointer to the mint data.
-     * @return Whether the platform signer is to be used instead.
-     */
-    function _usePlatformSigner(MintData storage d) internal view returns (bool) {
-        return d.flags & _USE_PLATFORM_SIGNER_FLAG != 0;
     }
 }
