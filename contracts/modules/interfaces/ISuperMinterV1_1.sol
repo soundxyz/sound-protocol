@@ -87,9 +87,9 @@ interface ISuperMinterV1_1 is IERC165 {
     }
 
     /**
-     * @dev A struct containing the arguments for presave.
+     * @dev A struct containing the arguments for platformAirdrop.
      */
-    struct Presave {
+    struct PlatformAirdrop {
         // The mint ID.
         address edition;
         // The tier of the mint.
@@ -241,7 +241,7 @@ interface ISuperMinterV1_1 is IERC165 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE` or `PRESAVE`.
+        // The signer address, required if `mode` is `VERIFY_SIGNATURE` or `PLATFORM_AIRDROP`.
         // This value will be the platform signer instead if it is configured to be `address(1)`.
         address signer;
         // Whether the platform signer is being used instead
@@ -363,14 +363,20 @@ interface ISuperMinterV1_1 is IERC165 {
     );
 
     /**
-     * @dev Emitted when tokens are minted for presave.
+     * @dev Emitted when tokens are platform airdropped.
      * @param edition        The address of the Sound Edition.
      * @param tier           The tier.
      * @param scheduleNum    The edition-tier schedule number.
      * @param to             The recipients of the tokens minted.
      * @param signedQuantity The amount of tokens per address.
      */
-    event Presaved(address indexed edition, uint8 tier, uint8 scheduleNum, address[] to, uint32 signedQuantity);
+    event PlatformAirdropped(
+        address indexed edition,
+        uint8 tier,
+        uint8 scheduleNum,
+        address[] to,
+        uint32 signedQuantity
+    );
 
     /**
      * @dev Emitted when the platform fee configuration for `tier` is updated.
@@ -589,10 +595,10 @@ interface ISuperMinterV1_1 is IERC165 {
     function mintTo(MintTo calldata p) external payable;
 
     /**
-     * @dev Performs a presave mint.
-     * @param p The presave parameters.
+     * @dev Performs a platform airdrop.
+     * @param p The platform airdrop parameters.
      */
-    function presave(Presave calldata p) external;
+    function platformAirdrop(PlatformAirdrop calldata p) external;
 
     /**
      * @dev Sets the price of the mint.
@@ -796,10 +802,10 @@ interface ISuperMinterV1_1 is IERC165 {
     function MINT_TO_TYPEHASH() external pure returns (bytes32);
 
     /**
-     * @dev The EIP-712 typehash for presave mints.
+     * @dev The EIP-712 typehash for platform airdrop mints.
      * @return The constant value.
      */
-    function PRESAVE_TYPEHASH() external pure returns (bytes32);
+    function PLATFORM_AIRDROP_TYPEHASH() external pure returns (bytes32);
 
     /**
      * @dev The default mint mode.
@@ -820,10 +826,10 @@ interface ISuperMinterV1_1 is IERC165 {
     function VERIFY_SIGNATURE() external pure returns (uint8);
 
     /**
-     * @dev The mint mode for presave.
+     * @dev The mint mode for platform airdrop.
      * @return The constant value.
      */
-    function PRESAVE() external pure returns (uint8);
+    function PLATFORM_AIRDROP() external pure returns (uint8);
 
     /**
      * @dev The denominator used in BPS fee calculations.
@@ -884,11 +890,11 @@ interface ISuperMinterV1_1 is IERC165 {
     function computeMintToDigest(MintTo calldata p) external view returns (bytes32);
 
     /**
-     * @dev Returns the EIP-712 digest of the mint-to data for presave mints.
-     * @param p The presave parameters.
+     * @dev Returns the EIP-712 digest of the mint-to data for platform airdrops.
+     * @param p The platform airdrop parameters.
      * @return The computed value.
      */
-    function computePresaveDigest(Presave calldata p) external view returns (bytes32);
+    function computePlatformAirdropDigest(PlatformAirdrop calldata p) external view returns (bytes32);
 
     /**
      * @dev Returns the total price and fees for the mint.

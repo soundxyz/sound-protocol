@@ -101,12 +101,12 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         );
 
     /**
-     * @dev For EIP-712 presave signature digest calculation.
+     * @dev For EIP-712 platform airdrop signature digest calculation.
      */
-    bytes32 public constant PRESAVE_TYPEHASH =
+    bytes32 public constant PLATFORM_AIRDROP_TYPEHASH =
         // prettier-ignore
         keccak256(
-            "Presave("
+            "PlatformAirdrop("
                 "address edition,"
                 "uint8 tier,"
                 "uint8 scheduleNum,"
@@ -138,9 +138,9 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     uint8 public constant VERIFY_SIGNATURE = 2;
 
     /**
-     * @dev The Presave mint mode.
+     * @dev The platform airdrop mint mode.
      */
-    uint8 public constant PRESAVE = 3;
+    uint8 public constant PLATFORM_AIRDROP = 3;
 
     /**
      * @dev The denominator of all BPS calculations.
@@ -262,11 +262,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             _validateSigner(c.signer);
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
-        } else if (mode == PRESAVE) {
+        } else if (mode == PLATFORM_AIRDROP) {
             _validateSigner(c.signer);
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
-            c.price = 0; // Presave mode doesn't have a price.
+            c.price = 0; // Platform airdrop mode doesn't have a price.
         } else {
             revert InvalidMode();
         }
@@ -341,7 +341,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         uint8 mode = d.mode;
         if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
         else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
-        else if (mode == PRESAVE) revert InvalidMode();
+        else if (mode == PLATFORM_AIRDROP) revert InvalidMode();
 
         _incrementMinted(mode, d, p);
 
@@ -423,17 +423,17 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     /**
      * @inheritdoc ISuperMinterV1_1
      */
-    function presave(Presave calldata p) public {
+    function platformAirdrop(PlatformAirdrop calldata p) public {
         MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
 
         /* ------------------- CHECKS AND UPDATES ------------------- */
 
         _requireMintOpen(d);
 
-        if (d.mode != PRESAVE) revert InvalidMode();
-        _verifyAndClaimPresaveSignature(d, p);
+        if (d.mode != PLATFORM_AIRDROP) revert InvalidMode();
+        _verifyAndClaimPlatfromAidropSignature(d, p);
 
-        _incrementPresaveMinted(d, p);
+        _incrementPlatformAirdropMinted(d, p);
 
         /* ------------------------- MINT --------------------------- */
 
@@ -446,7 +446,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             }
         }
 
-        emit Presaved(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity);
+        emit PlatformAirdropped(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity);
     }
 
     // Per edition mint parameter setters:
@@ -466,8 +466,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         MintData storage d = _getMintData(mintId);
         // If the tier is GA and the `mode` is `VERIFY_SIGNATURE`, we'll use `gaPrice[platform]`.
         if (tier == GA_TIER && d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
-        // Presave mints will not have a price.
-        if (d.mode == PRESAVE) revert NotConfigurable();
+        // Platform airdropped mints will not have a price.
+        if (d.mode == PLATFORM_AIRDROP) revert NotConfigurable();
         d.price = price;
         emit PriceSet(edition, tier, scheduleNum, price);
     }
@@ -566,8 +566,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         if (tier == GA_TIER) revert NotConfigurable();
         // Signature mints will have `type(uint32).max`.
         if (d.mode == VERIFY_SIGNATURE) revert NotConfigurable();
-        // Presave mints will have `type(uint32).max`.
-        if (d.mode == PRESAVE) revert NotConfigurable();
+        // Platform airdrops will have `type(uint32).max`.
+        if (d.mode == PLATFORM_AIRDROP) revert NotConfigurable();
         _validateMaxMintablePerAccount(value);
         d.maxMintablePerAccount = value;
         emit MaxMintablePerAccountSet(edition, tier, scheduleNum, value);
@@ -753,11 +753,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     /**
      * @inheritdoc ISuperMinterV1_1
      */
-    function computePresaveDigest(Presave calldata p) public view returns (bytes32) {
+    function computePlatformAirdropDigest(PlatformAirdrop calldata p) public view returns (bytes32) {
         // prettier-ignore
         return
             _hashTypedData(keccak256(abi.encode(
-                PRESAVE_TYPEHASH,
+                PLATFORM_AIRDROP_TYPEHASH,
                 p.edition,
                 p.tier, 
                 p.scheduleNum,
@@ -1119,9 +1119,9 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     /**
      * @dev Increments the number minted in the mint and the number minted by the collector.
      * @param d    The mint data storage pointer.
-     * @param p    The presave parameters.
+     * @param p    The platform airdrop parameters.
      */
-    function _incrementPresaveMinted(MintData storage d, Presave calldata p) internal {
+    function _incrementPlatformAirdropMinted(MintData storage d, PlatformAirdrop calldata p) internal {
         unchecked {
             uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
             uint256 toLength = p.to.length;
@@ -1165,14 +1165,14 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @dev Verify the presave signature, and mark the signed claim ticket as claimed.
+     * @dev Verify the platform airdrop signature, and mark the signed claim ticket as claimed.
      * @param d The mint data storage pointer.
-     * @param p The presave parameters.
+     * @param p The platform airdrop parameters.
      */
-    function _verifyAndClaimPresaveSignature(MintData storage d, Presave calldata p) internal {
-        // Unlike regular signature mints, presave mints only used `signedQuantity`.
+    function _verifyAndClaimPlatfromAidropSignature(MintData storage d, PlatformAirdrop calldata p) internal {
+        // Unlike regular signature mints, platform airdrops only use `signedQuantity`.
         address signer = _effectiveSigner(d);
-        if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computePresaveDigest(p), p.signature))
+        if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computePlatformAirdropDigest(p), p.signature))
             revert InvalidSignature();
         if (block.timestamp > p.signedDeadline) revert SignatureExpired();
         uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
