@@ -322,7 +322,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     /**
      * @inheritdoc ISuperMinterV1_1
      */
-    function mintTo(MintTo calldata p) public payable {
+    function mintTo(MintTo calldata p) public payable returns (uint256 fromTokenId) {
         MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
 
         /* ------------------- CHECKS AND UPDATES ------------------- */
@@ -410,12 +410,14 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         l.unitPrice = f.unitPrice;
 
         emit Minted(p.edition, p.tier, p.scheduleNum, p.to, l, p.attributionId);
+
+        return l.fromTokenId;
     }
 
     /**
      * @inheritdoc ISuperMinterV1_1
      */
-    function platformAirdrop(PlatformAirdrop calldata p) public {
+    function platformAirdrop(PlatformAirdrop calldata p) public returns (uint256 fromTokenId) {
         MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
 
         /* ------------------- CHECKS AND UPDATES ------------------- */
@@ -429,16 +431,10 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
 
         /* ------------------------- MINT --------------------------- */
 
-        unchecked {
-            ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
+        ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
+        fromTokenId = edition.airdrop(p.tier, p.to, p.signedQuantity);
 
-            uint256 toLength = p.to.length;
-            for (uint256 i; i != toLength; ++i) {
-                edition.mint(p.tier, p.to[i], p.signedQuantity);
-            }
-        }
-
-        emit PlatformAirdropped(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity);
+        emit PlatformAirdropped(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity, fromTokenId);
     }
 
     // Per edition mint parameter setters:

@@ -353,13 +353,15 @@ interface ISuperMinterV1_1 is IERC165 {
      * @param scheduleNum    The edition-tier schedule number.
      * @param to             The recipients of the tokens minted.
      * @param signedQuantity The amount of tokens per address.
+     * @param fromTokenId    The first token ID minted.
      */
     event PlatformAirdropped(
         address indexed edition,
         uint8 tier,
         uint8 scheduleNum,
         address[] to,
-        uint32 signedQuantity
+        uint32 signedQuantity,
+        uint256 fromTokenId
     );
 
     /**
@@ -570,14 +572,16 @@ interface ISuperMinterV1_1 is IERC165 {
     /**
      * @dev Performs a mint.
      * @param p The mint-to parameters.
+     * @return fromTokenId The first token ID minted.
      */
-    function mintTo(MintTo calldata p) external payable;
+    function mintTo(MintTo calldata p) external payable returns (uint256 fromTokenId);
 
     /**
      * @dev Performs a platform airdrop.
      * @param p The platform airdrop parameters.
+     * @return fromTokenId The first token ID minted.
      */
-    function platformAirdrop(PlatformAirdrop calldata p) external;
+    function platformAirdrop(PlatformAirdrop calldata p) external returns (uint256 fromTokenId);
 
     /**
      * @dev Sets the price of the mint.

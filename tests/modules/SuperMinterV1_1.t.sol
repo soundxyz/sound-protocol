@@ -261,7 +261,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             p.edition = address(edition);
             p.tier = c.tier;
             p.scheduleNum = 0;
-            p.to = new address[](_bound(_random(), 0, 8));
+            p.to = new address[](_bound(_random(), 1, 8));
             p.signedQuantity = uint32(_bound(_random(), 1, 8));
             p.signedClaimTicket = uint32(_bound(_random(), 0, type(uint32).max));
             p.signedDeadline = type(uint32).max;
