@@ -68,8 +68,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        address signer;
     }
 
     // =============================================================
