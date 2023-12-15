@@ -40,9 +40,6 @@ interface ISuperMinterV1_1 is IERC165 {
         address platform;
         // The mode of the mint. Options: `DEFAULT`, `VERIFY_MERKLE`, `VERIFY_SIGNATURE`.
         uint8 mode;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        // If set to `address(1)`, the platform signer will be used instead.
-        address signer;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
     }
@@ -84,6 +81,28 @@ interface ISuperMinterV1_1 is IERC165 {
         bytes32[] affiliateProof;
         // The attribution ID, optional.
         uint256 attributionId;
+    }
+
+    /**
+     * @dev A struct containing the arguments for platformAirdrop.
+     */
+    struct PlatformAirdrop {
+        // The mint ID.
+        address edition;
+        // The tier of the mint.
+        uint8 tier;
+        // The edition-tier schedule number.
+        uint8 scheduleNum;
+        // The addresses to mint to.
+        address[] to;
+        // The signed quantity.
+        uint32 signedQuantity;
+        // The signed claimed ticket. Used if `mode` is `VERIFY_SIGNATURE`.
+        uint32 signedClaimTicket;
+        // The expiry timestamp for the signature. Used if `mode` is `VERIFY_SIGNATURE`.
+        uint32 signedDeadline;
+        // The signature by the signer. Used if `mode` is `VERIFY_SIGNATURE`.
+        bytes signature;
     }
 
     /**
@@ -219,12 +238,8 @@ interface ISuperMinterV1_1 is IERC165 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        // This value will be the platform signer instead if it is configured to be `address(1)`.
+        // The signer address, used if `mode` is `VERIFY_SIGNATURE` or `PLATFORM_AIRDROP`.
         address signer;
-        // Whether the platform signer is being used instead
-        // (i.e. `signer` configured to be `address(1)`).
-        bool usePlatformSigner;
     }
 
     // =============================================================
@@ -296,15 +311,6 @@ interface ISuperMinterV1_1 is IERC165 {
     event MerkleRootSet(address indexed edition, uint8 tier, uint8 scheduleNum, bytes32 merkleRoot);
 
     /**
-     * @dev Emitted when the signer of a mint is updated.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param signer        The signer of the mint.
-     */
-    event SignerSet(address indexed edition, uint8 tier, uint8 scheduleNum, address signer);
-
-    /**
      * @dev Emitted when the affiliate fee BPS for a mint is updated.
      * @param edition       The address of the Sound Edition.
      * @param tier          The tier.
@@ -338,6 +344,24 @@ interface ISuperMinterV1_1 is IERC165 {
         address indexed to,
         MintedLogData data,
         uint256 indexed attributionId
+    );
+
+    /**
+     * @dev Emitted when tokens are platform airdropped.
+     * @param edition        The address of the Sound Edition.
+     * @param tier           The tier.
+     * @param scheduleNum    The edition-tier schedule number.
+     * @param to             The recipients of the tokens minted.
+     * @param signedQuantity The amount of tokens per address.
+     * @param fromTokenId    The first token ID minted.
+     */
+    event PlatformAirdropped(
+        address indexed edition,
+        uint8 tier,
+        uint8 scheduleNum,
+        address[] to,
+        uint32 signedQuantity,
+        uint256 fromTokenId
     );
 
     /**
@@ -475,11 +499,6 @@ interface ISuperMinterV1_1 is IERC165 {
     error SignatureAlreadyUsed();
 
     /**
-     * @dev The signer cannot be the zero address.
-     */
-    error SignerIsZeroAddress();
-
-    /**
      * @dev The Merkle root cannot be empty.
      */
     error MerkleRootIsEmpty();
@@ -553,8 +572,16 @@ interface ISuperMinterV1_1 is IERC165 {
     /**
      * @dev Performs a mint.
      * @param p The mint-to parameters.
+     * @return fromTokenId The first token ID minted.
      */
-    function mintTo(MintTo calldata p) external payable;
+    function mintTo(MintTo calldata p) external payable returns (uint256 fromTokenId);
+
+    /**
+     * @dev Performs a platform airdrop.
+     * @param p The platform airdrop parameters.
+     * @return fromTokenId The first token ID minted.
+     */
+    function platformAirdrop(PlatformAirdrop calldata p) external returns (uint256 fromTokenId);
 
     /**
      * @dev Sets the price of the mint.
@@ -685,20 +712,6 @@ interface ISuperMinterV1_1 is IERC165 {
     ) external;
 
     /**
-     * @dev Sets the signer for the mint. The mint mode must be `VERIFY_SIGNATURE`.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param signer        The signer of the mint.
-     */
-    function setSigner(
-        address edition,
-        uint8 tier,
-        uint8 scheduleNum,
-        address signer
-    ) external;
-
-    /**
      * @dev Withdraws all accrued fees of the affiliate, to the affiliate.
      * @param affiliate The affiliate address.
      */
@@ -758,6 +771,12 @@ interface ISuperMinterV1_1 is IERC165 {
     function MINT_TO_TYPEHASH() external pure returns (bytes32);
 
     /**
+     * @dev The EIP-712 typehash for platform airdrop mints.
+     * @return The constant value.
+     */
+    function PLATFORM_AIRDROP_TYPEHASH() external pure returns (bytes32);
+
+    /**
      * @dev The default mint mode.
      * @return The constant value.
      */
@@ -774,6 +793,12 @@ interface ISuperMinterV1_1 is IERC165 {
      * @return The constant value.
      */
     function VERIFY_SIGNATURE() external pure returns (uint8);
+
+    /**
+     * @dev The mint mode for platform airdrop.
+     * @return The constant value.
+     */
+    function PLATFORM_AIRDROP() external pure returns (uint8);
 
     /**
      * @dev The denominator used in BPS fee calculations.
@@ -832,6 +857,13 @@ interface ISuperMinterV1_1 is IERC165 {
      * @return The computed value.
      */
     function computeMintToDigest(MintTo calldata p) external view returns (bytes32);
+
+    /**
+     * @dev Returns the EIP-712 digest of the mint-to data for platform airdrops.
+     * @param p The platform airdrop parameters.
+     * @return The computed value.
+     */
+    function computePlatformAirdropDigest(PlatformAirdrop calldata p) external view returns (bytes32);
 
     /**
      * @dev Returns the total price and fees for the mint.

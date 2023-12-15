@@ -232,7 +232,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
         uint8 tier,
         address[] calldata to,
         uint256 quantity
-    ) external payable onlyRolesOrOwner(ADMIN_ROLE) returns (uint256 fromTokenId) {
+    ) external payable onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE) returns (uint256 fromTokenId) {
         uint32 fromTierTokenIdIndex;
         unchecked {
             // Multiplication overflow is not possible due to the max block gas limit.

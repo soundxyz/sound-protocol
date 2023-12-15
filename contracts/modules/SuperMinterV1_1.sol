@@ -68,8 +68,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        address signer;
     }
 
     // =============================================================
@@ -101,6 +99,23 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         );
 
     /**
+     * @dev For EIP-712 platform airdrop signature digest calculation.
+     */
+    bytes32 public constant PLATFORM_AIRDROP_TYPEHASH =
+        // prettier-ignore
+        keccak256(
+            "PlatformAirdrop("
+                "address edition,"
+                "uint8 tier,"
+                "uint8 scheduleNum,"
+                "address[] to,"
+                "uint32 signedQuantity,"
+                "uint32 signedClaimTicket,"
+                "uint32 signedDeadline"
+            ")"
+        );
+
+    /**
      * @dev For EIP-712 signature digest calculation.
      */
     bytes32 public constant DOMAIN_TYPEHASH = _DOMAIN_TYPEHASH;
@@ -119,6 +134,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @dev The Signature mint mint mode.
      */
     uint8 public constant VERIFY_SIGNATURE = 2;
+
+    /**
+     * @dev The platform airdrop mint mode.
+     */
+    uint8 public constant PLATFORM_AIRDROP = 3;
 
     /**
      * @dev The denominator of all BPS calculations.
@@ -231,15 +251,16 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         uint8 mode = c.mode;
 
         if (mode == DEFAULT) {
-            c.signer = address(0);
             c.merkleRoot = bytes32(0);
         } else if (mode == VERIFY_MERKLE) {
             _validateMerkleRoot(c.merkleRoot);
-            c.signer = address(0);
         } else if (mode == VERIFY_SIGNATURE) {
-            _validateSigner(c.signer);
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
+        } else if (mode == PLATFORM_AIRDROP) {
+            c.merkleRoot = bytes32(0);
+            c.maxMintablePerAccount = type(uint32).max;
+            c.price = 0; // Platform airdrop mode doesn't have a price.
         } else {
             revert InvalidMode();
         }
@@ -274,7 +295,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             editionHead.numMintData = uint16(n);
 
             uint256 mintId = LibOps.packId(c.edition, c.tier, scheduleNum);
-            bool usePlatformSigner = c.signer == address(1);
 
             MintData storage d = _mintData[mintId];
             d.platform = c.platform;
@@ -285,16 +305,13 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             d.maxMintable = c.maxMintable;
             d.affiliateFeeBPS = c.affiliateFeeBPS;
             d.mode = c.mode;
-            d.flags = _MINT_CREATED_FLAG | LibOps.toFlag(usePlatformSigner, _USE_PLATFORM_SIGNER_FLAG);
+            d.flags = _MINT_CREATED_FLAG;
             d.next = editionHead.head;
             editionHead.head = uint16((uint256(c.tier) << 8) | uint256(scheduleNum));
 
             // Skip writing zeros, to avoid cold SSTOREs.
             if (c.affiliateMerkleRoot != bytes32(0)) d.affiliateMerkleRoot = c.affiliateMerkleRoot;
             if (c.merkleRoot != bytes32(0)) d.merkleRoot = c.merkleRoot;
-            if (c.signer != address(0)) {
-                if (!usePlatformSigner) d.signer = c.signer; // Only write if it is not the platform signer.
-            }
 
             emit MintCreated(c.edition, c.tier, scheduleNum, c);
         }
@@ -303,20 +320,18 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     /**
      * @inheritdoc ISuperMinterV1_1
      */
-    function mintTo(MintTo calldata p) public payable {
+    function mintTo(MintTo calldata p) public payable returns (uint256 fromTokenId) {
         MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
 
         /* ------------------- CHECKS AND UPDATES ------------------- */
 
-        // Check if the mint is open.
-        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
-            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
-        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
+        _requireMintOpen(d);
 
         // Perform the sub workflows depending on the mint mode.
         uint8 mode = d.mode;
         if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
         else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
+        else if (mode == PLATFORM_AIRDROP) revert InvalidMode();
 
         _incrementMinted(mode, d, p);
 
@@ -393,6 +408,31 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         l.unitPrice = f.unitPrice;
 
         emit Minted(p.edition, p.tier, p.scheduleNum, p.to, l, p.attributionId);
+
+        return l.fromTokenId;
+    }
+
+    /**
+     * @inheritdoc ISuperMinterV1_1
+     */
+    function platformAirdrop(PlatformAirdrop calldata p) public returns (uint256 fromTokenId) {
+        MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
+
+        /* ------------------- CHECKS AND UPDATES ------------------- */
+
+        _requireMintOpen(d);
+
+        if (d.mode != PLATFORM_AIRDROP) revert InvalidMode();
+        _verifyAndClaimPlatfromAidropSignature(d, p);
+
+        _incrementPlatformAirdropMinted(d, p);
+
+        /* ------------------------- MINT --------------------------- */
+
+        ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
+        fromTokenId = edition.airdrop(p.tier, p.to, p.signedQuantity);
+
+        emit PlatformAirdropped(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity, fromTokenId);
     }
 
     // Per edition mint parameter setters:
@@ -412,6 +452,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         MintData storage d = _getMintData(mintId);
         // If the tier is GA and the `mode` is `VERIFY_SIGNATURE`, we'll use `gaPrice[platform]`.
         if (tier == GA_TIER && d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
+        // Platform airdropped mints will not have a price.
+        if (d.mode == PLATFORM_AIRDROP) revert NotConfigurable();
         d.price = price;
         emit PriceSet(edition, tier, scheduleNum, price);
     }
@@ -510,6 +552,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         if (tier == GA_TIER) revert NotConfigurable();
         // Signature mints will have `type(uint32).max`.
         if (d.mode == VERIFY_SIGNATURE) revert NotConfigurable();
+        // Platform airdrops will have `type(uint32).max`.
+        if (d.mode == PLATFORM_AIRDROP) revert NotConfigurable();
         _validateMaxMintablePerAccount(value);
         d.maxMintablePerAccount = value;
         emit MaxMintablePerAccountSet(edition, tier, scheduleNum, value);
@@ -548,25 +592,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         _validateMerkleRoot(merkleRoot);
         d.merkleRoot = merkleRoot;
         emit MerkleRootSet(edition, tier, scheduleNum, merkleRoot);
-    }
-
-    /**
-     * @inheritdoc ISuperMinterV1_1
-     */
-    function setSigner(
-        address edition,
-        uint8 tier,
-        uint8 scheduleNum,
-        address signer
-    ) public onlyEditionOwnerOrAdmin(edition) {
-        uint256 mintId = LibOps.packId(edition, tier, scheduleNum);
-        MintData storage d = _getMintData(mintId);
-        if (d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
-        _validateSigner(signer);
-        bool usePlatformSigner = signer == address(1);
-        d.flags = LibOps.setFlagTo(d.flags, _USE_PLATFORM_SIGNER_FLAG, usePlatformSigner);
-        if (!usePlatformSigner) d.signer = signer;
-        emit SignerSet(edition, tier, scheduleNum, signer);
     }
 
     // Withdrawal functions:
@@ -689,6 +714,24 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 p.signedPrice,
                 p.signedDeadline,
                 p.affiliate
+            )));
+    }
+
+    /**
+     * @inheritdoc ISuperMinterV1_1
+     */
+    function computePlatformAirdropDigest(PlatformAirdrop calldata p) public view returns (bytes32) {
+        // prettier-ignore
+        return
+            _hashTypedData(keccak256(abi.encode(
+                PLATFORM_AIRDROP_TYPEHASH,
+                p.edition,
+                p.tier, 
+                p.scheduleNum,
+                keccak256(abi.encodePacked(p.to)),
+                p.signedQuantity,
+                p.signedClaimTicket,
+                p.signedDeadline
             )));
     }
 
@@ -851,8 +894,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         info.paused = _isPaused(d);
         info.affiliateMerkleRoot = d.affiliateMerkleRoot;
         info.merkleRoot = d.merkleRoot;
-        info.signer = _effectiveSigner(d);
-        info.usePlatformSigner = _usePlatformSigner(d);
+        info.signer = platformSigner[d.platform];
     }
 
     /**
@@ -937,14 +979,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      */
     function _validateMerkleRoot(bytes32 merkleRoot) internal pure {
         if (merkleRoot == bytes32(0)) revert MerkleRootIsEmpty();
-    }
-
-    /**
-     * @dev Validates that the signer is not the zero address.
-     * @param signer The signer.
-     */
-    function _validateSigner(address signer) internal pure {
-        if (signer == address(0)) revert SignerIsZeroAddress();
     }
 
     /**
@@ -1041,14 +1075,62 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
+     * @dev Increments the number minted in the mint and the number minted by the collector.
+     * @param d    The mint data storage pointer.
+     * @param p    The platform airdrop parameters.
+     */
+    function _incrementPlatformAirdropMinted(MintData storage d, PlatformAirdrop calldata p) internal {
+        unchecked {
+            uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
+            uint256 toLength = p.to.length;
+
+            // Increment the number minted in the mint.
+            uint256 n = uint256(d.minted) + toLength * uint256(p.signedQuantity); // The next `minted`.
+            if (n > d.maxMintable) revert ExceedsMintSupply();
+            d.minted = uint32(n);
+
+            // Increment the number minted by the collectors.
+            for (uint256 i; i != toLength; ++i) {
+                LibMap.Uint32Map storage m = _numberMinted[p.to[i]];
+                m.set(mintId, uint32(uint256(m.get(mintId)) + uint256(p.signedQuantity)));
+            }
+        }
+    }
+
+    /**
+     * @dev Requires that the mint is open and not paused.
+     * @param d    The mint data storage pointer.
+     */
+    function _requireMintOpen(MintData storage d) internal view {
+        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
+            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
+        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
+    }
+
+    /**
      * @dev Verify the signature, and mark the signed claim ticket as claimed.
      * @param d The mint data storage pointer.
      * @param p The mint-to parameters.
      */
     function _verifyAndClaimSignature(MintData storage d, MintTo calldata p) internal {
         if (p.quantity > p.signedQuantity) revert ExceedsSignedQuantity();
-        address signer = _effectiveSigner(d);
+        address signer = platformSigner[d.platform];
         if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computeMintToDigest(p), p.signature))
+            revert InvalidSignature();
+        if (block.timestamp > p.signedDeadline) revert SignatureExpired();
+        uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
+        if (!_claimsBitmaps[mintId].toggle(p.signedClaimTicket)) revert SignatureAlreadyUsed();
+    }
+
+    /**
+     * @dev Verify the platform airdrop signature, and mark the signed claim ticket as claimed.
+     * @param d The mint data storage pointer.
+     * @param p The platform airdrop parameters.
+     */
+    function _verifyAndClaimPlatfromAidropSignature(MintData storage d, PlatformAirdrop calldata p) internal {
+        // Unlike regular signature mints, platform airdrops only use `signedQuantity`.
+        address signer = platformSigner[d.platform];
+        if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computePlatformAirdropDigest(p), p.signature))
             revert InvalidSignature();
         if (block.timestamp > p.signedDeadline) revert SignatureExpired();
         uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
@@ -1209,23 +1291,5 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      */
     function _isPaused(MintData storage d) internal view returns (bool) {
         return d.flags & _MINT_PAUSED_FLAG != 0;
-    }
-
-    /**
-     * @dev Returns the effective signer.
-     * @param d The storage pointer to the mint data.
-     * @return The effective signer.
-     */
-    function _effectiveSigner(MintData storage d) internal view returns (address) {
-        return _usePlatformSigner(d) ? platformSigner[d.platform] : d.signer;
-    }
-
-    /**
-     * @dev Returns whether the platform signer is to be used instead.
-     * @param d The storage pointer to the mint data.
-     * @return Whether the platform signer is to be used instead.
-     */
-    function _usePlatformSigner(MintData storage d) internal view returns (bool) {
-        return d.flags & _USE_PLATFORM_SIGNER_FLAG != 0;
     }
 }
