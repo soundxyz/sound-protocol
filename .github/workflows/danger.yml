@@ -25,13 +25,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - uses: pnpm/action-setup@v2.0.1
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2.2.4
         with:
           version: latest
-      - name: Setup Node v16
-        uses: actions/setup-node@v2
+
+      - name: Setup Node v18
+        uses: actions/setup-node@v4
         with:
-          node-version: '16.x'
+          node-version: 18
           cache: 'pnpm'
 
       - name: Run Danger JS

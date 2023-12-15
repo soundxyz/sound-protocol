@@ -1,52 +1,51 @@
 name: Release
+
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
+
 jobs:
-    publish:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Master
-              uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0
-            - name: Use Node
-              uses: actions/setup-node@v2
-              with:
-                  node-version: "16.x"
-            - name: Install Foundry
-              uses: foundry-rs/foundry-toolchain@v1
-              with:
-                  version: nightly
-            - name: Cache pnpm modules
-              uses: actions/cache@v2
-              env:
-                  cache-name: cache-pnpm-modules
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-${{ hashFiles('./pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-
-            - name: install pnpm
-              run: npm i pnpm@^7.2.1 -g
-            - name: Install Dependencies
-              run: pnpm i
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
 
-            - name: Setup NPM credentials
-              run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-              env:
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: latest
 
-            - name: Create Release Pull Request or Publish to npm
-              id: changesets
-              uses: dotansimha/changesets-action@v1.3.3
-              with:
-                  publish: "pnpm release"
-                  commit: "chore(release): update monorepo packages versions"
-                  title: "Upcoming Release Changes"
-                  createGithubReleases: true
-                  githubReleaseName: ${{ steps.vars.outputs.date }}
-              env:
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Node v18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Set version variables
+        id: vars
+        shell: bash
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "date=$(date +"%B %d, %Y")" >> $GITHUB_OUTPUT
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: dotansimha/changesets-action@v1.3.3
+        with:
+          publish: 'pnpm release'
+          commit: 'chore(release): update monorepo packages versions'
+          title: 'Upcoming Release Changes'
+          createGithubReleases: true
+          githubReleaseName: ${{ steps.vars.outputs.date }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
