@@ -27,6 +27,11 @@ jobs:
           node-version: 18
           cache: 'pnpm'
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+            version: nightly
+
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile
 
