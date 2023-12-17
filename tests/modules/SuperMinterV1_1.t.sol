@@ -676,252 +676,148 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
     //     }
     // }
 
-    // function test_mintWithVariousFees(uint256) public {
-    //     SuperMinterV1_1Constants memory smc = _superMinterConstants();
-    //     address[] memory feeRecipients = _twoRandomUniqueAddresses();
+    function test_mintWithVariousFees(uint256) public {
+        SuperMinterV1_1Constants memory smc = _superMinterConstants();
+        address[] memory feeRecipients = _twoRandomUniqueAddresses();
 
-    //     ISuperMinterV1_1.MintCreation memory c;
-    //     c.maxMintable = type(uint32).max;
-    //     c.platform = _randomNonZeroAddress();
-    //     c.edition = address(edition);
-    //     c.tier = 1;
-    //     c.price = uint96(_bound(_random(), 0, type(uint96).max));
-    //     c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
-    //     c.startTime = 0;
-    //     c.endTime = uint32(block.timestamp + 1000);
-    //     c.maxMintablePerAccount = type(uint32).max;
-    //     bytes32[] memory affiliateLeaves;
-    //     if (_random() % 2 == 0) {
-    //         affiliateLeaves = new bytes32[](2);
-    //         affiliateLeaves[0] = keccak256(abi.encodePacked(feeRecipients[0]));
-    //         affiliateLeaves[1] = keccak256(abi.encodePacked(feeRecipients[1]));
-    //         c.affiliateMerkleRoot = merkle.getRoot(affiliateLeaves);
-    //     }
-    //     assertEq(sm.createEditionMint(c), 0);
+        // Create a tier 1 mint schedule, without any affiliate root.
+        ISuperMinterV1_1.MintCreation memory c;
+        c.maxMintable = type(uint32).max;
+        c.platform = _randomNonZeroAddress();
+        c.edition = address(edition);
+        c.tier = 1;
+        c.price = uint96(_bound(_random(), 0, type(uint96).max));
+        c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
+        c.startTime = 0;
+        c.endTime = uint32(block.timestamp + 1000);
+        c.maxMintablePerAccount = type(uint32).max;
+        assertEq(sm.createEditionMint(c), 0);
 
-    //     ISuperMinterV1_1.MintInfo memory mintInfo = sm.mintInfo(address(edition), 1, 0);
-    //     assertEq(mintInfo.price, c.price);
-    //     assertEq(mintInfo.affiliateFeeBPS, c.affiliateFeeBPS);
+        // Set the tier 1 platform fee config.
+        ISuperMinterV1_1.PlatformFeeConfig memory pfc;
 
-    //     ISuperMinterV1_1.PlatformFeeConfig memory pfc;
-    //     pfc.perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
-    //     pfc.perMintFlat = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-    //     pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
-    //     pfc.active = true;
-    //     vm.prank(c.platform);
-    //     sm.setPlatformFeeConfig(1, pfc);
+        pfc.perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
+        pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
 
-    //     ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
+        pfc.artistReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+        pfc.affiliateReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+        pfc.platformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
-    //     ISuperMinterV1_1.MintTo memory p;
-    //     p.edition = address(edition);
-    //     p.tier = 1;
-    //     p.scheduleNum = 0;
-    //     p.to = address(this);
-    //     p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
-    //     bool affiliated = _random() % 2 == 0;
-    //     if (affiliated) {
-    //         p.affiliate = feeRecipients[1];
-    //         if (affiliateLeaves.length != 0) p.affiliateProof = merkle.getProof(affiliateLeaves, 1);
-    //     } else if (_random() % 2 == 0) {
-    //         // Use wrong affiliate proof.
-    //         if (affiliateLeaves.length != 0) {
-    //             p.affiliateProof = merkle.getProof(affiliateLeaves, 0);
-    //             if (_random() % 4 == 0) {
-    //                 p.affiliate = feeRecipients[1];
-    //                 p.quantity = uint32(_bound(_random(), 1, 8));
-    //                 tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-    //                 vm.expectRevert(ISuperMinterV1_1.InvalidAffiliate.selector);
-    //                 vm.deal(address(this), type(uint192).max);
-    //                 sm.mintTo{ value: tpaf.total }(p);
-    //                 return;
-    //             }
-    //         }
-    //     }
+        pfc.thresholdPrice = uint96(_bound(_random(), 0, type(uint96).max));
 
-    //     tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-    //     _checkTotalPriceAndFees(
-    //         tpaf,
-    //         p.quantity,
-    //         pfc.perTxFlat,
-    //         pfc.perMintFlat,
-    //         pfc.perMintBPS,
-    //         c.affiliateFeeBPS,
-    //         c.price
-    //     );
+        pfc.thresholdArtistReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+        pfc.thresholdAffiliateReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+        pfc.thresholdPlatformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
-    //     p.quantity = uint32(_bound(_random(), 1, 8));
-    //     tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-    //     vm.deal(address(this), type(uint192).max);
+        pfc.active = true;
+        vm.prank(c.platform);
+        sm.setPlatformFeeConfig(1, pfc);
 
-    //     // Mint 2 times.
-    //     sm.mintTo{ value: tpaf.total }(p);
-    //     sm.mintTo{ value: tpaf.total }(p);
+        // Prepare the MintTo struct witha a random quantity.
+        ISuperMinterV1_1.MintTo memory p;
+        p.edition = address(edition);
+        p.tier = 1;
+        p.scheduleNum = 0;
+        p.to = address(this);
+        p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
 
-    //     if (affiliated) {
-    //         assertEq(sm.affiliateFeesAccrued(p.affiliate), tpaf.affiliateFee * 2);
-    //         assertEq(sm.platformFeesAccrued(c.platform), tpaf.platformFee * 2);
-    //         assertEq(address(sm).balance, (tpaf.affiliateFee + tpaf.platformFee) * 2);
-    //         assertEq(address(edition).balance, (tpaf.total - tpaf.platformFee - tpaf.affiliateFee) * 2);
+        ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
+        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
+        if (c.price <= pfc.thresholdPrice) {
+            assertEq(tpaf.affiliateReward, pfc.affiliateReward * uint256(p.quantity));
+        } else {
+            assertEq(tpaf.affiliateReward, pfc.thresholdAffiliateReward * uint256(p.quantity));
+        }
 
-    //         vm.expectRevert(ISuperMinterV1_1.PlatformFeeAddressIsZero.selector);
-    //         sm.withdrawForPlatform(c.platform);
+        // Use a lower, non-zero quantity for mint testing.
+        p.quantity = uint32(_bound(_random(), 1, 8));
+        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
+        if (c.price <= pfc.thresholdPrice) {
+            assertEq(tpaf.affiliateReward, pfc.affiliateReward * uint256(p.quantity));
+        } else {
+            assertEq(tpaf.affiliateReward, pfc.thresholdAffiliateReward * uint256(p.quantity));
+        }
 
-    //         vm.prank(c.platform);
-    //         sm.setPlatformFeeAddress(feeRecipients[0]);
-    //         assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
+        // Just to ensure we have enough ETH to mint.
+        vm.deal(address(this), type(uint192).max);
 
-    //         uint256 balanceBefore = address(p.affiliate).balance;
-    //         sm.withdrawForAffiliate(p.affiliate);
-    //         assertEq(address(p.affiliate).balance, balanceBefore + tpaf.affiliateFee * 2);
-    //         assertEq(address(sm).balance, tpaf.platformFee * 2);
+        // Test the affiliated path.
+        if (_random() % 2 == 0) {
+            p.affiliate = _randomNonZeroAddress();
 
-    //         balanceBefore = address(feeRecipients[0]).balance;
-    //         sm.withdrawForPlatform(c.platform);
-    //         assertEq(address(feeRecipients[0]).balance, balanceBefore + tpaf.platformFee * 2);
-    //         assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-    //         assertEq(address(sm).balance, 0);
-    //     } else {
-    //         assertEq(sm.affiliateFeesAccrued(p.affiliate), 0);
-    //         assertEq(sm.platformFeesAccrued(c.platform), tpaf.platformFee * 2);
-    //         assertEq(address(sm).balance, tpaf.platformFee * 2);
-    //         assertEq(address(edition).balance, (tpaf.total - tpaf.platformFee) * 2);
-    //     }
-    // }
+            vm.expectEmit(true, true, true, true);
+            ISuperMinterV1_1.MintedLogData memory l;
+            {
+                l.quantity = p.quantity;
+                l.fromTokenId = 1;
+                l.affiliate = p.affiliate;
+                l.affiliated = true;
+                l.requiredEtherValue = tpaf.total;
+                l.unitPrice = tpaf.unitPrice;
+                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateBPSFee - tpaf.affiliateReward;
+                l.finalAffiliateFee = tpaf.affiliateBPSFee + tpaf.affiliateReward;
+                l.finalPlatformFee = tpaf.platformFee;
+            }
+            emit Minted(address(edition), 1, 0, address(this), l, 0);
 
-    // function testMintWithIncentives(uint256) public {
-    //     SuperMinterV1_1Constants memory smc = _superMinterConstants();
-    //     address[] memory feeRecipients = _twoRandomUniqueAddresses();
+            sm.mintTo{ value: tpaf.total }(p);
+            assertEq(l.finalPlatformFee + l.finalAffiliateFee + l.finalArtistFee, tpaf.total);
+            assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
+            assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
+            assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
+            assertEq(address(edition).balance, l.finalArtistFee);
 
-    //     // Create a tier 1 mint schedule, without any affiliate root.
-    //     ISuperMinterV1_1.MintCreation memory c;
-    //     c.maxMintable = type(uint32).max;
-    //     c.platform = _randomNonZeroAddress();
-    //     c.edition = address(edition);
-    //     c.tier = 1;
-    //     c.price = uint96(_bound(_random(), 0, type(uint96).max));
-    //     c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
-    //     c.startTime = 0;
-    //     c.endTime = uint32(block.timestamp + 1000);
-    //     c.maxMintablePerAccount = type(uint32).max;
-    //     assertEq(sm.createEditionMint(c), 0);
+            // Perform the withdrawals and check if the balances tally.
+            vm.prank(c.platform);
+            sm.setPlatformFeeAddress(feeRecipients[0]);
+            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
 
-    //     // Set the tier 1 platform fee config.
-    //     ISuperMinterV1_1.PlatformFeeConfig memory pfc;
+            uint256 balanceBefore = address(p.affiliate).balance;
+            sm.withdrawForAffiliate(p.affiliate);
+            assertEq(address(p.affiliate).balance, balanceBefore + l.finalAffiliateFee);
 
-    //     pfc.perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
-    //     pfc.perMintFlat = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-    //     pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
-    //     pfc.affiliateIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat));
-    //     pfc.cheapMintIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive));
-    //     pfc.cheapMintIncentiveThreshold = uint96(_bound(_random(), 0, pfc.cheapMintIncentive * 2));
-    //     pfc.active = true;
-    //     vm.prank(c.platform);
-    //     sm.setPlatformFeeConfig(1, pfc);
+            balanceBefore = address(feeRecipients[0]).balance;
+            sm.withdrawForPlatform(c.platform);
+            assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
+            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
+            assertEq(address(sm).balance, 0);
+        } else {
+            p.affiliate = address(0);
 
-    //     // Prepare the MintTo struct witha a random quantity.
-    //     ISuperMinterV1_1.MintTo memory p;
-    //     p.edition = address(edition);
-    //     p.tier = 1;
-    //     p.scheduleNum = 0;
-    //     p.to = address(this);
-    //     p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
+            vm.expectEmit(true, true, true, true);
+            ISuperMinterV1_1.MintedLogData memory l;
+            {
+                l.quantity = p.quantity;
+                l.fromTokenId = 1;
+                l.affiliate = address(0);
+                l.affiliated = false;
+                l.requiredEtherValue = tpaf.total;
+                l.unitPrice = tpaf.unitPrice;
+                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateReward;
+                l.finalAffiliateFee = 0;
+                l.finalPlatformFee = tpaf.platformFee + tpaf.affiliateReward;
+            }
+            emit Minted(address(edition), 1, 0, address(this), l, 0);
 
-    //     ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
-    //     tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-    //     assertEq(tpaf.affiliateIncentive, pfc.affiliateIncentive * uint256(p.quantity));
+            sm.mintTo{ value: tpaf.total }(p);
+            assertEq(l.finalPlatformFee + l.finalAffiliateFee + l.finalArtistFee, tpaf.total);
+            assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
+            assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
+            assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
+            assertEq(address(edition).balance, l.finalArtistFee);
 
-    //     // Use a lower, non-zero quantity for mint testing.
-    //     p.quantity = uint32(_bound(_random(), 1, 8));
-    //     tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-    //     assertEq(tpaf.affiliateIncentive, pfc.affiliateIncentive * uint256(p.quantity));
+            // Perform the withdrawals and check if the balances tally.
+            vm.prank(c.platform);
+            sm.setPlatformFeeAddress(feeRecipients[0]);
+            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
 
-    //     // Just to ensure we have enough ETH to mint.
-    //     vm.deal(address(this), type(uint192).max);
-
-    //     // Test the affiliated path.
-    //     if (_random() % 2 == 0) {
-    //         p.affiliate = _randomNonZeroAddress();
-
-    //         vm.expectEmit(true, true, true, true);
-    //         ISuperMinterV1_1.MintedLogData memory l;
-    //         {
-    //             l.quantity = p.quantity;
-    //             l.fromTokenId = 1;
-    //             l.affiliate = p.affiliate;
-    //             l.affiliated = true;
-    //             l.requiredEtherValue = tpaf.total;
-    //             l.unitPrice = tpaf.unitPrice;
-    //             uint256 finalCheapMintIncentive;
-    //             if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold)
-    //                 finalCheapMintIncentive = tpaf.cheapMintIncentive;
-    //             l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateFee + finalCheapMintIncentive;
-    //             l.finalPlatformFee = tpaf.platformFee - tpaf.affiliateIncentive - finalCheapMintIncentive;
-    //             l.finalAffiliateIncentive = tpaf.affiliateIncentive;
-    //             l.finalAffiliateFee = tpaf.affiliateFee + tpaf.affiliateIncentive;
-    //             l.finalCheapMintIncentive = finalCheapMintIncentive;
-    //         }
-    //         emit Minted(address(edition), 1, 0, address(this), l, 0);
-
-    //         sm.mintTo{ value: tpaf.total }(p);
-    //         assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
-    //         assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
-    //         assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
-    //         assertEq(address(edition).balance, l.finalArtistFee);
-
-    //         // Perform the withdrawals and check if the balances tally.
-    //         vm.prank(c.platform);
-    //         sm.setPlatformFeeAddress(feeRecipients[0]);
-    //         assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-
-    //         uint256 balanceBefore = address(p.affiliate).balance;
-    //         sm.withdrawForAffiliate(p.affiliate);
-    //         assertEq(address(p.affiliate).balance, balanceBefore + l.finalAffiliateFee);
-
-    //         balanceBefore = address(feeRecipients[0]).balance;
-    //         sm.withdrawForPlatform(c.platform);
-    //         assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
-    //         assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-    //         assertEq(address(sm).balance, 0);
-    //     } else {
-    //         p.affiliate = address(0);
-
-    //         vm.expectEmit(true, true, true, true);
-    //         ISuperMinterV1_1.MintedLogData memory l;
-    //         {
-    //             l.quantity = p.quantity;
-    //             l.fromTokenId = 1;
-    //             l.affiliate = address(0);
-    //             l.affiliated = false;
-    //             l.requiredEtherValue = tpaf.total;
-    //             l.unitPrice = tpaf.unitPrice;
-    //             uint256 finalCheapMintIncentive;
-    //             if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold)
-    //                 finalCheapMintIncentive = tpaf.cheapMintIncentive;
-    //             l.finalArtistFee = tpaf.total - tpaf.platformFee + finalCheapMintIncentive;
-    //             l.finalPlatformFee = tpaf.platformFee - finalCheapMintIncentive;
-    //             l.finalAffiliateFee = 0;
-    //             l.finalCheapMintIncentive = finalCheapMintIncentive;
-    //         }
-    //         emit Minted(address(edition), 1, 0, address(this), l, 0);
-
-    //         sm.mintTo{ value: tpaf.total }(p);
-    //         assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
-    //         assertEq(address(sm).balance, l.finalPlatformFee);
-    //         assertEq(address(edition).balance, l.finalArtistFee);
-
-    //         // Perform the withdrawals and check if the balances tally.
-    //         vm.prank(c.platform);
-    //         sm.setPlatformFeeAddress(feeRecipients[0]);
-    //         assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-
-    //         uint256 balanceBefore = address(feeRecipients[0]).balance;
-    //         sm.withdrawForPlatform(c.platform);
-    //         assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
-    //         assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-    //         assertEq(address(sm).balance, 0);
-    //     }
-    // }
+            uint256 balanceBefore = address(feeRecipients[0]).balance;
+            sm.withdrawForPlatform(c.platform);
+            assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
+            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
+            assertEq(address(sm).balance, 0);
+        }
+    }
 
     // function _checkTotalPriceAndFees(
     //     ISuperMinterV1_1.TotalPriceAndFees memory tpaf,

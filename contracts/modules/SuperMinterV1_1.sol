@@ -355,9 +355,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         {
             if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
 
-            // Deduct the platform fees (both BPS and flat) first.
             // We'll deduct the affiliate BPS fees in the affiliate fees calculation step.
-            l.finalArtistFee = f.subTotal - f.platformBPSFee;
+            l.finalArtistFee = f.subTotal + f.artistReward - f.platformBPSFee;
             // Initialize to the platform fee.
             // (inclusive of `platformTxFlatFee`, `platformBPSFee`, and `platformReward`).
             l.finalPlatformFee = f.platformFee;
