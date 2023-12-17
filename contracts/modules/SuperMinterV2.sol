@@ -337,24 +337,29 @@ contract SuperMinterV2 is ISuperMinterV2, EIP712 {
         /* ----------------- COMPUTE AND ACCRUE FEES ---------------- */
 
         MintedLogData memory l;
-        // Blocking same address self referral is left curved, but we do anyway
+        // Blocking same address self referral is left curved, but we do anyway.
         l.affiliate = p.to == p.affiliate ? address(0) : p.affiliate;
+        // Affiliate check.
         l.affiliated = _isAffiliatedWithProof(d, l.affiliate, p.affiliateProof);
 
         TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice, l.affiliated);
 
         if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
+
         l.finalArtistFee = f.finalArtistFee;
         l.finalPlatformFee = f.finalPlatformFee;
         l.finalAffiliateFee = f.finalAffiliateFee;
 
-        // Platform and affilaite fees are accrued mappings
-        // Artist earnings are directly forwarded to the nft contract in mint call below
-        if (l.finalAffiliateFee != 0) {
-            affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
-        }
-        if (l.finalPlatformFee != 0) {
-            platformFeesAccrued[d.platform] += l.finalPlatformFee;
+        // Platform and affilaite fees are accrued mappings.
+        // Artist earnings are directly forwarded to the nft contract in mint call below.
+        // Overflow not possible since all fees are uint96s.
+        unchecked {
+            if (l.finalAffiliateFee != 0) {
+                affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
+            }
+            if (l.finalPlatformFee != 0) {
+                platformFeesAccrued[d.platform] += l.finalPlatformFee;
+            }
         }
 
         /* ------------------------- MINT --------------------------- */
@@ -958,7 +963,7 @@ contract SuperMinterV2 is ISuperMinterV2, EIP712 {
             LibOps.or(
                 LibOps.or(
                     c.platformTxFlatFee > MAX_PLATFORM_PER_TX_FLAT_FEE,
-                    c.platformMintBPSFee > MAX_PLATFORM_PER_MINT_FEE_BPS
+                    c.platformMintFeeBPS > MAX_PLATFORM_PER_MINT_FEE_BPS
                 ),
                 LibOps.or(
                     c.artistMintReward > MAX_PER_MINT_REWARD,
@@ -1154,45 +1159,43 @@ contract SuperMinterV2 is ISuperMinterV2, EIP712 {
         // The quantity is a uint32. Multiplications between a uint96 and uint32 won't overflow.
         unchecked {
             PlatformFeeConfig memory c = effectivePlatformFeeConfig(d.platform, tier);
-            // The actual unit price per token.
-            uint256 unitPrice;
+
             // For signature mints, even if it is GA tier, we will use the signed price.
             if (d.mode == VERIFY_SIGNATURE) {
                 if (signedPrice < d.price) revert SignedPriceTooLow(); // Enforce the price floor.
-                unitPrice = signedPrice;
+                f.unitPrice = signedPrice;
             } else if (tier == GA_TIER) {
-                unitPrice = gaPrice[d.platform]; // Else if GA tier, use `gaPrice[platform]`.
+                f.unitPrice = gaPrice[d.platform]; // Else if GA tier, use `gaPrice[platform]`.
             } else {
-                unitPrice = d.price; // Else, use the `price`.
+                f.unitPrice = d.price; // Else, use the `price`.
             }
-            f.unitPrice = unitPrice;
 
             // The total price before any additive fees.
-            f.subTotal = unitPrice * uint256(quantity);
+            f.subTotal = f.unitPrice * uint256(quantity);
 
             // Artist earns subTotal minus any basis points (BPS) split with affiliates and platform
             f.finalArtistFee = f.subTotal;
 
-            // platformBPSFee and affiliateBPSFee come from the artist sub total
+            // `affiliateBPSFee` is deducted from the `finalArtistFee`.
             if (d.affiliateFeeBPS != 0 && hasValidAffiliate) {
                 uint256 affiliateBPSFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
                 f.finalArtistFee -= affiliateBPSFee;
                 f.finalAffiliateFee = affiliateBPSFee;
             }
-
-            if (c.platformMintBPSFee != 0) {
-                uint256 platformBPSFee = LibOps.rawMulDiv(f.subTotal, c.platformMintBPSFee, BPS_DENOMINATOR);
+            // `platformBPSFee` is deducted from the `finalArtistFee`.
+            if (c.platformMintFeeBPS != 0) {
+                uint256 platformBPSFee = LibOps.rawMulDiv(f.subTotal, c.platformMintFeeBPS, BPS_DENOMINATOR);
                 f.finalArtistFee -= platformBPSFee;
                 f.finalPlatformFee = platformBPSFee;
             }
 
-            // Protocol rewards are additive to unitPrice and paid by the buyer.
-            // There are 2 sets of rewards, one for prices below thresholdPrice and one for prices above.
-            if (unitPrice <= c.thresholdPrice) {
+            // Protocol rewards are additive to `unitPrice` and paid by the buyer.
+            // There are 2 sets of rewards, one for prices below `thresholdPrice` and one for prices above.
+            if (f.unitPrice <= c.thresholdPrice) {
                 f.finalArtistFee += c.artistMintReward * uint256(quantity);
                 f.finalPlatformFee += c.platformMintReward * uint256(quantity);
 
-                // The platform is the affiliate if no affiliate is provided
+                // The platform is the affiliate if no affiliate is provided.
                 if (hasValidAffiliate) {
                     f.finalAffiliateFee += c.affiliateMintReward * uint256(quantity);
                 } else {
@@ -1210,7 +1213,7 @@ contract SuperMinterV2 is ISuperMinterV2, EIP712 {
                 }
             }
 
-            // per-transaction flat fee.
+            // Per-transaction flat fee.
             f.finalPlatformFee += c.platformTxFlatFee;
 
             // The total is the final value which the minter has to pay. It includes all fees.

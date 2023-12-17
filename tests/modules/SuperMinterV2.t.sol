@@ -570,7 +570,7 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
         ISuperMinterV2.PlatformFeeConfig memory c;
         c.platformTxFlatFee = perTxFlat;
         c.platformMintReward = platformReward;
-        c.platformMintBPSFee = perMintBPS;
+        c.platformMintFeeBPS = perMintBPS;
         c.active = active;
         sm.setDefaultPlatformFeeConfig(c);
     }
@@ -585,7 +585,7 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
         ISuperMinterV2.PlatformFeeConfig memory c;
         c.platformTxFlatFee = perTxFlat;
         c.platformMintReward = platformReward;
-        c.platformMintBPSFee = perMintBPS;
+        c.platformMintFeeBPS = perMintBPS;
         c.active = active;
         sm.setPlatformFeeConfig(tier, c);
     }
@@ -630,7 +630,7 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
     ) internal {
         assertEq(result.platformTxFlatFee, perTxFlat);
         assertEq(result.platformMintReward, platformReward);
-        assertEq(result.platformMintBPSFee, perMintBPS);
+        assertEq(result.platformMintFeeBPS, perMintBPS);
         assertEq(result.active, active);
     }
 
@@ -705,7 +705,7 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
         ISuperMinterV2.PlatformFeeConfig memory pfc;
         {
             pfc.platformTxFlatFee = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
-            pfc.platformMintBPSFee = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
+            pfc.platformMintFeeBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
 
             pfc.artistMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
             pfc.affiliateMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));

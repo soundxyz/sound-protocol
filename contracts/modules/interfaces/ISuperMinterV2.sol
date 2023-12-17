@@ -179,7 +179,7 @@ interface ISuperMinterV2 is IERC165 {
         // The per-transaction flat fee.
         uint96 platformTxFlatFee;
         // The per-token fee BPS.
-        uint16 platformMintBPSFee;
+        uint16 platformMintFeeBPS;
         // Whether the fees are active.
         bool active;
     }
