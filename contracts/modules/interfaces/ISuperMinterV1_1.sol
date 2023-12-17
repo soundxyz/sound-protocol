@@ -116,9 +116,6 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 subTotal;
         // The price per token.
         uint256 unitPrice;
-        // The total platform fees.
-        // (inclusive of `platformTxFlatFee`, `platformBPSFee`, and `platformReward`).
-        uint256 platformFee;
         // The platform per-transaction flat fees.
         uint256 platformTxFlatFee;
         // The total platform per-token BPS fees.

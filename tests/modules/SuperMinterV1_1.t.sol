@@ -768,9 +768,9 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             l.affiliated = true;
             l.requiredEtherValue = tpaf.total;
             l.unitPrice = tpaf.unitPrice;
-            l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateBPSFee - tpaf.affiliateReward;
+            l.finalArtistFee = tpaf.total - tpaf.platformTxFlatFee - tpaf.platformBPSFee - tpaf.affiliateBPSFee - tpaf.platformReward - tpaf.affiliateReward;
             l.finalAffiliateFee = tpaf.affiliateBPSFee + tpaf.affiliateReward;
-            l.finalPlatformFee = tpaf.platformFee;
+            l.finalPlatformFee = tpaf.platformTxFlatFee + tpaf.platformBPSFee + tpaf.platformReward;
 
             emit Minted(address(edition), 1, 0, address(this), l, 0);
         } else {
@@ -784,9 +784,9 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             l.affiliated = false;
             l.requiredEtherValue = tpaf.total;
             l.unitPrice = tpaf.unitPrice;
-            l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateReward;
+            l.finalArtistFee = tpaf.total - tpaf.platformTxFlatFee - tpaf.platformBPSFee - tpaf.affiliateBPSFee - tpaf.platformReward - tpaf.affiliateReward;
             l.finalAffiliateFee = 0;
-            l.finalPlatformFee = tpaf.platformFee + tpaf.affiliateReward;
+            l.finalPlatformFee = tpaf.platformTxFlatFee + tpaf.platformBPSFee + tpaf.platformReward + tpaf.affiliateReward;
 
             emit Minted(address(edition), 1, 0, address(this), l, 0);
         }

@@ -358,8 +358,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             // We'll deduct the affiliate BPS fees in the affiliate fees calculation step.
             l.finalArtistFee = f.subTotal + f.artistReward - f.platformBPSFee;
             // Initialize to the platform fee.
-            // (inclusive of `platformTxFlatFee`, `platformBPSFee`, and `platformReward`).
-            l.finalPlatformFee = f.platformFee;
+            l.finalPlatformFee = f.platformTxFlatFee + f.platformBPSFee + f.platformReward;
             // Yeah, we know it's left curved.
             l.affiliate = p.to == p.affiliate ? address(0) : p.affiliate;
 
@@ -1191,9 +1190,16 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 unitPrice = d.price; // Else, use the `price`.
             }
             f.unitPrice = unitPrice;
+
             // The artist will receive the remaining after all BPS fees are deducted from sub total.
             // The minter will have to pay the sub total plus any flat fees.
             f.subTotal = unitPrice * uint256(quantity);
+
+            // BPS fees are to be deducted from the sub total.
+            f.platformBPSFee = LibOps.rawMulDiv(f.subTotal, c.perMintBPS, BPS_DENOMINATOR);
+            f.affiliateBPSFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
+
+            // Flat fees, additive to the sub total, include platformTxFlatFee, and rewards
 
             // Set the rewards depending on the `unitPrice`.
             if (unitPrice <= c.thresholdPrice) {
@@ -1205,18 +1211,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 f.affiliateReward = c.thresholdAffiliateReward * uint256(quantity);
                 f.platformReward = c.thresholdPlatformReward * uint256(quantity);
             }
-
-            // Sum the total flat fees for mints, and the transaction flat fee.
             f.platformTxFlatFee = c.perTxFlat;
-            // Platform BPS fees are to be deducted from the sub total.
-            f.platformBPSFee = LibOps.rawMulDiv(f.subTotal, c.perMintBPS, BPS_DENOMINATOR);
-            // The platform fee includes BPS fees deducted from sub total,
-            // and flat fees added to sub total.
-            f.platformFee = f.platformBPSFee + f.platformTxFlatFee + f.platformReward;
-
-            // Affiliate BPS fee is to be deducted from the sub total.
-            // Will be conditionally set to zero during mint if not affiliated.
-            f.affiliateBPSFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
 
             // The total is the final value which the minter has to pay. It includes all fees.
             f.total = f.subTotal + f.platformTxFlatFee + f.artistReward + f.affiliateReward + f.platformReward;
