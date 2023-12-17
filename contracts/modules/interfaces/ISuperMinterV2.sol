@@ -116,7 +116,7 @@ interface ISuperMinterV2 is IERC165 {
         uint256 subTotal;
         // The price per token.
         uint256 unitPrice;
-         // The final artist fee (inclusive of `finalArtistReward`).
+        // The final artist fee (inclusive of `finalArtistReward`).
         uint256 finalArtistFee;
         // The total affiliate fee (inclusive of `finalAffiliateReward`).
         uint256 finalAffiliateFee;
@@ -874,7 +874,7 @@ interface ISuperMinterV2 is IERC165 {
      * @param scheduleNum      The edition-tier schedule number.
      * @param quantity         How many tokens to mint.
      * @param signedPrice      The signed price.
-    * @param hasValidAffiliate Whether there is a valid affiliate for the mint.
+     * @param hasValidAffiliate Whether there is a valid affiliate for the mint.
      * @return A struct containing the total price and fees.
      */
     function totalPriceAndFeesWithSignedPrice(

@@ -737,14 +737,25 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
 
         ISuperMinterV2.MintedLogData memory l;
         ISuperMinterV2.TotalPriceAndFees memory tpaf;
-            
+        {
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, _random() % 2 == 0);
+            assertEq(tpaf.subTotal, c.price * uint256(p.quantity));
+            assertGt(tpaf.total + 1, tpaf.subTotal);
+
+            // Use a lower, non-zero quantity for mint testing.
+            p.quantity = uint32(_bound(_random(), 1, 8));
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, _random() % 2 == 0);
+            assertEq(tpaf.subTotal, c.price * uint256(p.quantity));
+            assertGt(tpaf.total + 1, tpaf.subTotal);
+        }
+
         // Test the affiliated path.
         if (_random() % 2 == 0) {
             p.affiliate = _randomNonZeroAddress();
 
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, true);
+
             vm.expectEmit(true, true, true, true);
-            
-            tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity, true);
 
             l.quantity = p.quantity;
             l.fromTokenId = 1;
@@ -756,13 +767,13 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
             l.finalAffiliateFee = tpaf.finalAffiliateFee;
             l.finalPlatformFee = tpaf.finalPlatformFee;
 
-            emit Minted(address(edition), 1, 0, address(this), l, 0);
+            emit Minted(address(edition), c.tier, 0, address(this), l, 0);
         } else {
             p.affiliate = address(0);
 
-            vm.expectEmit(true, true, true, true);
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, false);
 
-            tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity, true);
+            vm.expectEmit(true, true, true, true);
 
             l.quantity = p.quantity;
             l.fromTokenId = 1;
@@ -774,7 +785,7 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
             l.finalAffiliateFee = 0;
             l.finalPlatformFee = tpaf.finalPlatformFee;
 
-            emit Minted(address(edition), 1, 0, address(this), l, 0);
+            emit Minted(address(edition), c.tier, 0, address(this), l, 0);
         }
 
         sm.mintTo{ value: tpaf.total }(p);
