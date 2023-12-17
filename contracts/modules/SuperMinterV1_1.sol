@@ -1197,14 +1197,14 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             f.subTotal = unitPrice * uint256(quantity);
 
             // Set the rewards depending on the `unitPrice`.
-            if (unitPrice >= c.thresholdPrice) {
-                f.artistReward = c.thresholdArtistReward * uint256(quantity);
-                f.affiliateReward = c.thresholdAffiliateReward * uint256(quantity);
-                f.platformReward = c.thresholdPlatformReward * uint256(quantity);
-            } else {
+            if (unitPrice <= c.thresholdPrice) {
                 f.artistReward = c.artistReward * uint256(quantity);
                 f.affiliateReward = c.affiliateReward * uint256(quantity);
                 f.platformReward = c.platformReward * uint256(quantity);
+            } else {
+                f.artistReward = c.thresholdArtistReward * uint256(quantity);
+                f.affiliateReward = c.thresholdAffiliateReward * uint256(quantity);
+                f.platformReward = c.thresholdPlatformReward * uint256(quantity);
             }
 
             // Sum the total flat fees for mints, and the transaction flat fee.
