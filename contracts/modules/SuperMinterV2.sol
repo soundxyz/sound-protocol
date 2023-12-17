@@ -1173,7 +1173,7 @@ contract SuperMinterV2 is ISuperMinterV2, EIP712 {
             // The total price before any additive fees.
             f.subTotal = f.unitPrice * uint256(quantity);
 
-            // Artist earns subTotal minus any basis points (BPS) split with affiliates and platform
+            // Artist earns `subTotal` minus any basis points (BPS) split with affiliates and platform
             f.finalArtistFee = f.subTotal;
 
             // `affiliateBPSFee` is deducted from the `finalArtistFee`.
