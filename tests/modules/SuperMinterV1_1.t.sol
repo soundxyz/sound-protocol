@@ -500,181 +500,187 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         assertEq(edition.balanceOf(address(this)), expectedNFTBalance);
     }
 
-    // function test_platformFeeConfig() public {
-    //     uint8 tier = 12;
+    function test_platformFeeConfig() public {
+        uint8 tier = 12;
 
-    //     _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
-    //     _checkDefaultPlatformFeeConfig(0, 0, 0, false);
+        _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
+        _checkDefaultPlatformFeeConfig(0, 0, 0, false);
 
-    //     _setDefaultPlatformFeeConfig(1, 2, 3, true);
-    //     _checkDefaultPlatformFeeConfig(1, 2, 3, true);
-    //     _checkEffectivePlatformFeeConfig(tier, 1, 2, 3, true);
-    //     _setDefaultPlatformFeeConfig(1, 2, 3, false);
-    //     _checkDefaultPlatformFeeConfig(1, 2, 3, false);
-    //     _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
+        _setDefaultPlatformFeeConfig(1, 2, 3, true);
+        _checkDefaultPlatformFeeConfig(1, 2, 3, true);
+        _checkEffectivePlatformFeeConfig(tier, 1, 2, 3, true);
+        _setDefaultPlatformFeeConfig(1, 2, 3, false);
+        _checkDefaultPlatformFeeConfig(1, 2, 3, false);
+        _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
 
-    //     _setPlatformFeeConfig(tier, 11, 22, 33, true);
-    //     _checkEffectivePlatformFeeConfig(tier, 11, 22, 33, true);
-    //     _setPlatformFeeConfig(tier, 11, 22, 33, false);
-    //     _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
-    //     _setDefaultPlatformFeeConfig(1, 2, 3, true);
-    //     _checkEffectivePlatformFeeConfig(tier, 1, 2, 3, true);
-    //     _setPlatformFeeConfig(tier, 11, 22, 33, true);
-    //     _checkEffectivePlatformFeeConfig(tier, 11, 22, 33, true);
-    // }
+        _setPlatformFeeConfig(tier, 11, 22, 33, true);
+        _checkEffectivePlatformFeeConfig(tier, 11, 22, 33, true);
+        _setPlatformFeeConfig(tier, 11, 22, 33, false);
+        _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
+        _setDefaultPlatformFeeConfig(1, 2, 3, true);
+        _checkEffectivePlatformFeeConfig(tier, 1, 2, 3, true);
+        _setPlatformFeeConfig(tier, 11, 22, 33, true);
+        _checkEffectivePlatformFeeConfig(tier, 11, 22, 33, true);
+    }
 
-    // function test_platformFeeConfig(uint256) public {
-    //     SuperMinterV1_1Constants memory smc = _superMinterConstants();
-    //     uint96 perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE * 2));
-    //     uint96 perMintFlat = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD * 2));
-    //     uint16 perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS * 2));
+    function test_platformFeeConfig(uint256) public {
+        SuperMinterV1_1Constants memory smc = _superMinterConstants();
+        uint96 perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE * 2));
+        uint96 platformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD * 2));
+        uint16 perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS * 2));
 
-    //     uint8 tier = uint8(_random());
-    //     bool active = _random() % 2 == 0;
+        uint8 tier = uint8(_random());
+        bool active = _random() % 2 == 0;
 
-    //     bool expectRevert = perTxFlat > smc.MAX_PLATFORM_PER_TX_FLAT_FEE ||
-    //         perMintFlat > smc.MAX_PER_MINT_REWARD ||
-    //         perMintBPS > smc.MAX_PLATFORM_PER_MINT_FEE_BPS;
+        bool expectRevert = perTxFlat > smc.MAX_PLATFORM_PER_TX_FLAT_FEE ||
+            platformReward > smc.MAX_PER_MINT_REWARD ||
+            perMintBPS > smc.MAX_PLATFORM_PER_MINT_FEE_BPS;
 
-    //     if (expectRevert) vm.expectRevert(ISuperMinterV1_1.InvalidPlatformFeeConfig.selector);
+        if (expectRevert) vm.expectRevert(ISuperMinterV1_1.InvalidPlatformFeeConfig.selector);
 
-    //     if (_random() % 2 == 0) {
-    //         _setPlatformFeeConfig(tier, perTxFlat, perMintFlat, perMintBPS, active);
-    //         if (!expectRevert) {
-    //             if (active) {
-    //                 _checkEffectivePlatformFeeConfig(tier, perTxFlat, perMintFlat, perMintBPS, true);
-    //             } else {
-    //                 _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
-    //             }
-    //         }
-    //     } else {
-    //         _setDefaultPlatformFeeConfig(perTxFlat, perMintFlat, perMintBPS, active);
-    //         if (!expectRevert) {
-    //             if (active) {
-    //                 _checkEffectivePlatformFeeConfig(tier, perTxFlat, perMintFlat, perMintBPS, true);
-    //                 _checkDefaultPlatformFeeConfig(perTxFlat, perMintFlat, perMintBPS, true);
-    //             } else {
-    //                 _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
-    //                 _checkDefaultPlatformFeeConfig(perTxFlat, perMintFlat, perMintBPS, false);
-    //             }
-    //         }
-    //     }
-    // }
+        if (_random() % 2 == 0) {
+            _setPlatformFeeConfig(tier, perTxFlat, platformReward, perMintBPS, active);
+            if (!expectRevert) {
+                if (active) {
+                    _checkEffectivePlatformFeeConfig(tier, perTxFlat, platformReward, perMintBPS, true);
+                } else {
+                    _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
+                }
+            }
+        } else {
+            _setDefaultPlatformFeeConfig(perTxFlat, platformReward, perMintBPS, active);
+            if (!expectRevert) {
+                if (active) {
+                    _checkEffectivePlatformFeeConfig(tier, perTxFlat, platformReward, perMintBPS, true);
+                    _checkDefaultPlatformFeeConfig(perTxFlat, platformReward, perMintBPS, true);
+                } else {
+                    _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
+                    _checkDefaultPlatformFeeConfig(perTxFlat, platformReward, perMintBPS, false);
+                }
+            }
+        }
+    }
 
-    // function _setDefaultPlatformFeeConfig(
-    //     uint96 perTxFlat,
-    //     uint96 perMintFlat,
-    //     uint16 perMintBPS,
-    //     bool active
-    // ) internal {
-    //     ISuperMinterV1_1.PlatformFeeConfig memory c;
-    //     c.perTxFlat = perTxFlat;
-    //     c.perMintFlat = perMintFlat;
-    //     c.perMintBPS = perMintBPS;
-    //     c.active = active;
-    //     sm.setDefaultPlatformFeeConfig(c);
-    // }
+    function _setDefaultPlatformFeeConfig(
+        uint96 perTxFlat,
+        uint96 platformReward,
+        uint16 perMintBPS,
+        bool active
+    ) internal {
+        ISuperMinterV1_1.PlatformFeeConfig memory c;
+        c.perTxFlat = perTxFlat;
+        c.platformReward = platformReward;
+        c.perMintBPS = perMintBPS;
+        c.active = active;
+        sm.setDefaultPlatformFeeConfig(c);
+    }
 
-    // function _setPlatformFeeConfig(
-    //     uint8 tier,
-    //     uint96 perTxFlat,
-    //     uint96 perMintFlat,
-    //     uint16 perMintBPS,
-    //     bool active
-    // ) internal {
-    //     ISuperMinterV1_1.PlatformFeeConfig memory c;
-    //     c.perTxFlat = perTxFlat;
-    //     c.perMintFlat = perMintFlat;
-    //     c.perMintBPS = perMintBPS;
-    //     c.active = active;
-    //     sm.setPlatformFeeConfig(tier, c);
-    // }
+    function _setPlatformFeeConfig(
+        uint8 tier,
+        uint96 perTxFlat,
+        uint96 platformReward,
+        uint16 perMintBPS,
+        bool active
+    ) internal {
+        ISuperMinterV1_1.PlatformFeeConfig memory c;
+        c.perTxFlat = perTxFlat;
+        c.platformReward = platformReward;
+        c.perMintBPS = perMintBPS;
+        c.active = active;
+        sm.setPlatformFeeConfig(tier, c);
+    }
 
-    // function _checkDefaultPlatformFeeConfig(
-    //     uint96 perTxFlat,
-    //     uint96 perMintFlat,
-    //     uint16 perMintBPS,
-    //     bool active
-    // ) internal {
-    //     _checkPlatformFeeConfig(sm.defaultPlatformFeeConfig(address(this)), perTxFlat, perMintFlat, perMintBPS, active);
-    // }
+    function _checkDefaultPlatformFeeConfig(
+        uint96 perTxFlat,
+        uint96 platformReward,
+        uint16 perMintBPS,
+        bool active
+    ) internal {
+        _checkPlatformFeeConfig(
+            sm.defaultPlatformFeeConfig(address(this)),
+            perTxFlat,
+            platformReward,
+            perMintBPS,
+            active
+        );
+    }
 
-    // function _checkEffectivePlatformFeeConfig(
-    //     uint8 tier,
-    //     uint96 perTxFlat,
-    //     uint96 perMintFlat,
-    //     uint16 perMintBPS,
-    //     bool active
-    // ) internal {
-    //     _checkPlatformFeeConfig(
-    //         sm.effectivePlatformFeeConfig(address(this), tier),
-    //         perTxFlat,
-    //         perMintFlat,
-    //         perMintBPS,
-    //         active
-    //     );
-    // }
+    function _checkEffectivePlatformFeeConfig(
+        uint8 tier,
+        uint96 perTxFlat,
+        uint96 platformReward,
+        uint16 perMintBPS,
+        bool active
+    ) internal {
+        _checkPlatformFeeConfig(
+            sm.effectivePlatformFeeConfig(address(this), tier),
+            perTxFlat,
+            platformReward,
+            perMintBPS,
+            active
+        );
+    }
 
-    // function _checkPlatformFeeConfig(
-    //     ISuperMinterV1_1.PlatformFeeConfig memory result,
-    //     uint96 perTxFlat,
-    //     uint96 perMintFlat,
-    //     uint16 perMintBPS,
-    //     bool active
-    // ) internal {
-    //     assertEq(result.perTxFlat, perTxFlat);
-    //     assertEq(result.perMintFlat, perMintFlat);
-    //     assertEq(result.perMintBPS, perMintBPS);
-    //     assertEq(result.active, active);
-    // }
+    function _checkPlatformFeeConfig(
+        ISuperMinterV1_1.PlatformFeeConfig memory result,
+        uint96 perTxFlat,
+        uint96 platformReward,
+        uint16 perMintBPS,
+        bool active
+    ) internal {
+        assertEq(result.perTxFlat, perTxFlat);
+        assertEq(result.platformReward, platformReward);
+        assertEq(result.perMintBPS, perMintBPS);
+        assertEq(result.active, active);
+    }
 
-    // function test_unitPrice(uint256) public {
-    //     SuperMinterV1_1Constants memory smc = _superMinterConstants();
+    function test_unitPrice(uint256) public {
+        SuperMinterV1_1Constants memory smc = _superMinterConstants();
 
-    //     ISuperMinterV1_1.MintCreation memory c;
-    //     c.maxMintable = type(uint32).max;
-    //     c.platform = _randomNonZeroAddress();
-    //     c.edition = address(edition);
-    //     c.tier = uint8(_random() % 2);
-    //     c.mode = uint8(_random() % 3);
-    //     c.price = uint96(_bound(_random(), 0, type(uint96).max));
-    //     c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
-    //     c.startTime = 0;
-    //     c.endTime = uint32(block.timestamp + 1000);
-    //     c.maxMintablePerAccount = type(uint32).max;
-    //     if (c.mode == sm.VERIFY_MERKLE()) {
-    //         c.merkleRoot = bytes32(_random() | 1);
-    //     }
-    //     assertEq(sm.createEditionMint(c), 0);
+        ISuperMinterV1_1.MintCreation memory c;
+        c.maxMintable = type(uint32).max;
+        c.platform = _randomNonZeroAddress();
+        c.edition = address(edition);
+        c.tier = uint8(_random() % 2);
+        c.mode = uint8(_random() % 3);
+        c.price = uint96(_bound(_random(), 0, type(uint96).max));
+        c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
+        c.startTime = 0;
+        c.endTime = uint32(block.timestamp + 1000);
+        c.maxMintablePerAccount = type(uint32).max;
+        if (c.mode == sm.VERIFY_MERKLE()) {
+            c.merkleRoot = bytes32(_random() | 1);
+        }
+        assertEq(sm.createEditionMint(c), 0);
 
-    //     uint256 gaPrice = uint96(_bound(_random(), 0, type(uint96).max));
-    //     vm.prank(c.platform);
-    //     sm.setGAPrice(uint96(gaPrice));
+        uint256 gaPrice = uint96(_bound(_random(), 0, type(uint96).max));
+        vm.prank(c.platform);
+        sm.setGAPrice(uint96(gaPrice));
 
-    //     uint32 quantity = uint32(_bound(_random(), 1, type(uint32).max));
-    //     uint96 signedPrice = uint96(_bound(_random(), 1, type(uint96).max));
-    //     ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
-    //     if (c.mode == sm.VERIFY_SIGNATURE() && signedPrice < c.price) {
-    //         vm.expectRevert(ISuperMinterV1_1.SignedPriceTooLow.selector);
-    //         tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice);
-    //         signedPrice = c.price;
-    //     }
-    //     tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice);
-    //     if (c.mode == sm.VERIFY_SIGNATURE()) {
-    //         assertEq(tpaf.unitPrice, signedPrice);
-    //     } else if (c.tier == 0) {
-    //         assertEq(tpaf.unitPrice, gaPrice);
-    //     } else {
-    //         assertEq(tpaf.unitPrice, c.price);
-    //     }
+        uint32 quantity = uint32(_bound(_random(), 1, type(uint32).max));
+        uint96 signedPrice = uint96(_bound(_random(), 1, type(uint96).max));
+        ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
+        if (c.mode == sm.VERIFY_SIGNATURE() && signedPrice < c.price) {
+            vm.expectRevert(ISuperMinterV1_1.SignedPriceTooLow.selector);
+            tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice);
+            signedPrice = c.price;
+        }
+        tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice);
+        if (c.mode == sm.VERIFY_SIGNATURE()) {
+            assertEq(tpaf.unitPrice, signedPrice);
+        } else if (c.tier == 0) {
+            assertEq(tpaf.unitPrice, gaPrice);
+        } else {
+            assertEq(tpaf.unitPrice, c.price);
+        }
 
-    //     ISuperMinterV1_1.MintInfo memory info = sm.mintInfo(address(edition), c.tier, 0);
-    //     if (c.tier == 0) {
-    //         assertEq(info.price, c.mode == sm.VERIFY_SIGNATURE() ? c.price : gaPrice);
-    //     } else {
-    //         assertEq(info.price, c.price);
-    //     }
-    // }
+        ISuperMinterV1_1.MintInfo memory info = sm.mintInfo(address(edition), c.tier, 0);
+        if (c.tier == 0) {
+            assertEq(info.price, c.mode == sm.VERIFY_SIGNATURE() ? c.price : gaPrice);
+        } else {
+            assertEq(info.price, c.price);
+        }
+    }
 
     function test_mintWithVariousFees(uint256) public {
         SuperMinterV1_1Constants memory smc = _superMinterConstants();
@@ -682,170 +688,133 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         // Create a tier 1 mint schedule, without any affiliate root.
         ISuperMinterV1_1.MintCreation memory c;
-        c.maxMintable = type(uint32).max;
-        c.platform = _randomNonZeroAddress();
-        c.edition = address(edition);
-        c.tier = 1;
-        c.price = uint96(_bound(_random(), 0, type(uint96).max));
-        c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
-        c.startTime = 0;
-        c.endTime = uint32(block.timestamp + 1000);
-        c.maxMintablePerAccount = type(uint32).max;
-        assertEq(sm.createEditionMint(c), 0);
+        {
+            c.maxMintable = type(uint32).max;
+            c.platform = _randomNonZeroAddress();
+            c.edition = address(edition);
+            c.tier = 1;
+            c.price = uint96(_bound(_random(), 0, type(uint96).max));
+            c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
+            c.startTime = 0;
+            c.endTime = uint32(block.timestamp + 1000);
+            c.maxMintablePerAccount = type(uint32).max;
+            assertEq(sm.createEditionMint(c), 0);
+        }
 
         // Set the tier 1 platform fee config.
         ISuperMinterV1_1.PlatformFeeConfig memory pfc;
+        {
+            pfc.perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
+            pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
 
-        pfc.perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
-        pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
+            pfc.artistReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.affiliateReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.platformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
-        pfc.artistReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-        pfc.affiliateReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-        pfc.platformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdPrice = uint96(_bound(_random(), 0, type(uint96).max));
 
-        pfc.thresholdPrice = uint96(_bound(_random(), 0, type(uint96).max));
+            pfc.thresholdArtistReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdAffiliateReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdPlatformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
-        pfc.thresholdArtistReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-        pfc.thresholdAffiliateReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-        pfc.thresholdPlatformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-
-        pfc.active = true;
-        vm.prank(c.platform);
-        sm.setPlatformFeeConfig(1, pfc);
+            pfc.active = true;
+            vm.prank(c.platform);
+            sm.setPlatformFeeConfig(1, pfc);
+        }
 
         // Prepare the MintTo struct witha a random quantity.
         ISuperMinterV1_1.MintTo memory p;
-        p.edition = address(edition);
-        p.tier = 1;
-        p.scheduleNum = 0;
-        p.to = address(this);
-        p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
-
-        ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
-        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-        if (c.price <= pfc.thresholdPrice) {
-            assertEq(tpaf.affiliateReward, pfc.affiliateReward * uint256(p.quantity));
-        } else {
-            assertEq(tpaf.affiliateReward, pfc.thresholdAffiliateReward * uint256(p.quantity));
+        {
+            p.edition = address(edition);
+            p.tier = 1;
+            p.scheduleNum = 0;
+            p.to = address(this);
+            p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
         }
 
-        // Use a lower, non-zero quantity for mint testing.
-        p.quantity = uint32(_bound(_random(), 1, 8));
-        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-        if (c.price <= pfc.thresholdPrice) {
-            assertEq(tpaf.affiliateReward, pfc.affiliateReward * uint256(p.quantity));
-        } else {
-            assertEq(tpaf.affiliateReward, pfc.thresholdAffiliateReward * uint256(p.quantity));
+        ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
+        {
+            tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
+            if (c.price <= pfc.thresholdPrice) {
+                assertEq(tpaf.affiliateReward, pfc.affiliateReward * uint256(p.quantity));
+            } else {
+                assertEq(tpaf.affiliateReward, pfc.thresholdAffiliateReward * uint256(p.quantity));
+            }
+
+            // Use a lower, non-zero quantity for mint testing.
+            p.quantity = uint32(_bound(_random(), 1, 8));
+            tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
+            if (c.price <= pfc.thresholdPrice) {
+                assertEq(tpaf.affiliateReward, pfc.affiliateReward * uint256(p.quantity));
+            } else {
+                assertEq(tpaf.affiliateReward, pfc.thresholdAffiliateReward * uint256(p.quantity));
+            }
         }
 
         // Just to ensure we have enough ETH to mint.
         vm.deal(address(this), type(uint192).max);
+
+        ISuperMinterV1_1.MintedLogData memory l;
 
         // Test the affiliated path.
         if (_random() % 2 == 0) {
             p.affiliate = _randomNonZeroAddress();
 
             vm.expectEmit(true, true, true, true);
-            ISuperMinterV1_1.MintedLogData memory l;
-            {
-                l.quantity = p.quantity;
-                l.fromTokenId = 1;
-                l.affiliate = p.affiliate;
-                l.affiliated = true;
-                l.requiredEtherValue = tpaf.total;
-                l.unitPrice = tpaf.unitPrice;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateBPSFee - tpaf.affiliateReward;
-                l.finalAffiliateFee = tpaf.affiliateBPSFee + tpaf.affiliateReward;
-                l.finalPlatformFee = tpaf.platformFee;
-            }
+
+            l.quantity = p.quantity;
+            l.fromTokenId = 1;
+            l.affiliate = p.affiliate;
+            l.affiliated = true;
+            l.requiredEtherValue = tpaf.total;
+            l.unitPrice = tpaf.unitPrice;
+            l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateBPSFee - tpaf.affiliateReward;
+            l.finalAffiliateFee = tpaf.affiliateBPSFee + tpaf.affiliateReward;
+            l.finalPlatformFee = tpaf.platformFee;
+
             emit Minted(address(edition), 1, 0, address(this), l, 0);
-
-            sm.mintTo{ value: tpaf.total }(p);
-            assertEq(l.finalPlatformFee + l.finalAffiliateFee + l.finalArtistFee, tpaf.total);
-            assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
-            assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
-            assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
-            assertEq(address(edition).balance, l.finalArtistFee);
-
-            // Perform the withdrawals and check if the balances tally.
-            vm.prank(c.platform);
-            sm.setPlatformFeeAddress(feeRecipients[0]);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-
-            uint256 balanceBefore = address(p.affiliate).balance;
-            sm.withdrawForAffiliate(p.affiliate);
-            assertEq(address(p.affiliate).balance, balanceBefore + l.finalAffiliateFee);
-
-            balanceBefore = address(feeRecipients[0]).balance;
-            sm.withdrawForPlatform(c.platform);
-            assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-            assertEq(address(sm).balance, 0);
         } else {
             p.affiliate = address(0);
 
             vm.expectEmit(true, true, true, true);
-            ISuperMinterV1_1.MintedLogData memory l;
-            {
-                l.quantity = p.quantity;
-                l.fromTokenId = 1;
-                l.affiliate = address(0);
-                l.affiliated = false;
-                l.requiredEtherValue = tpaf.total;
-                l.unitPrice = tpaf.unitPrice;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateReward;
-                l.finalAffiliateFee = 0;
-                l.finalPlatformFee = tpaf.platformFee + tpaf.affiliateReward;
-            }
+
+            l.quantity = p.quantity;
+            l.fromTokenId = 1;
+            l.affiliate = address(0);
+            l.affiliated = false;
+            l.requiredEtherValue = tpaf.total;
+            l.unitPrice = tpaf.unitPrice;
+            l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateReward;
+            l.finalAffiliateFee = 0;
+            l.finalPlatformFee = tpaf.platformFee + tpaf.affiliateReward;
+
             emit Minted(address(edition), 1, 0, address(this), l, 0);
-
-            sm.mintTo{ value: tpaf.total }(p);
-            assertEq(l.finalPlatformFee + l.finalAffiliateFee + l.finalArtistFee, tpaf.total);
-            assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
-            assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
-            assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
-            assertEq(address(edition).balance, l.finalArtistFee);
-
-            // Perform the withdrawals and check if the balances tally.
-            vm.prank(c.platform);
-            sm.setPlatformFeeAddress(feeRecipients[0]);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-
-            uint256 balanceBefore = address(feeRecipients[0]).balance;
-            sm.withdrawForPlatform(c.platform);
-            assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-            assertEq(address(sm).balance, 0);
         }
-    }
 
-    // function _checkTotalPriceAndFees(
-    //     ISuperMinterV1_1.TotalPriceAndFees memory tpaf,
-    //     uint256 quantity,
-    //     uint256 perTxFlat,
-    //     uint256 perMintFlat,
-    //     uint256 perMintBPS,
-    //     uint256 affiliateFeeBPS,
-    //     uint256 unitPrice
-    // ) internal {
-    //     assertEq(tpaf.unitPrice, unitPrice);
-    //     uint256 subTotal = unitPrice * quantity;
-    //     assertEq(tpaf.subTotal, subTotal);
-    //     uint256 platformTxFlatFee = perTxFlat;
-    //     assertEq(tpaf.platformTxFlatFee, platformTxFlatFee);
-    //     uint256 platformMintFlatFee = perMintFlat * uint256(quantity);
-    //     assertEq(tpaf.platformMintFlatFee, platformMintFlatFee);
-    //     uint256 platformFlatFee = platformMintFlatFee + platformTxFlatFee;
-    //     assertEq(tpaf.platformFlatFee, platformFlatFee);
-    //     uint256 platformMintBPSFee = (subTotal * perMintBPS) / LibOps.BPS_DENOMINATOR;
-    //     assertEq(tpaf.platformMintBPSFee, platformMintBPSFee);
-    //     uint256 platformFee = platformMintBPSFee + platformFlatFee;
-    //     assertEq(tpaf.platformFee, platformFee);
-    //     uint256 affiliateFee = (subTotal * affiliateFeeBPS) / LibOps.BPS_DENOMINATOR;
-    //     assertEq(tpaf.affiliateFee, affiliateFee);
-    //     uint256 total = subTotal + platformFlatFee;
-    //     assertEq(tpaf.total, total);
-    // }
+        sm.mintTo{ value: tpaf.total }(p);
+
+        // Check invariants.
+        assertEq(l.finalPlatformFee + l.finalAffiliateFee + l.finalArtistFee, tpaf.total);
+        assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
+        assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
+        assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
+        assertEq(address(edition).balance, l.finalArtistFee);
+
+        // Perform the withdrawals for affiliate and check if the balances tally.
+        uint256 balanceBefore = address(p.affiliate).balance;
+        sm.withdrawForAffiliate(p.affiliate);
+        assertEq(address(p.affiliate).balance, balanceBefore + l.finalAffiliateFee);
+
+        // Perform the withdrawals for platform and check if the balances tally.
+        balanceBefore = address(feeRecipients[0]).balance;
+        vm.prank(c.platform);
+        sm.setPlatformFeeAddress(feeRecipients[0]);
+        assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
+        sm.withdrawForPlatform(c.platform);
+        assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
+        assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
+        assertEq(address(sm).balance, 0);
+    }
 
     function test_mintWithSignature(uint256) public {
         (address signer, uint256 privateKey) = _randomSigner();
