@@ -156,10 +156,9 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     uint16 public constant MAX_PLATFORM_PER_MINT_FEE_BPS = 1000;
 
     /**
-     * @dev The maximum platform per-mint flat fee.
-     * Also applies to the maximum per-mint flat fee.
+     * @dev The maximum per-mint reward. Applies to artists, affiliates, platform.
      */
-    uint96 public constant MAX_PLATFORM_PER_MINT_FLAT_FEE = 0.1 ether;
+    uint96 public constant MAX_PER_MINT_REWARD = 0.1 ether;
 
     /**
      * @dev The maximum platform per-transaction flat fee.
@@ -357,9 +356,10 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
 
             // Deduct the platform fees (both BPS and flat) first.
-            // We'll deduct the affiliate fees in the affiliate fees calculation step.
-            l.finalArtistFee = f.total - f.platformFee;
+            // We'll deduct the affiliate BPS fees in the affiliate fees calculation step.
+            l.finalArtistFee = f.subTotal - f.platformBPSFee;
             // Initialize to the platform fee.
+            // (inclusive of `platformTxFlatFee`, `platformBPSFee`, and `platformReward`).
             l.finalPlatformFee = f.platformFee;
             // Yeah, we know it's left curved.
             l.affiliate = p.to == p.affiliate ? address(0) : p.affiliate;
@@ -369,28 +369,18 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             if (l.affiliated = _isAffiliatedWithProof(d, l.affiliate, p.affiliateProof)) {
                 // There are two kinds of affiliate fees:
                 // - The BPS based affiliateFee, which will be deducted from the artist's fee.
-                // - The per-mint flat affiliate incentive fee, which will be be deducted from the platform's fee.
+                // - The per-mint flat affiliate reward.
 
                 // Deduct the BPS based affiliate fee from the artist's fee.
-                l.finalArtistFee -= f.affiliateFee;
-                // Deduct the affiliate incentive from the platform's fee.
-                l.finalPlatformFee -= f.affiliateIncentive;
-                // Sum up the BPS based affiliate fee and the affiliate incentive.
-                l.finalAffiliateFee = f.affiliateFee + f.affiliateIncentive;
-                l.finalAffiliateIncentive = f.affiliateIncentive;
+                l.finalArtistFee -= f.affiliateBPSFee;
+                // Sum up the BPS based affiliate fee and the affiliate reward.
+                l.finalAffiliateFee = f.affiliateBPSFee + f.affiliateReward;
                 affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
             } else {
                 // Proof may be invalid, revert to prevent unintended skipping of affiliate fee.
                 if (p.affiliate != address(0)) revert InvalidAffiliate();
-            }
-
-            /* -------------------- CHEAP MINT FEES --------------------- */
-
-            if (f.cheapMintIncentive != 0 && f.unitPrice <= f.cheapMintIncentiveThreshold) {
-                // Divert the cheap mint incentive from the platform to the artist.
-                l.finalPlatformFee -= f.cheapMintIncentive;
-                l.finalCheapMintIncentive = f.cheapMintIncentive;
-                l.finalArtistFee += l.finalCheapMintIncentive;
+                // Redirect the affiliate reward to the platform reward.
+                l.finalPlatformFee += f.affiliateReward;
             }
 
             platformFeesAccrued[d.platform] += l.finalPlatformFee; // Accrue the platform fee.
@@ -994,19 +984,21 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @param c The platform fee configuration.
      */
     function _validatePlatformFeeConfig(PlatformFeeConfig memory c) internal pure {
-        unchecked {
-            uint256 incentiveSum;
-            incentiveSum += uint256(c.affiliateIncentive);
-            incentiveSum += uint256(c.cheapMintIncentive);
-            if (
+        if (
+            LibOps.or(
+                LibOps.or(c.perTxFlat > MAX_PLATFORM_PER_TX_FLAT_FEE, c.perMintBPS > MAX_PLATFORM_PER_MINT_FEE_BPS),
                 LibOps.or(
-                    c.perTxFlat > MAX_PLATFORM_PER_TX_FLAT_FEE,
-                    c.perMintFlat > MAX_PLATFORM_PER_MINT_FLAT_FEE,
-                    c.perMintBPS > MAX_PLATFORM_PER_MINT_FEE_BPS,
-                    incentiveSum > c.perMintFlat
+                    c.artistReward > MAX_PER_MINT_REWARD,
+                    c.affiliateReward > MAX_PER_MINT_REWARD,
+                    c.platformReward > MAX_PER_MINT_REWARD
+                ),
+                LibOps.or(
+                    c.thresholdArtistReward > MAX_PER_MINT_REWARD,
+                    c.thresholdAffiliateReward > MAX_PER_MINT_REWARD,
+                    c.thresholdPlatformReward > MAX_PER_MINT_REWARD
                 )
-            ) revert InvalidPlatformFeeConfig();
-        }
+            )
+        ) revert InvalidPlatformFeeConfig();
     }
 
     /**
@@ -1203,24 +1195,32 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             // The artist will receive the remaining after all BPS fees are deducted from sub total.
             // The minter will have to pay the sub total plus any flat fees.
             f.subTotal = unitPrice * uint256(quantity);
+
+            // Set the rewards depending on the `unitPrice`.
+            if (unitPrice >= c.thresholdPrice) {
+                f.artistReward = c.thresholdArtistReward * uint256(quantity);
+                f.affiliateReward = c.thresholdAffiliateReward * uint256(quantity);
+                f.platformReward = c.thresholdPlatformReward * uint256(quantity);
+            } else {
+                f.artistReward = c.artistReward * uint256(quantity);
+                f.affiliateReward = c.affiliateReward * uint256(quantity);
+                f.platformReward = c.platformReward * uint256(quantity);
+            }
+
             // Sum the total flat fees for mints, and the transaction flat fee.
             f.platformTxFlatFee = c.perTxFlat;
-            f.platformMintFlatFee = c.perMintFlat * uint256(quantity);
-            f.platformFlatFee = f.platformMintFlatFee + f.platformTxFlatFee;
-            // BPS fees are to be deducted from the sub total.
-            f.platformMintBPSFee = LibOps.rawMulDiv(f.subTotal, c.perMintBPS, BPS_DENOMINATOR);
+            // Platform BPS fees are to be deducted from the sub total.
+            f.platformBPSFee = LibOps.rawMulDiv(f.subTotal, c.perMintBPS, BPS_DENOMINATOR);
             // The platform fee includes BPS fees deducted from sub total,
             // and flat fees added to sub total.
-            f.platformFee = f.platformMintBPSFee + f.platformFlatFee;
-            // Affiliate fee is to be deducted from the sub total.
+            f.platformFee = f.platformBPSFee + f.platformTxFlatFee + f.platformReward;
+
+            // Affiliate BPS fee is to be deducted from the sub total.
             // Will be conditionally set to zero during mint if not affiliated.
-            f.affiliateFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
-            // Calculate the incentives. These may be redirected away from the `platformFee`.
-            f.affiliateIncentive = c.affiliateIncentive * uint256(quantity);
-            f.cheapMintIncentive = c.cheapMintIncentive * uint256(quantity);
-            f.cheapMintIncentiveThreshold = c.cheapMintIncentiveThreshold;
+            f.affiliateBPSFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
+
             // The total is the final value which the minter has to pay. It includes all fees.
-            f.total = f.subTotal + f.platformFlatFee;
+            f.total = f.subTotal + f.platformTxFlatFee + f.artistReward + f.affiliateReward + f.platformReward;
         }
     }
 

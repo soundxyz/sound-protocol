@@ -110,32 +110,27 @@ interface ISuperMinterV1_1 is IERC165 {
      */
     struct TotalPriceAndFees {
         // The required Ether value.
-        // `subTotal + platformFlatFee`.
+        // (`subTotal + platformTxFlatFee + artistReward + affiliateReward + platformReward`).
         uint256 total;
         // The total price before any additive fees.
         uint256 subTotal;
         // The price per token.
         uint256 unitPrice;
         // The total platform fees.
-        // `platformFlatFee + platformMintBPSFee`.
+        // (inclusive of `platformTxFlatFee`, `platformBPSFee`, and `platformReward`).
         uint256 platformFee;
-        // The total platform flat fees.
-        // `platformTxFlatFee + platformMintFlatFee`.
-        uint256 platformFlatFee;
         // The platform per-transaction flat fees.
         uint256 platformTxFlatFee;
-        // The total platform per-token flat fees.
-        // This includes all incentives.
-        uint256 platformMintFlatFee;
         // The total platform per-token BPS fees.
-        uint256 platformMintBPSFee;
-        // The affiliate fees (before any incentives).
-        uint256 affiliateFee;
-        // The incentive for the affiliate.
-        uint256 affiliateIncentive;
-        // The incentive for cheap mints, to be given to the artist.
-        uint256 cheapMintIncentive;
-        uint256 cheapMintIncentiveThreshold;
+        uint256 platformBPSFee;
+        // The affiliate BPS fee (does NOT include `affiliateReward`).
+        uint256 affiliateBPSFee;
+        // The amount of reward to give to the artist (after considering `thresholdPrice`).
+        uint256 artistReward;
+        // The amount of reward to give to the affiliate (after considering `thresholdPrice`).
+        uint256 affiliateReward;
+        // The amount of reward to give to the platform (after considering `thresholdPrice`).
+        uint256 platformReward;
     }
 
     /**
@@ -162,37 +157,35 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 requiredEtherValue;
         // The price per token.
         uint256 unitPrice;
-        // The final artist fee.
+        // The final artist fee (inclusive of `finalArtistReward`).
         uint256 finalArtistFee;
-        // The final platform fee.
-        uint256 finalPlatformFee;
-        // The total affiliate fee.
+        // The total affiliate fee (inclusive of `finalAffiliateReward`).
         uint256 finalAffiliateFee;
-        // The final affiliate incentive.
-        uint256 finalAffiliateIncentive;
-        // The final cheap mint incentive.
-        uint256 finalCheapMintIncentive;
+        // The final platform fee
+        // (inclusive of `finalPlatformReward`, `perTxFlat`, sum of `perMintBPS`).
+        uint256 finalPlatformFee;
     }
 
     /**
      * @dev A struct to hold the fee configuration for a platform and a tier.
      */
     struct PlatformFeeConfig {
-        // The amount of platform per-mint flat fee
-        // to give to the affiliate, if provided.
-        uint96 affiliateIncentive;
-        // The amount of platform per-mint flat fee
-        // to give to the artist, if the mint is
-        // less than or equal to `cheapMintIncentiveThreshold`.
-        uint96 cheapMintIncentive;
-        uint96 cheapMintIncentiveThreshold;
+        // The amount of reward to give to the artist.
+        uint96 artistReward;
+        // The amount of reward to give to the affiliate.
+        uint96 affiliateReward;
+        // The amount of reward to give to the platform.
+        uint96 platformReward;
+        // If the price is greater than this, the rewards will become the threshold variants.
+        uint96 thresholdPrice;
+        // The amount of reward to give to the artist (`unitPrice >= thresholdPrice`).
+        uint96 thresholdArtistReward;
+        // The amount of reward to give to the affiliate (`unitPrice >= thresholdPrice`).
+        uint96 thresholdAffiliateReward;
+        // The amount of reward to give to the platform (`unitPrice >= thresholdPrice`).
+        uint96 thresholdPlatformReward;
         // The per-transaction flat fee.
         uint96 perTxFlat;
-        // The per-token flat fee.
-        // This fee includes:
-        // - `affiliateIncentive`.
-        // - `cheapMintIncentive`.
-        uint96 perMintFlat;
         // The per-token fee BPS.
         uint16 perMintBPS;
         // Whether the fees are active.
@@ -819,10 +812,10 @@ interface ISuperMinterV1_1 is IERC165 {
     function MAX_PLATFORM_PER_MINT_FEE_BPS() external pure returns (uint16);
 
     /**
-     * @dev The maximum platform per-mint flat fee.
+     * @dev The maximum per-mint reward. Applies to artists, affiliates, platform.
      * @return The constant value.
      */
-    function MAX_PLATFORM_PER_MINT_FLAT_FEE() external pure returns (uint96);
+    function MAX_PER_MINT_REWARD() external pure returns (uint96);
 
     /**
      * @dev The maximum platform per-transaction flat fee.
