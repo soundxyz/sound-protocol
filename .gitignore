@@ -3,6 +3,8 @@ cache
 out*
 typechain
 dist
+create2
+.tmp
 
 # Ignores development broadcast logs
 /broadcast/**/run-166*.json
