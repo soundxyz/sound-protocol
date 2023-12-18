@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 1.8.0
+
+### Minor Changes
+
+-   4ab84ed: SuperMinterV2 et al.
+
 ## 1.7.0
 
 ### Minor Changes
