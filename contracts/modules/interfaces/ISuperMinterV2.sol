@@ -4,10 +4,10 @@ pragma solidity ^0.8.16;
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
- * @title ISuperMinterV1_1
+ * @title ISuperMinterV2
  * @notice The interface for the generalized minter.
  */
-interface ISuperMinterV1_1 is IERC165 {
+interface ISuperMinterV2 is IERC165 {
     // =============================================================
     //                            STRUCTS
     // =============================================================
@@ -40,9 +40,6 @@ interface ISuperMinterV1_1 is IERC165 {
         address platform;
         // The mode of the mint. Options: `DEFAULT`, `VERIFY_MERKLE`, `VERIFY_SIGNATURE`.
         uint8 mode;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        // If set to `address(1)`, the platform signer will be used instead.
-        address signer;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
     }
@@ -87,30 +84,45 @@ interface ISuperMinterV1_1 is IERC165 {
     }
 
     /**
+     * @dev A struct containing the arguments for platformAirdrop.
+     */
+    struct PlatformAirdrop {
+        // The mint ID.
+        address edition;
+        // The tier of the mint.
+        uint8 tier;
+        // The edition-tier schedule number.
+        uint8 scheduleNum;
+        // The addresses to mint to.
+        address[] to;
+        // The signed quantity.
+        uint32 signedQuantity;
+        // The signed claimed ticket. Used if `mode` is `VERIFY_SIGNATURE`.
+        uint32 signedClaimTicket;
+        // The expiry timestamp for the signature. Used if `mode` is `VERIFY_SIGNATURE`.
+        uint32 signedDeadline;
+        // The signature by the signer. Used if `mode` is `VERIFY_SIGNATURE`.
+        bytes signature;
+    }
+
+    /**
      * @dev A struct containing the total prices and fees.
      */
     struct TotalPriceAndFees {
         // The required Ether value.
-        // `subTotal + platformFlatFee`.
+        // (`subTotal + platformTxFlatFee + artistReward + affiliateReward + platformReward`).
         uint256 total;
         // The total price before any additive fees.
         uint256 subTotal;
         // The price per token.
         uint256 unitPrice;
-        // The total platform fees.
-        // `platformFlatFee + platformMintBPSFee`.
-        uint256 platformFee;
-        // The total platform flat fees.
-        // `platformTxFlatFee + platformMintFlatFee`.
-        uint256 platformFlatFee;
-        // The platform per-transaction flat fees.
-        uint256 platformTxFlatFee;
-        // The total platform per-token flat fees.
-        uint256 platformMintFlatFee;
-        // The total platform per-token BPS fees.
-        uint256 platformMintBPSFee;
-        // The total affiliate fees.
-        uint256 affiliateFee;
+        // The final artist fee (inclusive of `finalArtistReward`).
+        uint256 finalArtistFee;
+        // The total affiliate fee (inclusive of `finalAffiliateReward`).
+        uint256 finalAffiliateFee;
+        // The final platform fee
+        // (inclusive of `finalPlatformReward`, `perTxFlat`, sum of `perMintBPS`).
+        uint256 finalPlatformFee;
     }
 
     /**
@@ -137,24 +149,37 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 requiredEtherValue;
         // The price per token.
         uint256 unitPrice;
-        // The total platform fees.
-        uint256 platformFee;
-        // The total platform flat fees.
-        uint256 platformFlatFee;
-        // The total affiliate fees.
-        uint256 affiliateFee;
+        // The final artist fee (inclusive of `finalArtistReward`).
+        uint256 finalArtistFee;
+        // The total affiliate fee (inclusive of `finalAffiliateReward`).
+        uint256 finalAffiliateFee;
+        // The final platform fee
+        // (inclusive of `finalPlatformReward`, `perTxFlat`, sum of `perMintBPS`).
+        uint256 finalPlatformFee;
     }
 
     /**
      * @dev A struct to hold the fee configuration for a platform and a tier.
      */
     struct PlatformFeeConfig {
+        // The amount of reward to give to the artist per mint.
+        uint96 artistMintReward;
+        // The amount of reward to give to the affiliate per mint.
+        uint96 affiliateMintReward;
+        // The amount of reward to give to the platform per mint.
+        uint96 platformMintReward;
+        // If the price is greater than this, the rewards will become the threshold variants.
+        uint96 thresholdPrice;
+        // The amount of reward to give to the artist (`unitPrice >= thresholdPrice`).
+        uint96 thresholdArtistMintReward;
+        // The amount of reward to give to the affiliate (`unitPrice >= thresholdPrice`).
+        uint96 thresholdAffiliateMintReward;
+        // The amount of reward to give to the platform (`unitPrice >= thresholdPrice`).
+        uint96 thresholdPlatformMintReward;
         // The per-transaction flat fee.
-        uint96 perTxFlat;
-        // The per-token flat fee.
-        uint96 perMintFlat;
+        uint96 platformTxFlatFee;
         // The per-token fee BPS.
-        uint16 perMintBPS;
+        uint16 platformMintFeeBPS;
         // Whether the fees are active.
         bool active;
     }
@@ -198,12 +223,8 @@ interface ISuperMinterV1_1 is IERC165 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        // This value will be the platform signer instead if it is configured to be `address(1)`.
+        // The signer address, used if `mode` is `VERIFY_SIGNATURE` or `PLATFORM_AIRDROP`.
         address signer;
-        // Whether the platform signer is being used instead
-        // (i.e. `signer` configured to be `address(1)`).
-        bool usePlatformSigner;
     }
 
     // =============================================================
@@ -275,15 +296,6 @@ interface ISuperMinterV1_1 is IERC165 {
     event MerkleRootSet(address indexed edition, uint8 tier, uint8 scheduleNum, bytes32 merkleRoot);
 
     /**
-     * @dev Emitted when the signer of a mint is updated.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param signer        The signer of the mint.
-     */
-    event SignerSet(address indexed edition, uint8 tier, uint8 scheduleNum, address signer);
-
-    /**
      * @dev Emitted when the affiliate fee BPS for a mint is updated.
      * @param edition       The address of the Sound Edition.
      * @param tier          The tier.
@@ -317,6 +329,24 @@ interface ISuperMinterV1_1 is IERC165 {
         address indexed to,
         MintedLogData data,
         uint256 indexed attributionId
+    );
+
+    /**
+     * @dev Emitted when tokens are platform airdropped.
+     * @param edition        The address of the Sound Edition.
+     * @param tier           The tier.
+     * @param scheduleNum    The edition-tier schedule number.
+     * @param to             The recipients of the tokens minted.
+     * @param signedQuantity The amount of tokens per address.
+     * @param fromTokenId    The first token ID minted.
+     */
+    event PlatformAirdropped(
+        address indexed edition,
+        uint8 tier,
+        uint8 scheduleNum,
+        address[] to,
+        uint32 signedQuantity,
+        uint256 fromTokenId
     );
 
     /**
@@ -454,11 +484,6 @@ interface ISuperMinterV1_1 is IERC165 {
     error SignatureAlreadyUsed();
 
     /**
-     * @dev The signer cannot be the zero address.
-     */
-    error SignerIsZeroAddress();
-
-    /**
      * @dev The Merkle root cannot be empty.
      */
     error MerkleRootIsEmpty();
@@ -532,8 +557,16 @@ interface ISuperMinterV1_1 is IERC165 {
     /**
      * @dev Performs a mint.
      * @param p The mint-to parameters.
+     * @return fromTokenId The first token ID minted.
      */
-    function mintTo(MintTo calldata p) external payable;
+    function mintTo(MintTo calldata p) external payable returns (uint256 fromTokenId);
+
+    /**
+     * @dev Performs a platform airdrop.
+     * @param p The platform airdrop parameters.
+     * @return fromTokenId The first token ID minted.
+     */
+    function platformAirdrop(PlatformAirdrop calldata p) external returns (uint256 fromTokenId);
 
     /**
      * @dev Sets the price of the mint.
@@ -664,20 +697,6 @@ interface ISuperMinterV1_1 is IERC165 {
     ) external;
 
     /**
-     * @dev Sets the signer for the mint. The mint mode must be `VERIFY_SIGNATURE`.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param signer        The signer of the mint.
-     */
-    function setSigner(
-        address edition,
-        uint8 tier,
-        uint8 scheduleNum,
-        address signer
-    ) external;
-
-    /**
      * @dev Withdraws all accrued fees of the affiliate, to the affiliate.
      * @param affiliate The affiliate address.
      */
@@ -737,6 +756,12 @@ interface ISuperMinterV1_1 is IERC165 {
     function MINT_TO_TYPEHASH() external pure returns (bytes32);
 
     /**
+     * @dev The EIP-712 typehash for platform airdrop mints.
+     * @return The constant value.
+     */
+    function PLATFORM_AIRDROP_TYPEHASH() external pure returns (bytes32);
+
+    /**
      * @dev The default mint mode.
      * @return The constant value.
      */
@@ -753,6 +778,12 @@ interface ISuperMinterV1_1 is IERC165 {
      * @return The constant value.
      */
     function VERIFY_SIGNATURE() external pure returns (uint8);
+
+    /**
+     * @dev The mint mode for platform airdrop.
+     * @return The constant value.
+     */
+    function PLATFORM_AIRDROP() external pure returns (uint8);
 
     /**
      * @dev The denominator used in BPS fee calculations.
@@ -773,10 +804,10 @@ interface ISuperMinterV1_1 is IERC165 {
     function MAX_PLATFORM_PER_MINT_FEE_BPS() external pure returns (uint16);
 
     /**
-     * @dev The maximum platform per-mint flat fee.
+     * @dev The maximum per-mint reward. Applies to artists, affiliates, platform.
      * @return The constant value.
      */
-    function MAX_PLATFORM_PER_MINT_FLAT_FEE() external pure returns (uint96);
+    function MAX_PER_MINT_REWARD() external pure returns (uint96);
 
     /**
      * @dev The maximum platform per-transaction flat fee.
@@ -813,27 +844,37 @@ interface ISuperMinterV1_1 is IERC165 {
     function computeMintToDigest(MintTo calldata p) external view returns (bytes32);
 
     /**
+     * @dev Returns the EIP-712 digest of the mint-to data for platform airdrops.
+     * @param p The platform airdrop parameters.
+     * @return The computed value.
+     */
+    function computePlatformAirdropDigest(PlatformAirdrop calldata p) external view returns (bytes32);
+
+    /**
      * @dev Returns the total price and fees for the mint.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param quantity      How many tokens to mint.
+     * @param edition           The address of the Sound Edition.
+     * @param tier              The tier.
+     * @param scheduleNum       The edition-tier schedule number.
+     * @param quantity          How many tokens to mint.
+     * @param hasValidAffiliate Whether there is a valid affiliate for the mint.
      * @return A struct containing the total price and fees.
      */
     function totalPriceAndFees(
         address edition,
         uint8 tier,
         uint8 scheduleNum,
-        uint32 quantity
+        uint32 quantity,
+        bool hasValidAffiliate
     ) external view returns (TotalPriceAndFees memory);
 
     /**
      * @dev Returns the total price and fees for the mint.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param quantity      How many tokens to mint.
-     * @param signedPrice   The signed price.
+     * @param edition          The address of the Sound Edition.
+     * @param tier             The tier.
+     * @param scheduleNum      The edition-tier schedule number.
+     * @param quantity         How many tokens to mint.
+     * @param signedPrice      The signed price.
+     * @param hasValidAffiliate Whether there is a valid affiliate for the mint.
      * @return A struct containing the total price and fees.
      */
     function totalPriceAndFeesWithSignedPrice(
@@ -841,7 +882,8 @@ interface ISuperMinterV1_1 is IERC165 {
         uint8 tier,
         uint8 scheduleNum,
         uint32 quantity,
-        uint96 signedPrice
+        uint96 signedPrice,
+        bool hasValidAffiliate
     ) external view returns (TotalPriceAndFees memory);
 
     /**

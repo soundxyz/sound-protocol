@@ -5,7 +5,7 @@ import "./TestPlus.sol";
 import { SoundCreatorV1 } from "@core/SoundCreatorV1.sol";
 import { ISoundEditionV2_1, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
 
-contract TestConfigV2 is TestPlus {
+contract TestConfigV2_1 is TestPlus {
     uint256 internal _salt;
 
     SoundCreatorV1 soundCreator;

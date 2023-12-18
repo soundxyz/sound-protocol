@@ -26,11 +26,9 @@
 	url = https://github.com/chiru-labs/ERC721A-Upgradeable
 	branch = 05bd2b9993e632ff898472fb6aec6d698a4c6015
 	ignore = dirty
-[submodule "lib/multicaller"]
-	path = lib/multicaller
-	url = https://github.com/vectorized/multicaller
-	branch = main
-	ignore = dirty
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
+[submodule "lib/multicaller"]
+	path = lib/multicaller
+	url = https://github.com/vectorized/multicaller

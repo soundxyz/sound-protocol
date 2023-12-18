@@ -230,21 +230,23 @@ interface ISoundEditionV2_1 is IERC721AUpgradeable, IERC2981Upgradeable {
 
     /**
      * @dev Emitted upon a mint.
-     * @param tier        The tier.
-     * @param to          The address to mint to.
-     * @param quantity    The number of minted.
-     * @param fromTokenId The first token ID minted.
+     * @param tier                 The tier.
+     * @param to                   The address to mint to.
+     * @param quantity             The number of minted.
+     * @param fromTokenId          The first token ID minted.
+     * @param fromTierTokenIdIndex The first token index in the tier.
      */
-    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId);
+    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
 
     /**
      * @dev Emitted upon an airdrop.
-     * @param tier        The tier.
-     * @param to          The recipients of the airdrop.
-     * @param quantity    The number of tokens airdropped to each address in `to`.
-     * @param fromTokenId The first token ID minted to the first address in `to`.
+     * @param tier                 The tier.
+     * @param to                   The recipients of the airdrop.
+     * @param quantity             The number of tokens airdropped to each address in `to`.
+     * @param fromTokenId          The first token ID minted to the first address in `to`.
+     * @param fromTierTokenIdIndex The first token index in the tier.
      */
-    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId);
+    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
 
     /**
      * @dev EIP-4906 event to signal marketplaces to refresh the metadata.

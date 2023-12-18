@@ -3,7 +3,7 @@ pragma solidity ^0.8.16;
 
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { ISoundEditionV2_1 } from "@core/interfaces/ISoundEditionV2_1.sol";
-import { ISuperMinterV1_1 } from "@modules/interfaces/ISuperMinterV1_1.sol";
+import { ISuperMinterV2 } from "@modules/interfaces/ISuperMinterV2.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { EIP712 } from "solady/utils/EIP712.sol";
@@ -17,10 +17,10 @@ import { LibOps } from "@core/utils/LibOps.sol";
 import { LibMulticaller } from "multicaller/LibMulticaller.sol";
 
 /**
- * @title SuperMinterV1_1
- * @dev The `SuperMinterV1_1` class is a generalized minter.
+ * @title SuperMinterV2
+ * @dev The `SuperMinterV2` class is a generalized minter.
  */
-contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
+contract SuperMinterV2 is ISuperMinterV2, EIP712 {
     using LibBitmap for *;
     using MerkleProofLib for *;
     using LibMap for *;
@@ -68,8 +68,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         bytes32 affiliateMerkleRoot;
         // The Merkle root hash, required if `mode` is `VERIFY_MERKLE`.
         bytes32 merkleRoot;
-        // The signer address, required if `mode` is `VERIFY_SIGNATURE`.
-        address signer;
     }
 
     // =============================================================
@@ -101,6 +99,23 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         );
 
     /**
+     * @dev For EIP-712 platform airdrop signature digest calculation.
+     */
+    bytes32 public constant PLATFORM_AIRDROP_TYPEHASH =
+        // prettier-ignore
+        keccak256(
+            "PlatformAirdrop("
+                "address edition,"
+                "uint8 tier,"
+                "uint8 scheduleNum,"
+                "address[] to,"
+                "uint32 signedQuantity,"
+                "uint32 signedClaimTicket,"
+                "uint32 signedDeadline"
+            ")"
+        );
+
+    /**
      * @dev For EIP-712 signature digest calculation.
      */
     bytes32 public constant DOMAIN_TYPEHASH = _DOMAIN_TYPEHASH;
@@ -121,6 +136,11 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     uint8 public constant VERIFY_SIGNATURE = 2;
 
     /**
+     * @dev The platform airdrop mint mode.
+     */
+    uint8 public constant PLATFORM_AIRDROP = 3;
+
+    /**
      * @dev The denominator of all BPS calculations.
      */
     uint16 public constant BPS_DENOMINATOR = LibOps.BPS_DENOMINATOR;
@@ -136,9 +156,9 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     uint16 public constant MAX_PLATFORM_PER_MINT_FEE_BPS = 1000;
 
     /**
-     * @dev The maximum platform per-mint flat fee.
+     * @dev The maximum per-mint reward. Applies to artists, affiliates, platform.
      */
-    uint96 public constant MAX_PLATFORM_PER_MINT_FLAT_FEE = 0.1 ether;
+    uint96 public constant MAX_PER_MINT_REWARD = 0.1 ether;
 
     /**
      * @dev The maximum platform per-transaction flat fee.
@@ -220,7 +240,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     // =============================================================
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function createEditionMint(MintCreation memory c) public returns (uint8 scheduleNum) {
         _requireOnlyEditionOwnerOrAdmin(c.edition);
@@ -230,15 +250,16 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         uint8 mode = c.mode;
 
         if (mode == DEFAULT) {
-            c.signer = address(0);
             c.merkleRoot = bytes32(0);
         } else if (mode == VERIFY_MERKLE) {
             _validateMerkleRoot(c.merkleRoot);
-            c.signer = address(0);
         } else if (mode == VERIFY_SIGNATURE) {
-            _validateSigner(c.signer);
             c.merkleRoot = bytes32(0);
             c.maxMintablePerAccount = type(uint32).max;
+        } else if (mode == PLATFORM_AIRDROP) {
+            c.merkleRoot = bytes32(0);
+            c.maxMintablePerAccount = type(uint32).max;
+            c.price = 0; // Platform airdrop mode doesn't have a price.
         } else {
             revert InvalidMode();
         }
@@ -273,7 +294,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             editionHead.numMintData = uint16(n);
 
             uint256 mintId = LibOps.packId(c.edition, c.tier, scheduleNum);
-            bool usePlatformSigner = c.signer == address(1);
 
             MintData storage d = _mintData[mintId];
             d.platform = c.platform;
@@ -284,82 +304,101 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
             d.maxMintable = c.maxMintable;
             d.affiliateFeeBPS = c.affiliateFeeBPS;
             d.mode = c.mode;
-            d.flags = _MINT_CREATED_FLAG | LibOps.toFlag(usePlatformSigner, _USE_PLATFORM_SIGNER_FLAG);
+            d.flags = _MINT_CREATED_FLAG;
             d.next = editionHead.head;
             editionHead.head = uint16((uint256(c.tier) << 8) | uint256(scheduleNum));
 
             // Skip writing zeros, to avoid cold SSTOREs.
             if (c.affiliateMerkleRoot != bytes32(0)) d.affiliateMerkleRoot = c.affiliateMerkleRoot;
             if (c.merkleRoot != bytes32(0)) d.merkleRoot = c.merkleRoot;
-            if (c.signer != address(0)) {
-                if (!usePlatformSigner) d.signer = c.signer; // Only write if it is not the platform signer.
-            }
 
             emit MintCreated(c.edition, c.tier, scheduleNum, c);
         }
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
-    function mintTo(MintTo calldata p) public payable {
+    function mintTo(MintTo calldata p) public payable returns (uint256 fromTokenId) {
         MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
 
         /* ------------------- CHECKS AND UPDATES ------------------- */
 
-        // Check if the mint is open.
-        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
-            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
-        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
+        _requireMintOpen(d);
 
         // Perform the sub workflows depending on the mint mode.
         uint8 mode = d.mode;
         if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
         else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
+        else if (mode == PLATFORM_AIRDROP) revert InvalidMode();
 
         _incrementMinted(mode, d, p);
 
-        /* ----------- AFFILIATE AND PLATFORM FEES LOGIC ------------ */
+        /* ----------------- COMPUTE AND ACCRUE FEES ---------------- */
 
-        TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice);
+        MintedLogData memory l;
+        // Blocking same address self referral is left curved, but we do anyway.
+        l.affiliate = p.to == p.affiliate ? address(0) : p.affiliate;
+        // Affiliate check.
+        l.affiliated = _isAffiliatedWithProof(d, l.affiliate, p.affiliateProof);
 
-        uint256 remaining; // The fee sent to the Sound Edition (i.e. artist fee).
-        bool affiliated;
+        TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice, l.affiliated);
 
+        if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
+
+        l.finalArtistFee = f.finalArtistFee;
+        l.finalPlatformFee = f.finalPlatformFee;
+        l.finalAffiliateFee = f.finalAffiliateFee;
+
+        // Platform and affilaite fees are accrued mappings.
+        // Artist earnings are directly forwarded to the nft contract in mint call below.
+        // Overflow not possible since all fees are uint96s.
         unchecked {
-            if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
-
-            remaining = f.total - f.platformFee; // `platformFee <= total`;
-            platformFeesAccrued[d.platform] += f.platformFee; // Accrue the platform fee.
-
-            if (affiliated = _isAffiliatedWithProof(d, p.affiliate, p.affiliateProof)) {
-                remaining -= f.affiliateFee; // `affiliateFee <= remaining`.
-                affiliateFeesAccrued[p.affiliate] += f.affiliateFee; // Accrue the affiliate fee.
-            } else {
-                // Proof may be invalid, revert to prevent unintended skipping of affiliate fee.
-                if (p.affiliate != address(0)) revert InvalidAffiliate();
-                f.affiliateFee = 0; // Set the affiliate fee to zero if not affiliated.
+            if (l.finalAffiliateFee != 0) {
+                affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
+            }
+            if (l.finalPlatformFee != 0) {
+                platformFeesAccrued[d.platform] += l.finalPlatformFee;
             }
         }
 
         /* ------------------------- MINT --------------------------- */
 
         ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
-        MintedLogData memory l;
         l.quantity = p.quantity;
-        l.fromTokenId = edition.mint{ value: remaining }(p.tier, p.to, p.quantity);
+        l.fromTokenId = edition.mint{ value: l.finalArtistFee }(p.tier, p.to, p.quantity);
         l.allowlisted = p.allowlisted;
         l.allowlistedQuantity = p.allowlistedQuantity;
         l.signedClaimTicket = p.signedClaimTicket;
-        l.affiliate = p.affiliate;
-        l.affiliated = affiliated;
         l.requiredEtherValue = f.total;
         l.unitPrice = f.unitPrice;
-        l.platformFee = f.platformFee;
-        l.platformFlatFee = f.platformFlatFee;
-        l.affiliateFee = f.affiliateFee;
 
         emit Minted(p.edition, p.tier, p.scheduleNum, p.to, l, p.attributionId);
+
+        return l.fromTokenId;
+    }
+
+    /**
+     * @inheritdoc ISuperMinterV2
+     */
+    function platformAirdrop(PlatformAirdrop calldata p) public returns (uint256 fromTokenId) {
+        MintData storage d = _getMintData(LibOps.packId(p.edition, p.tier, p.scheduleNum));
+
+        /* ------------------- CHECKS AND UPDATES ------------------- */
+
+        _requireMintOpen(d);
+
+        if (d.mode != PLATFORM_AIRDROP) revert InvalidMode();
+        _verifyAndClaimPlatfromAidropSignature(d, p);
+
+        _incrementPlatformAirdropMinted(d, p);
+
+        /* ------------------------- MINT --------------------------- */
+
+        ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
+        fromTokenId = edition.airdrop(p.tier, p.to, p.signedQuantity);
+
+        emit PlatformAirdropped(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity, fromTokenId);
     }
 
     // Per edition mint parameter setters:
@@ -367,7 +406,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     // These functions can only be called by the owner or admin of the edition.
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setPrice(
         address edition,
@@ -379,12 +418,14 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         MintData storage d = _getMintData(mintId);
         // If the tier is GA and the `mode` is `VERIFY_SIGNATURE`, we'll use `gaPrice[platform]`.
         if (tier == GA_TIER && d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
+        // Platform airdropped mints will not have a price.
+        if (d.mode == PLATFORM_AIRDROP) revert NotConfigurable();
         d.price = price;
         emit PriceSet(edition, tier, scheduleNum, price);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setPaused(
         address edition,
@@ -399,7 +440,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setTimeRange(
         address edition,
@@ -419,7 +460,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setStartTime(
         address edition,
@@ -432,7 +473,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setAffiliateFee(
         address edition,
@@ -448,7 +489,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setAffiliateMerkleRoot(
         address edition,
@@ -463,7 +504,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setMaxMintablePerAccount(
         address edition,
@@ -477,13 +518,15 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         if (tier == GA_TIER) revert NotConfigurable();
         // Signature mints will have `type(uint32).max`.
         if (d.mode == VERIFY_SIGNATURE) revert NotConfigurable();
+        // Platform airdrops will have `type(uint32).max`.
+        if (d.mode == PLATFORM_AIRDROP) revert NotConfigurable();
         _validateMaxMintablePerAccount(value);
         d.maxMintablePerAccount = value;
         emit MaxMintablePerAccountSet(edition, tier, scheduleNum, value);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setMaxMintable(
         address edition,
@@ -501,7 +544,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setMerkleRoot(
         address edition,
@@ -517,31 +560,12 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         emit MerkleRootSet(edition, tier, scheduleNum, merkleRoot);
     }
 
-    /**
-     * @inheritdoc ISuperMinterV1_1
-     */
-    function setSigner(
-        address edition,
-        uint8 tier,
-        uint8 scheduleNum,
-        address signer
-    ) public onlyEditionOwnerOrAdmin(edition) {
-        uint256 mintId = LibOps.packId(edition, tier, scheduleNum);
-        MintData storage d = _getMintData(mintId);
-        if (d.mode != VERIFY_SIGNATURE) revert NotConfigurable();
-        _validateSigner(signer);
-        bool usePlatformSigner = signer == address(1);
-        d.flags = LibOps.setFlagTo(d.flags, _USE_PLATFORM_SIGNER_FLAG, usePlatformSigner);
-        if (!usePlatformSigner) d.signer = signer;
-        emit SignerSet(edition, tier, scheduleNum, signer);
-    }
-
     // Withdrawal functions:
     // ---------------------
     // These functions can be called by anyone.
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function withdrawForAffiliate(address affiliate) public {
         uint256 accrued = affiliateFeesAccrued[affiliate];
@@ -553,7 +577,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function withdrawForPlatform(address platform) public {
         address recipient = platformFeeAddress[platform];
@@ -571,49 +595,49 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     // These functions enable any caller to set their own platform fees.
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setPlatformFeeAddress(address recipient) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         _validatePlatformFeeAddress(recipient);
         platformFeeAddress[sender] = recipient;
         emit PlatformFeeAddressSet(sender, recipient);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setPlatformFeeConfig(uint8 tier, PlatformFeeConfig memory c) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         _validatePlatformFeeConfig(c);
         _platformFeeConfigs[LibOps.packId(sender, tier)] = c;
         emit PlatformFeeConfigSet(sender, tier, c);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setDefaultPlatformFeeConfig(PlatformFeeConfig memory c) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         _validatePlatformFeeConfig(c);
         _platformFeeConfigs[LibOps.packId(sender, _DEFAULT_FEE_CONFIG_INDEX)] = c;
         emit DefaultPlatformFeeConfigSet(sender, c);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setGAPrice(uint96 price) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         gaPrice[sender] = price;
         emit GAPriceSet(sender, price);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function setPlatformSigner(address signer) public {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         platformSigner[sender] = signer;
         emit PlatformSignerSet(sender, signer);
     }
@@ -640,7 +664,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     // =============================================================
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function computeMintToDigest(MintTo calldata p) public view returns (bytes32) {
         // prettier-ignore
@@ -660,40 +684,60 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
+     */
+    function computePlatformAirdropDigest(PlatformAirdrop calldata p) public view returns (bytes32) {
+        // prettier-ignore
+        return
+            _hashTypedData(keccak256(abi.encode(
+                PLATFORM_AIRDROP_TYPEHASH,
+                p.edition,
+                p.tier, 
+                p.scheduleNum,
+                keccak256(abi.encodePacked(p.to)),
+                p.signedQuantity,
+                p.signedClaimTicket,
+                p.signedDeadline
+            )));
+    }
+
+    /**
+     * @inheritdoc ISuperMinterV2
      */
     function totalPriceAndFees(
         address edition,
         uint8 tier,
         uint8 scheduleNum,
-        uint32 quantity
+        uint32 quantity,
+        bool hasValidAffiliate
     ) public view returns (TotalPriceAndFees memory) {
-        return totalPriceAndFeesWithSignedPrice(edition, tier, scheduleNum, quantity, 0);
+        return totalPriceAndFeesWithSignedPrice(edition, tier, scheduleNum, quantity, 0, hasValidAffiliate);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function totalPriceAndFeesWithSignedPrice(
         address edition,
         uint8 tier,
         uint8 scheduleNum,
         uint32 quantity,
-        uint96 signedPrice
+        uint96 signedPrice,
+        bool hasValidAffiliate
     ) public view returns (TotalPriceAndFees memory) {
         uint256 mintId = LibOps.packId(edition, tier, scheduleNum);
-        return _totalPriceAndFees(tier, _getMintData(mintId), quantity, signedPrice);
+        return _totalPriceAndFees(tier, _getMintData(mintId), quantity, signedPrice, hasValidAffiliate);
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function nextScheduleNum(address edition, uint8 tier) public view returns (uint8) {
         return _mintData[LibOps.packId(edition, tier, 0)].nextScheduleNum;
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function numberMinted(
         address edition,
@@ -706,7 +750,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function isAffiliatedWithProof(
         address edition,
@@ -720,7 +764,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function isAffiliated(
         address edition,
@@ -732,7 +776,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function checkClaimTickets(
         address edition,
@@ -751,21 +795,21 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function platformFeeConfig(address platform, uint8 tier) public view returns (PlatformFeeConfig memory) {
         return _platformFeeConfigs[LibOps.packId(platform, tier)];
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function defaultPlatformFeeConfig(address platform) public view returns (PlatformFeeConfig memory) {
         return _platformFeeConfigs[LibOps.packId(platform, _DEFAULT_FEE_CONFIG_INDEX)];
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function effectivePlatformFeeConfig(address platform, uint8 tier) public view returns (PlatformFeeConfig memory) {
         PlatformFeeConfig memory c = _platformFeeConfigs[LibOps.packId(platform, tier)];
@@ -775,7 +819,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function mintInfoList(address edition) public view returns (MintInfo[] memory a) {
         unchecked {
@@ -794,7 +838,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function mintInfo(
         address edition,
@@ -818,19 +862,18 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         info.paused = _isPaused(d);
         info.affiliateMerkleRoot = d.affiliateMerkleRoot;
         info.merkleRoot = d.merkleRoot;
-        info.signer = _effectiveSigner(d);
-        info.usePlatformSigner = _usePlatformSigner(d);
+        info.signer = platformSigner[d.platform];
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function name() external pure returns (string memory name_) {
         (name_, ) = _domainNameAndVersion();
     }
 
     /**
-     * @inheritdoc ISuperMinterV1_1
+     * @inheritdoc ISuperMinterV2
      */
     function version() external pure returns (string memory version_) {
         (, version_) = _domainNameAndVersion();
@@ -840,7 +883,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return LibOps.or(interfaceId == type(ISuperMinterV1_1).interfaceId, interfaceId == this.supportsInterface.selector);
+        return
+            LibOps.or(interfaceId == type(ISuperMinterV2).interfaceId, interfaceId == this.supportsInterface.selector);
     }
 
     // =============================================================
@@ -864,7 +908,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      * @param edition The edition address.
      */
     function _requireOnlyEditionOwnerOrAdmin(address edition) internal view {
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         if (sender != OwnableRoles(edition).owner())
             if (!OwnableRoles(edition).hasAnyRole(sender, LibOps.ADMIN_ROLE)) LibOps.revertUnauthorized();
     }
@@ -903,14 +947,6 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
-     * @dev Validates that the signer is not the zero address.
-     * @param signer The signer.
-     */
-    function _validateSigner(address signer) internal pure {
-        if (signer == address(0)) revert SignerIsZeroAddress();
-    }
-
-    /**
      * @dev Validates that the affiliate fee BPS does not exceed the max threshold.
      * @param bps The affiliate fee BPS.
      */
@@ -925,9 +961,20 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     function _validatePlatformFeeConfig(PlatformFeeConfig memory c) internal pure {
         if (
             LibOps.or(
-                c.perTxFlat > MAX_PLATFORM_PER_TX_FLAT_FEE,
-                c.perMintFlat > MAX_PLATFORM_PER_MINT_FLAT_FEE,
-                c.perMintBPS > MAX_PLATFORM_PER_MINT_FEE_BPS
+                LibOps.or(
+                    c.platformTxFlatFee > MAX_PLATFORM_PER_TX_FLAT_FEE,
+                    c.platformMintFeeBPS > MAX_PLATFORM_PER_MINT_FEE_BPS
+                ),
+                LibOps.or(
+                    c.artistMintReward > MAX_PER_MINT_REWARD,
+                    c.affiliateMintReward > MAX_PER_MINT_REWARD,
+                    c.platformMintReward > MAX_PER_MINT_REWARD
+                ),
+                LibOps.or(
+                    c.thresholdArtistMintReward > MAX_PER_MINT_REWARD,
+                    c.thresholdAffiliateMintReward > MAX_PER_MINT_REWARD,
+                    c.thresholdPlatformMintReward > MAX_PER_MINT_REWARD
+                )
             )
         ) revert InvalidPlatformFeeConfig();
     }
@@ -955,8 +1002,8 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         override
         returns (string memory name_, string memory version_)
     {
-        name_ = "SuperMinterV1_1";
-        version_ = "1";
+        name_ = "SuperMinter";
+        version_ = "1_1";
     }
 
     // Minting:
@@ -998,14 +1045,62 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
     }
 
     /**
+     * @dev Increments the number minted in the mint and the number minted by the collector.
+     * @param d    The mint data storage pointer.
+     * @param p    The platform airdrop parameters.
+     */
+    function _incrementPlatformAirdropMinted(MintData storage d, PlatformAirdrop calldata p) internal {
+        unchecked {
+            uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
+            uint256 toLength = p.to.length;
+
+            // Increment the number minted in the mint.
+            uint256 n = uint256(d.minted) + toLength * uint256(p.signedQuantity); // The next `minted`.
+            if (n > d.maxMintable) revert ExceedsMintSupply();
+            d.minted = uint32(n);
+
+            // Increment the number minted by the collectors.
+            for (uint256 i; i != toLength; ++i) {
+                LibMap.Uint32Map storage m = _numberMinted[p.to[i]];
+                m.set(mintId, uint32(uint256(m.get(mintId)) + uint256(p.signedQuantity)));
+            }
+        }
+    }
+
+    /**
+     * @dev Requires that the mint is open and not paused.
+     * @param d    The mint data storage pointer.
+     */
+    function _requireMintOpen(MintData storage d) internal view {
+        if (LibOps.or(block.timestamp < d.startTime, block.timestamp > d.endTime))
+            revert MintNotOpen(block.timestamp, d.startTime, d.endTime);
+        if (_isPaused(d)) revert MintPaused(); // Check if the mint is not paused.
+    }
+
+    /**
      * @dev Verify the signature, and mark the signed claim ticket as claimed.
      * @param d The mint data storage pointer.
      * @param p The mint-to parameters.
      */
     function _verifyAndClaimSignature(MintData storage d, MintTo calldata p) internal {
         if (p.quantity > p.signedQuantity) revert ExceedsSignedQuantity();
-        address signer = _effectiveSigner(d);
+        address signer = platformSigner[d.platform];
         if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computeMintToDigest(p), p.signature))
+            revert InvalidSignature();
+        if (block.timestamp > p.signedDeadline) revert SignatureExpired();
+        uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
+        if (!_claimsBitmaps[mintId].toggle(p.signedClaimTicket)) revert SignatureAlreadyUsed();
+    }
+
+    /**
+     * @dev Verify the platform airdrop signature, and mark the signed claim ticket as claimed.
+     * @param d The mint data storage pointer.
+     * @param p The platform airdrop parameters.
+     */
+    function _verifyAndClaimPlatfromAidropSignature(MintData storage d, PlatformAirdrop calldata p) internal {
+        // Unlike regular signature mints, platform airdrops only use `signedQuantity`.
+        address signer = platformSigner[d.platform];
+        if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, computePlatformAirdropDigest(p), p.signature))
             revert InvalidSignature();
         if (block.timestamp > p.signedDeadline) revert SignatureExpired();
         uint256 mintId = LibOps.packId(p.edition, p.tier, p.scheduleNum);
@@ -1038,7 +1133,7 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
                 revert InvalidMerkleProof();
         }
         // To mint, either the sender or `to` must be equal to `allowlisted`,
-        address sender = LibMulticaller.sender();
+        address sender = LibMulticaller.senderOrSigner();
         if (!LibOps.or(sender == allowlisted, p.to == allowlisted)) {
             // or the sender must be a delegate of `allowlisted`.
             if (!DelegateCashLib.checkDelegateForAll(sender, allowlisted)) revert CallerNotDelegated();
@@ -1057,39 +1152,72 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
         uint8 tier,
         MintData storage d,
         uint32 quantity,
-        uint96 signedPrice
+        uint96 signedPrice,
+        bool hasValidAffiliate
     ) internal view returns (TotalPriceAndFees memory f) {
+        // All flat prices are stored as uint96s in storage.
+        // The quantity is a uint32. Multiplications between a uint96 and uint32 won't overflow.
         unchecked {
             PlatformFeeConfig memory c = effectivePlatformFeeConfig(d.platform, tier);
-            // The actual unit price per token.
-            uint256 unitPrice;
+
             // For signature mints, even if it is GA tier, we will use the signed price.
             if (d.mode == VERIFY_SIGNATURE) {
                 if (signedPrice < d.price) revert SignedPriceTooLow(); // Enforce the price floor.
-                unitPrice = signedPrice;
+                f.unitPrice = signedPrice;
             } else if (tier == GA_TIER) {
-                unitPrice = gaPrice[d.platform]; // Else if GA tier, use `gaPrice[platform]`.
+                f.unitPrice = gaPrice[d.platform]; // Else if GA tier, use `gaPrice[platform]`.
             } else {
-                unitPrice = d.price; // Else, use the `price`.
+                f.unitPrice = d.price; // Else, use the `price`.
             }
-            f.unitPrice = unitPrice;
-            // The artist will receive the remaining after all BPS fees are deducted from sub total.
-            // The minter will have to pay the sub total plus any flat fees.
-            f.subTotal = unitPrice * uint256(quantity);
-            // Sum the total flat fees for mints, and the transaction flat fee.
-            f.platformTxFlatFee = c.perTxFlat;
-            f.platformMintFlatFee = c.perMintFlat * uint256(quantity);
-            f.platformFlatFee = f.platformMintFlatFee + f.platformTxFlatFee;
-            // BPS fees are to be deducted from the sub total.
-            f.platformMintBPSFee = LibOps.rawMulDiv(f.subTotal, c.perMintBPS, BPS_DENOMINATOR);
-            // The platform fee includes BPS fees deducted from sub total,
-            // and flat fees added to sub total.
-            f.platformFee = f.platformMintBPSFee + f.platformFlatFee;
-            // Affiliate fee is to be deducted from the sub total.
-            // Will be conditionally set to zero during mint if not affiliated.
-            f.affiliateFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
+
+            // The total price before any additive fees.
+            f.subTotal = f.unitPrice * uint256(quantity);
+
+            // Artist earns `subTotal` minus any basis points (BPS) split with affiliates and platform
+            f.finalArtistFee = f.subTotal;
+
+            // `affiliateBPSFee` is deducted from the `finalArtistFee`.
+            if (d.affiliateFeeBPS != 0 && hasValidAffiliate) {
+                uint256 affiliateBPSFee = LibOps.rawMulDiv(f.subTotal, d.affiliateFeeBPS, BPS_DENOMINATOR);
+                f.finalArtistFee -= affiliateBPSFee;
+                f.finalAffiliateFee = affiliateBPSFee;
+            }
+            // `platformBPSFee` is deducted from the `finalArtistFee`.
+            if (c.platformMintFeeBPS != 0) {
+                uint256 platformBPSFee = LibOps.rawMulDiv(f.subTotal, c.platformMintFeeBPS, BPS_DENOMINATOR);
+                f.finalArtistFee -= platformBPSFee;
+                f.finalPlatformFee = platformBPSFee;
+            }
+
+            // Protocol rewards are additive to `unitPrice` and paid by the buyer.
+            // There are 2 sets of rewards, one for prices below `thresholdPrice` and one for prices above.
+            if (f.unitPrice <= c.thresholdPrice) {
+                f.finalArtistFee += c.artistMintReward * uint256(quantity);
+                f.finalPlatformFee += c.platformMintReward * uint256(quantity);
+
+                // The platform is the affiliate if no affiliate is provided.
+                if (hasValidAffiliate) {
+                    f.finalAffiliateFee += c.affiliateMintReward * uint256(quantity);
+                } else {
+                    f.finalPlatformFee += c.affiliateMintReward * uint256(quantity);
+                }
+            } else {
+                f.finalArtistFee += c.thresholdArtistMintReward * uint256(quantity);
+                f.finalPlatformFee += c.thresholdPlatformMintReward * uint256(quantity);
+
+                // The platform is the affiliate if no affiliate is provided
+                if (hasValidAffiliate) {
+                    f.finalAffiliateFee += c.thresholdAffiliateMintReward * uint256(quantity);
+                } else {
+                    f.finalPlatformFee += c.thresholdAffiliateMintReward * uint256(quantity);
+                }
+            }
+
+            // Per-transaction flat fee.
+            f.finalPlatformFee += c.platformTxFlatFee;
+
             // The total is the final value which the minter has to pay. It includes all fees.
-            f.total = f.subTotal + f.platformFlatFee;
+            f.total = f.finalArtistFee + f.finalAffiliateFee + f.finalPlatformFee;
         }
     }
 
@@ -1160,23 +1288,5 @@ contract SuperMinterV1_1 is ISuperMinterV1_1, EIP712 {
      */
     function _isPaused(MintData storage d) internal view returns (bool) {
         return d.flags & _MINT_PAUSED_FLAG != 0;
-    }
-
-    /**
-     * @dev Returns the effective signer.
-     * @param d The storage pointer to the mint data.
-     * @return The effective signer.
-     */
-    function _effectiveSigner(MintData storage d) internal view returns (address) {
-        return _usePlatformSigner(d) ? platformSigner[d.platform] : d.signer;
-    }
-
-    /**
-     * @dev Returns whether the platform signer is to be used instead.
-     * @param d The storage pointer to the mint data.
-     * @return Whether the platform signer is to be used instead.
-     */
-    function _usePlatformSigner(MintData storage d) internal view returns (bool) {
-        return d.flags & _USE_PLATFORM_SIGNER_FLAG != 0;
     }
 }
