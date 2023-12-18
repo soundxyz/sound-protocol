@@ -1,7 +1,6 @@
 name: Canary Release
 
 on:
-  push:
   workflow_dispatch:
 
 env:
