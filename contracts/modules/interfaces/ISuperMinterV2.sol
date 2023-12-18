@@ -4,10 +4,10 @@ pragma solidity ^0.8.16;
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
- * @title ISuperMinterV1_1
+ * @title ISuperMinterV2
  * @notice The interface for the generalized minter.
  */
-interface ISuperMinterV1_1 is IERC165 {
+interface ISuperMinterV2 is IERC165 {
     // =============================================================
     //                            STRUCTS
     // =============================================================
@@ -116,21 +116,13 @@ interface ISuperMinterV1_1 is IERC165 {
         uint256 subTotal;
         // The price per token.
         uint256 unitPrice;
-        // The total platform fees.
-        // (inclusive of `platformTxFlatFee`, `platformBPSFee`, and `platformReward`).
-        uint256 platformFee;
-        // The platform per-transaction flat fees.
-        uint256 platformTxFlatFee;
-        // The total platform per-token BPS fees.
-        uint256 platformBPSFee;
-        // The affiliate BPS fee (does NOT include `affiliateReward`).
-        uint256 affiliateBPSFee;
-        // The amount of reward to give to the artist (after considering `thresholdPrice`).
-        uint256 artistReward;
-        // The amount of reward to give to the affiliate (after considering `thresholdPrice`).
-        uint256 affiliateReward;
-        // The amount of reward to give to the platform (after considering `thresholdPrice`).
-        uint256 platformReward;
+        // The final artist fee (inclusive of `finalArtistReward`).
+        uint256 finalArtistFee;
+        // The total affiliate fee (inclusive of `finalAffiliateReward`).
+        uint256 finalAffiliateFee;
+        // The final platform fee
+        // (inclusive of `finalPlatformReward`, `perTxFlat`, sum of `perMintBPS`).
+        uint256 finalPlatformFee;
     }
 
     /**
@@ -170,24 +162,24 @@ interface ISuperMinterV1_1 is IERC165 {
      * @dev A struct to hold the fee configuration for a platform and a tier.
      */
     struct PlatformFeeConfig {
-        // The amount of reward to give to the artist.
-        uint96 artistReward;
-        // The amount of reward to give to the affiliate.
-        uint96 affiliateReward;
-        // The amount of reward to give to the platform.
-        uint96 platformReward;
+        // The amount of reward to give to the artist per mint.
+        uint96 artistMintReward;
+        // The amount of reward to give to the affiliate per mint.
+        uint96 affiliateMintReward;
+        // The amount of reward to give to the platform per mint.
+        uint96 platformMintReward;
         // If the price is greater than this, the rewards will become the threshold variants.
         uint96 thresholdPrice;
         // The amount of reward to give to the artist (`unitPrice >= thresholdPrice`).
-        uint96 thresholdArtistReward;
+        uint96 thresholdArtistMintReward;
         // The amount of reward to give to the affiliate (`unitPrice >= thresholdPrice`).
-        uint96 thresholdAffiliateReward;
+        uint96 thresholdAffiliateMintReward;
         // The amount of reward to give to the platform (`unitPrice >= thresholdPrice`).
-        uint96 thresholdPlatformReward;
+        uint96 thresholdPlatformMintReward;
         // The per-transaction flat fee.
-        uint96 perTxFlat;
+        uint96 platformTxFlatFee;
         // The per-token fee BPS.
-        uint16 perMintBPS;
+        uint16 platformMintFeeBPS;
         // Whether the fees are active.
         bool active;
     }
@@ -860,26 +852,29 @@ interface ISuperMinterV1_1 is IERC165 {
 
     /**
      * @dev Returns the total price and fees for the mint.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param quantity      How many tokens to mint.
+     * @param edition           The address of the Sound Edition.
+     * @param tier              The tier.
+     * @param scheduleNum       The edition-tier schedule number.
+     * @param quantity          How many tokens to mint.
+     * @param hasValidAffiliate Whether there is a valid affiliate for the mint.
      * @return A struct containing the total price and fees.
      */
     function totalPriceAndFees(
         address edition,
         uint8 tier,
         uint8 scheduleNum,
-        uint32 quantity
+        uint32 quantity,
+        bool hasValidAffiliate
     ) external view returns (TotalPriceAndFees memory);
 
     /**
      * @dev Returns the total price and fees for the mint.
-     * @param edition       The address of the Sound Edition.
-     * @param tier          The tier.
-     * @param scheduleNum   The edition-tier schedule number.
-     * @param quantity      How many tokens to mint.
-     * @param signedPrice   The signed price.
+     * @param edition          The address of the Sound Edition.
+     * @param tier             The tier.
+     * @param scheduleNum      The edition-tier schedule number.
+     * @param quantity         How many tokens to mint.
+     * @param signedPrice      The signed price.
+     * @param hasValidAffiliate Whether there is a valid affiliate for the mint.
      * @return A struct containing the total price and fees.
      */
     function totalPriceAndFeesWithSignedPrice(
@@ -887,7 +882,8 @@ interface ISuperMinterV1_1 is IERC165 {
         uint8 tier,
         uint8 scheduleNum,
         uint32 quantity,
-        uint96 signedPrice
+        uint96 signedPrice,
+        bool hasValidAffiliate
     ) external view returns (TotalPriceAndFees memory);
 
     /**
