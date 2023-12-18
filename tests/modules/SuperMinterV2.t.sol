@@ -2,7 +2,7 @@ pragma solidity ^0.8.16;
 
 import { Merkle } from "murky/Merkle.sol";
 import { IERC721AUpgradeable, ISoundEditionV2_1, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
-import { ISuperMinterV1_1, SuperMinterV1_1 } from "@modules/SuperMinterV1_1.sol";
+import { ISuperMinterV2, SuperMinterV2 } from "@modules/SuperMinterV2.sol";
 import { DelegateCashLib } from "@modules/utils/DelegateCashLib.sol";
 import { LibOps } from "@core/utils/LibOps.sol";
 import { Ownable } from "solady/auth/Ownable.sol";
@@ -10,8 +10,8 @@ import { SafeCastLib } from "solady/utils/SafeCastLib.sol";
 import { LibSort } from "solady/utils/LibSort.sol";
 import "../TestConfigV2_1.sol";
 
-contract SuperMinterV1_1Tests is TestConfigV2_1 {
-    SuperMinterV1_1 sm;
+contract SuperMinterV2Tests is TestConfigV2_1 {
+    SuperMinterV2 sm;
     SoundEditionV2_1 edition;
     Merkle merkle;
 
@@ -20,13 +20,13 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         uint8 tier,
         uint8 scheduleNum,
         address indexed to,
-        ISuperMinterV1_1.MintedLogData data,
+        ISuperMinterV2.MintedLogData data,
         uint256 indexed attributionId
     );
 
-    struct SuperMinterV1_1Constants {
+    struct SuperMinterV2Constants {
         uint96 MAX_PLATFORM_PER_TX_FLAT_FEE;
-        uint96 MAX_PLATFORM_PER_MINT_FLAT_FEE;
+        uint96 MAX_PER_MINT_REWARD;
         uint16 MAX_PLATFORM_PER_MINT_FEE_BPS;
         uint16 MAX_AFFILIATE_FEE_BPS;
     }
@@ -43,14 +43,14 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         init.tierCreations[1].maxMintableLower = type(uint32).max;
         init.tierCreations[1].maxMintableUpper = type(uint32).max;
         edition = createSoundEdition(init);
-        sm = new SuperMinterV1_1();
+        sm = new SuperMinterV2();
         edition.grantRoles(address(sm), edition.MINTER_ROLE());
         merkle = new Merkle();
     }
 
-    function _superMinterConstants() internal view returns (SuperMinterV1_1Constants memory smc) {
+    function _superMinterConstants() internal view returns (SuperMinterV2Constants memory smc) {
         smc.MAX_PLATFORM_PER_TX_FLAT_FEE = sm.MAX_PLATFORM_PER_TX_FLAT_FEE();
-        smc.MAX_PLATFORM_PER_MINT_FLAT_FEE = sm.MAX_PLATFORM_PER_MINT_FLAT_FEE();
+        smc.MAX_PER_MINT_REWARD = sm.MAX_PER_MINT_REWARD();
         smc.MAX_PLATFORM_PER_MINT_FEE_BPS = sm.MAX_PLATFORM_PER_MINT_FEE_BPS();
         smc.MAX_AFFILIATE_FEE_BPS = sm.MAX_AFFILIATE_FEE_BPS();
     }
@@ -62,7 +62,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         assertEq(sm.mintInfoList(address(edition)).length, 0);
         for (uint256 j; j < 3; ++j) {
             for (uint256 i; i < 3; ++i) {
-                ISuperMinterV1_1.MintCreation memory c;
+                ISuperMinterV2.MintCreation memory c;
                 c.maxMintable = type(uint32).max;
                 c.platform = address(this);
                 c.edition = address(edition);
@@ -89,11 +89,11 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         address signer = _randomNonZeroAddress();
         sm.setPlatformSigner(signer);
 
-        ISuperMinterV1_1.MintInfo[] memory mintInfoList = sm.mintInfoList(address(edition));
+        ISuperMinterV2.MintInfo[] memory mintInfoList = sm.mintInfoList(address(edition));
         assertEq(mintInfoList.length, 3 * 3);
         for (uint256 j; j < 3; ++j) {
             for (uint256 i; i < 3; ++i) {
-                ISuperMinterV1_1.MintInfo memory info = mintInfoList[j * 3 + i];
+                ISuperMinterV2.MintInfo memory info = mintInfoList[j * 3 + i];
                 assertEq(info.scheduleNum, j);
                 assertEq(info.edition, address(edition));
                 assertEq(info.startTime, uint32(block.timestamp + i));
@@ -129,7 +129,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
     }
 
     function test_settersConfigurable(uint256) public {
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = uint32(_bound(_random(), 1, type(uint32).max));
         c.platform = address(this);
         c.edition = address(edition);
@@ -143,44 +143,44 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         assertEq(sm.createEditionMint(c), 0);
 
-        ISuperMinterV1_1.MintInfo memory info = sm.mintInfo(address(edition), c.tier, 0);
+        ISuperMinterV2.MintInfo memory info = sm.mintInfo(address(edition), c.tier, 0);
         assertEq(info.platform, address(this));
         if (c.tier == 0) {
             if (c.mode == sm.DEFAULT()) {
                 assertEq(info.merkleRoot, bytes32(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
 
                 assertEq(info.price, 0);
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setPrice(address(edition), c.tier, 0, c.price);
 
                 assertEq(info.maxMintable, type(uint32).max);
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMaxMintable(address(edition), c.tier, 0, c.maxMintable);
 
                 assertEq(info.maxMintablePerAccount, type(uint32).max);
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             } else if (c.mode == sm.VERIFY_MERKLE()) {
                 assertEq(info.merkleRoot, c.merkleRoot);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
 
                 assertEq(info.price, 0);
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setPrice(address(edition), c.tier, 0, c.price);
 
                 assertEq(info.maxMintable, c.maxMintable);
                 sm.setMaxMintable(address(edition), c.tier, 0, c.maxMintable);
 
                 assertEq(info.maxMintablePerAccount, type(uint32).max);
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             } else if (c.mode == sm.VERIFY_SIGNATURE()) {
                 assertEq(info.signer, sm.platformSigner(c.platform));
 
                 assertEq(info.merkleRoot, bytes32(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
 
                 assertEq(info.price, c.price);
@@ -190,13 +190,13 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 sm.setMaxMintable(address(edition), c.tier, 0, c.maxMintable);
 
                 assertEq(info.maxMintablePerAccount, type(uint32).max);
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             }
         } else {
             if (c.mode == sm.DEFAULT()) {
                 assertEq(info.merkleRoot, bytes32(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
 
                 assertEq(info.price, c.price);
@@ -223,7 +223,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 assertEq(info.signer, sm.platformSigner(c.platform));
 
                 assertEq(info.merkleRoot, bytes32(0));
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMerkleRoot(address(edition), c.tier, 0, c.merkleRoot);
 
                 assertEq(info.price, c.price);
@@ -233,7 +233,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 sm.setMaxMintable(address(edition), c.tier, 0, c.maxMintable);
 
                 assertEq(info.maxMintablePerAccount, type(uint32).max);
-                vm.expectRevert(ISuperMinterV1_1.NotConfigurable.selector);
+                vm.expectRevert(ISuperMinterV2.NotConfigurable.selector);
                 sm.setMaxMintablePerAccount(address(edition), c.tier, 0, c.maxMintablePerAccount);
             }
         }
@@ -242,7 +242,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
     function test_platformAirdrop(uint256) public {
         (address signer, uint256 privateKey) = _randomSigner();
 
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = uint32(_bound(_random(), 1, 64));
         c.platform = address(this);
         c.edition = address(edition);
@@ -257,7 +257,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         sm.setPlatformSigner(signer);
 
         unchecked {
-            ISuperMinterV1_1.PlatformAirdrop memory p;
+            ISuperMinterV2.PlatformAirdrop memory p;
             p.edition = address(edition);
             p.tier = c.tier;
             p.scheduleNum = 0;
@@ -274,7 +274,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
             uint256 expectedMinted = p.signedQuantity * p.to.length;
             if (expectedMinted > c.maxMintable) {
-                vm.expectRevert(ISuperMinterV1_1.ExceedsMintSupply.selector);
+                vm.expectRevert(ISuperMinterV2.ExceedsMintSupply.selector);
                 sm.platformAirdrop(p);
                 return;
             }
@@ -286,13 +286,13 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
                 assertEq(sm.numberMinted(address(edition), p.tier, p.scheduleNum, p.to[i]), p.signedQuantity);
             }
 
-            vm.expectRevert(ISuperMinterV1_1.SignatureAlreadyUsed.selector);
+            vm.expectRevert(ISuperMinterV2.SignatureAlreadyUsed.selector);
             sm.platformAirdrop(p);
         }
     }
 
     function test_mintDefaultUpToMaxPerAccount() public {
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = type(uint32).max;
         c.platform = address(this);
         c.edition = address(edition);
@@ -307,7 +307,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         c.tier = 1;
         assertEq(sm.createEditionMint(c), 0);
 
-        ISuperMinterV1_1.MintTo memory p;
+        ISuperMinterV2.MintTo memory p;
         p.edition = address(edition);
         p.tier = 0;
         p.scheduleNum = 0;
@@ -335,7 +335,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         p.tier = 1;
         p.quantity = 9;
-        vm.expectRevert(ISuperMinterV1_1.ExceedsMaxPerAccount.selector);
+        vm.expectRevert(ISuperMinterV2.ExceedsMaxPerAccount.selector);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
 
         p.quantity = 8;
@@ -357,7 +357,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         leaves[0] = keccak256(abi.encodePacked(allowlisted[0]));
         leaves[1] = keccak256(abi.encodePacked(allowlisted[1]));
 
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = type(uint32).max;
         c.platform = address(this);
         c.edition = address(edition);
@@ -371,7 +371,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         // Schedule 0.
         assertEq(sm.createEditionMint(c), 0);
 
-        ISuperMinterV1_1.MintTo memory p;
+        ISuperMinterV2.MintTo memory p;
         p.edition = address(edition);
         p.tier = 1;
         p.scheduleNum = 0;
@@ -383,7 +383,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         // Try mint with a corrupted proof.
         p.allowlistProof[0] = bytes32(uint256(p.allowlistProof[0]) ^ 1);
-        vm.expectRevert(ISuperMinterV1_1.InvalidMerkleProof.selector);
+        vm.expectRevert(ISuperMinterV2.InvalidMerkleProof.selector);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
         // Restore the proof.
         p.allowlistProof[0] = bytes32(uint256(p.allowlistProof[0]) ^ 1);
@@ -397,14 +397,14 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         assertEq(sm.numberMinted(address(edition), 1, 0, allowlisted[1]), 0);
 
         p.quantity = 9;
-        vm.expectRevert(ISuperMinterV1_1.ExceedsMaxPerAccount.selector);
+        vm.expectRevert(ISuperMinterV2.ExceedsMaxPerAccount.selector);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
 
         p.quantity = 8;
         sm.mintTo{ value: p.quantity * 1 ether }(p);
 
         p.quantity = 1;
-        vm.expectRevert(ISuperMinterV1_1.ExceedsMaxPerAccount.selector);
+        vm.expectRevert(ISuperMinterV2.ExceedsMaxPerAccount.selector);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
 
         // Schedule 1.
@@ -422,7 +422,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         p.allowlistProof = merkle.getProof(leaves, 0);
         p.quantity = 3;
         p.allowlistedQuantity = 3;
-        vm.expectRevert(ISuperMinterV1_1.ExceedsMaxPerAccount.selector);
+        vm.expectRevert(ISuperMinterV2.ExceedsMaxPerAccount.selector);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
 
         p.quantity = 2;
@@ -445,7 +445,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         leaves[0] = keccak256(abi.encodePacked(allowlisted[0]));
         leaves[1] = keccak256(abi.encodePacked(allowlisted[1]));
 
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = type(uint32).max;
         c.platform = address(this);
         c.edition = address(edition);
@@ -459,7 +459,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         // Schedule 0.
         assertEq(sm.createEditionMint(c), 0);
 
-        ISuperMinterV1_1.MintTo memory p;
+        ISuperMinterV2.MintTo memory p;
         p.edition = address(edition);
         p.tier = 1;
         p.scheduleNum = 0;
@@ -473,14 +473,14 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         vm.deal(allowlisted[0], 1000 ether);
 
-        vm.expectRevert(ISuperMinterV1_1.CallerNotDelegated.selector);
+        vm.expectRevert(ISuperMinterV2.CallerNotDelegated.selector);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
 
         vm.prank(allowlisted[0]);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
         expectedNFTBalance += p.quantity;
 
-        vm.expectRevert(ISuperMinterV1_1.CallerNotDelegated.selector);
+        vm.expectRevert(ISuperMinterV2.CallerNotDelegated.selector);
         sm.mintTo{ value: p.quantity * 1 ether }(p);
 
         for (uint256 q; q < 3; ++q) {
@@ -493,7 +493,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             vm.prank(allowlisted[0]);
             _setDelegateForAll(address(this), false);
 
-            vm.expectRevert(ISuperMinterV1_1.CallerNotDelegated.selector);
+            vm.expectRevert(ISuperMinterV2.CallerNotDelegated.selector);
             sm.mintTo{ value: p.quantity * 1 ether }(p);
         }
 
@@ -524,38 +524,38 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
     }
 
     function test_platformFeeConfig(uint256) public {
-        SuperMinterV1_1Constants memory smc = _superMinterConstants();
+        SuperMinterV2Constants memory smc = _superMinterConstants();
         uint96 perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE * 2));
-        uint96 perMintFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FLAT_FEE * 2));
+        uint96 platformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD * 2));
         uint16 perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS * 2));
 
         uint8 tier = uint8(_random());
         bool active = _random() % 2 == 0;
 
         bool expectRevert = perTxFlat > smc.MAX_PLATFORM_PER_TX_FLAT_FEE ||
-            perMintFlat > smc.MAX_PLATFORM_PER_MINT_FLAT_FEE ||
+            platformReward > smc.MAX_PER_MINT_REWARD ||
             perMintBPS > smc.MAX_PLATFORM_PER_MINT_FEE_BPS;
 
-        if (expectRevert) vm.expectRevert(ISuperMinterV1_1.InvalidPlatformFeeConfig.selector);
+        if (expectRevert) vm.expectRevert(ISuperMinterV2.InvalidPlatformFeeConfig.selector);
 
         if (_random() % 2 == 0) {
-            _setPlatformFeeConfig(tier, perTxFlat, perMintFlat, perMintBPS, active);
+            _setPlatformFeeConfig(tier, perTxFlat, platformReward, perMintBPS, active);
             if (!expectRevert) {
                 if (active) {
-                    _checkEffectivePlatformFeeConfig(tier, perTxFlat, perMintFlat, perMintBPS, true);
+                    _checkEffectivePlatformFeeConfig(tier, perTxFlat, platformReward, perMintBPS, true);
                 } else {
                     _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
                 }
             }
         } else {
-            _setDefaultPlatformFeeConfig(perTxFlat, perMintFlat, perMintBPS, active);
+            _setDefaultPlatformFeeConfig(perTxFlat, platformReward, perMintBPS, active);
             if (!expectRevert) {
                 if (active) {
-                    _checkEffectivePlatformFeeConfig(tier, perTxFlat, perMintFlat, perMintBPS, true);
-                    _checkDefaultPlatformFeeConfig(perTxFlat, perMintFlat, perMintBPS, true);
+                    _checkEffectivePlatformFeeConfig(tier, perTxFlat, platformReward, perMintBPS, true);
+                    _checkDefaultPlatformFeeConfig(perTxFlat, platformReward, perMintBPS, true);
                 } else {
                     _checkEffectivePlatformFeeConfig(tier, 0, 0, 0, false);
-                    _checkDefaultPlatformFeeConfig(perTxFlat, perMintFlat, perMintBPS, false);
+                    _checkDefaultPlatformFeeConfig(perTxFlat, platformReward, perMintBPS, false);
                 }
             }
         }
@@ -563,14 +563,14 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
     function _setDefaultPlatformFeeConfig(
         uint96 perTxFlat,
-        uint96 perMintFlat,
+        uint96 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
-        ISuperMinterV1_1.PlatformFeeConfig memory c;
-        c.perTxFlat = perTxFlat;
-        c.perMintFlat = perMintFlat;
-        c.perMintBPS = perMintBPS;
+        ISuperMinterV2.PlatformFeeConfig memory c;
+        c.platformTxFlatFee = perTxFlat;
+        c.platformMintReward = platformReward;
+        c.platformMintFeeBPS = perMintBPS;
         c.active = active;
         sm.setDefaultPlatformFeeConfig(c);
     }
@@ -578,60 +578,66 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
     function _setPlatformFeeConfig(
         uint8 tier,
         uint96 perTxFlat,
-        uint96 perMintFlat,
+        uint96 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
-        ISuperMinterV1_1.PlatformFeeConfig memory c;
-        c.perTxFlat = perTxFlat;
-        c.perMintFlat = perMintFlat;
-        c.perMintBPS = perMintBPS;
+        ISuperMinterV2.PlatformFeeConfig memory c;
+        c.platformTxFlatFee = perTxFlat;
+        c.platformMintReward = platformReward;
+        c.platformMintFeeBPS = perMintBPS;
         c.active = active;
         sm.setPlatformFeeConfig(tier, c);
     }
 
     function _checkDefaultPlatformFeeConfig(
         uint96 perTxFlat,
-        uint96 perMintFlat,
+        uint96 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
-        _checkPlatformFeeConfig(sm.defaultPlatformFeeConfig(address(this)), perTxFlat, perMintFlat, perMintBPS, active);
+        _checkPlatformFeeConfig(
+            sm.defaultPlatformFeeConfig(address(this)),
+            perTxFlat,
+            platformReward,
+            perMintBPS,
+            active
+        );
     }
 
     function _checkEffectivePlatformFeeConfig(
         uint8 tier,
         uint96 perTxFlat,
-        uint96 perMintFlat,
+        uint96 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
         _checkPlatformFeeConfig(
             sm.effectivePlatformFeeConfig(address(this), tier),
             perTxFlat,
-            perMintFlat,
+            platformReward,
             perMintBPS,
             active
         );
     }
 
     function _checkPlatformFeeConfig(
-        ISuperMinterV1_1.PlatformFeeConfig memory result,
+        ISuperMinterV2.PlatformFeeConfig memory result,
         uint96 perTxFlat,
-        uint96 perMintFlat,
+        uint96 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
-        assertEq(result.perTxFlat, perTxFlat);
-        assertEq(result.perMintFlat, perMintFlat);
-        assertEq(result.perMintBPS, perMintBPS);
+        assertEq(result.platformTxFlatFee, perTxFlat);
+        assertEq(result.platformMintReward, platformReward);
+        assertEq(result.platformMintFeeBPS, perMintBPS);
         assertEq(result.active, active);
     }
 
     function test_unitPrice(uint256) public {
-        SuperMinterV1_1Constants memory smc = _superMinterConstants();
+        SuperMinterV2Constants memory smc = _superMinterConstants();
 
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = type(uint32).max;
         c.platform = _randomNonZeroAddress();
         c.edition = address(edition);
@@ -653,13 +659,13 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         uint32 quantity = uint32(_bound(_random(), 1, type(uint32).max));
         uint96 signedPrice = uint96(_bound(_random(), 1, type(uint96).max));
-        ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
+        ISuperMinterV2.TotalPriceAndFees memory tpaf;
         if (c.mode == sm.VERIFY_SIGNATURE() && signedPrice < c.price) {
-            vm.expectRevert(ISuperMinterV1_1.SignedPriceTooLow.selector);
-            tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice);
+            vm.expectRevert(ISuperMinterV2.SignedPriceTooLow.selector);
+            tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice, false);
             signedPrice = c.price;
         }
-        tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice);
+        tpaf = sm.totalPriceAndFeesWithSignedPrice(address(edition), c.tier, 0, quantity, signedPrice, false);
         if (c.mode == sm.VERIFY_SIGNATURE()) {
             assertEq(tpaf.unitPrice, signedPrice);
         } else if (c.tier == 0) {
@@ -668,7 +674,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
             assertEq(tpaf.unitPrice, c.price);
         }
 
-        ISuperMinterV1_1.MintInfo memory info = sm.mintInfo(address(edition), c.tier, 0);
+        ISuperMinterV2.MintInfo memory info = sm.mintInfo(address(edition), c.tier, 0);
         if (c.tier == 0) {
             assertEq(info.price, c.mode == sm.VERIFY_SIGNATURE() ? c.price : gaPrice);
         } else {
@@ -677,283 +683,139 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
     }
 
     function test_mintWithVariousFees(uint256) public {
-        SuperMinterV1_1Constants memory smc = _superMinterConstants();
-        address[] memory feeRecipients = _twoRandomUniqueAddresses();
-
-        ISuperMinterV1_1.MintCreation memory c;
-        c.maxMintable = type(uint32).max;
-        c.platform = _randomNonZeroAddress();
-        c.edition = address(edition);
-        c.tier = 1;
-        c.price = uint96(_bound(_random(), 0, type(uint96).max));
-        c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
-        c.startTime = 0;
-        c.endTime = uint32(block.timestamp + 1000);
-        c.maxMintablePerAccount = type(uint32).max;
-        bytes32[] memory affiliateLeaves;
-        if (_random() % 2 == 0) {
-            affiliateLeaves = new bytes32[](2);
-            affiliateLeaves[0] = keccak256(abi.encodePacked(feeRecipients[0]));
-            affiliateLeaves[1] = keccak256(abi.encodePacked(feeRecipients[1]));
-            c.affiliateMerkleRoot = merkle.getRoot(affiliateLeaves);
-        }
-        assertEq(sm.createEditionMint(c), 0);
-
-        ISuperMinterV1_1.MintInfo memory mintInfo = sm.mintInfo(address(edition), 1, 0);
-        assertEq(mintInfo.price, c.price);
-        assertEq(mintInfo.affiliateFeeBPS, c.affiliateFeeBPS);
-
-        ISuperMinterV1_1.PlatformFeeConfig memory pfc;
-        pfc.perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
-        pfc.perMintFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FLAT_FEE));
-        pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
-        pfc.active = true;
-        vm.prank(c.platform);
-        sm.setPlatformFeeConfig(1, pfc);
-
-        ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
-
-        ISuperMinterV1_1.MintTo memory p;
-        p.edition = address(edition);
-        p.tier = 1;
-        p.scheduleNum = 0;
-        p.to = address(this);
-        p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
-        bool affiliated = _random() % 2 == 0;
-        if (affiliated) {
-            p.affiliate = feeRecipients[1];
-            if (affiliateLeaves.length != 0) p.affiliateProof = merkle.getProof(affiliateLeaves, 1);
-        } else if (_random() % 2 == 0) {
-            // Use wrong affiliate proof.
-            if (affiliateLeaves.length != 0) {
-                p.affiliateProof = merkle.getProof(affiliateLeaves, 0);
-                if (_random() % 4 == 0) {
-                    p.affiliate = feeRecipients[1];
-                    p.quantity = uint32(_bound(_random(), 1, 8));
-                    tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-                    vm.expectRevert(ISuperMinterV1_1.InvalidAffiliate.selector);
-                    vm.deal(address(this), type(uint192).max);
-                    sm.mintTo{ value: tpaf.total }(p);
-                    return;
-                }
-            }
-        }
-
-        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-        _checkTotalPriceAndFees(
-            tpaf,
-            p.quantity,
-            pfc.perTxFlat,
-            pfc.perMintFlat,
-            pfc.perMintBPS,
-            c.affiliateFeeBPS,
-            c.price
-        );
-
-        p.quantity = uint32(_bound(_random(), 1, 8));
-        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-        vm.deal(address(this), type(uint192).max);
-
-        // Mint 2 times.
-        sm.mintTo{ value: tpaf.total }(p);
-        sm.mintTo{ value: tpaf.total }(p);
-
-        if (affiliated) {
-            assertEq(sm.affiliateFeesAccrued(p.affiliate), tpaf.affiliateFee * 2);
-            assertEq(sm.platformFeesAccrued(c.platform), tpaf.platformFee * 2);
-            assertEq(address(sm).balance, (tpaf.affiliateFee + tpaf.platformFee) * 2);
-            assertEq(address(edition).balance, (tpaf.total - tpaf.platformFee - tpaf.affiliateFee) * 2);
-
-            vm.expectRevert(ISuperMinterV1_1.PlatformFeeAddressIsZero.selector);
-            sm.withdrawForPlatform(c.platform);
-
-            vm.prank(c.platform);
-            sm.setPlatformFeeAddress(feeRecipients[0]);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-
-            uint256 balanceBefore = address(p.affiliate).balance;
-            sm.withdrawForAffiliate(p.affiliate);
-            assertEq(address(p.affiliate).balance, balanceBefore + tpaf.affiliateFee * 2);
-            assertEq(address(sm).balance, tpaf.platformFee * 2);
-
-            balanceBefore = address(feeRecipients[0]).balance;
-            sm.withdrawForPlatform(c.platform);
-            assertEq(address(feeRecipients[0]).balance, balanceBefore + tpaf.platformFee * 2);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-            assertEq(address(sm).balance, 0);
-        } else {
-            assertEq(sm.affiliateFeesAccrued(p.affiliate), 0);
-            assertEq(sm.platformFeesAccrued(c.platform), tpaf.platformFee * 2);
-            assertEq(address(sm).balance, tpaf.platformFee * 2);
-            assertEq(address(edition).balance, (tpaf.total - tpaf.platformFee) * 2);
-        }
-    }
-
-    function testMintWithIncentives(uint256) public {
-        SuperMinterV1_1Constants memory smc = _superMinterConstants();
+        SuperMinterV2Constants memory smc = _superMinterConstants();
         address[] memory feeRecipients = _twoRandomUniqueAddresses();
 
         // Create a tier 1 mint schedule, without any affiliate root.
-        ISuperMinterV1_1.MintCreation memory c;
-        c.maxMintable = type(uint32).max;
-        c.platform = _randomNonZeroAddress();
-        c.edition = address(edition);
-        c.tier = 1;
-        c.price = uint96(_bound(_random(), 0, type(uint96).max));
-        c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
-        c.startTime = 0;
-        c.endTime = uint32(block.timestamp + 1000);
-        c.maxMintablePerAccount = type(uint32).max;
-        assertEq(sm.createEditionMint(c), 0);
+        ISuperMinterV2.MintCreation memory c;
+        {
+            c.maxMintable = type(uint32).max;
+            c.platform = _randomNonZeroAddress();
+            c.edition = address(edition);
+            c.tier = 1;
+            c.price = uint96(_bound(_random(), 0, type(uint96).max));
+            c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
+            c.startTime = 0;
+            c.endTime = uint32(block.timestamp + 1000);
+            c.maxMintablePerAccount = type(uint32).max;
+            assertEq(sm.createEditionMint(c), 0);
+        }
 
         // Set the tier 1 platform fee config.
-        ISuperMinterV1_1.PlatformFeeConfig memory pfc;
+        ISuperMinterV2.PlatformFeeConfig memory pfc;
+        {
+            pfc.platformTxFlatFee = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
+            pfc.platformMintFeeBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
 
-        pfc.perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
-        pfc.perMintFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FLAT_FEE));
-        pfc.perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
-        pfc.affiliateIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat));
-        pfc.cheapMintIncentive = uint96(_bound(_random(), 0, pfc.perMintFlat - pfc.affiliateIncentive));
-        pfc.cheapMintIncentiveThreshold = uint96(_bound(_random(), 0, pfc.cheapMintIncentive * 2));
-        pfc.active = true;
-        vm.prank(c.platform);
-        sm.setPlatformFeeConfig(1, pfc);
+            pfc.artistMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.affiliateMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.platformMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+
+            pfc.thresholdPrice = uint96(_bound(_random(), 0, type(uint96).max));
+
+            pfc.thresholdArtistMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdAffiliateMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdPlatformMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+
+            pfc.active = true;
+            vm.prank(c.platform);
+            sm.setPlatformFeeConfig(1, pfc);
+        }
 
         // Prepare the MintTo struct witha a random quantity.
-        ISuperMinterV1_1.MintTo memory p;
-        p.edition = address(edition);
-        p.tier = 1;
-        p.scheduleNum = 0;
-        p.to = address(this);
-        p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
-
-        ISuperMinterV1_1.TotalPriceAndFees memory tpaf;
-        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-        assertEq(tpaf.affiliateIncentive, pfc.affiliateIncentive * uint256(p.quantity));
-
-        // Use a lower, non-zero quantity for mint testing.
-        p.quantity = uint32(_bound(_random(), 1, 8));
-        tpaf = sm.totalPriceAndFees(address(edition), 1, 0, p.quantity);
-        assertEq(tpaf.affiliateIncentive, pfc.affiliateIncentive * uint256(p.quantity));
+        ISuperMinterV2.MintTo memory p;
+        {
+            p.edition = address(edition);
+            p.tier = 1;
+            p.scheduleNum = 0;
+            p.to = address(this);
+            p.quantity = uint32(_bound(_random(), 0, type(uint32).max));
+        }
 
         // Just to ensure we have enough ETH to mint.
         vm.deal(address(this), type(uint192).max);
+
+        ISuperMinterV2.MintedLogData memory l;
+        ISuperMinterV2.TotalPriceAndFees memory tpaf;
+        {
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, _random() % 2 == 0);
+            assertEq(tpaf.subTotal, c.price * uint256(p.quantity));
+            assertGt(tpaf.total + 1, tpaf.subTotal);
+
+            // Use a lower, non-zero quantity for mint testing.
+            p.quantity = uint32(_bound(_random(), 1, 8));
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, _random() % 2 == 0);
+            assertEq(tpaf.subTotal, c.price * uint256(p.quantity));
+            assertGt(tpaf.total + 1, tpaf.subTotal);
+        }
 
         // Test the affiliated path.
         if (_random() % 2 == 0) {
             p.affiliate = _randomNonZeroAddress();
 
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, true);
+
             vm.expectEmit(true, true, true, true);
-            ISuperMinterV1_1.MintedLogData memory l;
-            {
-                l.quantity = p.quantity;
-                l.fromTokenId = 1;
-                l.affiliate = p.affiliate;
-                l.affiliated = true;
-                l.requiredEtherValue = tpaf.total;
-                l.unitPrice = tpaf.unitPrice;
-                uint256 finalCheapMintIncentive;
-                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold)
-                    finalCheapMintIncentive = tpaf.cheapMintIncentive;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee - tpaf.affiliateFee + finalCheapMintIncentive;
-                l.finalPlatformFee = tpaf.platformFee - tpaf.affiliateIncentive - finalCheapMintIncentive;
-                l.finalAffiliateIncentive = tpaf.affiliateIncentive;
-                l.finalAffiliateFee = tpaf.affiliateFee + tpaf.affiliateIncentive;
-                l.finalCheapMintIncentive = finalCheapMintIncentive;
-            }
-            emit Minted(address(edition), 1, 0, address(this), l, 0);
 
-            sm.mintTo{ value: tpaf.total }(p);
-            assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
-            assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
-            assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
-            assertEq(address(edition).balance, l.finalArtistFee);
+            l.quantity = p.quantity;
+            l.fromTokenId = 1;
+            l.affiliate = p.affiliate;
+            l.affiliated = true;
+            l.requiredEtherValue = tpaf.total;
+            l.unitPrice = tpaf.unitPrice;
+            l.finalArtistFee = tpaf.finalArtistFee;
+            l.finalAffiliateFee = tpaf.finalAffiliateFee;
+            l.finalPlatformFee = tpaf.finalPlatformFee;
 
-            // Perform the withdrawals and check if the balances tally.
-            vm.prank(c.platform);
-            sm.setPlatformFeeAddress(feeRecipients[0]);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-
-            uint256 balanceBefore = address(p.affiliate).balance;
-            sm.withdrawForAffiliate(p.affiliate);
-            assertEq(address(p.affiliate).balance, balanceBefore + l.finalAffiliateFee);
-
-            balanceBefore = address(feeRecipients[0]).balance;
-            sm.withdrawForPlatform(c.platform);
-            assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-            assertEq(address(sm).balance, 0);
+            emit Minted(address(edition), c.tier, 0, address(this), l, 0);
         } else {
             p.affiliate = address(0);
 
+            tpaf = sm.totalPriceAndFees(address(edition), c.tier, 0, p.quantity, false);
+
             vm.expectEmit(true, true, true, true);
-            ISuperMinterV1_1.MintedLogData memory l;
-            {
-                l.quantity = p.quantity;
-                l.fromTokenId = 1;
-                l.affiliate = address(0);
-                l.affiliated = false;
-                l.requiredEtherValue = tpaf.total;
-                l.unitPrice = tpaf.unitPrice;
-                uint256 finalCheapMintIncentive;
-                if (tpaf.unitPrice <= tpaf.cheapMintIncentiveThreshold)
-                    finalCheapMintIncentive = tpaf.cheapMintIncentive;
-                l.finalArtistFee = tpaf.total - tpaf.platformFee + finalCheapMintIncentive;
-                l.finalPlatformFee = tpaf.platformFee - finalCheapMintIncentive;
-                l.finalAffiliateFee = 0;
-                l.finalCheapMintIncentive = finalCheapMintIncentive;
-            }
-            emit Minted(address(edition), 1, 0, address(this), l, 0);
 
-            sm.mintTo{ value: tpaf.total }(p);
-            assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
-            assertEq(address(sm).balance, l.finalPlatformFee);
-            assertEq(address(edition).balance, l.finalArtistFee);
+            l.quantity = p.quantity;
+            l.fromTokenId = 1;
+            l.affiliate = address(0);
+            l.affiliated = false;
+            l.requiredEtherValue = tpaf.total;
+            l.unitPrice = tpaf.unitPrice;
+            l.finalArtistFee = tpaf.finalArtistFee;
+            l.finalAffiliateFee = 0;
+            l.finalPlatformFee = tpaf.finalPlatformFee;
 
-            // Perform the withdrawals and check if the balances tally.
-            vm.prank(c.platform);
-            sm.setPlatformFeeAddress(feeRecipients[0]);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-
-            uint256 balanceBefore = address(feeRecipients[0]).balance;
-            sm.withdrawForPlatform(c.platform);
-            assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
-            assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
-            assertEq(address(sm).balance, 0);
+            emit Minted(address(edition), c.tier, 0, address(this), l, 0);
         }
-    }
 
-    function _checkTotalPriceAndFees(
-        ISuperMinterV1_1.TotalPriceAndFees memory tpaf,
-        uint256 quantity,
-        uint256 perTxFlat,
-        uint256 perMintFlat,
-        uint256 perMintBPS,
-        uint256 affiliateFeeBPS,
-        uint256 unitPrice
-    ) internal {
-        assertEq(tpaf.unitPrice, unitPrice);
-        uint256 subTotal = unitPrice * quantity;
-        assertEq(tpaf.subTotal, subTotal);
-        uint256 platformTxFlatFee = perTxFlat;
-        assertEq(tpaf.platformTxFlatFee, platformTxFlatFee);
-        uint256 platformMintFlatFee = perMintFlat * uint256(quantity);
-        assertEq(tpaf.platformMintFlatFee, platformMintFlatFee);
-        uint256 platformFlatFee = platformMintFlatFee + platformTxFlatFee;
-        assertEq(tpaf.platformFlatFee, platformFlatFee);
-        uint256 platformMintBPSFee = (subTotal * perMintBPS) / LibOps.BPS_DENOMINATOR;
-        assertEq(tpaf.platformMintBPSFee, platformMintBPSFee);
-        uint256 platformFee = platformMintBPSFee + platformFlatFee;
-        assertEq(tpaf.platformFee, platformFee);
-        uint256 affiliateFee = (subTotal * affiliateFeeBPS) / LibOps.BPS_DENOMINATOR;
-        assertEq(tpaf.affiliateFee, affiliateFee);
-        uint256 total = subTotal + platformFlatFee;
-        assertEq(tpaf.total, total);
+        sm.mintTo{ value: tpaf.total }(p);
+
+        // Check invariants.
+        assertEq(l.finalPlatformFee + l.finalAffiliateFee + l.finalArtistFee, tpaf.total);
+        assertEq(sm.platformFeesAccrued(c.platform), l.finalPlatformFee);
+        assertEq(sm.affiliateFeesAccrued(p.affiliate), l.finalAffiliateFee);
+        assertEq(address(sm).balance, l.finalPlatformFee + l.finalAffiliateFee);
+        assertEq(address(edition).balance, l.finalArtistFee);
+
+        // Perform the withdrawals for affiliate and check if the balances tally.
+        uint256 balanceBefore = address(p.affiliate).balance;
+        sm.withdrawForAffiliate(p.affiliate);
+        assertEq(address(p.affiliate).balance, balanceBefore + l.finalAffiliateFee);
+
+        // Perform the withdrawals for platform and check if the balances tally.
+        balanceBefore = address(feeRecipients[0]).balance;
+        vm.prank(c.platform);
+        sm.setPlatformFeeAddress(feeRecipients[0]);
+        assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
+        sm.withdrawForPlatform(c.platform);
+        assertEq(address(feeRecipients[0]).balance, balanceBefore + l.finalPlatformFee);
+        assertEq(sm.platformFeeAddress(c.platform), feeRecipients[0]);
+        assertEq(address(sm).balance, 0);
     }
 
     function test_mintWithSignature(uint256) public {
         (address signer, uint256 privateKey) = _randomSigner();
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = type(uint32).max;
         c.platform = _randomNonZeroAddress();
         c.edition = address(edition);
@@ -966,7 +828,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         sm.setPlatformSigner(signer);
         assertEq(sm.createEditionMint(c), 0);
 
-        ISuperMinterV1_1.MintTo memory p;
+        ISuperMinterV2.MintTo memory p;
         p.edition = address(edition);
         p.tier = c.tier;
         p.scheduleNum = 0;
@@ -984,19 +846,19 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
 
         sm.mintTo{ value: uint256(p.quantity) * uint256(p.signedPrice) }(p);
 
-        vm.expectRevert(ISuperMinterV1_1.SignatureAlreadyUsed.selector);
+        vm.expectRevert(ISuperMinterV2.SignatureAlreadyUsed.selector);
         sm.mintTo{ value: uint256(p.quantity) * uint256(p.signedPrice) }(p);
 
         assertEq(edition.balanceOf(p.to), p.quantity);
 
         p.signedClaimTicket = uint32(p.signedClaimTicket ^ 1);
-        vm.expectRevert(ISuperMinterV1_1.InvalidSignature.selector);
+        vm.expectRevert(ISuperMinterV2.InvalidSignature.selector);
         sm.mintTo{ value: uint256(p.quantity) * uint256(p.signedPrice) }(p);
 
         uint32 originalQuantity = p.quantity;
         p.quantity = uint32(p.signedQuantity + _bound(_random(), 1, 10));
         p.signature = _generateSignature(p, privateKey);
-        vm.expectRevert(ISuperMinterV1_1.ExceedsSignedQuantity.selector);
+        vm.expectRevert(ISuperMinterV2.ExceedsSignedQuantity.selector);
         sm.mintTo{ value: uint256(p.quantity) * uint256(p.signedPrice) }(p);
         p.quantity = originalQuantity;
 
@@ -1006,7 +868,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         assertEq(edition.balanceOf(p.to), p.quantity * 2);
     }
 
-    function _generateSignature(ISuperMinterV1_1.MintTo memory p, uint256 privateKey)
+    function _generateSignature(ISuperMinterV2.MintTo memory p, uint256 privateKey)
         internal
         returns (bytes memory signature)
     {
@@ -1015,7 +877,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         signature = abi.encodePacked(r, s, v);
     }
 
-    function _generatePlatformAirdropSignature(ISuperMinterV1_1.PlatformAirdrop memory p, uint256 privateKey)
+    function _generatePlatformAirdropSignature(ISuperMinterV2.PlatformAirdrop memory p, uint256 privateKey)
         internal
         returns (bytes memory signature)
     {
@@ -1025,7 +887,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
     }
 
     function test_mintGA(uint256) public {
-        ISuperMinterV1_1.MintCreation memory c;
+        ISuperMinterV2.MintCreation memory c;
         c.maxMintable = type(uint32).max;
         c.platform = _randomNonZeroAddress();
         c.edition = address(edition);
@@ -1040,7 +902,7 @@ contract SuperMinterV1_1Tests is TestConfigV2_1 {
         vm.prank(c.platform);
         sm.setGAPrice(uint96(gaPrice));
 
-        ISuperMinterV1_1.MintTo memory p;
+        ISuperMinterV2.MintTo memory p;
         p.edition = address(edition);
         p.tier = 0;
         p.scheduleNum = 0;

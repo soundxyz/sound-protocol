@@ -63,5 +63,5 @@ generateDeployment "SoundOnChainMetadata";
 generateDeployment "SoundMetadata";
 
 generateDeployment "SoundEditionV2_1";
-generateDeployment "SuperMinterV1_1";
+generateDeployment "SuperMinterV2";
 
