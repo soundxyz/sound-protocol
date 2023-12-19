@@ -20,9 +20,9 @@ The following contracts have been deployed on Mainnet, Optimism, Goerli, Optimis
 
 | Contract  |  Address |
 |---|---|
-| `SoundEditionV2` | `0x0000000000c78FEE168002D89D141517b8E6E0FE`
+| `SoundEditionV2_1` | `0x000000000000Be2397A709213a10cf71b07f42eE`
 | `SoundCreatorV2` | `0x0000000000aec84F5BFc2af15EAfb943bf4e3522`
-| `SuperMinter` | `0x0000000000CF4558c36229ac0026ee16D3aE35Cd`
+| `SuperMinterV2` | `0x000000000001A36777f9930aAEFf623771b13e70`
 | `SoundOnChainMetadata` | `0x0000000000724868d80283B098Ffa809B2181692`
 | `SoundMetadata` | `0x0000000000f5A96Dc85959cAeb0Cfe680f108FB5`
 
@@ -30,7 +30,7 @@ The following contracts have been deployed on Mainnet, Optimism, Goerli, Optimis
 
 The latest Sound Protocol comprises of several components: 
 
-- **`SoundEditionV2`**  
+- **`SoundEditionV2_1`**  
 
   The NFT contract.
 
@@ -45,7 +45,7 @@ The latest Sound Protocol comprises of several components:
   1. Clones and initializes a `SoundEdition`.
   2. Forwards calldata to an array of target contracts. These calldata can be used to set up the required authorizations and mint schedules.
 
-- **`SuperMinter`**
+- **`SuperMinterV2`**
 
   A generalized singleton minter contract that can mint on `SoundEdition`s.
 
@@ -68,20 +68,20 @@ The actual directories may contain some older contracts not on the list ─ they
 contracts
 ├── core
 │   ├── SoundCreatorV2.sol ─ "Factory"
-│   ├── SoundEditionV2.sol ─ "NFT implementation"
+│   ├── SoundEditionV2_1.sol ─ "NFT implementation"
 │   ├── interfaces
 │   │   ├── ISoundCreatorV2.sol
-│   │   └── ISoundEditionV2.sol
+│   │   └── ISoundEditionV2_1.sol
 │   └── utils
 │       ├── MintRandomnessLib.sol ─ "Library for on-chain 1-of-1 raffle"
 │       ├── LibOps.sol ─ "Library for common operations"
 │       └── ArweaveURILib.sol ─ "For efficient storage of Arweave URIs"
 └── modules
-    ├── SuperMinter.sol ─ "Generalized minter"
+    ├── SuperMinterV2.sol ─ "Generalized minter"
     ├── SoundMetadata.sol ─ "Metadata module for SoundEdition"
     ├── SoundOnChainMetadata.sol ─ "On-chain variant of SoundMetadata"
     ├── interfaces
-    │   ├── ISuperMinter.sol
+    │   ├── ISuperMinterV2.sol
     │   ├── ISoundMetadata.sol
     │   └── ISoundOnChainMetadata.sol
     └── utils
