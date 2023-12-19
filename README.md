@@ -18,6 +18,8 @@ Sound Protocol is a generalized platform for flexible and efficient creation of 
 
 The following contracts have been deployed on Mainnet, Optimism, Goerli, Optimism-Goerli, and Sepolia.
 
+### Latest deployments
+
 | Contract  |  Address |
 |---|---|
 | `SoundEditionV2_1` | `0x000000000000Be2397A709213a10cf71b07f42eE`
@@ -25,6 +27,13 @@ The following contracts have been deployed on Mainnet, Optimism, Goerli, Optimis
 | `SuperMinterV2` | `0x000000000001A36777f9930aAEFf623771b13e70`
 | `SoundOnChainMetadata` | `0x0000000000724868d80283B098Ffa809B2181692`
 | `SoundMetadata` | `0x0000000000f5A96Dc85959cAeb0Cfe680f108FB5`
+
+### Older deployments
+
+| Contract  |  Address |
+|---|---|
+| `SoundEditionV2` | `0x0000000000c78FEE168002D89D141517b8E6E0FE`
+| `SuperMinter` | `0x0000000000CF4558c36229ac0026ee16D3aE35Cd`
 
 ## Architecture
 
