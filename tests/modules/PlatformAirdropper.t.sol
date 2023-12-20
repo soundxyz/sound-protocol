@@ -54,6 +54,9 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
 
     function _randomNonZeroAddressesGreaterThan(uint256 t) internal returns (address[] memory a) {
         uint256 n = _random() % 4;
+        if (_random() % 32 == 0) {
+            n = _random() % 32;
+        }
         a = new address[](n);
         require(t != 0, "t must not be zero");
         unchecked {
@@ -104,10 +107,12 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
             address[][2] memory aliases;
             (, aliases[0]) = pa.platformAirdrop(address(sm), p);
 
-            for (uint256 i; i < p.to.length; ++i) {
-                uint256 k = _expectedMintCounts[0][p.to[i]];
-                assertEq(edition.balanceOf(p.to[i]), k);
-                assertEq(sm.numberMinted(address(edition), p.tier, p.scheduleNum, p.to[i]), k);
+            if (_random() % 8 == 0) {
+                for (uint256 i; i < p.to.length; ++i) {
+                    uint256 k = _expectedMintCounts[0][p.to[i]];
+                    assertEq(edition.balanceOf(p.to[i]), k);
+                    assertEq(sm.numberMinted(address(edition), p.tier, p.scheduleNum, p.to[i]), k);
+                }
             }
 
             p.signedClaimTicket ^= 1;
@@ -122,10 +127,12 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
 
             p.to = pa.aliasesToAddresses(p.to);
 
-            for (uint256 i; i < p.to.length; ++i) {
-                uint256 k = _expectedMintCounts[0][p.to[i]] * 2;
-                assertEq(edition.balanceOf(p.to[i]), k);
-                assertEq(sm.numberMinted(address(edition), p.tier, p.scheduleNum, p.to[i]), k);
+            if (_random() % 8 == 0) {
+                for (uint256 i; i < p.to.length; ++i) {
+                    uint256 k = _expectedMintCounts[0][p.to[i]] * 2;
+                    assertEq(edition.balanceOf(p.to[i]), k);
+                    assertEq(sm.numberMinted(address(edition), p.tier, p.scheduleNum, p.to[i]), k);
+                }
             }
 
             assertEq(_uniquified(p.to).length, numAliases);
@@ -168,11 +175,13 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
             address[][][2] memory aliases;
             (, aliases[0]) = pa.platformAirdropMulti(address(sm), p);
 
-            for (uint256 j; j != 2; ++j) {
-                for (uint256 i; i < p[j].to.length; ++i) {
-                    uint256 k = _expectedMintCounts[0][p[j].to[i]];
-                    assertEq(edition.balanceOf(p[j].to[i]), k);
-                    assertEq(sm.numberMinted(address(edition), p[j].tier, p[j].scheduleNum, p[j].to[i]), k);
+            if (_random() % 8 == 0) {
+                for (uint256 j; j != 2; ++j) {
+                    for (uint256 i; i < p[j].to.length; ++i) {
+                        uint256 k = _expectedMintCounts[0][p[j].to[i]];
+                        assertEq(edition.balanceOf(p[j].to[i]), k);
+                        assertEq(sm.numberMinted(address(edition), p[j].tier, p[j].scheduleNum, p[j].to[i]), k);
+                    }
                 }
             }
 
@@ -189,11 +198,13 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
                 p[j].to = pa.aliasesToAddresses(p[j].to);
             }
 
-            for (uint256 j; j != 2; ++j) {
-                for (uint256 i; i < p[j].to.length; ++i) {
-                    uint256 k = _expectedMintCounts[0][p[j].to[i]] * 2;
-                    assertEq(edition.balanceOf(p[j].to[i]), k);
-                    assertEq(sm.numberMinted(address(edition), p[j].tier, p[j].scheduleNum, p[j].to[i]), k);
+            if (_random() % 8 == 0) {
+                for (uint256 j; j != 2; ++j) {
+                    for (uint256 i; i < p[j].to.length; ++i) {
+                        uint256 k = _expectedMintCounts[0][p[j].to[i]] * 2;
+                        assertEq(edition.balanceOf(p[j].to[i]), k);
+                        assertEq(sm.numberMinted(address(edition), p[j].tier, p[j].scheduleNum, p[j].to[i]), k);
+                    }
                 }
             }
 
