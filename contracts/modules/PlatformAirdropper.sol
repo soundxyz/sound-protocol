@@ -15,16 +15,28 @@ contract PlatformAirdropper is IPlatformAirdropper {
     //                            STORAGE
     // =============================================================
 
-    uint256 internal _numAliases;
+    /**
+     * @dev The current number of aliases.
+     */
+    uint32 public numAliases;
 
+    /**
+     * @dev Maps an alias to its original address.
+     */
     mapping(address => address) internal _aliasToAddress;
 
+    /**
+     * @dev Maps an address to its alias.
+     */
     mapping(address => address) internal _addressToAlias;
 
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
 
+    /**
+     * @inheritdoc IPlatformAirdropper
+     */
     function platformAirdrop(address superMinter, ISuperMinterV2.PlatformAirdrop memory p)
         public
         returns (uint256 fromTokenId, address[] memory aliases)
@@ -39,6 +51,9 @@ contract PlatformAirdropper is IPlatformAirdropper {
         }
     }
 
+    /**
+     * @inheritdoc IPlatformAirdropper
+     */
     function platformAirdropMulti(address superMinter, ISuperMinterV2.PlatformAirdrop[] memory p)
         public
         returns (uint256[] memory fromTokenIds, address[][] memory aliases)
@@ -53,10 +68,32 @@ contract PlatformAirdropper is IPlatformAirdropper {
         }
     }
 
+    /**
+     * @inheritdoc IPlatformAirdropper
+     */
+    function registerAliases(address[] memory a) public returns (address[] memory) {
+        unchecked {
+            uint256 n = a.length;
+            for (uint256 i; i != n; ++i) {
+                a[i] = _registerAlias(a[i]);
+            }
+            return a;
+        }
+    }
+
+    // Misc functions:
+    // ---------------
+
+    /**
+     * @dev For calldata compression.
+     */
     fallback() external payable {
         LibZip.cdFallback();
     }
 
+    /**
+     * @dev For calldata compression.
+     */
     receive() external payable {
         LibZip.cdFallback();
     }
@@ -65,6 +102,9 @@ contract PlatformAirdropper is IPlatformAirdropper {
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
     // =============================================================
 
+    /**
+     * @inheritdoc IPlatformAirdropper
+     */
     function addressesToAliases(address[] memory a) public view returns (address[] memory) {
         unchecked {
             uint256 n = a.length;
@@ -75,6 +115,9 @@ contract PlatformAirdropper is IPlatformAirdropper {
         }
     }
 
+    /**
+     * @inheritdoc IPlatformAirdropper
+     */
     function aliasesToAddresses(address[] memory a) public view returns (address[] memory) {
         unchecked {
             uint256 n = a.length;
@@ -89,24 +132,43 @@ contract PlatformAirdropper is IPlatformAirdropper {
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
 
+    /**
+     * @dev Returns the alias and address for `aliasOrAddress`.
+     *      If the `aliasOrAddress` is less than `2**31 - 1`, it is treated as an alias.
+     *      Otherwise, it is treated as an address, and it's alias will be registered on-the-fly.
+     * @param aliasOrAddress The alias or address.
+     * @return alias_   The alias.
+     * @return address_ The address.
+     */
     function _getAliasAndAddress(address aliasOrAddress) internal returns (address alias_, address address_) {
-        if (aliasOrAddress == address(0)) revert AliasOrAddressCannotBeZero();
+        // If the `aliasOrAddress` is less than or equal to `2**32 - 1`, we will consider it an alias.
+        if (uint160(aliasOrAddress) <= type(uint32).max) {
+            alias_ = aliasOrAddress;
+            address_ = _aliasToAddress[alias_];
+            if (address_ == address(0)) revert AliasNotFound();
+        } else {
+            address_ = aliasOrAddress;
+            alias_ = _registerAlias(address_);
+        }
+    }
 
-        address_ = _aliasToAddress[aliasOrAddress];
+    /**
+     * @dev Registers the alias for the address on-the-fly.
+     * @param address_ The address.
+     * @return alias_ The alias registered for the address.
+     */
+    function _registerAlias(address address_) internal returns (address alias_) {
+        if (uint160(address_) <= type(uint32).max) revert AddressTooSmall();
 
-        if (address_ == address(0)) {
-            // If the address has not been registered,
-            address_ = aliasOrAddress; // then the input must be an address.
-            unchecked {
-                alias_ = address(uint160(++_numAliases)); // Increment the `_numAliases` and cast it into an alias.
-            }
+        alias_ = _addressToAlias[address_];
+        // If the address has no alias, register it's alias.
+        if (alias_ == address(0)) {
+            // Increment the `numAliases` and cast it into an alias.
+            alias_ = address(uint160(++numAliases));
             // Add to the mappings.
             _aliasToAddress[alias_] = address_;
             _addressToAlias[address_] = alias_;
             emit RegisteredAlias(address_, alias_);
-        } else {
-            // Otherwise, if the address has already been registered,
-            alias_ = aliasOrAddress; // then the input must be an alias.
         }
     }
 }
