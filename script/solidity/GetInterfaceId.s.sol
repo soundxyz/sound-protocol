@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 import { ISoundEditionV1 } from "@core/interfaces/ISoundEditionV1.sol";
 import { ISoundEditionV1_2 } from "@core/interfaces/ISoundEditionV1_2.sol";
 import { ISoundEditionV2 } from "@core/interfaces/ISoundEditionV2.sol";
+import { ISoundEditionV2_1 } from "@core/interfaces/ISoundEditionV2_1.sol";
+
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { IFixedPriceSignatureMinter } from "@modules/interfaces/IFixedPriceSignatureMinter.sol";
 import { IMerkleDropMinter } from "@modules/interfaces/IMerkleDropMinter.sol";
@@ -19,6 +21,7 @@ import { IEditionMaxMinterV2 } from "@modules/interfaces/IEditionMaxMinterV2.sol
 import { IRangeEditionMinterV2 } from "@modules/interfaces/IRangeEditionMinterV2.sol";
 
 import { ISuperMinter } from "@modules/interfaces/ISuperMinter.sol";
+import { ISuperMinterV2 } from "@modules/interfaces/ISuperMinterV2.sol";
 
 contract GetInterfaceId is Script {
     function run() external view {
@@ -67,8 +70,14 @@ contract GetInterfaceId is Script {
         console.log('", "ISoundEditionV2": "');
         console.logBytes4(type(ISoundEditionV2).interfaceId);
 
+        console.log('", "ISoundEditionV2_1": "');
+        console.logBytes4(type(ISoundEditionV2_1).interfaceId);
+
         console.log('", "ISuperMinter": "');
         console.logBytes4(type(ISuperMinter).interfaceId);
+
+        console.log('", "ISuperMinterV2": "');
+        console.logBytes4(type(ISuperMinterV2).interfaceId);
 
         console.log('"}');
     }
