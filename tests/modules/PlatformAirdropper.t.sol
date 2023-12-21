@@ -229,7 +229,7 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
         vm.prank(c.platform);
         sm.setPlatformSigner(signer);
 
-        uint256 n = 200;
+        uint256 n = 256;
 
         ISuperMinterV2.PlatformAirdrop memory p;
         p.edition = address(edition);
