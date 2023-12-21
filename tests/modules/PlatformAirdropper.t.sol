@@ -212,6 +212,43 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
         }
     }
 
+    function test_platformAirdropLimit() public {
+        (address signer, uint256 privateKey) = _randomSigner();
+
+        ISuperMinterV2.MintCreation memory c;
+        c.maxMintable = type(uint32).max;
+        c.platform = address(this);
+        c.edition = address(edition);
+        c.startTime = 0;
+        c.tier = 0;
+        c.endTime = type(uint32).max;
+        c.maxMintablePerAccount = uint32(_random()); // Doesn't matter, will be auto set to max.
+        c.mode = sm.PLATFORM_AIRDROP();
+        assertEq(sm.createEditionMint(c), 0);
+
+        vm.prank(c.platform);
+        sm.setPlatformSigner(signer);
+
+        uint256 n = 200;
+
+        ISuperMinterV2.PlatformAirdrop memory p;
+        p.edition = address(edition);
+        p.tier = c.tier;
+        p.scheduleNum = 0;
+        p.to = new address[](n);
+        unchecked {
+            for (uint256 i; i != n; ++i) {
+                p.to[i] = address(uint160(0x123456789abcdef + i));
+            }
+        }
+        p.signedQuantity = 1;
+        p.signedClaimTicket = 1;
+        p.signedDeadline = type(uint32).max;
+        p.signature = _generatePlatformAirdropSignature(p, privateKey);
+
+        pa.platformAirdrop(address(sm), p);
+    }
+
     function _generatePlatformAirdropSignature(ISuperMinterV2.PlatformAirdrop memory p, uint256 privateKey)
         internal
         returns (bytes memory signature)
