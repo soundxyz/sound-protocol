@@ -905,7 +905,7 @@ contract SoundEditionV2_1 is ISoundEditionV2, ERC721AQueryableUpgradeable, ERC72
         if (!_mintConcluded(d)) revert MintNotConcluded();
     }
 
-        /**
+    /**
      * @dev Append to the tier token IDs and the token tiers arrays.
      * Reverts if there is insufficient supply.
      * @param tier     The tier.
