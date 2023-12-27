@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
 
 import { Merkle } from "murky/Merkle.sol";
-import { IERC721AUpgradeable, ISoundEditionV2_1, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
+import { IERC721AUpgradeable, ISoundEditionV2, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
 import { ISuperMinterV2, SuperMinterV2 } from "@modules/SuperMinterV2.sol";
 import { DelegateCashLib } from "@modules/utils/DelegateCashLib.sol";
 import { LibOps } from "@core/utils/LibOps.sol";
@@ -36,8 +36,8 @@ contract SuperMinterV2Tests is TestConfigV2_1 {
 
     function setUp() public virtual override {
         super.setUp();
-        ISoundEditionV2_1.EditionInitialization memory init = genericEditionInitialization();
-        init.tierCreations = new ISoundEditionV2_1.TierCreation[](2);
+        ISoundEditionV2.EditionInitialization memory init = genericEditionInitialization();
+        init.tierCreations = new ISoundEditionV2.TierCreation[](2);
         init.tierCreations[0].tier = 0;
         init.tierCreations[1].tier = 1;
         init.tierCreations[1].maxMintableLower = type(uint32).max;

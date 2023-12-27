@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import { IERC721AUpgradeable, ISoundEditionV2_1, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
+import { IERC721AUpgradeable, ISoundEditionV2, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { LibSort } from "solady/utils/LibSort.sol";
 import { LibMap } from "solady/utils/LibMap.sol";
@@ -20,20 +20,20 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
     event MaxMintableRangeSet(uint8 tier, uint32 lower, uint32 upper);
     event CutoffTimeSet(uint8 tier, uint32 cutoff);
     event MintRandomnessEnabledSet(uint8 tier, bool enabled);
-    event SoundEditionInitialized(ISoundEditionV2_1.EditionInitialization init);
-    event TierCreated(ISoundEditionV2_1.TierCreation creation);
+    event SoundEditionInitialized(ISoundEditionV2.EditionInitialization init);
+    event TierCreated(ISoundEditionV2.TierCreation creation);
     event TierFrozen(uint8 tier);
     event ETHWithdrawn(address recipient, uint256 amount, address caller);
     event ERC20Withdrawn(address recipient, address[] tokens, uint256[] amounts, address caller);
-    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
-    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
+    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId);
+    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId);
     event BatchMetadataUpdate(uint256 fromTokenId, uint256 toTokenId);
 
     uint16 public constant BPS_DENOMINATOR = 10000;
 
     function test_initialization(uint256) public {
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init = genericEditionInitialization();
+        ISoundEditionV2.EditionInitialization memory init = genericEditionInitialization();
 
         init.royaltyBPS = uint16(_bound(_random(), 0, BPS_DENOMINATOR));
         init.isCreateTierFrozen = _random() % 2 == 0;
@@ -47,7 +47,7 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
         emit SoundEditionInitialized(init);
         edition = createSoundEdition(init);
 
-        ISoundEditionV2_1.EditionInfo memory info = edition.editionInfo();
+        ISoundEditionV2.EditionInfo memory info = edition.editionInfo();
         assertEq(info.royaltyBPS, init.royaltyBPS);
         assertEq(info.isCreateTierFrozen, init.isCreateTierFrozen);
         assertEq(info.isMetadataFrozen, init.isMetadataFrozen);
@@ -55,38 +55,38 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
     }
 
     function test_initializationReverts() public {
-        ISoundEditionV2_1.EditionInitialization memory init = genericEditionInitialization();
+        ISoundEditionV2.EditionInitialization memory init = genericEditionInitialization();
 
         createSoundEdition(init);
 
         init = genericEditionInitialization();
         init.fundingRecipient = address(0);
-        vm.expectRevert(ISoundEditionV2_1.InvalidFundingRecipient.selector);
+        vm.expectRevert(ISoundEditionV2.InvalidFundingRecipient.selector);
         createSoundEdition(init);
 
         init = genericEditionInitialization();
         init.royaltyBPS = BPS_DENOMINATOR + 1;
-        vm.expectRevert(ISoundEditionV2_1.InvalidRoyaltyBPS.selector);
+        vm.expectRevert(ISoundEditionV2.InvalidRoyaltyBPS.selector);
         createSoundEdition(init);
 
         init = genericEditionInitialization();
-        init.tierCreations = new ISoundEditionV2_1.TierCreation[](0);
-        vm.expectRevert(ISoundEditionV2_1.ZeroTiersProvided.selector);
+        init.tierCreations = new ISoundEditionV2.TierCreation[](0);
+        vm.expectRevert(ISoundEditionV2.ZeroTiersProvided.selector);
         createSoundEdition(init);
 
         init = genericEditionInitialization();
         init.tierCreations[0].tier = 1;
         init.tierCreations[0].maxMintableUpper = 0;
         init.tierCreations[0].maxMintableLower = 1;
-        vm.expectRevert(ISoundEditionV2_1.InvalidMaxMintableRange.selector);
+        vm.expectRevert(ISoundEditionV2.InvalidMaxMintableRange.selector);
         createSoundEdition(init);
     }
 
     function test_tierTokenIds(uint256) public {
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init;
+        ISoundEditionV2.EditionInitialization memory init;
         init.fundingRecipient = address(this);
-        init.tierCreations = new ISoundEditionV2_1.TierCreation[](3);
+        init.tierCreations = new ISoundEditionV2.TierCreation[](3);
         for (uint256 i; i < 3; ++i) {
             init.tierCreations[i].tier = uint8(i);
             init.tierCreations[i].maxMintableLower = 10;
@@ -136,17 +136,16 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
     }
 
     function _mintOrAirdrop(
-        ISoundEditionV2_1 edition,
+        ISoundEditionV2 edition,
         uint8 tier,
         address to,
         uint256 quantity
     ) internal {
         uint256 r = _random() % 3;
         uint256 expectedFromTokenId = edition.nextTokenId();
-        uint32 expectedFromTierTokenIdIndex = edition.tierInfo(tier).minted;
         if (r == 0) {
             vm.expectEmit(true, true, true, true);
-            emit Minted(tier, to, quantity, expectedFromTokenId, expectedFromTierTokenIdIndex);
+            emit Minted(tier, to, quantity, expectedFromTokenId);
             edition.mint(tier, to, quantity);
         } else if (r == 1) {
             address[] memory recipients = new address[](quantity);
@@ -154,13 +153,13 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
                 recipients[i] = to;
             }
             vm.expectEmit(true, true, true, true);
-            emit Airdropped(tier, recipients, 1, expectedFromTokenId, expectedFromTierTokenIdIndex);
+            emit Airdropped(tier, recipients, 1, expectedFromTokenId);
             edition.airdrop(tier, recipients, 1);
         } else {
             address[] memory recipients = new address[](1);
             recipients[0] = to;
             vm.expectEmit(true, true, true, true);
-            emit Airdropped(tier, recipients, quantity, expectedFromTokenId, expectedFromTierTokenIdIndex);
+            emit Airdropped(tier, recipients, quantity, expectedFromTokenId);
             edition.airdrop(tier, recipients, quantity);
         }
     }
@@ -168,9 +167,9 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
     function test_mintsForNonGA(uint256) public {
         uint8 tier = uint8(_bound(_random(), 1, 255));
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init;
+        ISoundEditionV2.EditionInitialization memory init;
         init.fundingRecipient = address(this);
-        init.tierCreations = new ISoundEditionV2_1.TierCreation[](1);
+        init.tierCreations = new ISoundEditionV2.TierCreation[](1);
         init.tierCreations[0].tier = tier;
         init.tierCreations[0].maxMintableLower = 5;
         init.tierCreations[0].maxMintableUpper = 10;
@@ -195,13 +194,13 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
         edition.mint(tier, address(this), limit - remainder);
         _checkMints(edition, tier, true, false);
 
-        vm.expectRevert(ISoundEditionV2_1.ExceedsAvailableSupply.selector);
+        vm.expectRevert(ISoundEditionV2.ExceedsAvailableSupply.selector);
         edition.mint(tier, address(this), remainder + 1);
 
         edition.mint(tier, address(this), remainder);
         _checkMints(edition, tier, true, true);
 
-        vm.expectRevert(ISoundEditionV2_1.ExceedsAvailableSupply.selector);
+        vm.expectRevert(ISoundEditionV2.ExceedsAvailableSupply.selector);
         edition.mint(tier, address(this), 1);
 
         _checkMints(edition, tier, true, true);
@@ -221,31 +220,31 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
 
     function test_updateGATier() public {
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init;
+        ISoundEditionV2.EditionInitialization memory init;
         init.fundingRecipient = address(this);
-        init.tierCreations = new ISoundEditionV2_1.TierCreation[](1);
+        init.tierCreations = new ISoundEditionV2.TierCreation[](1);
         init.tierCreations[0].tier = 0;
         edition = createSoundEdition(init);
 
         assertEq(edition.editionInfo().tierInfo[0].isFrozen, true);
         assertEq(edition.isFrozen(0), true);
 
-        vm.expectRevert(ISoundEditionV2_1.TierIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV2.TierIsFrozen.selector);
         edition.setMaxMintableRange(0, 7, 11);
 
-        vm.expectRevert(ISoundEditionV2_1.TierIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV2.TierIsFrozen.selector);
         edition.freezeTier(0);
 
-        vm.expectRevert(ISoundEditionV2_1.TierIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV2.TierIsFrozen.selector);
         edition.setMintRandomnessEnabled(0, false);
     }
 
     function test_updateNonGATier() public {
         uint8 tier = uint8(_bound(_random(), 1, 255));
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init;
+        ISoundEditionV2.EditionInitialization memory init;
         init.fundingRecipient = address(this);
-        init.tierCreations = new ISoundEditionV2_1.TierCreation[](1);
+        init.tierCreations = new ISoundEditionV2.TierCreation[](1);
         init.tierCreations[0].tier = tier;
         init.tierCreations[0].maxMintableLower = 5;
         init.tierCreations[0].maxMintableUpper = 10;
@@ -286,13 +285,13 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
         assertEq(edition.editionInfo().tierInfo[0].isFrozen, true);
         assertEq(edition.isFrozen(tier), true);
 
-        vm.expectRevert(ISoundEditionV2_1.TierIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV2.TierIsFrozen.selector);
         edition.setCutoffTime(tier, uint32(block.timestamp + 100));
 
-        vm.expectRevert(ISoundEditionV2_1.TierIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV2.TierIsFrozen.selector);
         edition.setMaxMintableRange(tier, 7, 11);
 
-        vm.expectRevert(ISoundEditionV2_1.TierIsFrozen.selector);
+        vm.expectRevert(ISoundEditionV2.TierIsFrozen.selector);
         edition.setMintRandomnessEnabled(tier, false);
     }
 
@@ -300,11 +299,11 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
         uint8[] memory uniqueTiers = _uniqueTiers(true);
 
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init;
+        ISoundEditionV2.EditionInitialization memory init;
         init.fundingRecipient = address(this);
-        init.tierCreations = new ISoundEditionV2_1.TierCreation[](uniqueTiers.length);
+        init.tierCreations = new ISoundEditionV2.TierCreation[](uniqueTiers.length);
         for (uint256 i; i < uniqueTiers.length; ++i) {
-            ISoundEditionV2_1.TierCreation memory tierCreation = init.tierCreations[i];
+            ISoundEditionV2.TierCreation memory tierCreation = init.tierCreations[i];
             tierCreation.tier = uniqueTiers[i];
             tierCreation.maxMintableLower = uint32(5 + i);
             tierCreation.maxMintableUpper = uint32(10 + i);
@@ -317,10 +316,10 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
             edition.mint(uniqueTiers[i], address(this), i % 3 != 0 ? 10 + i : 1);
         }
 
-        ISoundEditionV2_1.EditionInfo memory info = edition.editionInfo();
+        ISoundEditionV2.EditionInfo memory info = edition.editionInfo();
         assertEq(info.tierInfo.length, uniqueTiers.length);
         for (uint256 i; i < uniqueTiers.length; ++i) {
-            ISoundEditionV2_1.TierInfo memory tierInfo = info.tierInfo[i];
+            ISoundEditionV2.TierInfo memory tierInfo = info.tierInfo[i];
             assertEq(tierInfo.tier, uniqueTiers[i]);
             if (tierInfo.tier == 0) {
                 assertEq(tierInfo.maxMintableLower, type(uint32).max);
@@ -339,7 +338,7 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
         }
 
         if (_random() % 2 == 0) {
-            ISoundEditionV2_1.TierCreation memory c;
+            ISoundEditionV2.TierCreation memory c;
             c.tier = _newUniqueTier(uniqueTiers, false);
             c.maxMintableLower = 55;
             c.maxMintableUpper = 111;
@@ -351,7 +350,7 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
                 edition.createTier(c);
                 info = edition.editionInfo();
                 assertEq(info.tierInfo.length, uniqueTiers.length + 1);
-                ISoundEditionV2_1.TierInfo memory tierInfo = info.tierInfo[uniqueTiers.length];
+                ISoundEditionV2.TierInfo memory tierInfo = info.tierInfo[uniqueTiers.length];
                 assertEq(tierInfo.maxMintableLower, 55);
                 assertEq(tierInfo.maxMintableUpper, 111);
                 assertEq(tierInfo.cutoffTime, uint32(block.timestamp + 222));
@@ -362,9 +361,9 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
                 assertEq(edition.editionInfo().isCreateTierFrozen, false);
                 edition.freezeCreateTier();
                 assertEq(edition.editionInfo().isCreateTierFrozen, true);
-                vm.expectRevert(ISoundEditionV2_1.CreateTierIsFrozen.selector);
+                vm.expectRevert(ISoundEditionV2.CreateTierIsFrozen.selector);
                 edition.createTier(c);
-                vm.expectRevert(ISoundEditionV2_1.CreateTierIsFrozen.selector);
+                vm.expectRevert(ISoundEditionV2.CreateTierIsFrozen.selector);
                 edition.freezeCreateTier();
             }
         }
@@ -403,7 +402,7 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
     function testMintRandomness(uint256) public {
         SoundEditionV2_1 edition;
         uint8 tier = uint8(_bound(_random(), 1, 255));
-        ISoundEditionV2_1.EditionInitialization memory init = genericEditionInitialization();
+        ISoundEditionV2.EditionInitialization memory init = genericEditionInitialization();
         if (_random() % 2 == 0) {
             init.tierCreations[0].tier = tier;
             init.tierCreations[0].maxMintableLower = 0;
@@ -429,19 +428,19 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
             assertEq(edition.mintRandomnessOneOfOne(tier) != 0, true);
         }
 
-        vm.expectRevert(ISoundEditionV2_1.ExceedsAvailableSupply.selector);
+        vm.expectRevert(ISoundEditionV2.ExceedsAvailableSupply.selector);
         edition.mint(tier, address(this), 1);
     }
 
     function test_supportsInterface() public {
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init = genericEditionInitialization();
+        ISoundEditionV2.EditionInitialization memory init = genericEditionInitialization();
         edition = createSoundEdition(init);
 
         assertTrue(edition.supportsInterface(0x80ac58cd)); // IERC721.
         assertTrue(edition.supportsInterface(0x01ffc9a7)); // IERC165.
         assertTrue(edition.supportsInterface(0x5b5e139f)); // IERC721Metadata.
-        assertTrue(edition.supportsInterface(type(ISoundEditionV2_1).interfaceId));
+        assertTrue(edition.supportsInterface(type(ISoundEditionV2).interfaceId));
 
         assertFalse(edition.supportsInterface(0x11223344)); // Some random ID.
     }
@@ -530,7 +529,7 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
         _deploySplitContracts();
 
         SoundEditionV2_1 edition;
-        ISoundEditionV2_1.EditionInitialization memory init = genericEditionInitialization();
+        ISoundEditionV2.EditionInitialization memory init = genericEditionInitialization();
         edition = createSoundEdition(init);
 
         SplitData memory splitData = _randomSplitData();

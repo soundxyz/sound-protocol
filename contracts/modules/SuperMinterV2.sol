@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
-import { ISoundEditionV2_1 } from "@core/interfaces/ISoundEditionV2_1.sol";
+import { ISoundEditionV2 } from "@core/interfaces/ISoundEditionV2.sol";
 import { ISuperMinterV2 } from "@modules/interfaces/ISuperMinterV2.sol";
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
@@ -364,7 +364,7 @@ contract SuperMinterV2 is ISuperMinterV2, EIP712 {
 
         /* ------------------------- MINT --------------------------- */
 
-        ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
+        ISoundEditionV2 edition = ISoundEditionV2(p.edition);
         l.quantity = p.quantity;
         l.fromTokenId = edition.mint{ value: l.finalArtistFee }(p.tier, p.to, p.quantity);
         l.allowlisted = p.allowlisted;
@@ -395,7 +395,7 @@ contract SuperMinterV2 is ISuperMinterV2, EIP712 {
 
         /* ------------------------- MINT --------------------------- */
 
-        ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
+        ISoundEditionV2 edition = ISoundEditionV2(p.edition);
         fromTokenId = edition.airdrop(p.tier, p.to, p.signedQuantity);
 
         emit PlatformAirdropped(p.edition, p.tier, p.scheduleNum, p.to, p.signedQuantity, fromTokenId);

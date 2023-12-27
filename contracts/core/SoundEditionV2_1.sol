@@ -11,7 +11,7 @@ import { OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { LibString } from "solady/utils/LibString.sol";
 import { LibMap } from "solady/utils/LibMap.sol";
 import { LibMulticaller } from "multicaller/LibMulticaller.sol";
-import { ISoundEditionV2_1 } from "./interfaces/ISoundEditionV2_1.sol";
+import { ISoundEditionV2 } from "./interfaces/ISoundEditionV2.sol";
 import { IMetadataModule } from "./interfaces/IMetadataModule.sol";
 
 import { LibOps } from "./utils/LibOps.sol";
@@ -22,7 +22,7 @@ import { MintRandomnessLib } from "./utils/MintRandomnessLib.sol";
  * @title SoundEditionV2_1
  * @notice The Sound Edition contract - a creator-owned, modifiable implementation of ERC721A.
  */
-contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
+contract SoundEditionV2_1 is ISoundEditionV2, ERC721AQueryableUpgradeable, ERC721ABurnableUpgradeable, OwnableRoles {
     using ArweaveURILib for ArweaveURILib.URI;
     using LibMap for *;
 
@@ -178,7 +178,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     // =============================================================
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function initialize(EditionInitialization memory init) public {
         // Will revert upon double initialization.
@@ -212,42 +212,40 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function mint(
         uint8 tier,
         address to,
         uint256 quantity
     ) external payable onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE) returns (uint256 fromTokenId) {
-        uint32 fromTierTokenIdIndex;
-        (fromTokenId, fromTierTokenIdIndex) = _beforeTieredMint(tier, quantity);
+        fromTokenId = _beforeTieredMint(tier, quantity);
         _batchMint(to, quantity);
-        emit Minted(tier, to, quantity, fromTokenId, fromTierTokenIdIndex);
+        emit Minted(tier, to, quantity, fromTokenId);
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function airdrop(
         uint8 tier,
         address[] calldata to,
         uint256 quantity
     ) external payable onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE) returns (uint256 fromTokenId) {
-        uint32 fromTierTokenIdIndex;
         unchecked {
             // Multiplication overflow is not possible due to the max block gas limit.
             // If `quantity` is too big (e.g. 2**64), the loop in `_batchMint` will run out of gas.
             // If `to.length` is too big (e.g. 2**64), the airdrop mint loop will run out of gas.
-            (fromTokenId, fromTierTokenIdIndex) = _beforeTieredMint(tier, to.length * quantity);
+            fromTokenId = _beforeTieredMint(tier, to.length * quantity);
             for (uint256 i; i != to.length; ++i) {
                 _batchMint(to[i], quantity);
             }
         }
-        emit Airdropped(tier, to, quantity, fromTokenId, fromTierTokenIdIndex);
+        emit Airdropped(tier, to, quantity, fromTokenId);
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function withdrawETH() external {
         uint256 amount = address(this).balance;
@@ -257,7 +255,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function withdrawERC20(address[] calldata tokens) external {
         unchecked {
@@ -271,7 +269,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setMetadataModule(address module) external onlyRolesOrOwner(ADMIN_ROLE) {
         _requireMetadataNotFrozen();
@@ -281,7 +279,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setBaseURI(string memory uri) external onlyRolesOrOwner(ADMIN_ROLE) {
         _requireMetadataNotFrozen();
@@ -291,7 +289,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setContractURI(string memory uri) public onlyRolesOrOwner(ADMIN_ROLE) {
         _requireMetadataNotFrozen();
@@ -300,7 +298,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function freezeMetadata() public onlyRolesOrOwner(ADMIN_ROLE) {
         _requireMetadataNotFrozen();
@@ -309,7 +307,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function freezeCreateTier() public onlyRolesOrOwner(ADMIN_ROLE) {
         _requireCreateTierNotFrozen();
@@ -318,14 +316,14 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setFundingRecipient(address recipient) public onlyRolesOrOwner(ADMIN_ROLE) {
         _setFundingRecipient(recipient);
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function createSplit(address splitMain, bytes calldata splitData)
         public
@@ -361,7 +359,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setRoyalty(uint16 bps) public onlyRolesOrOwner(ADMIN_ROLE) {
         _validateRoyaltyBPS(bps);
@@ -370,7 +368,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setMaxMintableRange(
         uint8 tier,
@@ -399,7 +397,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function freezeTier(uint8 tier) public onlyRolesOrOwner(ADMIN_ROLE) {
         TierData storage d = _getTierData(tier);
@@ -409,7 +407,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setCutoffTime(uint8 tier, uint32 cutoff) public onlyRolesOrOwner(ADMIN_ROLE) {
         TierData storage d = _getTierData(tier);
@@ -420,7 +418,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function createTier(TierCreation memory creation) public onlyRolesOrOwner(ADMIN_ROLE) {
         _requireCreateTierNotFrozen();
@@ -429,7 +427,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function setMintRandomnessEnabled(uint8 tier, bool enabled) public onlyRolesOrOwner(ADMIN_ROLE) {
         TierData storage d = _getTierData(tier);
@@ -440,7 +438,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function emitAllMetadataUpdate() public {
         emit BatchMetadataUpdate(_startTokenId(), _nextTokenId() - 1);
@@ -451,7 +449,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     // =============================================================
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function editionInfo() public view returns (EditionInfo memory info) {
         info.baseURI = baseURI();
@@ -482,7 +480,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function tierInfo(uint8 tier) public view returns (TierInfo memory info) {
         TierData storage d = _getTierData(tier);
@@ -499,63 +497,63 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function isFrozen(uint8 tier) public view returns (bool) {
         return _isFrozen(_getTierData(tier));
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function isMetadataFrozen() public view returns (bool) {
         return _flags & _METADATA_IS_FROZEN_FLAG != 0;
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function isCreateTierFrozen() public view returns (bool) {
         return _flags & _CREATE_TIER_IS_FROZEN_FLAG != 0;
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function nextTokenId() public view returns (uint256) {
         return _nextTokenId();
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function numberMinted(address owner) public view returns (uint256) {
         return _numberMinted(owner);
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function numberBurned(address owner) public view returns (uint256) {
         return _numberBurned(owner);
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function totalMinted() public view returns (uint256) {
         return _totalMinted();
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function totalBurned() public view returns (uint256) {
         return _totalBurned();
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function tokenTier(uint256 tokenId) public view returns (uint8) {
         if (!_exists(tokenId)) revert TierQueryForNonexistentToken();
@@ -563,14 +561,14 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function explicitTokenTier(uint256 tokenId) public view returns (uint8) {
         return _tokenTiers.get(tokenId);
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function tokenTiers(uint256[] calldata tokenIds) public view returns (uint8[] memory tiers) {
         unchecked {
@@ -582,21 +580,21 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function tierMinted(uint8 tier) public view returns (uint32) {
         return _getTierData(tier).minted;
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function tierTokenIds(uint8 tier) public view returns (uint256[] memory tokenIds) {
         tokenIds = tierTokenIdsIn(tier, 0, tierMinted(tier));
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function tierTokenIdsIn(
         uint8 tier,
@@ -616,7 +614,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function tierTokenIdIndex(uint256 tokenId) public view returns (uint256) {
         uint8 tier = tokenTier(tokenId);
@@ -625,56 +623,56 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function mintRandomness(uint8 tier) public view returns (uint256 result) {
         return _mintRandomness(_getTierData(tier));
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function mintConcluded(uint8 tier) public view returns (bool) {
         return _mintConcluded(_getTierData(tier));
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function maxMintable(uint8 tier) public view returns (uint32) {
         return _maxMintable(_getTierData(tier));
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function maxMintableUpper(uint8 tier) public view returns (uint32) {
         return _getTierData(tier).maxMintableUpper;
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function maxMintableLower(uint8 tier) public view returns (uint32) {
         return _getTierData(tier).maxMintableLower;
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function cutoffTime(uint8 tier) public view returns (uint32) {
         return _getTierData(tier).cutoffTime;
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function mintRandomnessEnabled(uint8 tier) public view returns (bool) {
         return _mintRandomnessEnabled(_getTierData(tier));
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function mintRandomnessOneOfOne(uint8 tier) public view returns (uint32) {
         TierData storage d = _getTierData(tier);
@@ -697,7 +695,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function explicitTokenURI(uint256 tokenId) public view returns (string memory) {
         if (metadataModule != address(0)) return IMetadataModule(metadataModule).tokenURI(tokenId);
@@ -706,17 +704,17 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ISoundEditionV2_1, ERC721AUpgradeable, IERC721AUpgradeable)
+        override(ISoundEditionV2, ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {
         return
             LibOps.or(
-                interfaceId == type(ISoundEditionV2_1).interfaceId,
+                interfaceId == type(ISoundEditionV2).interfaceId,
                 ERC721AUpgradeable.supportsInterface(interfaceId),
                 interfaceId == _INTERFACE_ID_ERC2981
             );
@@ -749,14 +747,14 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function baseURI() public view returns (string memory) {
         return _baseURIStorage.load();
     }
 
     /**
-     * @inheritdoc ISoundEditionV2_1
+     * @inheritdoc ISoundEditionV2
      */
     function contractURI() public view returns (string memory) {
         return _contractURIStorage.load();
@@ -907,18 +905,13 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
         if (!_mintConcluded(d)) revert MintNotConcluded();
     }
 
-    /**
+        /**
      * @dev Append to the tier token IDs and the token tiers arrays.
      * Reverts if there is insufficient supply.
      * @param tier     The tier.
      * @param quantity The total number of tokens to mint.
-     * @return fromTokenId          The first token ID minted.
-     * @return fromTierTokenIdIndex The first token index in the tier.
      */
-    function _beforeTieredMint(uint8 tier, uint256 quantity)
-        internal
-        returns (uint256 fromTokenId, uint32 fromTierTokenIdIndex)
-    {
+    function _beforeTieredMint(uint8 tier, uint256 quantity) internal returns (uint256 fromTokenId) {
         unchecked {
             if (quantity == 0) revert MintZeroQuantity();
             fromTokenId = _nextTokenId();
@@ -948,7 +941,6 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
                 m.set(minted + i, uint32(fromTokenId + i)); // Set the token IDs for the tier.
                 if (tier != 0) _tokenTiers.set(fromTokenId + i, tier); // Set the tier for the token ID.
             }
-            fromTierTokenIdIndex = uint32(minted);
         }
     }
 
