@@ -79,9 +79,19 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
     uint16 public constant BPS_DENOMINATOR = LibOps.BPS_DENOMINATOR;
 
     /**
+     * @dev For making the the interface ID different.
+     */
+    bool public constant V2_1 = true;
+
+    /**
      * @dev The interface ID for EIP-2981 (royaltyInfo)
      */
     bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
+
+    /**
+     * @dev The interface ID for SoundEditionV2.
+     */
+    bytes4 private constant _INTERFACE_ID_SOUND_EDITION_V2 = 0x7888cfe1;
 
     /**
      * @dev The boolean flag on whether the metadata is frozen.
@@ -219,10 +229,9 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
         address to,
         uint256 quantity
     ) external payable onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE) returns (uint256 fromTokenId) {
-        uint32 fromTierTokenIdIndex;
-        (fromTokenId, fromTierTokenIdIndex) = _beforeTieredMint(tier, quantity);
+        (fromTokenId, ) = _beforeTieredMint(tier, quantity);
         _batchMint(to, quantity);
-        emit Minted(tier, to, quantity, fromTokenId, fromTierTokenIdIndex);
+        emit Minted(tier, to, quantity, fromTokenId);
     }
 
     /**
@@ -233,17 +242,16 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
         address[] calldata to,
         uint256 quantity
     ) external payable onlyRolesOrOwner(ADMIN_ROLE | MINTER_ROLE) returns (uint256 fromTokenId) {
-        uint32 fromTierTokenIdIndex;
         unchecked {
             // Multiplication overflow is not possible due to the max block gas limit.
             // If `quantity` is too big (e.g. 2**64), the loop in `_batchMint` will run out of gas.
             // If `to.length` is too big (e.g. 2**64), the airdrop mint loop will run out of gas.
-            (fromTokenId, fromTierTokenIdIndex) = _beforeTieredMint(tier, to.length * quantity);
+            (fromTokenId, ) = _beforeTieredMint(tier, to.length * quantity);
             for (uint256 i; i != to.length; ++i) {
                 _batchMint(to[i], quantity);
             }
         }
-        emit Airdropped(tier, to, quantity, fromTokenId, fromTierTokenIdIndex);
+        emit Airdropped(tier, to, quantity, fromTokenId);
     }
 
     /**
@@ -718,6 +726,7 @@ contract SoundEditionV2_1 is ISoundEditionV2_1, ERC721AQueryableUpgradeable, ERC
             LibOps.or(
                 interfaceId == type(ISoundEditionV2_1).interfaceId,
                 ERC721AUpgradeable.supportsInterface(interfaceId),
+                interfaceId == _INTERFACE_ID_SOUND_EDITION_V2,
                 interfaceId == _INTERFACE_ID_ERC2981
             );
     }

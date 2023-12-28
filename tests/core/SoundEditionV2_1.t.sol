@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
+import { ISoundEditionV2 } from "@core/SoundEditionV2.sol";
 import { IERC721AUpgradeable, ISoundEditionV2_1, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
 import { Ownable, OwnableRoles } from "solady/auth/OwnableRoles.sol";
 import { LibSort } from "solady/utils/LibSort.sol";
@@ -25,8 +26,8 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
     event TierFrozen(uint8 tier);
     event ETHWithdrawn(address recipient, uint256 amount, address caller);
     event ERC20Withdrawn(address recipient, address[] tokens, uint256[] amounts, address caller);
-    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
-    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
+    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId);
+    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId);
     event BatchMetadataUpdate(uint256 fromTokenId, uint256 toTokenId);
 
     uint16 public constant BPS_DENOMINATOR = 10000;
@@ -143,10 +144,10 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
     ) internal {
         uint256 r = _random() % 3;
         uint256 expectedFromTokenId = edition.nextTokenId();
-        uint32 expectedFromTierTokenIdIndex = edition.tierInfo(tier).minted;
+
         if (r == 0) {
             vm.expectEmit(true, true, true, true);
-            emit Minted(tier, to, quantity, expectedFromTokenId, expectedFromTierTokenIdIndex);
+            emit Minted(tier, to, quantity, expectedFromTokenId);
             edition.mint(tier, to, quantity);
         } else if (r == 1) {
             address[] memory recipients = new address[](quantity);
@@ -154,13 +155,13 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
                 recipients[i] = to;
             }
             vm.expectEmit(true, true, true, true);
-            emit Airdropped(tier, recipients, 1, expectedFromTokenId, expectedFromTierTokenIdIndex);
+            emit Airdropped(tier, recipients, 1, expectedFromTokenId);
             edition.airdrop(tier, recipients, 1);
         } else {
             address[] memory recipients = new address[](1);
             recipients[0] = to;
             vm.expectEmit(true, true, true, true);
-            emit Airdropped(tier, recipients, quantity, expectedFromTokenId, expectedFromTierTokenIdIndex);
+            emit Airdropped(tier, recipients, quantity, expectedFromTokenId);
             edition.airdrop(tier, recipients, quantity);
         }
     }
@@ -441,6 +442,7 @@ contract SoundEditionV2_1Tests is TestConfigV2_1 {
         assertTrue(edition.supportsInterface(0x80ac58cd)); // IERC721.
         assertTrue(edition.supportsInterface(0x01ffc9a7)); // IERC165.
         assertTrue(edition.supportsInterface(0x5b5e139f)); // IERC721Metadata.
+        assertTrue(edition.supportsInterface(type(ISoundEditionV2).interfaceId));
         assertTrue(edition.supportsInterface(type(ISoundEditionV2_1).interfaceId));
 
         assertFalse(edition.supportsInterface(0x11223344)); // Some random ID.
