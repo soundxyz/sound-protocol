@@ -234,9 +234,8 @@ interface ISoundEditionV2_1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param to                   The address to mint to.
      * @param quantity             The number of minted.
      * @param fromTokenId          The first token ID minted.
-     * @param fromTierTokenIdIndex The first token index in the tier.
      */
-    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
+    event Minted(uint8 tier, address to, uint256 quantity, uint256 fromTokenId);
 
     /**
      * @dev Emitted upon an airdrop.
@@ -244,9 +243,8 @@ interface ISoundEditionV2_1 is IERC721AUpgradeable, IERC2981Upgradeable {
      * @param to                   The recipients of the airdrop.
      * @param quantity             The number of tokens airdropped to each address in `to`.
      * @param fromTokenId          The first token ID minted to the first address in `to`.
-     * @param fromTierTokenIdIndex The first token index in the tier.
      */
-    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId, uint32 fromTierTokenIdIndex);
+    event Airdropped(uint8 tier, address[] to, uint256 quantity, uint256 fromTokenId);
 
     /**
      * @dev EIP-4906 event to signal marketplaces to refresh the metadata.
@@ -810,4 +808,10 @@ interface ISoundEditionV2_1 is IERC721AUpgradeable, IERC2981Upgradeable {
         view
         override(IERC721AUpgradeable, IERC165Upgradeable)
         returns (bool);
+
+    /**
+     * @dev Filler function to make the interface ID different.
+     * @return True.
+     */
+    function V2_1() external view returns (bool);
 }

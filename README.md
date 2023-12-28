@@ -22,7 +22,7 @@ The following contracts have been deployed on Mainnet, Optimism, Goerli, Optimis
 
 | Contract  |  Address |
 |---|---|
-| `SoundEditionV2_1` | `0x000000000000Be2397A709213a10cf71b07f42eE`
+| `SoundEditionV2_1` | `0x000000000053C8B49473BDa4b8d1DC47CAb411CC`
 | `SoundCreatorV2` | `0x0000000000aec84F5BFc2af15EAfb943bf4e3522`
 | `SuperMinterV2` | `0x000000000001A36777f9930aAEFf623771b13e70`
 | `SoundOnChainMetadata` | `0x0000000000724868d80283B098Ffa809B2181692`
