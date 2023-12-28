@@ -1,5 +1,11 @@
 # @soundxyz/sound-protocol
 
+## 1.8.1
+
+### Patch Changes
+
+-   da41073: Revert to SoundEditionV2 events, change SoundEditionV2_1 interface ID
+
 ## 1.8.0
 
 ### Minor Changes
