@@ -37,12 +37,12 @@ interface IAddressAliasRegistry {
      * @dev Resolve the addresses or aliases.
      *      If an address does not have an aliases, an alias will be registered for it.
      * @param a An array of addresses, which can be aliases.
-     * @return aliases   The aliases for the addresses.
      * @return addresses The resolved addresses.
+     * @return aliases   The aliases for the addresses.
      */
     function resolveAndRegister(address[] memory a)
         external
-        returns (address[] memory aliases, address[] memory addresses);
+        returns (address[] memory addresses, address[] memory aliases);
 
     // =============================================================
     //               PUBLIC / EXTERNAL VIEW FUNCTIONS
@@ -59,8 +59,8 @@ interface IAddressAliasRegistry {
      *      If an address does not have an aliases, it's corresponding returned alias will be zero.
      *      If an alias does not have an address, it's corresponding returned address will be zero.
      * @param a An array of addresses, which can be aliases.
-     * @return aliases   The aliases for the addresses.
      * @return addresses The resolved addresses.
+     * @return aliases   The aliases for the addresses.
      */
-    function resolve(address[] memory a) external view returns (address[] memory aliases, address[] memory addresses);
+    function resolve(address[] memory a) external view returns (address[] memory addresses, address[] memory aliases);
 }

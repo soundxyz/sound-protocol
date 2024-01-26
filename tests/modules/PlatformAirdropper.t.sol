@@ -87,7 +87,7 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
             assertEq(aar.numAliases(), numAliases);
             assertEq(aliases[0], aliases[1]);
 
-            (, p.to) = aar.resolve(p.to);
+            (p.to, ) = aar.resolve(p.to);
 
             if (_random() % 8 == 0) {
                 for (uint256 i; i < p.to.length; ++i) {
@@ -157,7 +157,7 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
             (, aliases[1]) = pa.platformAirdropMulti(address(sm), p);
             for (uint256 j; j != 2; ++j) {
                 assertEq(aliases[0][j], aliases[1][j]);
-                (, p[j].to) = aar.resolve(p[j].to);
+                (p[j].to, ) = aar.resolve(p[j].to);
             }
 
             if (_random() % 8 == 0) {

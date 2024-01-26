@@ -37,14 +37,14 @@ contract AddressAliasRegistry is IAddressAliasRegistry {
      */
     function resolveAndRegister(address[] memory a)
         public
-        returns (address[] memory aliases, address[] memory addresses)
+        returns (address[] memory addresses, address[] memory aliases)
     {
         unchecked {
             uint256 n = a.length;
+            addresses = a;
             aliases = new address[](n);
-            addresses = new address[](n);
             for (uint256 i; i != n; ++i) {
-                (aliases[i], addresses[i]) = _resolveAndRegister(a[i]);
+                (addresses[i], aliases[i]) = _resolveAndRegister(a[i]);
             }
         }
     }
@@ -73,13 +73,13 @@ contract AddressAliasRegistry is IAddressAliasRegistry {
     /**
      * @inheritdoc IAddressAliasRegistry
      */
-    function resolve(address[] memory a) public view returns (address[] memory aliases, address[] memory addresses) {
+    function resolve(address[] memory a) public view returns (address[] memory addresses, address[] memory aliases) {
         unchecked {
             uint256 n = a.length;
+            addresses = a;
             aliases = new address[](n);
-            addresses = new address[](n);
             for (uint256 i; i != n; ++i) {
-                (aliases[i], addresses[i]) = _resolve(a[i]);
+                (addresses[i], aliases[i]) = _resolve(a[i]);
             }
         }
     }
@@ -93,10 +93,10 @@ contract AddressAliasRegistry is IAddressAliasRegistry {
      *      If the `aliasOrAddress` is less than `2**31 - 1`, it is treated as an alias.
      *      Otherwise, it is treated as an address, and it's alias will be registered on-the-fly.
      * @param aliasOrAddress The alias or address.
-     * @return alias_   The alias.
      * @return address_ The address.
+     * @return alias_   The alias.
      */
-    function _resolveAndRegister(address aliasOrAddress) internal returns (address alias_, address address_) {
+    function _resolveAndRegister(address aliasOrAddress) internal returns (address address_, address alias_) {
         // If the `aliasOrAddress` is less than or equal to `2**32 - 1`, we will consider it an alias.
         if (uint160(aliasOrAddress) <= type(uint32).max) {
             alias_ = aliasOrAddress;
@@ -113,10 +113,10 @@ contract AddressAliasRegistry is IAddressAliasRegistry {
      *      If the `aliasOrAddress` is less than `2**31 - 1`, it is treated as an alias.
      *      Otherwise, it is treated as an address.
      * @param aliasOrAddress The alias or address.
-     * @return alias_   The alias.
      * @return address_ The address.
+     * @return alias_   The alias.
      */
-    function _resolve(address aliasOrAddress) internal view returns (address alias_, address address_) {
+    function _resolve(address aliasOrAddress) internal view returns (address address_, address alias_) {
         // If the `aliasOrAddress` is less than or equal to `2**32 - 1`, we will consider it an alias.
         if (uint160(aliasOrAddress) <= type(uint32).max) {
             alias_ = aliasOrAddress;

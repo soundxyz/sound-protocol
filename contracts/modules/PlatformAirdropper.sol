@@ -40,7 +40,7 @@ contract PlatformAirdropper is IPlatformAirdropper {
         returns (uint256 fromTokenId, address[] memory aliases)
     {
         unchecked {
-            (aliases, p.to) = IAddressAliasRegistry(addressAliasRegistry).resolveAndRegister(p.to);
+            (p.to, aliases) = IAddressAliasRegistry(addressAliasRegistry).resolveAndRegister(p.to);
             fromTokenId = ISuperMinterV2(superMinter).platformAirdrop(p);
         }
     }

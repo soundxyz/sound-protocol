@@ -22,15 +22,19 @@ contract AddressAliasRegistryTests is TestConfigV2_1 {
         Resolved memory r1;
         address[] memory addresses = _randomNonZeroAddressesGreaterThan();
         if (_random() % 32 == 0) {
-            (r0.aliases, r0.addresses) = aar.resolve(new address[](addresses.length));
+            (r0.addresses, r0.aliases) = aar.resolve(new address[](addresses.length));
             assertEq(r0.aliases, new address[](addresses.length));
             assertEq(r0.addresses, new address[](addresses.length));
         }
-        (r0.aliases, r0.addresses) = aar.resolveAndRegister(addresses);
-        (r1.aliases, r1.addresses) = aar.resolve(addresses);
+        (r0.addresses, r0.aliases) = aar.resolveAndRegister(addresses);
+        (r1.addresses, r1.aliases) = aar.resolve(addresses);
+        if (addresses.length != 0) {
+            assertEq(uint160(r0.aliases[0]), 1);
+            assertEq(uint160(r1.aliases[0]), 1);
+        }
         assertEq(r1.aliases, r0.aliases);
         assertEq(r1.addresses, r0.addresses);
-        (r1.aliases, r1.addresses) = aar.resolve(r0.aliases);
+        (r1.addresses, r1.aliases) = aar.resolve(r0.aliases);
         assertEq(r1.aliases, r0.aliases);
         assertEq(r1.addresses, r0.addresses);
         uint256 n = _uniquified(addresses).length;
