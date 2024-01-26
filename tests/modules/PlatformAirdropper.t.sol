@@ -3,6 +3,7 @@ pragma solidity ^0.8.16;
 import { IERC721AUpgradeable, ISoundEditionV2_1, SoundEditionV2_1 } from "@core/SoundEditionV2_1.sol";
 import { ISuperMinterV2, SuperMinterV2 } from "@modules/SuperMinterV2.sol";
 import { IPlatformAirdropper, PlatformAirdropper } from "@modules/PlatformAirdropper.sol";
+import { IAddressAliasRegistry, AddressAliasRegistry } from "@modules/AddressAliasRegistry.sol";
 import { LibOps } from "@core/utils/LibOps.sol";
 import { Ownable } from "solady/auth/Ownable.sol";
 import { LibZip } from "solady/utils/LibZip.sol";
@@ -14,6 +15,7 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
     SuperMinterV2 sm;
     SoundEditionV2_1 edition;
     PlatformAirdropper pa;
+    AddressAliasRegistry aar;
 
     mapping(uint256 => mapping(address => uint256)) internal _expectedMintCounts;
 
@@ -28,48 +30,8 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
         edition = createSoundEdition(init);
         sm = new SuperMinterV2();
         edition.grantRoles(address(sm), edition.MINTER_ROLE());
-        pa = new PlatformAirdropper();
-    }
-
-    function test_registerAliases(uint256) public {
-        address[] memory addresses = _randomNonZeroAddressesGreaterThan();
-        assertEq(pa.addressesToAliases(addresses), new address[](addresses.length));
-        address[] memory aliases = pa.registerAliases(addresses);
-        assertEq(pa.aliasesToAddresses(aliases), addresses);
-        assertEq(pa.addressesToAliases(addresses), aliases);
-        assertEq(_uniquified(addresses).length, _uniquified(aliases).length);
-        assertEq(_uniquified(pa.aliasesToAddresses(aliases)), addresses);
-        assertEq(_uniquified(pa.addressesToAliases(addresses)), aliases);
-    }
-
-    function _uniquified(address[] memory a) internal pure returns (address[] memory) {
-        LibSort.sort(a);
-        LibSort.uniquifySorted(a);
-        return a;
-    }
-
-    function _randomNonZeroAddressesGreaterThan() internal returns (address[] memory a) {
-        a = _randomNonZeroAddressesGreaterThan(0xffffffff);
-    }
-
-    function _randomNonZeroAddressesGreaterThan(uint256 t) internal returns (address[] memory a) {
-        uint256 n = _random() % 4;
-        if (_random() % 32 == 0) {
-            n = _random() % 32;
-        }
-        a = new address[](n);
-        require(t != 0, "t must not be zero");
-        unchecked {
-            for (uint256 i; i != n; ++i) {
-                uint256 r;
-                if (_random() & 1 == 0) {
-                    while (r <= t) r = uint256(uint160(_random()));
-                } else {
-                    r = type(uint256).max ^ _bound(_random(), 1, 8);
-                }
-                a[i] = address(uint160(r));
-            }
-        }
+        aar = new AddressAliasRegistry();
+        pa = new PlatformAirdropper(address(aar));
     }
 
     function test_platformAirdrop(uint256) public {
@@ -120,12 +82,12 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
             // Note that we replace the addresses AFTER signing.
             p.to = aliases[0];
 
-            uint256 numAliases = pa.numAliases();
+            uint256 numAliases = aar.numAliases();
             (, aliases[1]) = pa.platformAirdrop(address(sm), p);
-            assertEq(pa.numAliases(), numAliases);
+            assertEq(aar.numAliases(), numAliases);
             assertEq(aliases[0], aliases[1]);
 
-            p.to = pa.aliasesToAddresses(p.to);
+            (, p.to) = aar.resolve(p.to);
 
             if (_random() % 8 == 0) {
                 for (uint256 i; i < p.to.length; ++i) {
@@ -195,7 +157,7 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
             (, aliases[1]) = pa.platformAirdropMulti(address(sm), p);
             for (uint256 j; j != 2; ++j) {
                 assertEq(aliases[0][j], aliases[1][j]);
-                p[j].to = pa.aliasesToAddresses(p[j].to);
+                (, p[j].to) = aar.resolve(p[j].to);
             }
 
             if (_random() % 8 == 0) {
@@ -208,7 +170,7 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
                 }
             }
 
-            assertEq(LibSort.union(_uniquified(p[0].to), _uniquified(p[1].to)).length, pa.numAliases());
+            assertEq(LibSort.union(_uniquified(p[0].to), _uniquified(p[1].to)).length, aar.numAliases());
         }
     }
 
@@ -256,5 +218,35 @@ contract PlatformAirdropperTests is TestConfigV2_1 {
         bytes32 digest = sm.computePlatformAirdropDigest(p);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
         signature = abi.encodePacked(r, s, v);
+    }
+
+    function _uniquified(address[] memory a) internal pure returns (address[] memory) {
+        LibSort.sort(a);
+        LibSort.uniquifySorted(a);
+        return a;
+    }
+
+    function _randomNonZeroAddressesGreaterThan() internal returns (address[] memory a) {
+        a = _randomNonZeroAddressesGreaterThan(0xffffffff);
+    }
+
+    function _randomNonZeroAddressesGreaterThan(uint256 t) internal returns (address[] memory a) {
+        uint256 n = _random() % 4;
+        if (_random() % 32 == 0) {
+            n = _random() % 32;
+        }
+        a = new address[](n);
+        require(t != 0, "t must not be zero");
+        unchecked {
+            for (uint256 i; i != n; ++i) {
+                uint256 r;
+                if (_random() & 1 == 0) {
+                    while (r <= t) r = uint256(uint160(_random()));
+                } else {
+                    r = type(uint256).max ^ _bound(_random(), 1, 8);
+                }
+                a[i] = address(uint160(r));
+            }
+        }
     }
 }
