@@ -105,7 +105,7 @@ contract CoreActions is ICoreActions, EIP712 {
         }
 
         // Check the signature and invalidate the nonce.
-        unchecked {
+        {
             bytes32 digest = _hashTypedData(
                 keccak256(
                     abi.encode(
@@ -131,7 +131,7 @@ contract CoreActions is ICoreActions, EIP712 {
 
         // Store and emit events.
         unchecked {
-            for (uint256 i; i != r.targets.length; ++i) {
+            for (uint256 i; i != n; ++i) {
                 address target = r.targets[i];
                 EnumerableMap.AddressToUintMap storage m = _coreActions[r.platform][r.coreActionType][target];
                 for (uint256 j; j != r.actors[i].length; ++j) {
@@ -283,46 +283,56 @@ contract CoreActions is ICoreActions, EIP712 {
 
     /**
      * @dev Returns the hash of `a`.
+     * @param a The input to hash.
+     * @return result The hash.
      */
-    function _hashOf(address[] memory a) internal pure freeTempMemory returns (bytes32) {
-        return keccak256(abi.encodePacked(a));
+    function _hashOf(address[] memory a) internal pure returns (bytes32 result) {
+        assembly {
+            result := keccak256(add(0x20, a), shl(5, mload(a)))
+        }
     }
 
     /**
      * @dev Returns the hash of `a`.
+     * @param a The input to hash.
+     * @return result The hash.
      */
-    function _hashOf(address[][] memory a) internal pure freeTempMemory returns (bytes32) {
-        uint256 n = a.length;
-        bytes32[] memory encoded = new bytes32[](n);
-        for (uint256 i = 0; i != n; ++i) {
-            encoded[i] = keccak256(abi.encodePacked(a[i]));
+    function _hashOf(address[][] memory a) internal pure returns (bytes32 result) {
+        assembly {
+            let m := mload(0x40)
+            let n := shl(5, mload(a))
+            for {
+                let i := 0
+            } iszero(eq(i, n)) {
+                i := add(i, 0x20)
+            } {
+                let o := mload(add(add(a, 0x20), i))
+                mstore(add(m, i), keccak256(add(0x20, o), shl(5, mload(o))))
+            }
+            result := keccak256(m, n)
         }
-        return keccak256(abi.encodePacked(encoded));
     }
 
     /**
      * @dev Returns the hash of `a`.
+     * @param a The input to hash.
+     * @return result The hash.
      */
-    function _hashOf(uint256[][] calldata a) internal pure freeTempMemory returns (bytes32) {
-        uint256 n = a.length;
-        bytes32[] memory encoded = new bytes32[](n);
-        for (uint256 i = 0; i != n; ++i) {
-            encoded[i] = keccak256(abi.encodePacked(a[i]));
-        }
-        return keccak256(abi.encodePacked(encoded));
-    }
-
-    /**
-     * @dev Frees all memory allocated within the scope of the function.
-     */
-    modifier freeTempMemory() {
-        bytes32 m;
+    function _hashOf(uint256[][] calldata a) internal pure returns (bytes32 result) {
         assembly {
-            m := mload(0x40)
-        }
-        _;
-        assembly {
-            mstore(0x40, m)
+            let m := mload(0x40)
+            let n := shl(5, a.length)
+            for {
+                let i := 0
+            } iszero(eq(i, n)) {
+                i := add(i, 0x20)
+            } {
+                let o := add(a.offset, calldataload(add(a.offset, i)))
+                let p := add(m, i)
+                calldatacopy(p, add(o, 0x20), shl(5, calldataload(o)))
+                mstore(p, keccak256(p, shl(5, calldataload(o))))
+            }
+            result := keccak256(m, n)
         }
     }
 }
