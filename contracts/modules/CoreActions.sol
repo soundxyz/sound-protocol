@@ -9,7 +9,6 @@ import { LibBitmap } from "solady/utils/LibBitmap.sol";
 import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
 import { LibZip } from "solady/utils/LibZip.sol";
 import { LibMulticaller } from "multicaller/LibMulticaller.sol";
-import { LibOps } from "@core/utils/LibOps.sol";
 
 /**
  * @title CoreActions
@@ -100,7 +99,7 @@ contract CoreActions is ICoreActions, EIP712 {
 
             for (uint256 i; i != n; ++i) {
                 if (r.actors[i].length != r.timestamps[i].length) revert ArrayLengthsMismatch();
-                (resolvedActors[i], actorAliases[i]) = registry.resolveAndRegister(actorAliases[i]);
+                (resolvedActors[i], actorAliases[i]) = registry.resolveAndRegister(r.actors[i]);
             }
         }
 
@@ -132,10 +131,10 @@ contract CoreActions is ICoreActions, EIP712 {
         // Store and emit events.
         unchecked {
             for (uint256 i; i != n; ++i) {
-                address target = r.targets[i];
+                address target = resolvedTargets[i];
                 EnumerableMap.AddressToUintMap storage m = _coreActions[r.platform][r.coreActionType][target];
-                for (uint256 j; j != r.actors[i].length; ++j) {
-                    address actor = r.actors[i][j];
+                for (uint256 j; j != resolvedActors[i].length; ++j) {
+                    address actor = resolvedActors[i][j];
                     if (!m.contains(actor)) {
                         uint256 timestamp = r.timestamps[i][j];
                         m.set(actor, timestamp);
@@ -252,7 +251,7 @@ contract CoreActions is ICoreActions, EIP712 {
         unchecked {
             uint256 l = stop - start;
             uint256 n = m.length();
-            if (LibOps.or(start > stop, stop > n)) revert InvalidQueryRange();
+            if (start > stop || stop > n) revert InvalidQueryRange();
             actors = new address[](l);
             timestamps = new uint256[](l);
             for (uint256 i; i != l; ++i) {
