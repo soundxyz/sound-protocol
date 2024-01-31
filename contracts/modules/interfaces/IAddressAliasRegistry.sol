@@ -36,11 +36,11 @@ interface IAddressAliasRegistry {
     /**
      * @dev Resolve the addresses or aliases.
      *      If an address does not have an aliases, an alias will be registered for it.
-     * @param a An array of addresses, which can be aliases.
+     * @param addressesOrAliases An array of addresses, which can be aliases.
      * @return addresses The resolved addresses.
      * @return aliases   The aliases for the addresses.
      */
-    function resolveAndRegister(address[] memory a)
+    function resolveAndRegister(address[] memory addressesOrAliases)
         external
         returns (address[] memory addresses, address[] memory aliases);
 
@@ -56,11 +56,28 @@ interface IAddressAliasRegistry {
 
     /**
      * @dev Resolve the addresses or aliases.
-     *      If an address does not have an aliases, it's corresponding returned alias will be zero.
+     *      If an address does not have an alias, it's corresponding returned alias will be zero.
      *      If an alias does not have an address, it's corresponding returned address will be zero.
-     * @param a An array of addresses, which can be aliases.
+     * @param addressesOrAliases An array of addresses, which can be aliases.
      * @return addresses The resolved addresses.
      * @return aliases   The aliases for the addresses.
      */
-    function resolve(address[] memory a) external view returns (address[] memory addresses, address[] memory aliases);
+    function resolve(address[] memory addressesOrAliases)
+        external
+        view
+        returns (address[] memory addresses, address[] memory aliases);
+
+    /**
+     * @dev Resolve the address or alias.
+     * @param addressesOrAliases An address or alias.
+     * @return The resolved address.
+     */
+    function addressOf(address addressesOrAliases) external view returns (address);
+
+    /**
+     * @dev Resolve the address or alias.
+     * @param addressesOrAliases An address or alias.
+     * @return The resolved alias.
+     */
+    function aliasOf(address addressesOrAliases) external view returns (address);
 }

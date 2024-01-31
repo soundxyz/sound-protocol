@@ -25,12 +25,19 @@ contract AddressAliasRegistryTests is TestConfigV2_1 {
             (r0.addresses, r0.aliases) = aar.resolve(new address[](addresses.length));
             assertEq(r0.aliases, new address[](addresses.length));
             assertEq(r0.addresses, new address[](addresses.length));
+            address a = addresses.length > 0 ? addresses[0] : address(0);
+            assertEq(aar.addressOf(a), a);
+            assertEq(uint160(aar.aliasOf(a)), 0);
         }
         (r0.addresses, r0.aliases) = aar.resolveAndRegister(addresses);
         (r1.addresses, r1.aliases) = aar.resolve(addresses);
         if (addresses.length != 0) {
             assertEq(uint160(r0.aliases[0]), 1);
             assertEq(uint160(r1.aliases[0]), 1);
+            address a = addresses[0];
+            assertEq(aar.addressOf(a), a);
+            assertEq(aar.addressOf(aar.aliasOf(a)), a);
+            assertEq(uint160(aar.aliasOf(a)), 1);
         }
         assertEq(r1.aliases, r0.aliases);
         assertEq(r1.addresses, r0.addresses);
