@@ -3,10 +3,10 @@ pragma solidity ^0.8.16;
 
 import { ICoreActions } from "@modules/interfaces/ICoreActions.sol";
 import { IAddressAliasRegistry } from "@modules/interfaces/IAddressAliasRegistry.sol";
-import { EnumerableMap } from "openzeppelin/utils/structs/EnumerableMap.sol";
 import { EIP712 } from "solady/utils/EIP712.sol";
 import { LibBitmap } from "solady/utils/LibBitmap.sol";
 import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
+import { LibMap } from "solady/utils/LibMap.sol";
 import { LibZip } from "solady/utils/LibZip.sol";
 import { LibMulticaller } from "multicaller/LibMulticaller.sol";
 
@@ -16,7 +16,23 @@ import { LibMulticaller } from "multicaller/LibMulticaller.sol";
  */
 contract CoreActions is ICoreActions, EIP712 {
     using LibBitmap for LibBitmap.Bitmap;
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
+    using LibMap for LibMap.Uint32Map;
+
+    // =============================================================
+    //                            STRUCTS
+    // =============================================================
+
+    /**
+     * @dev Storage struct for storing mapping from `actors` => `timestamps`.
+     */
+    struct ActorsAndTimestamps {
+        // Number of entries, for enumeration.
+        uint256 length;
+        // `actorAlias` => `timestamp`.
+        LibMap.Uint32Map timestamps;
+        // `index` => `actorAlias`.
+        LibMap.Uint32Map actorAliases;
+    }
 
     // =============================================================
     //                           CONSTANTS
@@ -32,7 +48,7 @@ contract CoreActions is ICoreActions, EIP712 {
                 "uint256 coreActionType,"
                 "address[] targets,"
                 "address[][] actors,"
-                "uint256[][] timestamps,"
+                "uint32[][] timestamps,"
                 "uint256 nonce"
             ")"
         );
@@ -51,9 +67,9 @@ contract CoreActions is ICoreActions, EIP712 {
     // =============================================================
 
     /**
-     * @dev Mapping of `platform` => `coreActionType` => `target` => `actor` => `timestamp`.
+     * @dev Mapping of `platform` => `coreActionType` => `target` => `actorAndTimestamps`.
      */
-    mapping(address => mapping(uint256 => mapping(address => EnumerableMap.AddressToUintMap))) internal _coreActions;
+    mapping(address => mapping(uint256 => mapping(address => ActorsAndTimestamps))) internal _coreActions;
 
     /**
      * @dev For storing the invalidated nonces.
@@ -132,13 +148,15 @@ contract CoreActions is ICoreActions, EIP712 {
         unchecked {
             for (uint256 i; i != n; ++i) {
                 address target = resolvedTargets[i];
-                EnumerableMap.AddressToUintMap storage m = _coreActions[r.platform][r.coreActionType][target];
+                ActorsAndTimestamps storage m = _coreActions[r.platform][r.coreActionType][target];
                 for (uint256 j; j != resolvedActors[i].length; ++j) {
-                    address actor = resolvedActors[i][j];
-                    if (!m.contains(actor)) {
-                        uint256 timestamp = r.timestamps[i][j];
-                        m.set(actor, timestamp);
-                        emit Interacted(r.platform, r.coreActionType, target, actor, timestamp);
+                    uint32 actorAlias = uint32(uint160(actorAliases[i][j]));
+                    if (m.timestamps.get(uint256(actorAlias)) == 0) {
+                        uint32 timestamp = r.timestamps[i][j];
+                        if (timestamp == 0) revert TimestampIsZero();
+                        m.timestamps.set(actorAlias, timestamp);
+                        m.actorAliases.set(m.length++, actorAlias);
+                        emit Interacted(r.platform, r.coreActionType, target, resolvedActors[i][j], timestamp);
                     }
                 }
             }
@@ -210,8 +228,10 @@ contract CoreActions is ICoreActions, EIP712 {
         uint256 coreActionType,
         address target,
         address actor
-    ) public view returns (uint256) {
-        return _coreActions[platform][coreActionType][target].get(actor);
+    ) public view returns (uint32) {
+        ActorsAndTimestamps storage m = _coreActions[platform][coreActionType][target];
+        uint256 actorAlias = uint160(IAddressAliasRegistry(addressAliasRegistry).aliasOf(actor));
+        return m.timestamps.get(actorAlias);
     }
 
     /**
@@ -222,7 +242,7 @@ contract CoreActions is ICoreActions, EIP712 {
         uint256 coreActionType,
         address target
     ) public view returns (uint256) {
-        return _coreActions[platform][coreActionType][target].length();
+        return _coreActions[platform][coreActionType][target].length;
     }
 
     /**
@@ -232,9 +252,9 @@ contract CoreActions is ICoreActions, EIP712 {
         address platform,
         uint256 coreActionType,
         address target
-    ) public view returns (address[] memory actors, uint256[] memory timestamps) {
-        EnumerableMap.AddressToUintMap storage m = _coreActions[platform][coreActionType][target];
-        return getCoreActionsIn(platform, coreActionType, target, 0, m.length());
+    ) public view returns (address[] memory actors, uint32[] memory timestamps) {
+        ActorsAndTimestamps storage m = _coreActions[platform][coreActionType][target];
+        return getCoreActionsIn(platform, coreActionType, target, 0, m.length);
     }
 
     /**
@@ -246,16 +266,19 @@ contract CoreActions is ICoreActions, EIP712 {
         address target,
         uint256 start,
         uint256 stop
-    ) public view returns (address[] memory actors, uint256[] memory timestamps) {
-        EnumerableMap.AddressToUintMap storage m = _coreActions[platform][coreActionType][target];
+    ) public view returns (address[] memory actors, uint32[] memory timestamps) {
+        ActorsAndTimestamps storage m = _coreActions[platform][coreActionType][target];
         unchecked {
             uint256 l = stop - start;
-            uint256 n = m.length();
+            uint256 n = m.length;
             if (start > stop || stop > n) revert InvalidQueryRange();
             actors = new address[](l);
-            timestamps = new uint256[](l);
+            timestamps = new uint32[](l);
+            IAddressAliasRegistry registry = IAddressAliasRegistry(addressAliasRegistry);
             for (uint256 i; i != l; ++i) {
-                (actors[i], timestamps[i]) = m.at(start + i);
+                uint32 actorAlias = m.actorAliases.get(start + i);
+                actors[i] = registry.addressOf(address(uint160(actorAlias)));
+                timestamps[i] = m.timestamps.get(actorAlias);
             }
         }
     }
@@ -300,11 +323,8 @@ contract CoreActions is ICoreActions, EIP712 {
         assembly {
             let m := mload(0x40)
             let n := shl(5, mload(a))
-            for {
-                let i := 0
-            } iszero(eq(i, n)) {
-                i := add(i, 0x20)
-            } {
+            // prettier-ignore
+            for { let i := 0 } iszero(eq(i, n)) { i := add(i, 0x20) } {
                 let o := mload(add(add(a, 0x20), i))
                 mstore(add(m, i), keccak256(add(0x20, o), shl(5, mload(o))))
             }
@@ -317,15 +337,12 @@ contract CoreActions is ICoreActions, EIP712 {
      * @param a The input to hash.
      * @return result The hash.
      */
-    function _hashOf(uint256[][] calldata a) internal pure returns (bytes32 result) {
+    function _hashOf(uint32[][] calldata a) internal pure returns (bytes32 result) {
         assembly {
             let m := mload(0x40)
             let n := shl(5, a.length)
-            for {
-                let i := 0
-            } iszero(eq(i, n)) {
-                i := add(i, 0x20)
-            } {
+            // prettier-ignore
+            for { let i := 0 } iszero(eq(i, n)) { i := add(i, 0x20) } {
                 let o := add(a.offset, calldataload(add(a.offset, i)))
                 let p := add(m, i)
                 calldatacopy(p, add(o, 0x20), shl(5, calldataload(o)))

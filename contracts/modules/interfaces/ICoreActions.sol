@@ -23,7 +23,7 @@ interface ICoreActions {
         // The list of lists of timestamps. Must have the same dimensions as `actors`.
         address[][] actors;
         // The list of lists of timestamps. Must have the same dimensions as `actors`.
-        uint256[][] timestamps;
+        uint32[][] timestamps;
         // The nonce of the signature (per platform's signer).
         uint256 nonce;
         // A signature by the current `platform` signer to authorize registration.
@@ -48,7 +48,7 @@ interface ICoreActions {
         uint256 coreActionType,
         address indexed target,
         address indexed actor,
-        uint256 timestamp
+        uint32 timestamp
     );
 
     /**
@@ -78,6 +78,11 @@ interface ICoreActions {
      * @dev The length of the input arrays must be the same.
      */
     error ArrayLengthsMismatch();
+
+    /**
+     * @dev The timestamp cannot be zero.
+     */
+    error TimestampIsZero();
 
     /**
      * @dev The query range exceeds the bounds.
@@ -149,7 +154,7 @@ interface ICoreActions {
         uint256 coreActionType,
         address target,
         address actor
-    ) external view returns (uint256);
+    ) external view returns (uint32);
 
     /**
      * @dev Returns the number of core actions on `target`,
@@ -178,7 +183,7 @@ interface ICoreActions {
         address platform,
         uint256 coreActionType,
         address target
-    ) external view returns (address[] memory actors, uint256[] memory timestamps);
+    ) external view returns (address[] memory actors, uint32[] memory timestamps);
 
     /**
      * @dev Returns the list of `actors` and `timestamps`
@@ -197,5 +202,5 @@ interface ICoreActions {
         address target,
         uint256 start,
         uint256 stop
-    ) external view returns (address[] memory actors, uint256[] memory timestamps);
+    ) external view returns (address[] memory actors, uint32[] memory timestamps);
 }
