@@ -215,6 +215,7 @@ contract CoreActions is ICoreActions, EIP712 {
         address target,
         address actor
     ) public view returns (uint32) {
+        target = IAddressAliasRegistry(addressAliasRegistry).addressOf(target);
         ActorsAndTimestamps storage m = _coreActions[platform][coreActionType][target];
         uint256 actorAlias = uint160(IAddressAliasRegistry(addressAliasRegistry).aliasOf(actor));
         return m.timestamps.get(actorAlias);
@@ -228,6 +229,7 @@ contract CoreActions is ICoreActions, EIP712 {
         uint256 coreActionType,
         address target
     ) public view returns (uint256) {
+        target = IAddressAliasRegistry(addressAliasRegistry).addressOf(target);
         return _coreActions[platform][coreActionType][target].length;
     }
 
@@ -239,8 +241,7 @@ contract CoreActions is ICoreActions, EIP712 {
         uint256 coreActionType,
         address target
     ) public view returns (address[] memory actors, uint32[] memory timestamps) {
-        ActorsAndTimestamps storage m = _coreActions[platform][coreActionType][target];
-        return getCoreActionsIn(platform, coreActionType, target, 0, m.length);
+        return getCoreActionsIn(platform, coreActionType, target, 0, type(uint256).max);
     }
 
     /**
@@ -253,11 +254,13 @@ contract CoreActions is ICoreActions, EIP712 {
         uint256 start,
         uint256 stop
     ) public view returns (address[] memory actors, uint32[] memory timestamps) {
+        target = IAddressAliasRegistry(addressAliasRegistry).addressOf(target);
         ActorsAndTimestamps storage m = _coreActions[platform][coreActionType][target];
         unchecked {
-            uint256 l = stop - start;
             uint256 n = m.length;
-            if (start > stop || stop > n) revert InvalidQueryRange();
+            if (stop > n) stop = n;
+            uint256 l = stop - start;
+            if (start > stop) revert InvalidQueryRange();
             actors = new address[](l);
             timestamps = new uint32[](l);
             IAddressAliasRegistry registry = IAddressAliasRegistry(addressAliasRegistry);

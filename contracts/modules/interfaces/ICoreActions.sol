@@ -19,10 +19,14 @@ interface ICoreActions {
         // The core action type.
         uint256 coreActionType;
         // The list of targets.
+        // Can be full addresses or aliases.
         address[] targets;
-        // The list of lists of timestamps. Must have the same dimensions as `actors`.
+        // The list of lists of timestamps.
+        // Can be full addresses or aliases.
+        // Must have the same dimensions as `actors`.
         address[][] actors;
-        // The list of lists of timestamps. Must have the same dimensions as `actors`.
+        // The list of lists of timestamps.
+        // Must have the same dimensions as `actors`.
         uint32[][] timestamps;
         // The nonce of the signature (per platform's signer).
         uint256 nonce;
@@ -154,7 +158,7 @@ interface ICoreActions {
      * @param coreActionType  The core action type.
      * @param target          The core action target.
      * @param actor           The actor
-     * @return The amped timestamp value.
+     * @return The timestamp value.
      */
     function getCoreActionTimestamp(
         address platform,
@@ -183,8 +187,8 @@ interface ICoreActions {
      * @param platform The platform.
      * @param coreActionType The core action type.
      * @param target         The core action target.
-     * @return actors     The actors for the coreActions.
-     * @return timestamps The timestamps of the coreActions.
+     * @return actors     The actors for the core actions.
+     * @return timestamps The timestamps of the core actions.
      */
     function getCoreActions(
         address platform,
@@ -200,8 +204,8 @@ interface ICoreActions {
      * @param target          The core action target.
      * @param start           The start index of the range.
      * @param stop            The end index of the range (exclusive).
-     * @return actors     The actors for the coreActions.
-     * @return timestamps The timestamps of the coreActions.
+     * @return actors     The actors for the core actions.
+     * @return timestamps The timestamps of the core actions.
      */
     function getCoreActionsIn(
         address platform,
