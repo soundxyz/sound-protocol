@@ -126,6 +126,13 @@ interface ICoreActions {
     function CORE_ACTION_REGISTRATIONS_TYPEHASH() external pure returns (bytes32);
 
     /**
+     * @dev Returns the digest for the core actions to register.
+     * @param r The core actions to register.
+     * @return The computed value.
+     */
+    function computeDigest(CoreActionRegistrations memory r) external view returns (bytes32);
+
+    /**
      * @dev Returns the configured signer for `platform`.
      * @param platform The platform.
      * @return The configured value.

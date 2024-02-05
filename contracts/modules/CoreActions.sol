@@ -100,39 +100,25 @@ contract CoreActions is ICoreActions, EIP712 {
         external
         returns (address[] memory targetAliases, address[][] memory actorAliases)
     {
+        _validateArrayLengths(r);
+
         uint256 n = r.targets.length;
         address[] memory resolvedTargets;
         address[][] memory resolvedActors = new address[][](n);
         actorAliases = new address[][](n);
 
-        // Check input array lengths and resolve aliases.
+        // Resolve and register aliases.
         unchecked {
-            if (n != r.actors.length) revert ArrayLengthsMismatch();
-            if (n != r.timestamps.length) revert ArrayLengthsMismatch();
-
             IAddressAliasRegistry registry = IAddressAliasRegistry(addressAliasRegistry);
             (resolvedTargets, targetAliases) = registry.resolveAndRegister(r.targets);
-
             for (uint256 i; i != n; ++i) {
-                if (r.actors[i].length != r.timestamps[i].length) revert ArrayLengthsMismatch();
                 (resolvedActors[i], actorAliases[i]) = registry.resolveAndRegister(r.actors[i]);
             }
         }
 
         // Check the signature and invalidate the nonce.
         {
-            bytes32 digest = _hashTypedData(
-                keccak256(
-                    abi.encode(
-                        CORE_ACTION_REGISTRATIONS_TYPEHASH,
-                        r.coreActionType, // uint256
-                        _hashOf(resolvedTargets), // address[]
-                        _hashOf(resolvedActors), // address[][]
-                        _hashOf(r.timestamps), // uint256[][]
-                        r.nonce // uint256
-                    )
-                )
-            );
+            bytes32 digest = _computeDigest(r, resolvedTargets, resolvedActors);
 
             address signer = platformSigner[r.platform];
             if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, digest, r.signature))
@@ -283,9 +269,59 @@ contract CoreActions is ICoreActions, EIP712 {
         }
     }
 
+    /**
+     * @inheritdoc ICoreActions
+     */
+    function computeDigest(CoreActionRegistrations calldata r) external view returns (bytes32) {
+        _validateArrayLengths(r);
+
+        uint256 n = r.targets.length;
+        address[] memory resolvedTargets;
+        address[][] memory resolvedActors = new address[][](n);
+
+        // Resolve aliases.
+        unchecked {
+            IAddressAliasRegistry registry = IAddressAliasRegistry(addressAliasRegistry);
+            (resolvedTargets, ) = registry.resolve(r.targets);
+            for (uint256 i; i != n; ++i) {
+                if (r.actors[i].length != r.timestamps[i].length) revert ArrayLengthsMismatch();
+                (resolvedActors[i], ) = registry.resolve(r.actors[i]);
+            }
+        }
+
+        return _computeDigest(r, resolvedTargets, resolvedActors);
+    }
+
     // =============================================================
     //                  INTERNAL / PRIVATE HELPERS
     // =============================================================
+
+    /**
+     * @dev Returns the digest for `r`, with `resolvedTargets` and `resolvedActors`.
+     * @param r               The core actions to register.
+     * @param resolvedTargets The list of resolved targets.
+     * @param resolvedActors  The list of resolved actors.
+     * @return The computed digest.
+     */
+    function _computeDigest(
+        CoreActionRegistrations calldata r,
+        address[] memory resolvedTargets,
+        address[][] memory resolvedActors
+    ) internal view returns (bytes32) {
+        return
+            _hashTypedData(
+                keccak256(
+                    abi.encode(
+                        CORE_ACTION_REGISTRATIONS_TYPEHASH,
+                        r.coreActionType, // uint256
+                        _hashOf(resolvedTargets), // address[]
+                        _hashOf(resolvedActors), // address[][]
+                        _hashOf(r.timestamps), // uint256[][]
+                        r.nonce // uint256
+                    )
+                )
+            );
+    }
 
     /**
      * @dev Override for EIP-712.
@@ -301,6 +337,21 @@ contract CoreActions is ICoreActions, EIP712 {
     {
         name_ = "CoreActions";
         version_ = "1";
+    }
+
+    /**
+     * @dev Validate the array lengths.
+     * @param r The core actions to register.
+     */
+    function _validateArrayLengths(CoreActionRegistrations calldata r) internal pure {
+        unchecked {
+            uint256 n = r.targets.length;
+            if (n != r.actors.length) revert ArrayLengthsMismatch();
+            if (n != r.timestamps.length) revert ArrayLengthsMismatch();
+            for (uint256 i; i != n; ++i) {
+                if (r.actors[i].length != r.timestamps[i].length) revert ArrayLengthsMismatch();
+            }
+        }
     }
 
     /**
