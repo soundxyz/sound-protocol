@@ -21,7 +21,7 @@ interface ISuperMinterE is IERC165 {
         // The base price per token.
         // For `VERIFY_SIGNATURE`, this will be the minimum limit of the signed price.
         // Will be 0 if the `tier` is `GA_TIER`.
-        uint96 price;
+        uint128 price;
         // The start time of the mint.
         uint32 startTime;
         // The end time of the mint.
@@ -68,7 +68,7 @@ interface ISuperMinterE is IERC165 {
         // The allowlist Merkle proof.
         bytes32[] allowlistProof;
         // The signed price. Used if `mode` is `VERIFY_SIGNATURE`.
-        uint96 signedPrice;
+        uint128 signedPrice;
         // The signed quantity. Used if `mode` is `VERIFY_SIGNATURE`.
         uint32 signedQuantity;
         // The signed claimed ticket. Used if `mode` is `VERIFY_SIGNATURE`.
@@ -167,21 +167,21 @@ interface ISuperMinterE is IERC165 {
      */
     struct PlatformFeeConfig {
         // The amount of reward to give to the artist per mint.
-        uint96 artistMintReward;
+        uint128 artistMintReward;
         // The amount of reward to give to the affiliate per mint.
-        uint96 affiliateMintReward;
+        uint128 affiliateMintReward;
         // The amount of reward to give to the platform per mint.
-        uint96 platformMintReward;
+        uint128 platformMintReward;
         // If the price is greater than this, the rewards will become the threshold variants.
-        uint96 thresholdPrice;
+        uint128 thresholdPrice;
         // The amount of reward to give to the artist (`unitPrice >= thresholdPrice`).
-        uint96 thresholdArtistMintReward;
+        uint128 thresholdArtistMintReward;
         // The amount of reward to give to the affiliate (`unitPrice >= thresholdPrice`).
-        uint96 thresholdAffiliateMintReward;
+        uint128 thresholdAffiliateMintReward;
         // The amount of reward to give to the platform (`unitPrice >= thresholdPrice`).
-        uint96 thresholdPlatformMintReward;
+        uint128 thresholdPlatformMintReward;
         // The per-transaction flat fee.
-        uint96 platformTxFlatFee;
+        uint128 platformTxFlatFee;
         // The per-token fee BPS.
         uint16 platformMintFeeBPS;
         // Whether the fees are active.
@@ -204,7 +204,7 @@ interface ISuperMinterE is IERC165 {
         // For `VERIFY_SIGNATURE` this will be the minimum limit of the signed price.
         // If the `tier` is `GA_TIER`, and the `mode` is NOT `VERIFY_SIGNATURE`,
         // this value will be the GA price instead.
-        uint96 price;
+        uint128 price;
         // The start time of the mint.
         uint32 startTime;
         // The end time of the mint.
@@ -270,7 +270,7 @@ interface ISuperMinterE is IERC165 {
      * @param scheduleNum   The edition-tier schedule number.
      * @param price         The base per-token price.
      */
-    event PriceSet(address indexed edition, uint8 tier, uint8 scheduleNum, uint96 price);
+    event PriceSet(address indexed edition, uint8 tier, uint8 scheduleNum, uint128 price);
 
     /**
      * @dev Emitted when the max mintable per account for a mint is updated.
@@ -410,7 +410,7 @@ interface ISuperMinterE is IERC165 {
      * @param platform The platform address.
      * @param price    The price per token for the GA tier.
      */
-    event GAPriceSet(address indexed platform, uint96 price);
+    event GAPriceSet(address indexed platform, uint128 price);
 
     /**
      * @dev Emitted when the signer for a platform is set.
@@ -604,7 +604,7 @@ interface ISuperMinterE is IERC165 {
         address edition,
         uint8 tier,
         uint8 scheduleNum,
-        uint96 price
+        uint128 price
     ) external;
 
     /**
@@ -770,7 +770,7 @@ interface ISuperMinterE is IERC165 {
      * @dev Allows the platform to set the price for the GA tier.
      * @param price The price per token for the GA tier.
      */
-    function setGAPrice(uint96 price) external;
+    function setGAPrice(uint128 price) external;
 
     /**
      * @dev Allows the platform to set their signer.
@@ -846,13 +846,13 @@ interface ISuperMinterE is IERC165 {
      * @dev The maximum per-mint reward. Applies to artists, affiliates, platform.
      * @return The constant value.
      */
-    function MAX_PER_MINT_REWARD() external pure returns (uint96);
+    function MAX_PER_MINT_REWARD() external pure returns (uint128);
 
     /**
      * @dev The maximum platform per-transaction flat fee.
      * @return The constant value.
      */
-    function MAX_PLATFORM_PER_TX_FLAT_FEE() external pure returns (uint96);
+    function MAX_PLATFORM_PER_TX_FLAT_FEE() external pure returns (uint128);
 
     /**
      * @dev Returns the amount of fees accrued by the platform.
@@ -921,7 +921,7 @@ interface ISuperMinterE is IERC165 {
         uint8 tier,
         uint8 scheduleNum,
         uint32 quantity,
-        uint96 signedPrice,
+        uint128 signedPrice,
         bool hasValidAffiliate
     ) external view returns (TotalPriceAndFees memory);
 
@@ -930,7 +930,7 @@ interface ISuperMinterE is IERC165 {
      * @param platform The platform address.
      * @return The configured value.
      */
-    function gaPrice(address platform) external view returns (uint96);
+    function gaPrice(address platform) external view returns (uint128);
 
     /**
      * @dev Returns the signer for the platform.

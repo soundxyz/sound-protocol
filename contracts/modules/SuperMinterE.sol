@@ -35,14 +35,14 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     struct MintData {
         // The platform address.
         address platform;
-        // The price per token.
-        uint96 price;
         // The start time of the mint.
         uint32 startTime;
         // The end time of the mint.
         uint32 endTime;
         // The maximum number of tokens an account can mint in this mint.
         uint32 maxMintablePerAccount;
+        // The price per token.
+        uint128 price;
         // The maximum tokens mintable.
         uint32 maxMintable;
         // The total number of tokens minted.
@@ -94,7 +94,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
                 "address to,"
                 "uint32 signedQuantity,"
                 "uint32 signedClaimTicket,"
-                "uint96 signedPrice,"
+                "uint128 signedPrice,"
                 "uint32 signedDeadline,"
                 "address affiliate"
             ")"
@@ -160,12 +160,12 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @dev The maximum per-mint reward. Applies to artists, affiliates, platform.
      */
-    uint96 public constant MAX_PER_MINT_REWARD = 0.1 ether;
+    uint128 public constant MAX_PER_MINT_REWARD = 0.1 ether;
 
     /**
      * @dev The maximum platform per-transaction flat fee.
      */
-    uint96 public constant MAX_PLATFORM_PER_TX_FLAT_FEE = 0.1 ether;
+    uint128 public constant MAX_PLATFORM_PER_TX_FLAT_FEE = 0.1 ether;
 
     /**
      * @dev The boolean flag on whether the mint has been created.
@@ -220,7 +220,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @dev A mapping of `platform` => `price`.
      */
-    mapping(address => uint96) public gaPrice;
+    mapping(address => uint128) public gaPrice;
 
     /**
      * @dev A mapping of `platform` => `platformSigner`.
@@ -371,7 +371,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
 
         // Platform and affilaite fees are accrued mappings.
         // Artist earnings are directly forwarded to the nft contract in mint call below.
-        // Overflow not possible since all fees are uint96s.
+        // Overflow not possible since all fees are uint128s.
         unchecked {
             if (l.finalAffiliateFee != 0) {
                 if (l.erc20 == address(0)) {
@@ -448,7 +448,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
         address edition,
         uint8 tier,
         uint8 scheduleNum,
-        uint96 price
+        uint128 price
     ) public onlyEditionOwnerOrAdmin(edition) {
         uint256 mintId = LibOps.packId(edition, tier, scheduleNum);
         MintData storage d = _getMintData(mintId);
@@ -689,7 +689,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @inheritdoc ISuperMinterE
      */
-    function setGAPrice(uint96 price) public {
+    function setGAPrice(uint128 price) public {
         address sender = LibMulticaller.senderOrSigner();
         gaPrice[sender] = price;
         emit GAPriceSet(sender, price);
@@ -784,7 +784,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
         uint8 tier,
         uint8 scheduleNum,
         uint32 quantity,
-        uint96 signedPrice,
+        uint128 signedPrice,
         bool hasValidAffiliate
     ) public view returns (TotalPriceAndFees memory) {
         uint256 mintId = LibOps.packId(edition, tier, scheduleNum);
@@ -1214,11 +1214,11 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
         uint8 tier,
         MintData storage d,
         uint32 quantity,
-        uint96 signedPrice,
+        uint128 signedPrice,
         bool hasValidAffiliate
     ) internal view returns (TotalPriceAndFees memory f) {
-        // All flat prices are stored as uint96s in storage.
-        // The quantity is a uint32. Multiplications between a uint96 and uint32 won't overflow.
+        // All flat prices are stored as uint128s in storage.
+        // The quantity is a uint32. Multiplications between a uint128 and uint32 won't overflow.
         unchecked {
             PlatformFeeConfig memory c = effectivePlatformFeeConfig(d.platform, tier);
 

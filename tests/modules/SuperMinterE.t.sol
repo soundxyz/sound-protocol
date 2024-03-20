@@ -27,8 +27,8 @@ contract SuperMinterETests is TestConfigV2_1 {
     );
 
     struct SuperMinterEConstants {
-        uint96 MAX_PLATFORM_PER_TX_FLAT_FEE;
-        uint96 MAX_PER_MINT_REWARD;
+        uint128 MAX_PLATFORM_PER_TX_FLAT_FEE;
+        uint128 MAX_PER_MINT_REWARD;
         uint16 MAX_PLATFORM_PER_MINT_FEE_BPS;
         uint16 MAX_AFFILIATE_FEE_BPS;
     }
@@ -60,7 +60,7 @@ contract SuperMinterETests is TestConfigV2_1 {
 
     function test_createMints() public {
         uint256 gaPrice = 123 ether;
-        sm.setGAPrice(uint96(gaPrice));
+        sm.setGAPrice(uint128(gaPrice));
 
         assertEq(sm.mintInfoList(address(edition)).length, 0);
         for (uint256 j; j < 3; ++j) {
@@ -70,7 +70,7 @@ contract SuperMinterETests is TestConfigV2_1 {
                 c.platform = address(this);
                 c.edition = address(edition);
                 c.tier = uint8(i * 2);
-                c.price = uint96(i * 1 ether);
+                c.price = uint128(i * 1 ether);
                 c.startTime = uint32(block.timestamp + i);
                 c.endTime = uint32(block.timestamp + 1000 + i);
                 c.maxMintablePerAccount = uint32(10 + i);
@@ -138,7 +138,7 @@ contract SuperMinterETests is TestConfigV2_1 {
         c.edition = address(edition);
         c.tier = uint8(_random() % 2);
         c.mode = uint8(_random() % 3);
-        c.price = uint96(_bound(_random(), 0, type(uint96).max));
+        c.price = uint128(_bound(_random(), 0, type(uint128).max));
         c.startTime = uint32(block.timestamp + _bound(_random(), 0, 1000));
         c.endTime = uint32(c.startTime + _bound(_random(), 0, 1000));
         c.maxMintablePerAccount = uint32(_bound(_random(), 1, type(uint32).max));
@@ -528,8 +528,8 @@ contract SuperMinterETests is TestConfigV2_1 {
 
     function test_platformFeeConfig(uint256) public {
         SuperMinterEConstants memory smc = _superMinterConstants();
-        uint96 perTxFlat = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE * 2));
-        uint96 platformReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD * 2));
+        uint128 perTxFlat = uint128(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE * 2));
+        uint128 platformReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD * 2));
         uint16 perMintBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS * 2));
 
         uint8 tier = uint8(_random());
@@ -565,8 +565,8 @@ contract SuperMinterETests is TestConfigV2_1 {
     }
 
     function _setDefaultPlatformFeeConfig(
-        uint96 perTxFlat,
-        uint96 platformReward,
+        uint128 perTxFlat,
+        uint128 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
@@ -580,8 +580,8 @@ contract SuperMinterETests is TestConfigV2_1 {
 
     function _setPlatformFeeConfig(
         uint8 tier,
-        uint96 perTxFlat,
-        uint96 platformReward,
+        uint128 perTxFlat,
+        uint128 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
@@ -594,8 +594,8 @@ contract SuperMinterETests is TestConfigV2_1 {
     }
 
     function _checkDefaultPlatformFeeConfig(
-        uint96 perTxFlat,
-        uint96 platformReward,
+        uint128 perTxFlat,
+        uint128 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
@@ -610,8 +610,8 @@ contract SuperMinterETests is TestConfigV2_1 {
 
     function _checkEffectivePlatformFeeConfig(
         uint8 tier,
-        uint96 perTxFlat,
-        uint96 platformReward,
+        uint128 perTxFlat,
+        uint128 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
@@ -626,8 +626,8 @@ contract SuperMinterETests is TestConfigV2_1 {
 
     function _checkPlatformFeeConfig(
         ISuperMinterE.PlatformFeeConfig memory result,
-        uint96 perTxFlat,
-        uint96 platformReward,
+        uint128 perTxFlat,
+        uint128 platformReward,
         uint16 perMintBPS,
         bool active
     ) internal {
@@ -646,7 +646,7 @@ contract SuperMinterETests is TestConfigV2_1 {
         c.edition = address(edition);
         c.tier = uint8(_random() % 2);
         c.mode = uint8(_random() % 3);
-        c.price = uint96(_bound(_random(), 0, type(uint96).max));
+        c.price = uint128(_bound(_random(), 0, type(uint128).max));
         c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
         c.startTime = 0;
         c.endTime = uint32(block.timestamp + 1000);
@@ -656,12 +656,12 @@ contract SuperMinterETests is TestConfigV2_1 {
         }
         assertEq(sm.createEditionMint(c), 0);
 
-        uint256 gaPrice = uint96(_bound(_random(), 0, type(uint96).max));
+        uint256 gaPrice = uint128(_bound(_random(), 0, type(uint128).max));
         vm.prank(c.platform);
-        sm.setGAPrice(uint96(gaPrice));
+        sm.setGAPrice(uint128(gaPrice));
 
         uint32 quantity = uint32(_bound(_random(), 1, type(uint32).max));
-        uint96 signedPrice = uint96(_bound(_random(), 1, type(uint96).max));
+        uint128 signedPrice = uint128(_bound(_random(), 1, type(uint128).max));
         ISuperMinterE.TotalPriceAndFees memory tpaf;
         if (c.mode == sm.VERIFY_SIGNATURE() && signedPrice < c.price) {
             vm.expectRevert(ISuperMinterE.SignedPriceTooLow.selector);
@@ -696,7 +696,7 @@ contract SuperMinterETests is TestConfigV2_1 {
             c.platform = _randomNonZeroAddress();
             c.edition = address(edition);
             c.tier = 1;
-            c.price = uint96(_bound(_random(), 0, type(uint96).max));
+            c.price = uint128(_bound(_random(), 0, type(uint128).max));
             c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
             c.startTime = 0;
             c.endTime = uint32(block.timestamp + 1000);
@@ -707,18 +707,18 @@ contract SuperMinterETests is TestConfigV2_1 {
         // Set the tier 1 platform fee config.
         ISuperMinterE.PlatformFeeConfig memory pfc;
         {
-            pfc.platformTxFlatFee = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
+            pfc.platformTxFlatFee = uint128(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
             pfc.platformMintFeeBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
 
-            pfc.artistMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.affiliateMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.platformMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.artistMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.affiliateMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.platformMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
-            pfc.thresholdPrice = uint96(_bound(_random(), 0, type(uint96).max));
+            pfc.thresholdPrice = uint128(_bound(_random(), 0, type(uint128).max));
 
-            pfc.thresholdArtistMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.thresholdAffiliateMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.thresholdPlatformMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdArtistMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdAffiliateMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdPlatformMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
             pfc.active = true;
             vm.prank(c.platform);
@@ -827,7 +827,7 @@ contract SuperMinterETests is TestConfigV2_1 {
             c.platform = _randomNonZeroAddress();
             c.edition = address(edition);
             c.tier = 1;
-            c.price = uint96(_bound(_random(), 0, type(uint96).max));
+            c.price = uint128(_bound(_random(), 0, type(uint128).max));
             c.affiliateFeeBPS = uint16(_bound(_random(), 0, smc.MAX_AFFILIATE_FEE_BPS));
             c.startTime = 0;
             c.endTime = uint32(block.timestamp + 1000);
@@ -839,18 +839,18 @@ contract SuperMinterETests is TestConfigV2_1 {
         // Set the tier 1 platform fee config.
         ISuperMinterE.PlatformFeeConfig memory pfc;
         {
-            pfc.platformTxFlatFee = uint96(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
+            pfc.platformTxFlatFee = uint128(_bound(_random(), 0, smc.MAX_PLATFORM_PER_TX_FLAT_FEE));
             pfc.platformMintFeeBPS = uint16(_bound(_random(), 0, smc.MAX_PLATFORM_PER_MINT_FEE_BPS));
 
-            pfc.artistMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.affiliateMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.platformMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.artistMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.affiliateMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.platformMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
-            pfc.thresholdPrice = uint96(_bound(_random(), 0, type(uint96).max));
+            pfc.thresholdPrice = uint128(_bound(_random(), 0, type(uint128).max));
 
-            pfc.thresholdArtistMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.thresholdAffiliateMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
-            pfc.thresholdPlatformMintReward = uint96(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdArtistMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdAffiliateMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
+            pfc.thresholdPlatformMintReward = uint128(_bound(_random(), 0, smc.MAX_PER_MINT_REWARD));
 
             pfc.active = true;
             vm.prank(c.platform);
@@ -974,7 +974,7 @@ contract SuperMinterETests is TestConfigV2_1 {
         p.scheduleNum = 0;
         p.to = _randomNonZeroAddress();
         p.quantity = uint32(_bound(_random(), 1, 16));
-        p.signedPrice = uint96(_bound(_random(), 0, type(uint96).max));
+        p.signedPrice = uint128(_bound(_random(), 0, type(uint128).max));
         p.signedQuantity = uint32(p.quantity + (_random() % 16));
         p.signedClaimTicket = uint32(_bound(_random(), 0, type(uint32).max));
         p.signedDeadline = type(uint32).max;
@@ -1038,9 +1038,9 @@ contract SuperMinterETests is TestConfigV2_1 {
         c.maxMintablePerAccount = type(uint32).max;
         assertEq(sm.createEditionMint(c), 0);
 
-        uint256 gaPrice = uint96(_bound(_random(), 0, type(uint96).max));
+        uint256 gaPrice = uint128(_bound(_random(), 0, type(uint128).max));
         vm.prank(c.platform);
-        sm.setGAPrice(uint96(gaPrice));
+        sm.setGAPrice(uint128(gaPrice));
 
         ISuperMinterE.MintTo memory p;
         p.edition = address(edition);
