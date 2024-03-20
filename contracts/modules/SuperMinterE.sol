@@ -396,7 +396,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
         l.allowlisted = p.allowlisted;
         l.allowlistedQuantity = p.allowlistedQuantity;
         l.signedClaimTicket = p.signedClaimTicket;
-        l.requiredEtherValue = f.total;
+        l.requiredPayment = f.total;
         l.unitPrice = f.unitPrice;
 
         if (l.erc20 == address(0)) {
@@ -615,7 +615,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @inheritdoc ISuperMinterE
      */
-    function withdrawERC20ForAffiliate(address erc20, address affiliate) public {
+    function withdrawERC20ForAffiliate(address affiliate, address erc20) public {
         uint256 accrued = affiliateERC20FeesAccrued[affiliate][erc20];
         if (accrued != 0) {
             affiliateERC20FeesAccrued[affiliate][erc20] = 0;
@@ -641,7 +641,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @inheritdoc ISuperMinterE
      */
-    function withdrawERC20ForPlatform(address erc20, address platform) public {
+    function withdrawERC20ForPlatform(address platform, address erc20) public {
         address recipient = platformFeeAddress[platform];
         _validatePlatformFeeAddress(recipient);
         uint256 accrued = platformERC20FeesAccrued[platform][erc20];
@@ -1064,8 +1064,8 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
         override
         returns (string memory name_, string memory version_)
     {
-        name_ = "SuperMinter";
-        version_ = "1_1";
+        name_ = "SuperMinterE";
+        version_ = "1";
     }
 
     // Minting:

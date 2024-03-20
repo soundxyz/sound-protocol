@@ -148,7 +148,7 @@ interface ISuperMinterE is IERC165 {
         // Whether the affiliate address is affiliated.
         bool affiliated;
         // The total price paid, inclusive of all fees.
-        uint256 requiredEtherValue;
+        uint256 requiredPayment;
         // The price per token.
         uint256 unitPrice;
         // The final artist fee (inclusive of `finalArtistReward`).
@@ -735,17 +735,17 @@ interface ISuperMinterE is IERC165 {
 
     /**
      * @dev Withdraws all accrued ERC20 fees of the affiliate, to the affiliate.
-     * @param erc20     The erc20 token address.
      * @param affiliate The affiliate address.
+     * @param erc20     The erc20 token address.
      */
-    function withdrawERC20ForAffiliate(address erc20, address affiliate) external;
+    function withdrawERC20ForAffiliate(address affiliate, address erc20) external;
 
     /**
      * @dev Withdraws all accrued ERC20 fees of the platform, to the their fee address.
-     * @param erc20    The erc20 token address.
      * @param platform The platform address.
+     * @param erc20    The erc20 token address.
      */
-    function withdrawERC20ForPlatform(address erc20, address platform) external;
+    function withdrawERC20ForPlatform(address platform, address erc20) external;
 
     /**
      * @dev Allows the caller, as a platform, to set their fee address
