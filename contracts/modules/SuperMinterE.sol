@@ -200,7 +200,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @dev A mapping of `platform` => `token` => `feesAccrued`.
      */
-    mapping(address => address(address => uint256)) public platformERC20FeesAccrued;
+    mapping(address => mapping(address => uint256)) public platformERC20FeesAccrued;
 
     /**
      * @dev A mapping of `platform` => `feeRecipient`.
@@ -215,7 +215,7 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @dev A mapping of `affiliate` => `token` => `feesAccrued`.
      */
-    mapping(address => address(address => uint256)) public affiliateERC20FeesAccrued;
+    mapping(address => mapping(address => uint256)) public affiliateERC20FeesAccrued;
 
     /**
      * @dev A mapping of `platform` => `price`.
@@ -318,11 +318,14 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
             d.mode = c.mode;
             d.flags = _MINT_CREATED_FLAG;
             d.next = editionHead.head;
+            d.erc20 = c.erc20;
             editionHead.head = uint16((uint256(c.tier) << 8) | uint256(scheduleNum));
 
             // Skip writing zeros, to avoid cold SSTOREs.
             if (c.affiliateMerkleRoot != bytes32(0)) d.affiliateMerkleRoot = c.affiliateMerkleRoot;
             if (c.merkleRoot != bytes32(0)) d.merkleRoot = c.merkleRoot;
+
+            if (c.erc20 != address(0) && c.erc20.code.length == 0) revert ERC20DoesNotExist();
 
             emit MintCreated(c.edition, c.tier, scheduleNum, c);
         }
@@ -339,12 +342,13 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
         _requireMintOpen(d);
 
         // Perform the sub workflows depending on the mint mode.
-        uint8 mode = d.mode;
-        if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
-        else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
-        else if (mode == PLATFORM_AIRDROP) revert InvalidMode();
-
-        _incrementMinted(mode, d, p);
+        {
+            uint8 mode = d.mode;
+            if (mode == VERIFY_MERKLE) _verifyMerkle(d, p);
+            else if (mode == VERIFY_SIGNATURE) _verifyAndClaimSignature(d, p);
+            else if (mode == PLATFORM_AIRDROP) revert InvalidMode();
+            _incrementMinted(mode, d, p);
+        }
 
         /* ----------------- COMPUTE AND ACCRUE FEES ---------------- */
 
@@ -356,7 +360,10 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
 
         TotalPriceAndFees memory f = _totalPriceAndFees(p.tier, d, p.quantity, p.signedPrice, l.affiliated);
 
-        if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
+        l.erc20 = d.erc20;
+        if (l.erc20 == address(0)) {
+            if (msg.value != f.total) revert WrongPayment(msg.value, f.total); // Require exact payment.
+        }
 
         l.finalArtistFee = f.finalArtistFee;
         l.finalPlatformFee = f.finalPlatformFee;
@@ -367,10 +374,18 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
         // Overflow not possible since all fees are uint96s.
         unchecked {
             if (l.finalAffiliateFee != 0) {
-                affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
+                if (l.erc20 == address(0)) {
+                    affiliateFeesAccrued[p.affiliate] += l.finalAffiliateFee;
+                } else {
+                    affiliateERC20FeesAccrued[p.affiliate][l.erc20] += l.finalAffiliateFee;
+                }
             }
             if (l.finalPlatformFee != 0) {
-                platformFeesAccrued[d.platform] += l.finalPlatformFee;
+                if (l.erc20 == address(0)) {
+                    platformFeesAccrued[d.platform] += l.finalPlatformFee;
+                } else {
+                    platformERC20FeesAccrued[d.platform][l.erc20] += l.finalPlatformFee;
+                }
             }
         }
 
@@ -378,13 +393,22 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
 
         ISoundEditionV2_1 edition = ISoundEditionV2_1(p.edition);
         l.quantity = p.quantity;
-        l.fromTokenId = edition.mint{ value: l.finalArtistFee }(p.tier, p.to, p.quantity);
         l.allowlisted = p.allowlisted;
         l.allowlistedQuantity = p.allowlistedQuantity;
         l.signedClaimTicket = p.signedClaimTicket;
         l.requiredEtherValue = f.total;
         l.unitPrice = f.unitPrice;
 
+        if (l.erc20 == address(0)) {
+            l.fromTokenId = edition.mint{ value: l.finalArtistFee }(p.tier, p.to, p.quantity);
+        } else {
+            l.fromTokenId = edition.mint(p.tier, p.to, p.quantity);
+            SafeTransferLib.safeTransferFrom(l.erc20, msg.sender, address(edition), l.finalArtistFee);
+            unchecked {
+                uint256 feesToThis = l.finalPlatformFee + l.finalAffiliateFee;
+                SafeTransferLib.safeTransferFrom(l.erc20, msg.sender, address(this), feesToThis);
+            }
+        }
         emit Minted(p.edition, p.tier, p.scheduleNum, p.to, l, p.attributionId);
 
         return l.fromTokenId;
@@ -591,6 +615,18 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
     /**
      * @inheritdoc ISuperMinterE
      */
+    function withdrawERC20ForAffiliate(address erc20, address affiliate) public {
+        uint256 accrued = affiliateERC20FeesAccrued[affiliate][erc20];
+        if (accrued != 0) {
+            affiliateERC20FeesAccrued[affiliate][erc20] = 0;
+            SafeTransferLib.safeTransfer(erc20, affiliate, accrued);
+            emit AffiliateERC20FeesWithdrawn(affiliate, erc20, accrued);
+        }
+    }
+
+    /**
+     * @inheritdoc ISuperMinterE
+     */
     function withdrawForPlatform(address platform) public {
         address recipient = platformFeeAddress[platform];
         _validatePlatformFeeAddress(recipient);
@@ -599,6 +635,20 @@ contract SuperMinterE is ISuperMinterE, EIP712 {
             platformFeesAccrued[platform] = 0;
             SafeTransferLib.forceSafeTransferETH(recipient, accrued);
             emit PlatformFeesWithdrawn(platform, accrued);
+        }
+    }
+
+    /**
+     * @inheritdoc ISuperMinterE
+     */
+    function withdrawERC20ForPlatform(address erc20, address platform) public {
+        address recipient = platformFeeAddress[platform];
+        _validatePlatformFeeAddress(recipient);
+        uint256 accrued = platformERC20FeesAccrued[platform][erc20];
+        if (accrued != 0) {
+            platformERC20FeesAccrued[platform][erc20] = 0;
+            SafeTransferLib.safeTransfer(erc20, recipient, accrued);
+            emit PlatformERC20FeesWithdrawn(platform, erc20, accrued);
         }
     }
 

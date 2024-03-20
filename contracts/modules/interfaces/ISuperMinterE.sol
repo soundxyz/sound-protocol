@@ -4,10 +4,10 @@ pragma solidity ^0.8.16;
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 
 /**
- * @title ISuperMinterV2
+ * @title ISuperMinterE
  * @notice The interface for the generalized minter.
  */
-interface ISuperMinterV2 is IERC165 {
+interface ISuperMinterE is IERC165 {
     // =============================================================
     //                            STRUCTS
     // =============================================================
@@ -158,6 +158,8 @@ interface ISuperMinterV2 is IERC165 {
         // The final platform fee
         // (inclusive of `finalPlatformReward`, `perTxFlat`, sum of `perMintBPS`).
         uint256 finalPlatformFee;
+        // The erc20 token for payment, if any.
+        address erc20;
     }
 
     /**
@@ -374,11 +376,27 @@ interface ISuperMinterV2 is IERC165 {
     event AffiliateFeesWithdrawn(address indexed affiliate, uint256 accrued);
 
     /**
+     * @dev Emitted when affiliate ERC20 fees are withdrawn.
+     * @param affiliate The recipient of the fees.
+     * @param erc20     The erc20 token address.
+     * @param accrued   The amount of Ether accrued and withdrawn.
+     */
+    event AffiliateERC20FeesWithdrawn(address indexed affiliate, address indexed erc20, uint256 accrued);
+
+    /**
      * @dev Emitted when platform fees are withdrawn.
      * @param platform  The platform address.
      * @param accrued   The amount of Ether accrued and withdrawn.
      */
     event PlatformFeesWithdrawn(address indexed platform, uint256 accrued);
+
+    /**
+     * @dev Emitted when platform ERC20 fees are withdrawn.
+     * @param platform  The platform address.
+     * @param erc20     The erc20 token address.
+     * @param accrued   The amount of Ether accrued and withdrawn.
+     */
+    event PlatformERC20FeesWithdrawn(address indexed platform, address indexed erc20, uint256 accrued);
 
     /**
      * @dev Emitted when the platform fee recipient address is updated.
@@ -545,6 +563,11 @@ interface ISuperMinterV2 is IERC165 {
      */
     error NotConfigurable();
 
+    /**
+     * @dev The ERC20 contract does not exist.
+     */
+    error ERC20DoesNotExist();
+
     // =============================================================
     //               PUBLIC / EXTERNAL WRITE FUNCTIONS
     // =============================================================
@@ -699,16 +722,30 @@ interface ISuperMinterV2 is IERC165 {
     ) external;
 
     /**
-     * @dev Withdraws all accrued fees of the affiliate, to the affiliate.
+     * @dev Withdraws all accrued ETH fees of the affiliate, to the affiliate.
      * @param affiliate The affiliate address.
      */
     function withdrawForAffiliate(address affiliate) external;
 
     /**
-     * @dev Withdraws all accrued fees of the platform, to the their fee address.
+     * @dev Withdraws all accrued ETH fees of the platform, to the their fee address.
      * @param platform The platform address.
      */
     function withdrawForPlatform(address platform) external;
+
+    /**
+     * @dev Withdraws all accrued ERC20 fees of the affiliate, to the affiliate.
+     * @param erc20     The erc20 token address.
+     * @param affiliate The affiliate address.
+     */
+    function withdrawERC20ForAffiliate(address erc20, address affiliate) external;
+
+    /**
+     * @dev Withdraws all accrued ERC20 fees of the platform, to the their fee address.
+     * @param erc20    The erc20 token address.
+     * @param platform The platform address.
+     */
+    function withdrawERC20ForPlatform(address erc20, address platform) external;
 
     /**
      * @dev Allows the caller, as a platform, to set their fee address
